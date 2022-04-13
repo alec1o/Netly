@@ -4,24 +4,24 @@ namespace Zenet.Package
 {
     public static class Encoding
     {
-        public static string String(byte[] target, Encode encode = Encode.UTF8)
+        public static string String(byte[] value, Encode encode = Encode.UTF8)
         {
             switch (encode)
             {
-                case Encode.ASCII: return Core.ASCII.GetString(target);
-                case Encode.UNICODE: return Core.Unicode.GetString(target);
-                case Encode.UTF8: return Core.UTF8.GetString(target);
+                case Encode.ASCII: return Core.ASCII.GetString(value);
+                case Encode.UNICODE: return Core.Unicode.GetString(value);
+                case Encode.UTF8: return Core.UTF8.GetString(value);
                 default: return null;
             }
         }
         
-        public static byte[] Bytes(string target, Encode encode = Encode.UTF8)
+        public static byte[] Bytes(string value, Encode encode = Encode.UTF8)
         {
             switch (encode)
             {
-                case Encode.ASCII: return Core.ASCII.GetBytes(target);
-                case Encode.UNICODE: return Core.Unicode.GetBytes(target);
-                case Encode.UTF8: return Core.UTF8.GetBytes(target);
+                case Encode.ASCII: return Core.ASCII.GetBytes(value);
+                case Encode.UNICODE: return Core.Unicode.GetBytes(value);
+                case Encode.UTF8: return Core.UTF8.GetBytes(value);
                 default: return null;
             }
         }
