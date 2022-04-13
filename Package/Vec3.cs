@@ -22,26 +22,26 @@ namespace Zenet.Package
             Z = z;
         }
 
-        public static byte[] ToBytes(Vec3 vec3)
+        public static byte[] ToBytes(Vec3 value)
         {
-            if (vec3 == null) return null;
+            if (value == null) return null;
 
-            var x = BitConverter.GetBytes(vec3.X);
-            var y = BitConverter.GetBytes(vec3.Y);
-            var z = BitConverter.GetBytes(vec3.Z);
+            var x = BitConverter.GetBytes(value.X);
+            var y = BitConverter.GetBytes(value.Y);
+            var z = BitConverter.GetBytes(value.Z);
 
             return Concat.Bytes(x, y, z);
         }
 
-        public static Vec3 ToVec3(byte[] vec3)
+        public static Vec3 ToVec3(byte[] value)
         {
-            if (vec3 == null || vec3.Length < (sizeof(float) * 3)) return null;
+            if (value == null || value.Length < (sizeof(float) * 3)) return null;
 
             try
             {
-                var x = BitConverter.ToSingle(vec3, sizeof(float) * 0);
-                var y = BitConverter.ToSingle(vec3, sizeof(float) * 1);
-                var z = BitConverter.ToSingle(vec3, sizeof(float) * 2);
+                var x = BitConverter.ToSingle(value, sizeof(float) * 0);
+                var y = BitConverter.ToSingle(value, sizeof(float) * 1);
+                var z = BitConverter.ToSingle(value, sizeof(float) * 2);
 
                 return new Vec3(x, y, z);
             }
