@@ -16,6 +16,12 @@ namespace Zenet.Manager
         {
             Open(Protocol.TCP);
             Open(Protocol.UDP);
+
+            Close(Protocol.TCP);
+            Close(Protocol.UDP);
+
+            bool tcp = Exist(Protocol.TCP);
+            bool udp = Exist(Protocol.UDP);
         }
 
         public override void OnOpen(Protocol protocol)
