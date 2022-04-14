@@ -33,5 +33,7 @@ namespace Zenet.Manager
         private void InitUDP() { }
 
         public void Open(Protocol protocol) { }
+        public void Close(Protocol protocol) { }
+        public bool Exist(Protocol protocol) { return false; }
     }
 }
