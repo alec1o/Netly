@@ -6,55 +6,51 @@ namespace Zenet.Network.Tcp
 {
     public class ServerTCP
     {
-        public static int Backlog = 0;
-        public bool Opened { get; private set; }
-        public List<AgentTCP> Clients;
-        public readonly Socket Socket;
-        public readonly Host Host;
-        private Socket socket;
+        public bool Running { get; private set; }
+        public Socket Socket => ESocket.Socket;
+        public bool Opened => ESocket.IsBind;
+        public readonly Host EHost;
+        public readonly EasySocket ESocket;
+        public readonly int MaxClient;
+        public readonly List<AgentTCP> Clients;
+        private EventHandler<object> OnOpenEvent, OnErrorEvent, OnCloseEvent, OnClientOpenEvent, OnClientCloseEvent;
+        private EventHandler<(AgentTCP client, byte[] data)> OnClientReceiveEvent;
         private bool tryOpen, tryClose;
 
-        private EventHandler OnOpenEvent;
-        private EventHandler OnCloseEvent;
-        private EventHandler<Exception> OnErrorEvent;
-
-        private EventHandler<AgentTCP> OnClientOpenEvent;
-        private EventHandler<AgentTCP> OnClientCloseEvent;
-        private EventHandler<(AgentTCP client, byte[] data)> OnClientDataEvent;
-        
-        public ServerTCP(Host host, Socket socket = null)
+        public ServerTCP(Host eHost, int maxClient = -1)
         {
-            Host = host;
-            Socket = socket ?? new Socket(host.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            EHost = eHost;
+            ESocket = new EasySocket(Protocol.TCP, EHost);
+            MaxClient = maxClient;
             Clients = new List<AgentTCP>();
         }
 
-        public void Open()
+        public void Open(int backlog = 0)
         {
-            if (tryOpen || Opened) return;
+            if (tryOpen || Running) return;
             tryOpen = true;
 
-            socket = EasySocket.CopySocket(Socket);
-
-            Async.Thread(() =>
-            {
-                try
+            ESocket.Bind
+            (
+                () =>
                 {
-                    socket.Bind(Host.EndPoint);
-                    socket.Listen(Backlog);
-
-                    Opened = true;
+                    //success
+                    tryOpen = false;
+                    Running = true;
                     OnOpenEvent?.Invoke(this, null);
 
+                    //accept
                     BeginAccept();
-                }
-                catch (Exception e)
+                },
+                (e) =>
                 {
+                    //error
+                    tryOpen = false;
+                    Running = false;
                     OnErrorEvent?.Invoke(this, e);
-                }
-
-                tryOpen = false;
-            });
+                },
+                backlog
+            );
         }
 
         private void BeginAccept()
@@ -63,7 +59,7 @@ namespace Zenet.Network.Tcp
 
             try
             {
-                socket.BeginAccept(EndAccept, null);
+                Socket.BeginAccept(EndAccept, null);
             }
             catch
             {
@@ -73,35 +69,66 @@ namespace Zenet.Network.Tcp
 
         private void EndAccept(IAsyncResult result)
         {
-            var client = socket.EndAccept(result);
+            var socket = Socket.EndAccept(result);
+            var client = new AgentTCP(socket);
 
-            var agent = new AgentTCP(ref client);
-
-            agent.OnOpen(() =>
+            client.OnOpen(() =>
             {
-                Clients.Add(agent);
-                OnClientOpenEvent?.Invoke(this, agent);
+                OnClientOpenEvent?.Invoke(this, client);
             });
 
-            agent.OnClose(() =>
+            client.OnClose(() =>
             {
-                Clients.Remove(agent);
-                OnClientCloseEvent?.Invoke(this, agent);
+                OnClientCloseEvent?.Invoke(this, client);
             });
 
-            agent.OnReceive((data) => OnClientDataEvent?.Invoke(this, (agent, data)));
+            client.OnReceive((data) =>
+            {
+                OnClientReceiveEvent?.Invoke(this, (client, data));
+            });
+
+            Clients.Add(client);
 
             BeginAccept();
+        }
+
+        public void Close()
+        {
+            if (tryClose || !Running) return;
+            tryClose = true;
+
+            ESocket.Close(() =>
+            {
+                foreach(var client in Clients)
+                {
+                    client?.Close();
+                }
+
+                Clients.Clear();
+
+                OnCloseEvent?.Invoke(this, null);
+            });
         }
 
         public void OnOpen(Action callback)
         {
             OnOpenEvent += (_, e) =>
             {
-                Callback.Execute(() => callback?.Invoke());
+                Callback.Execute(() =>
+                {
+                    Callback.Execute(() => callback?.Invoke());
+                });
             };
         }
-        
+
+        public void OnError(Action<Exception> callback)
+        {
+            OnErrorEvent += (_, e) =>
+            {
+                Callback.Execute(() => callback?.Invoke(e as Exception));
+            };
+        }
+
         public void OnClose(Action callback)
         {
             OnCloseEvent += (_, e) =>
@@ -109,60 +136,31 @@ namespace Zenet.Network.Tcp
                 Callback.Execute(() => callback?.Invoke());
             };
         }
-        
-        public void OnError(Action<Exception> callback)
-        {
-            OnErrorEvent += (_, e) =>
-            {
-                Callback.Execute(() => callback?.Invoke(e));
-            };
-        }
-        
+
         public void OnClientOpen(Action<AgentTCP> callback)
         {
             OnClientOpenEvent += (_, e) =>
             {
-                Callback.Execute(() => callback?.Invoke(e));
+                Callback.Execute(() => callback?.Invoke(e as AgentTCP));
             };
         }
-        
         public void OnClientClose(Action<AgentTCP> callback)
         {
             OnClientCloseEvent += (_, e) =>
             {
-                Callback.Execute(() => callback?.Invoke(e));
+                Callback.Execute(() => callback?.Invoke(e as AgentTCP));
             };
         }
-        
+
         public void OnClientReceive(Action<AgentTCP, byte[]> callback)
         {
-            OnClientDataEvent += (_, e) =>
+            OnClientReceiveEvent += (_, e) =>
             {
-                Callback.Execute(() => callback?.Invoke(e.client, e.data));
-            };
-        }
-
-        public void Close()
-        {
-            if (tryClose || !Opened) return;
-
-            socket.Shutdown(SocketShutdown.Both);
-
-            Async.Thread(() =>
-            {
-                socket.Close();
-
-                foreach (var client in Clients.ToArray())
+                Callback.Execute(() =>
                 {
-                    client?.Close();
-                }
-
-                Clients.Clear();
-
-                Opened = false;
-                tryClose = false;
-                OnCloseEvent?.Invoke(this, null);
-            });
+                    callback?.Invoke(e.client, e.data);
+                });
+            };
         }
     }
 }
