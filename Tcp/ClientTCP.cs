@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using Zenet.Package;
-
 
 namespace Zenet.Network.Tcp
 {
-    public class AgentTCP
+    public class ClientTCP
     {
         #region VAR
 
-        public readonly IPEndPoint Host;
-        public readonly Socket Socket;
-        private EventHandler<object> OnOpenEvent, OnCloseEvent, OnReceiveEvent;
-        private bool closed, tryClose;
-        private readonly NetworkStream stream;
+        public readonly Host Host;
+        private readonly Socket SocketMirror;
+        public Socket Socket { get; private set; }
+        private EventHandler<object> OnOpenEvent, OnErrorEvent, OnCloseEvent, OnReceiveEvent;
+        private bool closed, tryOpen, tryClose, oneConnection;
+        private NetworkStream stream;
         public bool Opened => Connected();
 
         #endregion
@@ -23,12 +21,10 @@ namespace Zenet.Network.Tcp
 
         #region INIT
 
-        public AgentTCP(Socket socket)
+        public ClientTCP(Host host, Socket socket = null)
         {
-            Socket = socket ?? throw new ArgumentNullException(nameof(socket));
-            stream = new NetworkStream(Socket, true);
-            Host = Socket.RemoteEndPoint as IPEndPoint;
-            Init();
+            SocketMirror = socket ?? new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Host = host;
         }
 
         #endregion
@@ -40,7 +36,7 @@ namespace Zenet.Network.Tcp
         {
             var result = IsRunning();
 
-            if (!result && !closed)
+            if (oneConnection && !result && !closed)
             {
                 Close();
             }
@@ -62,16 +58,37 @@ namespace Zenet.Network.Tcp
             }
         }
 
-        private void Init()
+        public void Open()
+        {
+            if (tryOpen || Opened) return;
+            tryOpen = true;
+
+            Async.Thread(() =>
+            {
+                Socket = EasySocket.CopySocket(SocketMirror);
+
+                try
+                {
+                    Socket.Connect(Host.EndPoint);
+                    stream = new NetworkStream(Socket, true);
+                    OnOpenEvent?.Invoke(this, null);
+                    closed = false;
+                    oneConnection = true;
+                    Receive();
+                }
+                catch (Exception e)
+                {
+                    OnErrorEvent?.Invoke(this, e);
+                }
+
+                tryOpen = false;
+            });
+        }
+
+        private void Receive()
         {
             Async.Thread(() =>
             {
-                Async.Thread(() =>
-                {
-                    Thread.Sleep(10);
-                    OnOpenEvent?.Invoke(this, null);
-                });
-
                 var buffer = new byte[1024 * 8];
 
                 while (Opened)
@@ -91,10 +108,9 @@ namespace Zenet.Network.Tcp
             });
         }
 
-
-
-
         #endregion
+
+
         #region CLOSE
 
         public void Close()
@@ -160,6 +176,17 @@ namespace Zenet.Network.Tcp
                 Callback.Execute(() =>
                 {
                     callback?.Invoke();
+                });
+            };
+        }
+
+        public void OnError(Action<Exception> callback)
+        {
+            OnErrorEvent += (_, e) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke((Exception)e);
                 });
             };
         }
