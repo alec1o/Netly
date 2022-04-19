@@ -9,6 +9,7 @@ namespace Zenet.Debug
     {
         public void Awake()
         {
+            UseEvent = true;
             Init(Protocol.TCP, new Host("127.0.0.1", 8800));
             Init(Protocol.UDP, new Host("127.0.0.1", 9900));
         }
