@@ -31,7 +31,7 @@ namespace Zenet.Debug
         }
 
         public override void OnOpen(Protocol protocol)
-        {
+        {           
             Console.WriteLine($"[{protocol} SERVER] OnOpen");
         }
 
@@ -49,8 +49,18 @@ namespace Zenet.Debug
         {
             Console.WriteLine($"[{protocol} AGENT] OnEnter");
             var c = client as AgentTCP;
-            c.Send(Encoding.Bytes("hello client"), false);
-            c.Send(Encoding.Bytes("close"));
+
+            var set = new SetPack();
+
+            set.String("Alecio");
+            set.String("Ola servidor");
+            set.Int(19);
+
+            var data = Event.Create("login", set.Data);
+
+            c?.Send(data);
+            c?.Send(Encoding.Bytes("hello client"), false);
+            c?.Send(Encoding.Bytes("close"));
         }
         
         public override void OnExit(Protocol protocol, object client)
