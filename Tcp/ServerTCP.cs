@@ -99,7 +99,9 @@ namespace Zenet.Network.Tcp
 
             ESocket.Close(() =>
             {
-                foreach(var client in Clients)
+                tryClose = false;
+
+                foreach (var client in Clients)
                 {
                     client?.Close();
                 }
