@@ -121,6 +121,7 @@ namespace Zenet.Network.Tcp
             Async.Thread(() =>
             {
                 closed = true;
+                tryClose = false;
 
                 if (Opened)
                 {
