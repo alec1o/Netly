@@ -85,5 +85,23 @@ namespace Zenet.Manager
                 if (initTCP) serverTcp.Open();
             }
         }
+
+        public void Close(Protocol protocol)
+        {
+            if (protocol == Protocol.TCP)
+            {
+                if (initTCP) serverTcp.Close();
+            }
+        }
+
+        public bool Exist(Protocol protocol)
+        {
+            if (protocol == Protocol.TCP)
+            {
+                return initTCP;
+            }
+
+            return false;
+        }
     }
 }
