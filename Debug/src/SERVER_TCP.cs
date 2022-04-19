@@ -1,6 +1,7 @@
 ﻿using System;
 using Zenet.Manager;
 using Zenet.Network;
+using Zenet.Network.Tcp;
 using Zenet.Package;
 
 namespace Zenet.Debug
@@ -46,22 +47,25 @@ namespace Zenet.Debug
 
         public override void OnEnter(Protocol protocol, object client)
         {
-            Console.WriteLine($"[{protocol} CLIENT] OnEnter");
+            Console.WriteLine($"[{protocol} AGENT] OnEnter");
+            var c = client as AgentTCP;
+            c.Send(Encoding.Bytes("hello client"), false);
+            c.Send(Encoding.Bytes("close"));
         }
         
         public override void OnExit(Protocol protocol, object client)
         {
-            Console.WriteLine($"[{protocol} CLIENT] OnExit");
+            Console.WriteLine($"[{protocol} AGENT] OnExit");
         }
 
         public override void OnData(Protocol protocol, object client, byte[] data)
         {
-            Console.WriteLine($"[{protocol} CLIENT] OnData: {Encoding.String(data)}");
+            Console.WriteLine($"[{protocol} AGENT] OnData: {Encoding.String(data)}");
         }
         
         public override void OnEvent(Protocol protocol, object client, string name, byte[] data)
         {
-            Console.WriteLine($"[{protocol} CLIENT] OnEvent ({name}): {Encoding.String(data)}");
+            Console.WriteLine($"[{protocol} AGENT] OnEvent ({name}): {Encoding.String(data)}");
         }
     }
 }
