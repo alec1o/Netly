@@ -16,8 +16,8 @@ s.Open();
 
 
 */
-
 S_TCP();
+C_TCP();
 
 void S_TCP()
 {
@@ -26,4 +26,12 @@ void S_TCP()
     server.Start();
 }
 
-Console.ReadLine();
+void C_TCP()
+{
+    var client = new CLIENT_TCP();
+    client.Awake();
+    client.Start();
+    Console.ReadLine();
+    client.Open(Protocol.TCP);
+    Console.ReadLine();
+}
