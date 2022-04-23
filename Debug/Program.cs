@@ -17,7 +17,7 @@ s.Open();
 
 */
 S_TCP();
-C_TCP();
+//C_TCP();
 
 void S_TCP()
 {
