@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Zenet.Network;
 
-namespace Zenet.Network.Tcp
+namespace Zenet.Tcp
 {
     public class ServerTCP
     {

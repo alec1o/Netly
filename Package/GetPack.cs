@@ -115,7 +115,7 @@ namespace Zenet.Package
             try
             {
                 var data = Bytes();
-                var text = Encoding.String(data, encode);
+                var text = Encoding2.String(data, encode);
 
                 if (string.IsNullOrEmpty(text))
                 {
