@@ -51,7 +51,7 @@ namespace Zenet.Package
 
         public void String(string value)
         {
-            Bytes(Encoding.Bytes(value, encode));
+            Bytes(Encoding2.Bytes(value, encode));
         }
 
         public void Vec2(Vec2 value)

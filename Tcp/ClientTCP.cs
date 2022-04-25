@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Net.Sockets;
 using Zenet.Package;
+using Zenet.Network;
 
-namespace Zenet.Network.Tcp
+namespace Zenet.Tcp
 {
     public class ClientTCP
     {
         #region VAR
 
-        public readonly Host Host;
+        public Host Host { get; private set; }
         private readonly Socket SocketMirror;
         public Socket Socket { get; private set; }
         private EventHandler<object> OnOpenEvent, OnErrorEvent, OnCloseEvent, OnReceiveEvent;
@@ -21,10 +22,9 @@ namespace Zenet.Network.Tcp
 
         #region INIT
 
-        public ClientTCP(Host host, Socket socket = null)
+        public ClientTCP(Socket socket = null)
         {
             SocketMirror = socket ?? new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Host = host;
         }
 
         #endregion
@@ -58,10 +58,12 @@ namespace Zenet.Network.Tcp
             }
         }
 
-        public void Open()
+        public void Open(Host host)
         {
             if (tryOpen || Opened) return;
             tryOpen = true;
+
+            Host = host;
 
             Async.Thread(() =>
             {
@@ -115,7 +117,7 @@ namespace Zenet.Network.Tcp
 
         public void Close()
         {
-            if (tryClose || closed) return;
+            if (!oneConnection || tryClose || closed) return;
             tryClose = true;
 
             Async.Thread(() =>
@@ -140,7 +142,7 @@ namespace Zenet.Network.Tcp
 
         public void Send(string message, Encode encode = Encode.UTF8, bool async = true)
         {
-            Send(Encoding.Bytes(message, encode), async);
+            Send(Encoding2.Bytes(message, encode), async);
         }
 
         public void Send(byte[] data, bool async = true)
@@ -203,7 +205,7 @@ namespace Zenet.Network.Tcp
             };
         }
 
-        public void OnReceive(Action<byte[]> callback)
+        public void OnData(Action<byte[]> callback)
         {
             OnReceiveEvent += (_, data) =>
             {

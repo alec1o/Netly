@@ -3,9 +3,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Zenet.Package;
+using Zenet.Network;
 
 
-namespace Zenet.Network.Tcp
+namespace Zenet.Tcp
 {
     public class AgentTCP
     {
@@ -123,7 +124,7 @@ namespace Zenet.Network.Tcp
 
         public void Send(string message, Encode encode = Encode.UTF8, bool async = true)
         {
-            Send(Encoding.Bytes(message, encode), async);
+            Send(Encoding2.Bytes(message, encode), async);
         }
 
         public void Send(byte[] data, bool async = true)
