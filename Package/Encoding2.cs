@@ -2,7 +2,7 @@
 
 namespace Zenet.Package
 {
-    public static class Encoding
+    public static class Encoding2
     {
         public static string String(byte[] value, Encode encode = Encode.UTF8)
         {
