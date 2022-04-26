@@ -96,6 +96,8 @@ namespace Zenet.Tcp
 
 
         #endregion
+
+
         #region CLOSE
 
         public void Close()
