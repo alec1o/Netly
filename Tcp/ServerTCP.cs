@@ -10,29 +10,31 @@ namespace Zenet.Tcp
         public bool Running { get; private set; }
         public Socket Socket => ESocket.Socket;
         public bool Opened => ESocket.IsBind;
-        public readonly Host EHost;
-        public readonly EasySocket ESocket;
+        public Host Host { get; private set; }
+        public EasySocket ESocket { get; private set; }
         public readonly int MaxClient;
         public readonly List<AgentTCP> Clients;
         private EventHandler<object> OnOpenEvent, OnErrorEvent, OnCloseEvent, OnClientOpenEvent, OnClientCloseEvent;
         private EventHandler<(AgentTCP client, byte[] data)> OnClientReceiveEvent;
-        private bool tryOpen, tryClose;
+        private bool tryOpen, tryClose, oneConnection;
 
-        public ServerTCP(Host eHost, int maxClient = -1)
-        {
-            EHost = eHost;
-            ESocket = new EasySocket(Protocol.TCP, EHost);
+        public ServerTCP(int maxClient = -1)
+        {            
             MaxClient = maxClient;
             Clients = new List<AgentTCP>();
+            ESocket = new EasySocket(Protocol.TCP);
         }
 
-        public void Open(int backlog = 0)
+        public void Open(Host host, int backlog = 0)
         {
             if (tryOpen || Running) return;
             tryOpen = true;
+            Host = host;
 
+            oneConnection = true;
             ESocket.Bind
             (
+                Host,
                 () =>
                 {
                     //success
@@ -95,12 +97,13 @@ namespace Zenet.Tcp
 
         public void Close()
         {
-            if (tryClose || !Running) return;
+            if (!oneConnection || tryClose || !Running) return;
             tryClose = true;
 
             ESocket.Close(() =>
             {
                 tryClose = false;
+                Running = false;
 
                 foreach (var client in Clients)
                 {
@@ -117,10 +120,7 @@ namespace Zenet.Tcp
         {
             OnOpenEvent += (_, e) =>
             {
-                Callback.Execute(() =>
-                {
-                    Callback.Execute(() => callback?.Invoke());
-                });
+                Callback.Execute(() => callback?.Invoke());
             };
         }
 
@@ -155,7 +155,7 @@ namespace Zenet.Tcp
             };
         }
 
-        public void OnClientReceive(Action<AgentTCP, byte[]> callback)
+        public void OnClientData(Action<AgentTCP, byte[]> callback)
         {
             OnClientReceiveEvent += (_, e) =>
             {
