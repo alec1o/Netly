@@ -6,6 +6,9 @@ namespace Zenet.Package
 {
     public static class Package2
     {
+        /// <summary>
+        /// *GET Is: GetPack.cs
+        /// </summary>
         public class GetData
         {
             private int index;
@@ -184,7 +187,9 @@ namespace Zenet.Package
             }
         }
 
-
+        /// <summary>
+        /// *SET Is: SetPack.cs
+        /// </summary>
         public class SetData
         {
             private readonly Encode encode;
