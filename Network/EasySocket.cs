@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Sockets;
 
 namespace Zenet.Network
@@ -15,16 +16,22 @@ namespace Zenet.Network
         public bool IsAccept { get; private set; }
         public bool IsOpen => SocketIsOpen(Socket);
         private bool tryBind, tryOpen, tryClose, closed;
+        public SocketType socketType { get; private set; }
+        public ProtocolType protocolType { get; private set; }
 
         //
-        public EasySocket(Protocol protocol, Host host)
-        {
-            this.Host = host;
+        public EasySocket(Protocol protocol)
+        {           
             this.SocketProtocol = protocol;
-            var socketType = (protocol == Protocol.UDP) ? SocketType.Dgram : SocketType.Stream;
-            var protocolType = (protocol == Protocol.UDP) ? ProtocolType.Udp : ProtocolType.Tcp;
+            Init(new Host(IPAddress.Any, 0));
+        }
 
-            this.Socket = new Socket(host.EndPoint.AddressFamily, socketType, protocolType);
+        private void Init(Host host)
+        {
+            Host = host;
+            socketType = (SocketProtocol == Protocol.UDP) ? SocketType.Dgram : SocketType.Stream;
+            protocolType = (SocketProtocol == Protocol.UDP) ? ProtocolType.Udp : ProtocolType.Tcp;
+            Socket = new Socket(Host.EndPoint.AddressFamily, socketType, protocolType);
         }
 
         public static bool SocketIsOpen(Socket Socket)
@@ -39,7 +46,7 @@ namespace Zenet.Network
         }
 
         //
-        public void Connect(Action success, Action<Exception> error)
+        public void Connect(Host host, Action success, Action<Exception> error)
         {
             if (tryOpen || IsOpen) return;
             tryOpen = true;
@@ -48,7 +55,15 @@ namespace Zenet.Network
             {
                 try
                 {
-                    Socket = CopySocket(SocketMirror);
+                    if (SocketMirror == null)
+                    {
+                        Init(host);
+                    }
+                    else
+                    {
+                        Socket = CopySocket(SocketMirror);
+                    }
+
                     Socket.Connect(Host.EndPoint);
                     closed = false;
                     success?.Invoke();
@@ -63,18 +78,24 @@ namespace Zenet.Network
         }
 
         //
-        public void Bind(Action success, Action<Exception> error, int backlog = 0)
+        public void Bind(Host host, Action success, Action<Exception> error, int backlog = 0)
         {
             if (tryBind || IsBind || IsOpen) return;
             tryBind = true;
-
-            //Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Tcp);
 
             Callback.Execute(() =>
             {
                 try
                 {
-                    //Socket = CopySocket(SocketMirror);
+                    if (SocketMirror == null)
+                    {
+                        Init(host);
+                    }
+                    else
+                    {
+                        Socket = CopySocket(SocketMirror);
+                    }
+
                     Socket.Bind(Host.EndPoint);
 
                     if(SocketProtocol == Protocol.TCP)
