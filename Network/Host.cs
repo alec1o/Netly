@@ -42,5 +42,10 @@ namespace Zenet.Network
             IPAddress = EndPoint.Address;
             Family = EndPoint.AddressFamily;
         }
+
+        public override string ToString()
+        {
+            return EndPoint.ToString();
+        }
     }
 }
