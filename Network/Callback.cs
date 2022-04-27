@@ -22,13 +22,18 @@ namespace Zenet.Network
 
         public static void Update()
         {
-            if (!Manual || Callbacks.Count <= 0) return;
-
-            foreach(var callback in Callbacks.ToArray())
+            try
             {
-                callback?.Invoke();
-                Callbacks.Remove(callback);
+                if (Manual && Callbacks.Count > 0)
+                {
+                    foreach (var callback in Callbacks.ToArray())
+                    {
+                        callback?.Invoke();
+                        Callbacks.Remove(callback);
+                    }
+                }
             }
+            catch { }
         }
     }
 }
