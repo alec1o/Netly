@@ -18,6 +18,7 @@ namespace Zenet.Tcp
         private bool closed, tryClose;
         private readonly NetworkStream stream;
         public bool Opened => Connected();
+        public readonly string Id;
 
         #endregion
 
@@ -29,6 +30,7 @@ namespace Zenet.Tcp
             Socket = socket ?? throw new ArgumentNullException(nameof(socket));
             stream = new NetworkStream(Socket, true);
             Host = Socket.RemoteEndPoint as IPEndPoint;
+            Id = Guid.NewGuid().ToString();
             Init();
         }
 
