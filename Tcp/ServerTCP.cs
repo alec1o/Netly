@@ -82,6 +82,11 @@ namespace Zenet.Tcp
 
             client.OnClose(() =>
             {
+                foreach (var target in Clients.ToArray())
+                {
+                    if (client.Id == target.Id) Clients.Remove(target);
+                }
+
                 OnClientCloseEvent?.Invoke(this, client);
             });
 
