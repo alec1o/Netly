@@ -140,7 +140,7 @@ namespace Zenet.Udp
             {
                 try
                 {
-                    if(client.Host.Port == host.Port && client.Host.IPAddress == host.Address)
+                    if(client.Host.Port == host.Port && client.Host.IPAddress.ToString() == host.Address.ToString())
                     {
                         return client;
                     }
