@@ -37,27 +37,12 @@ namespace Zenet.Package
             throw new NotImplementedException();
         }
 
-        public void Add(uint value)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Add(short value)
         {
             throw new NotImplementedException();
         }
 
-        public void Add(ushort value)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Add(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Add(ulong value)
         {
             throw new NotImplementedException();
         }
@@ -178,21 +163,6 @@ namespace Zenet.Package
         }
 
         public string GetString()
-        {
-            throw new NotImplementedException();
-        }
-
-        public uint GetUInt()
-        {
-            throw new NotImplementedException();
-        }
-
-        public ulong GetULong()
-        {
-            throw new NotImplementedException();
-        }
-
-        public ushort GetUShort()
         {
             throw new NotImplementedException();
         }

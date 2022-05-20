@@ -30,11 +30,8 @@ namespace Zenet.Package
         // integer numbers
         void Add(byte value);
         void Add(int value);
-        void Add(uint value);
         void Add(short value);
-        void Add(ushort value);
         void Add(long value);
-        void Add(ulong value);
 
         // real numbers  
         void Add(float value);
@@ -59,11 +56,8 @@ namespace Zenet.Package
         // integer numbers
         byte GetByte();
         int GetInt();
-        uint GetUInt();
         short GetShort();
-        ushort GetUShort();
         long GetLong();
-        ulong GetULong();
 
         // real numbers  
         float GetFloat();
