@@ -239,7 +239,24 @@ namespace Zenet.Package
 
         public string GetString()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var data = GetBytes();
+                var text = Encoding2.String(data, Encode.UTF8);
+
+                if (string.IsNullOrEmpty(text))
+                {
+                    _errors.Add($"[{nameof(GetString)}] on index {_index}: {nameof(string.IsNullOrEmpty)}");
+                    return null;
+                }
+
+                return text;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetString)}] on index {_index}");
+                return null;
+            }
         }
 
         public Vec2 GetVec2()
