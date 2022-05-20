@@ -1,6 +1,5 @@
 # Zenet
 
-
 <br>
 
 
@@ -37,3 +36,5 @@ Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Stride Engine](https://www.stride3d.net/)
 - #### [Unity Engine](https://www.unity.com/)
 - Zenet is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
+
+##### [Zeloot © 2022 - 2022 All rights reserved](https://github.com/zeloot/)
