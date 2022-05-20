@@ -52,11 +52,6 @@ namespace Zenet.Package
             _data.Add(BitConverter.GetBytes(value));
         }
 
-        public void Add(decimal value)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Add(double value)
         {
             _data.Add(BitConverter.GetBytes(value));
@@ -128,11 +123,6 @@ namespace Zenet.Package
         }
 
         public DateTime GetDateTime()
-        {
-            throw new NotImplementedException();
-        }
-
-        public decimal GetDecimal()
         {
             throw new NotImplementedException();
         }

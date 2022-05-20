@@ -35,7 +35,6 @@ namespace Zenet.Package
 
         // real numbers  
         void Add(float value);
-        void Add(decimal value);
         void Add(double value);
 
         // text
@@ -61,7 +60,6 @@ namespace Zenet.Package
 
         // real numbers  
         float GetFloat();
-        decimal GetDecimal();
         double GetDouble();
 
         // text
