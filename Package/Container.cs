@@ -39,7 +39,7 @@ namespace Zenet.Package
 
         public void Add(short value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(long value)
