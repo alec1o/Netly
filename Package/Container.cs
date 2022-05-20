@@ -59,7 +59,7 @@ namespace Zenet.Package
 
         public void Add(double value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(string value)
