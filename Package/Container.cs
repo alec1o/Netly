@@ -169,7 +169,17 @@ namespace Zenet.Package
 
         public short GetShort()
         {
-            throw new NotImplementedException();
+            try
+            {
+                short value = BitConverter.ToInt16(_target, _index);
+                _index += sizeof(short);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetShort)}] on index {_index}");
+                return 0;
+            }
         }
 
         public string GetString()
