@@ -19,7 +19,7 @@ namespace Zenet.Network
 
         // Events
         void OnOpen(Action callback);
-        void OnError(Action callback);
+        void OnError(Action<Exception> callback);
         void OnClose(Action callback);
         void OnData(Action<byte[]> callback);
         void OnEvent(Action<string, byte[]> callback);
