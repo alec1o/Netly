@@ -29,7 +29,7 @@ namespace Zenet.Package
 
         public void Add(byte value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(int value)
