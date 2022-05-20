@@ -6,6 +6,8 @@ namespace Zenet.Package
 {
     public class Container : IContainer
     {
+        #region Header
+
         private int _index;
         private List<byte[]> _data;
         private List<string> _errors;
@@ -19,6 +21,10 @@ namespace Zenet.Package
 
         public string[] Errors => _errors.ToArray();
 
+        #endregion
+
+        #region Init
+
         public Container()
         {
             _index = 0;
@@ -26,6 +32,10 @@ namespace Zenet.Package
             _errors = new List<string>();
             _target = null;
         }
+
+        #endregion
+
+        #region Add
 
         public void Add(byte value)
         {
@@ -87,6 +97,10 @@ namespace Zenet.Package
         {
             Add(Vec2.ToBytes(value));
         }
+
+        #endregion
+
+        #region Get
 
         public bool GetBool()
         {
@@ -292,5 +306,7 @@ namespace Zenet.Package
                 return null;
             }
         }
+
+        #endregion
     }
 }
