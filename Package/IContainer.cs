@@ -46,7 +46,6 @@ namespace Zenet.Package
         void Add(byte[] value);
         void Add(Vec3 value);
         void Add(Vec2 value);
-        void Add(DateTime value);
 
         #endregion#region Add
 
@@ -71,7 +70,6 @@ namespace Zenet.Package
         byte[] GetBytes();
         Vec3 GetVec3();
         Vec2 GetVec2();
-        DateTime GetDateTime();
 
         #endregion
     }
