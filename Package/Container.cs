@@ -74,7 +74,8 @@ namespace Zenet.Package
 
         public void Add(byte[] value)
         {
-            throw new NotImplementedException();
+            Add(value.Length);
+            _data.Add(value);
         }
 
         public void Add(Vec3 value)
