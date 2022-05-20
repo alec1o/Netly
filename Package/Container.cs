@@ -88,11 +88,6 @@ namespace Zenet.Package
             Add(Vec2.ToBytes(value));
         }
 
-        public void Add(DateTime value)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool GetBool()
         {
             try
@@ -155,11 +150,6 @@ namespace Zenet.Package
                 _errors.Add($"[{nameof(GetChar)}] on index {_index}");
                 return new char();
             }
-        }
-
-        public DateTime GetDateTime()
-        {
-            throw new NotImplementedException();
         }
 
         public double GetDouble()
