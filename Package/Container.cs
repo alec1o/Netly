@@ -154,7 +154,17 @@ namespace Zenet.Package
 
         public long GetLong()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var value = BitConverter.ToInt64(_target, _index);
+                _index += sizeof(long);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetLong)}] on index {_index}");
+                return 0;
+            }
         }
 
         public short GetShort()
