@@ -119,7 +119,17 @@ namespace Zenet.Package
 
         public byte GetByte()
         {
-            throw new NotImplementedException();
+            try
+            {
+                byte _byte = _target[_index];
+                _index += sizeof(byte);
+                return _byte;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetByte)}] on index {_index}");
+                return 0;
+            }
         }
 
         public byte[] GetBytes()
