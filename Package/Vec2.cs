@@ -42,5 +42,10 @@ namespace Zenet.Package
             }
             catch { return null; }
         }
+
+        public override string ToString()
+        {
+            return $"X {X}, Y {Y}";
+        }
     }
 }
