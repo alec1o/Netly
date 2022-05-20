@@ -95,7 +95,17 @@ namespace Zenet.Package
 
         public bool GetBool()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var value = BitConverter.ToBoolean(_target, _index);
+                _index += sizeof(bool);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetBool)}] on index {_index}");
+                return false;
+            }
         }
 
         public byte GetByte()
