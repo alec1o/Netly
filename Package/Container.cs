@@ -134,7 +134,17 @@ namespace Zenet.Package
 
         public float GetFloat()
         {
-            throw new NotImplementedException();
+            try
+            {
+                float value = BitConverter.ToSingle(_target, _index);
+                _index += sizeof(float);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetFloat)}] on index {_index}");
+                return 0;
+            }
         }
 
         public int GetInt()
