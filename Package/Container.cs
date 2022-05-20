@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zenet.Package
 {
     public class Container : IContainer
     {
-        public int Index => throw new NotImplementedException();
+        private int _index;
+        private List<byte[]> _data;
+        private List<string> _errors;
+        private byte[] _target;
 
-        public byte[] Serialized => throw new NotImplementedException();
+        public int Index => _index;
 
-        public byte[] Deserialize { set => throw new NotImplementedException(); }
+        public byte[] Serialized => _data.SelectMany(bytes => bytes).ToArray();
 
-        public string[] Errors => throw new NotImplementedException();
+        public byte[] Deserialize { set => _target = value; }
+
+        public string[] Errors => _errors.ToArray();
 
         public void Add(byte value)
         {
