@@ -59,7 +59,7 @@ namespace Zenet.Package
 
         public void Add(string value)
         {
-            throw new NotImplementedException();
+            Add(Encoding2.Bytes(value, Encode.UTF8));
         }
 
         public void Add(char value)
