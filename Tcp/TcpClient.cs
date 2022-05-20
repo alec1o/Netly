@@ -78,7 +78,7 @@ namespace Zenet.Tcp
             throw new NotImplementedException();
         }
 
-        public void OnError(Action callback)
+        public void OnError(Action<Exception> callback)
         {
             throw new NotImplementedException();
         }
