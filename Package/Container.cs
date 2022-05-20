@@ -129,7 +129,17 @@ namespace Zenet.Package
 
         public double GetDouble()
         {
-            throw new NotImplementedException();
+            try
+            {
+                double value = BitConverter.ToDouble(_target, _index);
+                _index += sizeof(double);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetDouble)}] on index {_index}");
+                return 0;
+            }
         }
 
         public float GetFloat()
