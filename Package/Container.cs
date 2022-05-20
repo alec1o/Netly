@@ -149,7 +149,17 @@ namespace Zenet.Package
 
         public int GetInt()
         {
-            throw new NotImplementedException();
+            try
+            {
+                int value = BitConverter.ToInt32(_target, _index);
+                _index += sizeof(int);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetLong)}] on index {_index}");
+                return 0;
+            }
         }
 
         public long GetLong()
