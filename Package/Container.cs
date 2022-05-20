@@ -85,7 +85,7 @@ namespace Zenet.Package
 
         public void Add(Vec2 value)
         {
-            throw new NotImplementedException();
+            Add(Vec2.ToBytes(value));
         }
 
         public void Add(DateTime value)
