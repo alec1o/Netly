@@ -19,6 +19,14 @@ namespace Zenet.Package
 
         public string[] Errors => _errors.ToArray();
 
+        public Container()
+        {
+            _index = 0;
+            _data = new List<byte[]>();
+            _errors = new List<string>();
+            _target = null;
+        }
+
         public void Add(byte value)
         {
             throw new NotImplementedException();
