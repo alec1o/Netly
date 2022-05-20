@@ -115,7 +115,21 @@ namespace Zenet.Package
 
         public byte[] GetBytes()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var length = GetInt();
+                var value = new byte[length];
+                Buffer.BlockCopy(_target, _index, value, 0, length);
+
+                _index += value.Length;
+
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetBytes)}] on index {_index}");
+                return null;
+            }
         }
 
         public char GetChar()
