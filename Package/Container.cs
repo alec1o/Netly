@@ -80,7 +80,7 @@ namespace Zenet.Package
 
         public void Add(Vec3 value)
         {
-            throw new NotImplementedException();
+            Add(Vec3.ToBytes(value));
         }
 
         public void Add(Vec2 value)
