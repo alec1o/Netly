@@ -64,7 +64,7 @@ namespace Zenet.Package
 
         public void Add(char value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(bool value)
