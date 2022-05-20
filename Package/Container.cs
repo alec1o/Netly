@@ -308,5 +308,83 @@ namespace Zenet.Package
         }
 
         #endregion
+
+        #region Snippet
+
+        /*
+                            ...  Add this char even before the data ...
+                    
+                this will help in decoding the data because you will be sure that the data
+            type being fetched is the same as the data type that is in the list. will also
+                            bring improvement in coding error collection
+
+                            _______________________________________
+                            |   Type    | Pin  | Data Type        |
+                            |___________|______|__________________|
+                            | -Vec2     |  2   |   Vec2           |
+                            | -Vec3     |  3   |   Vec3           |
+                            | -Byte     |  b   |   byte           |    
+                            | -Bytes    |  B   |   bytes (byte[]) |
+                            | -Tongle   |  t   |   bool           |    
+                            | -Double   |  d   |   double         |        
+                            | -Char     |  c   |   char           |    
+                            | -Float    |  f   |   float          |    
+                            | -Int      |  i   |   int            |    
+                            | -Long     |  l   |   long           |    
+                            | -String   |  s   |   string         |        
+                            | -Short    |  S   |   short          |            
+                            |___________|______|__________________|
+         */
+
+        private void AddData(char type, byte[] data)
+        {
+            if (data == null || data.Length <= 0)
+                throw new Exception("invalid data");
+
+            switch (type)
+            {
+                // add Vec2
+                case '2': break;
+
+                // add Vec3
+                case '3': break;
+
+                // add byte
+                case 'b': break;
+
+                // add byte[]
+                case 'B': break;
+
+                // add bool
+                case 't': break;
+
+                // add double
+                case 'd': break;
+
+                // add char
+                case 'c': break;
+
+                // add float
+                case 'f': break;
+
+                // add int
+                case 'i': break;
+
+                // add long
+                case 'l': break;
+
+                // add string
+                case 's': break;
+
+                // add Short
+                case 'S': break;
+
+                default: throw new Exception($"The (char) to identify the data type is invalid: [{type}]");
+            }
+
+            _data.Add(Concat.Bytes(BitConverter.GetBytes(type), data));
+        }
+
+        #endregion
     }
 }
