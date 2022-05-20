@@ -261,7 +261,24 @@ namespace Zenet.Package
 
         public Vec2 GetVec2()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var data = GetBytes();
+                var vec2 = Vec2.ToVec2(data);
+
+                if (vec2 == null)
+                {
+                    _errors.Add($"[{nameof(GetVec2)}] on index {_index}: {"Vec2 not found"}");
+                    return null;
+                }
+
+                return vec2;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetVec2)}] on index {_index}");
+                return null;
+            }
         }
 
         public Vec3 GetVec3()
