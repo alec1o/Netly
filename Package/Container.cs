@@ -134,7 +134,17 @@ namespace Zenet.Package
 
         public char GetChar()
         {
-            throw new NotImplementedException();
+            try
+            {
+                char value = BitConverter.ToChar(_target, _index);
+                _index += sizeof(char);
+                return value;
+            }
+            catch
+            {
+                _errors.Add($"[{nameof(GetChar)}] on index {_index}");
+                return new char();
+            }
         }
 
         public DateTime GetDateTime()
