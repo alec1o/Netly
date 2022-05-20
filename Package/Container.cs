@@ -106,9 +106,9 @@ namespace Zenet.Package
         {
             try
             {
-                byte _byte = _target[_index];
+                byte value = _target[_index];
                 _index += sizeof(byte);
-                return _byte;
+                return value;
             }
             catch
             {
@@ -157,7 +157,7 @@ namespace Zenet.Package
             }
             catch
             {
-                _errors.Add($"[{nameof(GetLong)}] on index {_index}");
+                _errors.Add($"[{nameof(GetInt)}] on index {_index}");
                 return 0;
             }
         }
