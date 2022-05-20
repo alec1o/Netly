@@ -49,7 +49,7 @@ namespace Zenet.Package
 
         public void Add(float value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(decimal value)
