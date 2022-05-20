@@ -44,7 +44,7 @@ namespace Zenet.Package
 
         public void Add(long value)
         {
-            throw new NotImplementedException();
+            _data.Add(BitConverter.GetBytes(value));
         }
 
         public void Add(float value)
