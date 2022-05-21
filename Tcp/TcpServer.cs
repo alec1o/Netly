@@ -63,6 +63,17 @@ namespace Zenet.Tcp
         private void BeginAccept()
         {
 
+            try
+            {
+                _socket.BeginAccept(EndAccept, null);
+            }
+            catch
+            {
+                if (Opened)
+                {
+                    BeginAccept();
+                }
+            }
         }
 
         private void EndAccept(IAsyncResult result)
