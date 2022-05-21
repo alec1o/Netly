@@ -192,7 +192,13 @@ namespace Zenet.Tcp
 
         public void OnEvent(Action<string, byte[]> callback)
         {
-            throw new NotImplementedException();
+            _OnEvent += (_, container) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(container.name, container.data);
+                });
+            };
         }        
 
         #endregion
