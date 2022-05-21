@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Zenet.Network;
+using Zenet.Package;
 
 namespace Zenet.Tcp
 {
@@ -11,6 +12,15 @@ namespace Zenet.Tcp
 
         private Socket _socket { get; set; }
         private Host _host { get; set; }
+
+        private bool _tryOpen { get; set; }
+        private bool _tryClose { get; set; }
+
+        private EventHandler _OnOpen { get; set; }
+        private EventHandler<Exception> _OnError { get; set; }
+        private EventHandler _OnClose { get; set; }
+        private EventHandler<byte[]> _OnData { get; set; }
+        private EventHandler<(string name, byte[] data)> _OnEvent { get; set; }
 
         #endregion
 
