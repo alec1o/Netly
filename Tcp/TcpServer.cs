@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Zenet.Package;
 using Zenet.Network;
 using System.Net.Sockets;
 using System.Net;
@@ -17,6 +15,7 @@ namespace Zenet.Tcp
 
         private bool _tryOpen { get; set; }
         private bool _tryClose { get; set; }
+        private bool _opened { get; set; }
 
         private EventHandler _OnOpen { get; set; }
         private EventHandler<Exception> _OnError { get; set; }
@@ -56,7 +55,9 @@ namespace Zenet.Tcp
 
         private bool VerifyOpened()
         {
-            return false;
+            if (_socket == null) return false;
+
+            return _opened;
         }
 
         private void BeginAccept()
