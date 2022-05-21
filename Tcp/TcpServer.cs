@@ -62,7 +62,6 @@ namespace Zenet.Tcp
 
         private void BeginAccept()
         {
-
             try
             {
                 _socket.BeginAccept(EndAccept, null);
@@ -78,7 +77,35 @@ namespace Zenet.Tcp
 
         private void EndAccept(IAsyncResult result)
         {
+            Socket _clientSocket = _socket.EndAccept(result);
 
+            TcpClient _client = new TcpClient(_clientSocket);            
+            
+            Clients.Add(_client);
+
+            _client.OnOpen(() =>
+            {
+                _OnEnter?.Invoke(this, _client);
+            });
+
+            _client.OnClose(() =>
+            {
+                _OnExit?.Invoke(this, _client);
+            });
+
+            _client.OnData((data) =>
+            {
+                _OnData?.Invoke(this, (_client, data));
+            });
+
+            _client.OnEvent((name, data) =>
+            {
+                _OnEvent?.Invoke(this, (_client, name, data));
+            });
+
+            _client.InitServer();
+
+            BeginAccept();
         }
 
         #endregion
