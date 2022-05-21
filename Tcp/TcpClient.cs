@@ -135,8 +135,6 @@ namespace Zenet.Tcp
                     {
                         _OnError?.Invoke(this, _exception);
                     }
-
-                    this.Receive();
                 }
             });
         }
