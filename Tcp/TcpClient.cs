@@ -59,6 +59,44 @@ namespace Zenet.Tcp
             }
         }
 
+        private void Receive()
+        {
+            Async.Thread(() =>
+            {
+                byte[] buffer = new byte[1024 * 8];
+
+                while (Opened)
+                {
+                    try
+                    {
+                        int _size = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
+
+                        if (_size <= 0) continue;
+
+                        byte[] _data = new byte[_size];
+                        Buffer.BlockCopy(buffer, 0, _data, 0, _size);
+
+                        (string name, byte[] data) _event = Event2.Verify(_data);
+
+                        if (string.IsNullOrEmpty(_event.name))
+                        {
+                            _OnData?.Invoke(this, _data);
+                        }
+                        else
+                        {
+                            _OnEvent?.Invoke(this, _event);
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
+                _OnClose?.Invoke(this, null);
+            });
+        }
+
         #endregion
 
         #region Remote
