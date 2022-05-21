@@ -90,7 +90,13 @@ namespace Zenet.Tcp
 
         public void OnEnter(Action<object> callback)
         {
-            throw new NotImplementedException();
+            _OnEnter += (_, client) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(client);
+                });
+            };
         }
 
         public void OnExit(Action<object> callback)
