@@ -77,7 +77,17 @@ namespace Zenet.Tcp
 
         private void EndAccept(IAsyncResult result)
         {
-            Socket _clientSocket = _socket.EndAccept(result);
+            Socket _clientSocket;
+
+            try
+            {
+                _clientSocket = _socket.EndAccept(result);
+            }
+            catch
+            {
+                BeginAccept();
+                return;
+            }
 
             TcpClient _client = new TcpClient(_clientSocket);            
             
@@ -158,8 +168,6 @@ namespace Zenet.Tcp
             if (!Opened || _tryClose) return;
 
             _tryClose = true;
-
-            _socket.Shutdown(SocketShutdown.Both);
 
             Async.Thread(() =>
             {
