@@ -48,7 +48,15 @@ namespace Zenet.Tcp
 
         private bool VerifyOpened()
         {
-            return false;
+            try
+            {
+                if (_socket == null || !_socket.Connected) return false;
+                return !(Socket.Poll(5000, SelectMode.SelectRead) && Socket.Available == 0);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
