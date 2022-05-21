@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Zenet.Network;
 using Zenet.Package;
 
@@ -13,6 +14,7 @@ namespace Zenet.Tcp
         private Socket _socket { get; set; }
         private Host _host { get; set; }
 
+        private readonly bool _isServer;
         private bool _tryOpen { get; set; }
         private bool _tryClose { get; set; }
 
@@ -40,6 +42,19 @@ namespace Zenet.Tcp
         {
             _host = new Host(IPAddress.Any, 0);
             _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
+        }
+
+        internal TcpClient(Socket socket)
+        {
+            _host = new Host(socket.RemoteEndPoint);
+            _socket = socket;
+            _isServer = true;
+        }
+
+        internal void InitServer()
+        {
+            _OnOpen?.Invoke(this, null);
+            Receive();
         }
 
         #endregion
@@ -103,7 +118,7 @@ namespace Zenet.Tcp
 
         public void Open(Host host)
         {
-            if (Opened || _tryOpen) return;
+            if (Opened || _tryOpen || _isServer) return;
 
             _tryOpen = true;
 
