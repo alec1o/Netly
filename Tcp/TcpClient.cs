@@ -9,8 +9,8 @@ namespace Zenet.Tcp
     {
         #region Private
 
-        private Socket _socket;
-        private Host _host;
+        private Socket _socket { get; set; }
+        private Host _host { get; set; }
 
         #endregion
 
