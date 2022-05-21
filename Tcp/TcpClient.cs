@@ -181,7 +181,13 @@ namespace Zenet.Tcp
 
         public void OnData(Action<byte[]> callback)
         {
-            throw new NotImplementedException();
+            _OnData += (_, data) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(data);
+                });
+            };
         }        
 
         public void OnEvent(Action<string, byte[]> callback)
