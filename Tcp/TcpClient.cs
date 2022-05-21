@@ -186,7 +186,11 @@ namespace Zenet.Tcp
 
         public void ToEvent(string name, byte[] data)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(name) || data == null || data.Length <= 0) return;
+
+            byte[] _event = Event2.Create(name, data);
+            
+            ToData(_event);
         }
 
         #endregion
