@@ -172,7 +172,16 @@ namespace Zenet.Tcp
 
         public void ToData(byte[] data)
         {
-            throw new NotImplementedException();
+            if (data == null || data.Length <= 0) return;
+
+            try
+            {
+                _socket.Send(data, 0, data.Length, SocketFlags.None);
+            }
+            catch
+            {
+
+            }
         }
 
         public void ToEvent(string name, byte[] data)
