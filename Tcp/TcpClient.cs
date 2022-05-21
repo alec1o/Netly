@@ -170,7 +170,13 @@ namespace Zenet.Tcp
 
         public void OnClose(Action callback)
         {
-            throw new NotImplementedException();
+            _OnClose += (_, __) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke();
+                });
+            };
         }
 
         public void OnData(Action<byte[]> callback)
