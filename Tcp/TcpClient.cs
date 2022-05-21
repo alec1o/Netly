@@ -129,6 +129,7 @@ namespace Zenet.Tcp
 
                     if (_exception == null)
                     {
+                        this.Receive();
                         _OnOpen?.Invoke(this, null);
                     }
                     else
