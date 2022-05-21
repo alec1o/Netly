@@ -159,7 +159,13 @@ namespace Zenet.Tcp
 
         public void OnError(Action<Exception> callback)
         {
-            throw new NotImplementedException();
+            _OnError += (_, exception) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(exception);
+                });
+            };
         }
 
         public void OnClose(Action callback)
