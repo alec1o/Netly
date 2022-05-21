@@ -15,6 +15,7 @@ namespace Zenet.Tcp
         private Host _host { get; set; }
 
         private readonly bool _isServer;
+        private bool _closeEmited { get; set; }
         private bool _tryOpen { get; set; }
         private bool _tryClose { get; set; }
 
@@ -108,7 +109,11 @@ namespace Zenet.Tcp
                     }
                 }
 
-                _OnClose?.Invoke(this, null);
+                if(!_tryClose || !_closeEmited)
+                {
+                    _closeEmited = true;
+                    _OnClose?.Invoke(this, null);
+                }
             });
         }
 
@@ -133,6 +138,8 @@ namespace Zenet.Tcp
                     _socket.Connect(host.EndPoint);
 
                     _host = host;
+
+                    _closeEmited = false;
                 }
                 catch (Exception e)
                 {
@@ -177,7 +184,12 @@ namespace Zenet.Tcp
                 finally
                 {
                     _tryClose = false;
-                    _OnClose?.Invoke(this, null);
+
+                    if (!_closeEmited)
+                    {
+                        _closeEmited = true;
+                        _OnClose?.Invoke(this, null);
+                    }
                 }
             });
         }
