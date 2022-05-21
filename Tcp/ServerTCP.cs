@@ -5,6 +5,7 @@ using Zenet.Network;
 
 namespace Zenet.Tcp
 {
+    [Obsolete("This version is obsolete. Use TcpClient or TcpServer")]
     public class ServerTCP
     {
         public bool Running { get; private set; }
