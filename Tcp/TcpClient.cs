@@ -105,7 +105,27 @@ namespace Zenet.Tcp
 
         public void Close()
         {
-            throw new NotImplementedException();
+            if (!Opened || _tryClose) return;
+
+            _tryClose = true;
+
+            Async.Thread(() =>
+            {
+                try
+                {
+                    _socket?.Close();
+                    _socket?.Dispose();
+                }
+                catch
+                {
+                    _socket = null;
+                }
+                finally
+                {
+                    _tryClose = false;
+                    _OnClose?.Invoke(this, null);
+                }
+            });
         }
 
         #endregion
