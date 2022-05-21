@@ -161,6 +161,8 @@ namespace Zenet.Tcp
 
             _tryClose = true;
 
+            _socket.Shutdown(SocketShutdown.Both);
+
             Async.Thread(() =>
             {
                 try
