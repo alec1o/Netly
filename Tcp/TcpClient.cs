@@ -65,7 +65,42 @@ namespace Zenet.Tcp
 
         public void Open(Host host)
         {
-            throw new NotImplementedException();
+            if (Opened || _tryOpen) return;
+
+            _tryOpen = true;
+
+            Async.Thread(() =>
+            {
+                Exception _exception = null;
+
+                try
+                {
+                    _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
+
+                    _socket.Connect(host.EndPoint);
+
+                    _host = host;
+                }
+                catch (Exception e)
+                {
+                    _exception = e;
+                }
+                finally
+                {
+                    _tryOpen = false;
+
+                    if (_exception == null)
+                    {
+                        _OnOpen?.Invoke(this, null);
+                    }
+                    else
+                    {
+                        _OnError?.Invoke(this, _exception);
+                    }
+
+                    this.Receive();
+                }
+            });
         }
 
         public void Close()
