@@ -10,6 +10,7 @@ namespace Zenet.Network
         Socket Socket { get; }
         Host Host { get; }
         bool Opened { get; }
+        string Id { get; }
 
         // Controller
         void Open(Host host);

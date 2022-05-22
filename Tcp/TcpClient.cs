@@ -35,6 +35,8 @@ namespace Zenet.Tcp
 
         public bool Opened => VerifyOpened();
 
+        public string Id { get; } = Guid.NewGuid().ToString();
+
         #endregion
 
         #region Init
