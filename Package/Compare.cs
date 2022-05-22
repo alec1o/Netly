@@ -1,4 +1,4 @@
-﻿namespace Zeent.Package
+﻿namespace Zenet.Package
 {
     public static class Compare
     {
