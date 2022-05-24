@@ -20,10 +20,10 @@ namespace Zenet.Tcp
         private EventHandler _OnOpen { get; set; }
         private EventHandler<Exception> _OnError { get; set; }
         private EventHandler _OnClose { get; set; }
-        private EventHandler<object> _OnEnter { get; set; }
-        private EventHandler<object> _OnExit { get; set; }
-        private EventHandler<(object client, byte[] data)> _OnData { get; set; }
-        private EventHandler<(object client, string name, byte[] data)> _OnEvent { get; set; }
+        private EventHandler<TcpClient> _OnEnter { get; set; }
+        private EventHandler<TcpClient> _OnExit { get; set; }
+        private EventHandler<(TcpClient client, byte[] data)> _OnData { get; set; }
+        private EventHandler<(TcpClient client, string name, byte[] data)> _OnEvent { get; set; }
 
         #endregion
 
@@ -35,17 +35,17 @@ namespace Zenet.Tcp
 
         public bool Opened => VerifyOpened();
 
-        public List<object> Clients { get; private set; }
+        public List<TcpClient> Clients { get; private set; }
 
         #endregion
 
         #region Init
 
         public TcpServer()
-        {
+        {            
             _host = new Host(IPAddress.Any, 0);
             _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
-            Clients = new List<object>();
+            Clients = new List<TcpClient>();
         }
 
 
@@ -210,7 +210,7 @@ namespace Zenet.Tcp
 
         #region Client
 
-        public void OnEnter(Action<object> callback)
+        public void OnEnter(Action<TcpClient> callback)
         {
             _OnEnter += (_, client) =>
             {
@@ -221,7 +221,7 @@ namespace Zenet.Tcp
             };
         }
 
-        public void OnExit(Action<object> callback)
+        public void OnExit(Action<TcpClient> callback)
         {
             _OnExit += (_, client) =>
             {
@@ -232,7 +232,7 @@ namespace Zenet.Tcp
             };
         }
 
-        public void OnData(Action<object, byte[]> callback)
+        public void OnData(Action<TcpClient, byte[]> callback)
         {
             _OnData += (_, container) =>
             {
@@ -243,7 +243,7 @@ namespace Zenet.Tcp
             };
         }
 
-        public void OnEvent(Action<object, string, byte[]> callback)
+        public void OnEvent(Action<TcpClient, string, byte[]> callback)
         {
             _OnEvent += (_, container) =>
             {
