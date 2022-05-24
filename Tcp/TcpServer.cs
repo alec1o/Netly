@@ -145,6 +145,7 @@ namespace Zenet.Tcp
                 try
                 {
                     _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
+                    
                     _OnBeforeOpen?.Invoke(this, _socket);
                     
                     _socket.Bind(host.EndPoint);
