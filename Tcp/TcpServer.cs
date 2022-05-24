@@ -100,6 +100,14 @@ namespace Zenet.Tcp
 
             _client.OnClose(() =>
             {
+                foreach (TcpClient client in Clients.ToArray())
+                {
+                    if (_client.Id == ((TcpClient)client).Id)
+                    {
+                        Clients.Remove(client);
+                    }
+                }
+
                 _OnExit?.Invoke(this, _client);
             });
 
@@ -182,16 +190,11 @@ namespace Zenet.Tcp
                 }
                 finally
                 {
-                    object[] clients = Clients.ToArray();
-
-                    Clients.Clear();
-
-                    foreach(object client in clients)
+                    foreach (TcpClient client in Clients.ToArray())
                     {
                         try
                         {
-                            TcpClient _client = (TcpClient)client;
-                            _client?.Close();
+                            client?.Close();
                         }
                         catch
                         {
@@ -199,6 +202,8 @@ namespace Zenet.Tcp
                         }
                     }
 
+                    Clients.Clear();
+                    
                     _opened = false;
                     _tryClose = false;
                     _OnClose?.Invoke(this, null);
