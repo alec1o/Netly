@@ -221,9 +221,31 @@ namespace Zenet.Tcp
 
         #region Client
 
+        public void OnEnter(Action<object> callback)
+        {
+            _OnEnter += (_, client) =>
+            {
+                ZCallback.Execute(() =>
+                {
+                    callback?.Invoke(client);
+                });
+            };
+        }
+
         public void OnEnter(Action<TcpClient> callback)
         {
             _OnEnter += (_, client) =>
+            {
+                ZCallback.Execute(() =>
+                {
+                    callback?.Invoke(client);
+                });
+            };
+        }
+
+        public void OnExit(Action<object> callback)
+        {
+            _OnExit += (_, client) =>
             {
                 ZCallback.Execute(() =>
                 {
@@ -243,6 +265,17 @@ namespace Zenet.Tcp
             };
         }
 
+        public void OnData(Action<object, byte[]> callback)
+        {
+            _OnData += (_, container) =>
+            {
+                ZCallback.Execute(() =>
+                {
+                    callback?.Invoke(container.client, container.data);
+                });
+            };
+        }
+
         public void OnData(Action<TcpClient, byte[]> callback)
         {
             _OnData += (_, container) =>
@@ -250,6 +283,17 @@ namespace Zenet.Tcp
                 ZCallback.Execute(() =>
                 {
                     callback?.Invoke(container.client, container.data);
+                });
+            };
+        }
+
+        public void OnEvent(Action<object, string, byte[]> callback)
+        {
+            _OnEvent += (_, container) =>
+            {
+                ZCallback.Execute(() =>
+                {
+                    callback?.Invoke(container.client, container.name, container.data);
                 });
             };
         }
