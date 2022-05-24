@@ -24,6 +24,7 @@ namespace Zenet.Tcp
         private EventHandler _OnClose { get; set; }
         private EventHandler<byte[]> _OnData { get; set; }
         private EventHandler<(string name, byte[] data)> _OnEvent { get; set; }
+        private EventHandler<Socket> _OnBeforeOpen { get; set; }
 
         #endregion
 
@@ -136,6 +137,8 @@ namespace Zenet.Tcp
                 try
                 {
                     _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
+
+                    _OnBeforeOpen?.Invoke(this, _socket);
 
                     _socket.Connect(host.EndPoint);
 
@@ -280,7 +283,18 @@ namespace Zenet.Tcp
                     callback?.Invoke(container.name, container.data);
                 });
             };
-        }        
+        }
+
+        public void BeforeOpen(Action<Socket> callback)
+        {
+            _OnBeforeOpen += (_, socket) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
+        }
 
         #endregion
     }
