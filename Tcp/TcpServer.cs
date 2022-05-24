@@ -25,6 +25,7 @@ namespace Zenet.Tcp
         private EventHandler<(TcpClient client, byte[] data)> _OnData { get; set; }
         private EventHandler<(TcpClient client, string name, byte[] data)> _OnEvent { get; set; }
         private EventHandler<Socket> _OnBeforeOpen { get; set; }
+        private EventHandler<Socket> _OnAfterOpen { get; set; }
 
         #endregion
 
@@ -144,7 +145,6 @@ namespace Zenet.Tcp
                 try
                 {
                     _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
-
                     _OnBeforeOpen?.Invoke(this, _socket);
                     
                     _socket.Bind(host.EndPoint);
@@ -152,6 +152,8 @@ namespace Zenet.Tcp
 
                     _host = host;
                     _opened = true;
+                   
+                    _OnAfterOpen?.Invoke(this, _socket);
                 }
                 catch (Exception e)
                 {
@@ -302,6 +304,17 @@ namespace Zenet.Tcp
         public void BeforeOpen(Action<Socket> callback)
         {
             _OnBeforeOpen += (_, socket) =>
+            {
+                Callback.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
+        }
+
+        public void AfterOpen(Action<Socket> callback)
+        {
+            _OnAfterOpen += (_, socket) =>
             {
                 Callback.Execute(() =>
                 {
