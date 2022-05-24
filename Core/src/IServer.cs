@@ -21,11 +21,9 @@ namespace Zenet.Core
         void OnClose(Action callback);
 
         // Client
-        /*
         void OnEnter(Action<object> callback);
         void OnExit(Action<object> callback);
         void OnData(Action<object, byte[]> callback);
         void OnEvent(Action<object, string, byte[]> callback);
-        */
     }
 }
