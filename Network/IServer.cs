@@ -10,7 +10,6 @@ namespace Zenet.Network
         Socket Socket { get; }
         Host Host { get; }
         bool Opened { get; }
-        List<object> Clients { get; }
 
         // Controller
         void Open(Host host);
@@ -22,9 +21,11 @@ namespace Zenet.Network
         void OnClose(Action callback);
 
         // Client
+        /*
         void OnEnter(Action<object> callback);
         void OnExit(Action<object> callback);
         void OnData(Action<object, byte[]> callback);
         void OnEvent(Action<object, string, byte[]> callback);
+        */
     }
 }
