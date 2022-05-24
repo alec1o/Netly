@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Zenet.Network;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
+using Zenet.Core;
 
 namespace Zenet.Tcp
 {
@@ -11,7 +11,7 @@ namespace Zenet.Tcp
         #region Private
 
         private Socket _socket { get; set; }
-        private Host _host { get; set; }
+        private ZHost _host { get; set; }
 
         private bool _tryOpen { get; set; }
         private bool _tryClose { get; set; }
@@ -33,7 +33,7 @@ namespace Zenet.Tcp
 
         public Socket Socket => _socket;
 
-        public Host Host => _host;
+        public ZHost Host => _host;
 
         public bool Opened => VerifyOpened();
 
@@ -44,8 +44,8 @@ namespace Zenet.Tcp
         #region Init
 
         public TcpServer()
-        {            
-            _host = new Host(IPAddress.Any, 0);
+        {
+            _host = new ZHost(IPAddress.Any, 0);
             _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
             Clients = new List<TcpClient>();
         }
@@ -91,8 +91,8 @@ namespace Zenet.Tcp
                 return;
             }
 
-            TcpClient _client = new TcpClient(_clientSocket);            
-            
+            TcpClient _client = new TcpClient(_clientSocket);
+
             Clients.Add(_client);
 
             _client.OnOpen(() =>
@@ -104,7 +104,7 @@ namespace Zenet.Tcp
             {
                 foreach (TcpClient client in Clients.ToArray())
                 {
-                    if (_client.Id == ((TcpClient)client).Id)
+                    if (_client.Id == client.Id)
                     {
                         Clients.Remove(client);
                     }
@@ -132,28 +132,28 @@ namespace Zenet.Tcp
 
         #region Remote
 
-        public void Open(Host host)
+        public void Open(ZHost host)
         {
             if (Opened || _tryOpen) return;
 
             _tryOpen = true;
 
-            Async.Thread(() =>
+            ZAsync.Execute(() =>
             {
                 Exception _exception = null;
 
                 try
                 {
                     _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
-                    
+
                     _OnBeforeOpen?.Invoke(this, _socket);
-                    
+
                     _socket.Bind(host.EndPoint);
                     _socket.Listen(0);
 
                     _host = host;
                     _opened = true;
-                   
+
                     _OnAfterOpen?.Invoke(this, _socket);
                 }
                 catch (Exception e)
@@ -166,7 +166,7 @@ namespace Zenet.Tcp
 
                     if (_exception == null)
                     {
-                        this.BeginAccept();
+                        BeginAccept();
                         _OnOpen?.Invoke(this, null);
                     }
                     else
@@ -183,7 +183,7 @@ namespace Zenet.Tcp
 
             _tryClose = true;
 
-            Async.Thread(() =>
+            ZAsync.Execute(() =>
             {
                 try
                 {
@@ -209,7 +209,7 @@ namespace Zenet.Tcp
                     }
 
                     Clients.Clear();
-                    
+
                     _opened = false;
                     _tryClose = false;
                     _OnClose?.Invoke(this, null);
@@ -225,7 +225,7 @@ namespace Zenet.Tcp
         {
             _OnEnter += (_, client) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -236,7 +236,7 @@ namespace Zenet.Tcp
         {
             _OnExit += (_, client) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -247,7 +247,7 @@ namespace Zenet.Tcp
         {
             _OnData += (_, container) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(container.client, container.data);
                 });
@@ -258,7 +258,7 @@ namespace Zenet.Tcp
         {
             _OnEvent += (_, container) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(container.client, container.name, container.data);
                 });
@@ -273,7 +273,7 @@ namespace Zenet.Tcp
         {
             _OnOpen += (_, __) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke();
                 });
@@ -284,7 +284,7 @@ namespace Zenet.Tcp
         {
             _OnError += (_, exception) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(exception);
                 });
@@ -295,7 +295,7 @@ namespace Zenet.Tcp
         {
             _OnClose += (_, __) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke();
                 });
@@ -306,7 +306,7 @@ namespace Zenet.Tcp
         {
             _OnBeforeOpen += (_, socket) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(socket);
                 });
@@ -317,7 +317,7 @@ namespace Zenet.Tcp
         {
             _OnAfterOpen += (_, socket) =>
             {
-                Callback.Execute(() =>
+                ZCallback.Execute(() =>
                 {
                     callback?.Invoke(socket);
                 });
