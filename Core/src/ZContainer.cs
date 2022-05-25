@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Zenet.Core;
-
-namespace Zenet.Core.Message
+namespace Zenet.Core
 {
     public class ZContainer : IZContainer
     {
@@ -39,65 +37,67 @@ namespace Zenet.Core.Message
 
         #region Add
 
-        public void Add(byte value)
+        public void AddByte(byte value)
         {
-            _data.Add(new byte[1] { value });
+            AddData('b', new byte[1] { value });
         }
 
-        public void Add(int value)
+        public void AddInt(int value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('i', BitConverter.GetBytes(value));
         }
 
-        public void Add(short value)
+        public void AddShort(short value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('S', BitConverter.GetBytes(value));
         }
 
-        public void Add(long value)
+        public void AddLong(long value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('l', BitConverter.GetBytes(value));
         }
 
-        public void Add(float value)
+        public void AddFloat(float value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('f', BitConverter.GetBytes(value));
         }
 
-        public void Add(double value)
+        public void AddDouble(double value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('d', BitConverter.GetBytes(value));
         }
 
-        public void Add(string value)
+        public void AddString(string value)
         {
-            Add(ZEncoding.ToBytes(value, ZEncode.UTF8));
+            byte[] data = ZEncoding.ToBytes(value, ZEncode.UTF8);
+            AddData('s', ZConcat.Bytes(BitConverter.GetBytes(data.Length), data));
         }
 
-        public void Add(char value)
+        public void AddChar(char value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('c', BitConverter.GetBytes(value));
         }
 
-        public void Add(bool value)
+        public void AddBool(bool value)
         {
-            _data.Add(BitConverter.GetBytes(value));
+            AddData('t', BitConverter.GetBytes(value));
         }
 
-        public void Add(byte[] value)
+        public void AddBytes(byte[] value)
         {
-            Add(value.Length);
-            _data.Add(value);
+            AddData('B', ZConcat.Bytes(BitConverter.GetBytes(value.Length), value));
         }
 
-        public void Add(ZVector3 value)
+        public void AddVector2(ZVector2 value)
         {
-            Add(ZVector3.ToBytes(value));
+            byte[] data = ZVector2.ToBytes(value);
+            AddData('2', ZConcat.Bytes(BitConverter.GetBytes(data.Length), data));
         }
 
-        public void Add(ZVector2 value)
+        public void AddVector3(ZVector3 value)
         {
-            Add(ZVector2.ToBytes(value));
+            byte[] data = ZVector3.ToBytes(value);
+            AddData('3', ZConcat.Bytes(BitConverter.GetBytes(data.Length), data));
         }
 
         #endregion
@@ -108,6 +108,14 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 't')
+                {
+                    _errors.Add($"[{nameof(GetBool)}] on key [index: {_index}]");
+                    return false;
+                }
+
+                _index += sizeof(char);
+
                 var value = BitConverter.ToBoolean(_target, _index);
                 _index += sizeof(bool);
                 return value;
@@ -123,6 +131,14 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'b')
+                {
+                    _errors.Add($"[{nameof(GetByte)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
                 byte value = _target[_index];
                 _index += sizeof(byte);
                 return value;
@@ -138,13 +154,27 @@ namespace Zenet.Core.Message
         {
             try
             {
-                var length = GetInt();
-                var value = new byte[length];
-                Buffer.BlockCopy(_target, _index, value, 0, length);
+                if (BitConverter.ToChar(_target, _index) != 'B')
+                {
+                    _errors.Add($"[{nameof(GetBytes)}] on key [index: {_index}]");
+                    return null;
+                }
 
-                _index += value.Length;
+                _index += sizeof(char);
 
-                return value;
+                int _start = BitConverter.ToInt32(_target, _index);
+
+                _index += sizeof(int);
+
+                byte[] data = new byte[_start];
+
+                Buffer.BlockCopy(_target, _index, data, 0, data.Length);
+
+                var vec2 = ZVector2.ToVec2(data);
+
+                _index += data.Length;
+
+                return data;
             }
             catch
             {
@@ -157,6 +187,14 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'c')
+                {
+                    _errors.Add($"[{nameof(GetChar)}] on key [index: {_index}]");
+                    return new char();
+                }
+
+                _index += sizeof(char);
+
                 char value = BitConverter.ToChar(_target, _index);
                 _index += sizeof(char);
                 return value;
@@ -172,6 +210,15 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'd')
+                {
+                    _errors.Add($"[{nameof(GetDouble)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
+
                 double value = BitConverter.ToDouble(_target, _index);
                 _index += sizeof(double);
                 return value;
@@ -187,6 +234,15 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'f')
+                {
+                    _errors.Add($"[{nameof(GetFloat)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
+
                 float value = BitConverter.ToSingle(_target, _index);
                 _index += sizeof(float);
                 return value;
@@ -202,6 +258,15 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'i')
+                {
+                    _errors.Add($"[{nameof(GetInt)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
+
                 int value = BitConverter.ToInt32(_target, _index);
                 _index += sizeof(int);
                 return value;
@@ -217,6 +282,14 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'l')
+                {
+                    _errors.Add($"[{nameof(GetLong)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
                 var value = BitConverter.ToInt64(_target, _index);
                 _index += sizeof(long);
                 return value;
@@ -232,6 +305,14 @@ namespace Zenet.Core.Message
         {
             try
             {
+                if (BitConverter.ToChar(_target, _index) != 'S')
+                {
+                    _errors.Add($"[{nameof(GetShort)}] on key [index: {_index}]");
+                    return 0;
+                }
+
+                _index += sizeof(char);
+
                 short value = BitConverter.ToInt16(_target, _index);
                 _index += sizeof(short);
                 return value;
@@ -247,7 +328,22 @@ namespace Zenet.Core.Message
         {
             try
             {
-                var data = GetBytes();
+                if (BitConverter.ToChar(_target, _index) != 's')
+                {
+                    _errors.Add($"[{nameof(GetByte)}] on key [index: {_index}]");
+                    return null;
+                }
+
+                _index += sizeof(char);
+
+                int _start = BitConverter.ToInt32(_target, _index);
+
+                _index += sizeof(int);
+
+                var data = new byte[_start];
+
+                Buffer.BlockCopy(_target, _index, data, 0, data.Length);
+
                 var text = ZEncoding.ToString(data, ZEncode.UTF8);
 
                 if (string.IsNullOrEmpty(text))
@@ -255,6 +351,8 @@ namespace Zenet.Core.Message
                     _errors.Add($"[{nameof(GetString)}] on index {_index}: {nameof(string.IsNullOrEmpty)}");
                     return null;
                 }
+
+                _index += data.Length;
 
                 return text;
             }
@@ -265,16 +363,33 @@ namespace Zenet.Core.Message
             }
         }
 
-        public ZVector2 GetVec2()
+        public ZVector2 GetVector2()
         {
             try
             {
-                var data = GetBytes();
+                if (BitConverter.ToChar(_target, _index) != '2')
+                {
+                    _errors.Add($"[{nameof(GetVector2)}] on key [index: {_index}]");
+                    return null;
+                }
+
+                _index += sizeof(char);
+
+                int _start = BitConverter.ToInt32(_target, _index);
+
+                _index += sizeof(int);
+
+                byte[] data = new byte[_start];
+
+                Buffer.BlockCopy(_target, _index, data, 0, data.Length);
+
                 var vec2 = ZVector2.ToVec2(data);
+
+                _index += data.Length;
 
                 if (vec2 == null)
                 {
-                    _errors.Add($"[{nameof(GetVec2)}] on index {_index}: {"Vec2 not found"}");
+                    _errors.Add($"[{nameof(GetVector2)}] on index {_index}: {"Vec2 not found"}");
                     return null;
                 }
 
@@ -282,21 +397,40 @@ namespace Zenet.Core.Message
             }
             catch
             {
-                _errors.Add($"[{nameof(GetVec2)}] on index {_index}");
+                _errors.Add($"[{nameof(GetVector2)}] on index {_index}");
                 return null;
             }
         }
 
-        public ZVector3 GetVec3()
+        public ZVector3 GetVector3()
         {
             try
             {
-                var data = GetBytes();
+                Console.WriteLine(BitConverter.ToChar(_target, _index));
+
+                if (BitConverter.ToChar(_target, _index) != '3')
+                {
+                    _errors.Add($"[{nameof(GetVector3)}] on key [index: {_index}] 0");
+                    return null;
+                }
+
+                _index += sizeof(char);
+
+                int _start = BitConverter.ToInt32(_target, _index);
+
+                _index += sizeof(int);
+
+                byte[] data = new byte[_start];
+
+                Buffer.BlockCopy(_target, _index, data, 0, data.Length);
+
                 var vec3 = ZVector3.ToVec3(data);
+
+                _index += data.Length;
 
                 if (vec3 == null)
                 {
-                    _errors.Add($"[{nameof(GetVec3)}] on index {_index}: {"Vec3 not found"}");
+                    _errors.Add($"[{nameof(GetVector3)}] on index {_index}: {"Vec2 not found"}");
                     return null;
                 }
 
@@ -304,14 +438,14 @@ namespace Zenet.Core.Message
             }
             catch
             {
-                _errors.Add($"[{nameof(GetVec3)}] on index {_index}");
+                _errors.Add($"[{nameof(GetVector3)}] on index {_index}");
                 return null;
             }
         }
 
         #endregion
 
-        #region Snippet
+        #region Container Manager: AddData
 
         /*
                             ...  Add this char even before the data ...
@@ -323,27 +457,27 @@ namespace Zenet.Core.Message
                             _______________________________________
                             |   Type    | Pin  | Data Type        |
                             |___________|______|__________________|
-                            | -Vec2     |  2   |   Vec2           |
-                            | -Vec3     |  3   |   Vec3           |
-                            | -Byte     |  b   |   byte           |    
+                            | -Vector2  |  2   |   Vector2        |
+                            | -Vector3  |  3   |   Vector3        |
+                            | -Byte     |  b   |   byte           |
                             | -Bytes    |  B   |   bytes (byte[]) |
-                            | -Tongle   |  t   |   bool           |    
-                            | -Double   |  d   |   double         |        
-                            | -Char     |  c   |   char           |    
-                            | -Float    |  f   |   float          |    
-                            | -Int      |  i   |   int            |    
-                            | -Long     |  l   |   long           |    
-                            | -String   |  s   |   string         |        
-                            | -Short    |  S   |   short          |            
+                            | -Tongle   |  t   |   bool           |
+                            | -Double   |  d   |   double         |
+                            | -Char     |  c   |   char           |
+                            | -Float    |  f   |   float          |
+                            | -Int      |  i   |   int            |
+                            | -Long     |  l   |   long           |
+                            | -String   |  s   |   string         |
+                            | -Short    |  S   |   short          |
                             |___________|______|__________________|
          */
 
-        private void AddData(char type, byte[] data)
+        private void AddData(char key, byte[] data)
         {
             if (data == null || data.Length <= 0)
                 throw new Exception("invalid data");
 
-            switch (type)
+            switch (key)
             {
                 // add Vec2
                 case '2': break;
@@ -381,10 +515,10 @@ namespace Zenet.Core.Message
                 // add Short
                 case 'S': break;
 
-                default: throw new Exception($"The (char) to identify the data type is invalid: [{type}]");
+                default: throw new Exception($"The (char) to identify the data type is invalid: [{key}]");
             }
 
-            _data.Add(ZConcat.Bytes(BitConverter.GetBytes(type), data));
+            _data.Add(ZConcat.Bytes(BitConverter.GetBytes(key), data));
         }
 
         #endregion

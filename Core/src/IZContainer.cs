@@ -25,30 +25,29 @@
         #region Add
 
         // integer numbers
-        void Add(byte value);
-        void Add(int value);
-        void Add(short value);
-        void Add(long value);
+        void AddByte(byte value);
+        void AddInt(int value);
+        void AddShort(short value);
+        void AddLong(long value);
 
         // real numbers  
-        void Add(float value);
-        void Add(double value);
+        void AddFloat(float value);
+        void AddDouble(double value);
 
         // text
-        void Add(string value);
-        void Add(char value);
-        void Add(bool value);
+        void AddString(string value);
+        void AddChar(char value);
+        void AddBool(bool value);
 
         // others
-        void Add(byte[] value);
-        void Add(ZVector3 value);
-        void Add(ZVector2 value);
+        void AddBytes(byte[] value);
+        void AddVector2(ZVector2 value);
+        void AddVector3(ZVector3 value);
 
-        #endregion#region Add
+        #endregion
 
         #region Get
 
-        // integer numbers
         byte GetByte();
         int GetInt();
         short GetShort();
@@ -65,8 +64,8 @@
 
         // others
         byte[] GetBytes();
-        ZVector3 GetVec3();
-        ZVector2 GetVec2();
+        ZVector2 GetVector2();
+        ZVector3 GetVector3();
 
         #endregion
     }
