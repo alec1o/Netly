@@ -5,7 +5,7 @@
 
 Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination.
 
-### [Learn Zenet](https://github.com/zeloot/LearnZenet/)
+### [Zenet Docs](https://github.com/zeloot/Zenet-Docs)
 
 <br>
 <br>
