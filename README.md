@@ -37,4 +37,4 @@ Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/ZenetForUnity)
 - Zenet is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
 
-##### [Zeloot © 2022 - 2022 All rights reserved](https://github.com/zeloot/)
+##### [© Zeloot * rights reserved](https://github.com/zeloot/)
