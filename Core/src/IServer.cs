@@ -21,6 +21,8 @@ namespace Zenet.Core
         void OnOpen(Action callback);
         void OnError(Action<Exception> callback);
         void OnClose(Action callback);
+        void BeforeOpen(Action<Socket> callback);
+        void AfterOpen(Action<Socket> callback);
 
         // Client
         void OnEnter(Action<object> callback);
