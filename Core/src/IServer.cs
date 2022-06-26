@@ -14,6 +14,8 @@ namespace Zenet.Core
         // Controller
         void Open(ZHost host);
         void Close();
+        void BroadcastToData(byte[] data);
+        void BroadcastToEvent(string name, byte[] data);
 
         // Events        
         void OnOpen(Action callback);
