@@ -227,6 +227,16 @@ namespace Zenet.Tcp
             }
         }
 
+        public void BroadcastToEvent(string name, byte[] data)
+        {
+            if (data == null || data.Length <= 0) return;
+
+            foreach (TcpClient client in Clients)
+            {
+                client.ToEvent(name, data);
+            }
+        }
+
         #endregion
 
         #region Client
