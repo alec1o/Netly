@@ -6,6 +6,9 @@ using Zenet.Core;
 
 namespace Zenet.Tcp
 {
+    /// <summary>
+    /// "TcpClient" is a class that facilitates the creation and interaction with TCP client sockets
+    /// </summary>
     public class TcpClient : IClient
     {
         #region Private
@@ -30,24 +33,43 @@ namespace Zenet.Tcp
 
         #region Public
 
+        /// <summary>
+        /// Target Socket
+        /// </summary>
         public Socket Socket => _socket;
 
+        /// <summary>
+        /// The connection destination "End Point"
+        /// </summary>
         public ZHost Host => _host;
 
+        /// <summary>
+        /// Returns "true" if the connection to the server is open
+        /// </summary>
         public bool Opened => VerifyOpened();
 
+        /// <summary>
+        /// Connection Id is very useful when the server is using it to compare and verify client instances
+        /// </summary>
         public string Id { get; } = Guid.NewGuid().ToString();
 
         #endregion
 
         #region Init
 
+        /// <summary>
+        /// Creating an instance of TcpClient
+        /// </summary>
         public TcpClient()
         {
             _host = new ZHost(IPAddress.Any, 0);
             _socket = new Socket(_host.Family, SocketType.Stream, ProtocolType.Tcp);
         }
 
+        /// <summary>
+        /// Creating an instance of 'TcpClient' to emulate a tcp client on the server
+        /// </summary>
+        /// <param name="socket"></param>
         internal TcpClient(Socket socket)
         {
             _host = new ZHost(socket.RemoteEndPoint);
@@ -55,6 +77,9 @@ namespace Zenet.Tcp
             _isServer = true;
         }
 
+        /// <summary>
+        /// To start the client tasks. Only when booted as client emulator
+        /// </summary>
         internal void InitServer()
         {
             _OnOpen?.Invoke(this, null);
@@ -124,6 +149,10 @@ namespace Zenet.Tcp
 
         #region Remote
 
+        /// <summary>
+        /// Opens a connection to the server if the connection is closed
+        /// </summary>
+        /// <param name="host">The connection destination "End Point"</param>
         public void Open(ZHost host)
         {
             if (Opened || _tryOpen || _isServer) return;
@@ -169,6 +198,9 @@ namespace Zenet.Tcp
             });
         }
 
+        /// <summary>
+        /// Closes a connection to the server if the connection is open
+        /// </summary>
         public void Close()
         {
             if (!Opened || _tryClose) return;
@@ -205,6 +237,10 @@ namespace Zenet.Tcp
 
         #region Send
 
+        /// <summary>
+        /// Sends raw data to the server
+        /// </summary>
+        /// <param name="data"></param>
         public void ToData(byte[] data)
         {
             if (data == null || data.Length <= 0) return;
@@ -219,6 +255,11 @@ namespace Zenet.Tcp
             }
         }
 
+        /// <summary>
+        /// Sends a formatted data "event" to the server
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="data"></param>
         public void ToEvent(string name, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(name) || data == null || data.Length <= 0) return;
@@ -232,6 +273,10 @@ namespace Zenet.Tcp
 
         #region Events        
 
+        /// <summary>
+        /// It is called "invoked callback" when it has received a connection opening
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void OnOpen(Action callback)
         {
             _OnOpen += (_, __) =>
@@ -243,6 +288,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// It is called "invoked callback" when the connection opening attempt fails
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void OnError(Action<Exception> callback)
         {
             _OnError += (_, exception) =>
@@ -254,6 +303,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// Is called "invoked callback" the connection is closed. being the client or server responsible for the closure
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void OnClose(Action callback)
         {
             _OnClose += (_, __) =>
@@ -265,6 +318,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// It is called The "invoked callback" the socket receiving raw data from the server
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void OnData(Action<byte[]> callback)
         {
             _OnData += (_, data) =>
@@ -276,6 +333,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// It is called The "invoked callback" the socket receiving a formatted "event" from the server
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void OnEvent(Action<string, byte[]> callback)
         {
             _OnEvent += (_, container) =>
@@ -287,6 +348,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// Is called "invoked callback" before connection open attempt is finished
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void BeforeOpen(Action<Socket> callback)
         {
             _OnBeforeOpen += (_, socket) =>
@@ -298,6 +363,10 @@ namespace Zenet.Tcp
             };
         }
 
+        /// <summary>
+        /// It is called "invoked callback" after connection opening is completed and succeeded
+        /// </summary>
+        /// <param name="callback">The callback invoked when the event received</param>
         public void AfterOpen(Action<Socket> callback)
         {
             _OnAfterOpen += (_, socket) =>
