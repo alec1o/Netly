@@ -240,7 +240,7 @@ namespace Zenet.Tcp
         /// <summary>
         /// Sends raw data to the server
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">The date to be published</param>
         public void ToData(byte[] data)
         {
             if (data == null || data.Length <= 0) return;
@@ -258,8 +258,8 @@ namespace Zenet.Tcp
         /// <summary>
         /// Sends a formatted data "event" to the server
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="data"></param>
+        /// <param name="name">Event name "subscription"</param>
+        /// <param name="data">The date to be published</param>
         public void ToEvent(string name, byte[] data)
         {
             if (string.IsNullOrWhiteSpace(name) || data == null || data.Length <= 0) return;
