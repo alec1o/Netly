@@ -22,5 +22,7 @@ namespace Zenet.Core
         void OnClose(Action callback);
         void OnData(Action<byte[]> callback);
         void OnEvent(Action<string, byte[]> callback);
+        void BeforeOpen(Action<Socket> callback);
+        void AfterOpen(Action<Socket> callback);
     }
 }
