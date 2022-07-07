@@ -321,6 +321,15 @@ namespace Zenet.Tcp
         /// <summary>
         /// It is called The "invoked callback" the socket receiving raw data from the server
         /// </summary>
+        /// <code>
+        /// TcpClient client = new TcpClient();
+        /// client.OnData((byte[] data) =>
+        /// {
+        ///     // convert data to string
+        ///     string message = ZEncoding.GetString(data);
+        ///     Console.WriteLine(message);
+        /// });
+        /// </code>
         /// <param name="callback">The callback invoked when the event received</param>
         public void OnData(Action<byte[]> callback)
         {
