@@ -5,7 +5,9 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tcp", "Tcp\Tcp.csproj", "{99A01ED4-AECC-4DB0-9F89-7E9692864E24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{DE12ADB7-8288-4B92-A060-8FE162684F41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{DE12ADB7-8288-4B92-A060-8FE162684F41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netly.Core", "Netly.Core\Netly.Core.csproj", "{C36A9932-06F5-41ED-AE99-2B0D1C27400A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{DE12ADB7-8288-4B92-A060-8FE162684F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE12ADB7-8288-4B92-A060-8FE162684F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE12ADB7-8288-4B92-A060-8FE162684F41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C36A9932-06F5-41ED-AE99-2B0D1C27400A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C36A9932-06F5-41ED-AE99-2B0D1C27400A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C36A9932-06F5-41ED-AE99-2B0D1C27400A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C36A9932-06F5-41ED-AE99-2B0D1C27400A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
