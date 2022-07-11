@@ -1,11 +1,11 @@
-# Zenet
+# Netly
 
 <br>
 
 
-Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination.
+Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination.
 
-### [Zenet Docs](https://github.com/zeloot/Zenet-Docs)
+### [Netly Docs](https://github.com/zeloot/netly-docs)
 
 <br>
 <br>
@@ -18,9 +18,9 @@ Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Flax Engine](https://flaxengine.com/)
 - #### [MonoGame Engine](https://www.monogame.net/)
 - #### [Stride Engine](https://www.stride3d.net/)
-- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/ZenetForUnity)
+- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/NetlyForUnity)
 - #### [Xamarin](https://dotnet.microsoft.com/apps/xamarin/)
-- Zenet is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
+- Netly is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
 
 
 <br>
@@ -34,7 +34,7 @@ Zenet is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Flax Engine](https://flaxengine.com/)
 - #### [MonoGame Engine](https://www.monogame.net/)
 - #### [Stride Engine](https://www.stride3d.net/)
-- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/ZenetForUnity)
-- Zenet is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
+- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/NetlyForUnity)
+- Netly is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
 
 ##### [© Zeloot * rights reserved](https://github.com/zeloot/)
