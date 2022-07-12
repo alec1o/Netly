@@ -91,7 +91,7 @@ namespace Netly.Tcp
 
             _tryOpen = true;
 
-            Async.UnsafePool(() =>
+            Async.SafePool(() =>
             {
                 try
                 {
@@ -128,7 +128,7 @@ namespace Netly.Tcp
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            Async.UnsafePool(() =>
+            Async.SafePool(() =>
             {
                 try
                 {
@@ -164,9 +164,9 @@ namespace Netly.Tcp
                     _stream.Write(value, 0, value.Length);
                 }
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e.Message);
+                
             }
         }
 
@@ -202,7 +202,7 @@ namespace Netly.Tcp
             {
                 _stream = new NetworkStream(_socket);
 
-                Async.UnsafePool(() =>
+                Async.SafePool(() =>
                 {
                     while (!_invokeClose)
                     {
