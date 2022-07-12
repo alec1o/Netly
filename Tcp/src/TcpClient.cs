@@ -139,8 +139,11 @@ namespace Zenet.Tcp
 
                 if (!_tryClose || !_closeEmited)
                 {
-                    _closeEmited = true;
-                    _OnClose?.Invoke(this, null);
+                    if (!_closeEmited)
+                    {
+                        _closeEmited = true;
+                        _OnClose?.Invoke(this, null);
+                    }
                 }
             });
         }

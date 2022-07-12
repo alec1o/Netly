@@ -123,11 +123,15 @@ namespace Zenet.Tcp
                 {
                     if (_client.Id == client.Id)
                     {
-                        Clients.Remove(client);
-                    }
-                }
+                        try
+                        {
+                            Clients.Remove(client);
+                        }
+                        catch { }
 
-                _OnExit?.Invoke(this, _client);
+                        _OnExit?.Invoke(this, _client);
+                    }
+                }                
             });
 
             _client.OnData((data) =>
