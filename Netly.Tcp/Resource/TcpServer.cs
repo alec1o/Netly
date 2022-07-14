@@ -259,6 +259,35 @@ namespace Netly.Tcp
             // IsEncrypted = value;
         }
 
+        /// <summary>
+        /// Sends raw data to all connected clients
+        /// </summary>
+        /// <param name="data">The date to be published</param>
+        public void BroadcastToData(byte[] data)
+        {
+            if (!Opened || data == null) return;
+
+            foreach (TcpClient client in Clients.ToArray())
+            {
+                client.ToData(data);
+            }
+        }
+
+        /// <summary>
+        /// Sends formatted "event" data to all connected clients
+        /// </summary>
+        /// <param name="name">Event name "subscription"</param>
+        /// <param name="data">The date to be published</param>
+        public void BroadcastToEvent(string name, byte[] data)
+        {
+            if (!Opened || data == null) return;
+
+            foreach (TcpClient client in Clients.ToArray())
+            {
+                client.ToEvent(name, data);
+            }
+        }
+
         #endregion
 
         #region Customization Event
