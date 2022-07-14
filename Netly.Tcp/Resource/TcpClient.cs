@@ -13,9 +13,24 @@ namespace Netly.Tcp
 
         #region Public
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string Id { get; private set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public Host Host { get; private set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsEncrypted { get; private set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public bool Opened { get => Connected(); }
 
         #endregion
@@ -51,6 +66,9 @@ namespace Netly.Tcp
 
         #region Builder
 
+        /// <summary>
+        /// 
+        /// </summary>
         public TcpClient()
         {
             Id = string.Empty;
@@ -77,11 +95,19 @@ namespace Netly.Tcp
 
         #region Customization Event
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnBeforeOpen(Action<Socket> callback)
         {
             _OnBeforeOpen += (sender, socket) => callback?.Invoke(socket);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnAfterOpen(Action<Socket> callback)
         {
             _OnAfterOpen += (sender, socket) => callback?.Invoke(socket);
@@ -91,6 +117,10 @@ namespace Netly.Tcp
 
         #region Init
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="host"></param>
         public void Open(Host host)
         {
             if (Opened || _tryOpen || _tryClose || _isServer) return;
@@ -126,6 +156,9 @@ namespace Netly.Tcp
             });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Close()
         {
             if (!Opened || _tryOpen || _tryClose) return;
@@ -156,6 +189,10 @@ namespace Netly.Tcp
             });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
@@ -178,6 +215,11 @@ namespace Netly.Tcp
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void ToEvent(string name, byte[] value)
         {
             ToData(Events.Create(name, value));
@@ -263,6 +305,12 @@ namespace Netly.Tcp
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="Exception"></exception>
+        /// <exception cref="NotImplementedException"></exception>
         public void UseEncryption(bool value)
         {
             if (Opened)
@@ -279,26 +327,46 @@ namespace Netly.Tcp
 
         #region Events
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnOpen(Action callback)
         {
             _OnOpen += (sender, args) => callback?.Invoke();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnClose(Action callback)
         {
             _OnClose += (sender, args) => callback?.Invoke();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnError(Action<Exception> callback)
         {
             _OnError += (sender, exception) => callback?.Invoke(exception);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnData(Action<byte[]> callback)
         {
             _OnData += (sender, data) => callback?.Invoke(data);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnEvent(Action<string, byte[]> callback)
         {
             _OnEvent += (sender, result) => callback?.Invoke(result.name, result.data);
