@@ -244,14 +244,15 @@ namespace Netly.Tcp
             int length = 0;
             byte[] buffer = new byte[1024 * 8];
 
+            _stream = new NetworkStream(_socket);
+
             if (IsEncrypted)
             {
+                _sslStream = new SslStream(_stream);
                 throw new NotImplementedException(nameof(IsEncrypted));
             }
             else
             {
-                _stream = new NetworkStream(_socket);
-
                 Async.SafePool(() =>
                 {
                     while (!_invokeClose)
