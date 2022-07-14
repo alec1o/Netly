@@ -101,7 +101,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnBeforeOpen(Action<Socket> callback)
         {
-            _OnBeforeOpen += (sender, socket) => callback?.Invoke(socket);
+            _OnBeforeOpen += (sender, socket) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
         }
 
         /// <summary>
@@ -110,7 +116,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnAfterOpen(Action<Socket> callback)
         {
-            _OnAfterOpen += (sender, socket) => callback?.Invoke(socket);
+            _OnAfterOpen += (sender, socket) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
         }
 
         #endregion
