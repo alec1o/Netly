@@ -67,6 +67,12 @@ namespace Netly.Tcp
             Host = new Host(socket.RemoteEndPoint ?? new IPEndPoint(IPAddress.Any, 0));
         }
 
+        internal void InitServer()
+        {
+            _OnOpen?.Invoke(this, null);
+            Receive();
+        }
+
         #endregion
 
         #region Customization Event
