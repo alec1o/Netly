@@ -137,6 +137,8 @@ namespace Netly.Tcp
                 }
                 finally
                 {
+                    _socket = null;
+
                     if (!_invokeClose)
                     {
                         _invokeClose = true;
