@@ -7,6 +7,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Netly.Tcp
 {
+    /// <summary>
+    /// TCP: Client
+    /// </summary>
     public class TcpClient : ITcpClient
     {
         #region Var
@@ -14,22 +17,22 @@ namespace Netly.Tcp
         #region Public
 
         /// <summary>
-        /// 
+        /// Client identifier
         /// </summary>
         public string Id { get; private set; }
 
         /// <summary>
-        /// 
+        /// Endpoint
         /// </summary>
         public Host Host { get; private set; }
 
         /// <summary>
-        /// 
+        /// Returns true if using encryption like SSL, TLS
         /// </summary>
         public bool IsEncrypted { get; private set; }
 
         /// <summary>
-        /// 
+        /// Returns true if socket is connected
         /// </summary>
         public bool Opened { get => Connected(); }
 
@@ -67,7 +70,7 @@ namespace Netly.Tcp
         #region Builder
 
         /// <summary>
-        /// 
+        /// Creating instance
         /// </summary>
         public TcpClient()
         {
@@ -96,9 +99,9 @@ namespace Netly.Tcp
         #region Customization Event
 
         /// <summary>
-        /// 
+        /// Is called, executes action before socket connect
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnBeforeOpen(Action<Socket> callback)
         {
             _OnBeforeOpen += (sender, socket) =>
@@ -111,9 +114,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Is called, executes action after socket connect
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnAfterOpen(Action<Socket> callback)
         {
             _OnAfterOpen += (sender, socket) =>
@@ -130,9 +133,9 @@ namespace Netly.Tcp
         #region Init
 
         /// <summary>
-        /// 
+        /// Use to open connection
         /// </summary>
-        /// <param name="host"></param>
+        /// <param name="host">Endpoint</param>
         public void Open(Host host)
         {
             if (Opened || _tryOpen || _tryClose || _isServer) return;
@@ -169,7 +172,7 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Use to close connection
         /// </summary>
         public void Close()
         {
@@ -202,7 +205,7 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Use to send raw data
         /// </summary>
         /// <param name="value"></param>
         public void ToData(byte[] value)
@@ -228,10 +231,10 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Use to send a certain event
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
+        /// <param name="name">name</param>
+        /// <param name="value">data</param>
         public void ToEvent(string name, byte[] value)
         {
             ToData(Events.Create(name, value));
@@ -319,9 +322,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Use to make use of encryption
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">Use encryption?</param>
         /// <exception cref="Exception"></exception>
         /// <exception cref="NotImplementedException"></exception>
         public void UseEncryption(bool value)
@@ -341,9 +344,9 @@ namespace Netly.Tcp
         #region Events
 
         /// <summary>
-        /// 
+        /// Execute the callback, when: the connection is opened
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnOpen(Action callback)
         {
             _OnOpen += (sender, args) =>
@@ -356,9 +359,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Execute the callback, when: the connection is closed
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnClose(Action callback)
         {
             _OnClose += (sender, args) =>
@@ -371,9 +374,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Execute the callback, when: the connection cannot be opened
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnError(Action<Exception> callback)
         {
             _OnError += (sender, exception) =>
@@ -386,9 +389,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Execute the callback, when: when the connection receives raw data
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnData(Action<byte[]> callback)
         {
             _OnData += (sender, data) =>
@@ -401,9 +404,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// 
+        /// Execute the callback, when: when the connection receives event data
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">action/callback</param>
         public void OnEvent(Action<string, byte[]> callback)
         {
             _OnEvent += (sender, result) =>
