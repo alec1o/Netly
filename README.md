@@ -5,7 +5,7 @@
 
 Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination.
 
-### [Netly Docs](https://github.com/zeloot/netly-docs)
+### [Netly Docs](https://zeloot.github.io/netly-docs/api/Netly.Core.html)
 
 <br>
 <br>
@@ -37,4 +37,4 @@ Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/NetlyForUnity)
 - Netly is native script and runs on all .NET C# projects or projects that contain dotnet c# as a script
 
-##### [© Zeloot * rights reserved](https://github.com/zeloot/)
+##### [© zeloot * rights reserved](https://github.com/zeloot/)
