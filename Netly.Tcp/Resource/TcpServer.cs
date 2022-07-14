@@ -12,9 +12,24 @@ namespace Netly.Tcp
 
         #region Public
 
+        /// <summary>
+        /// 
+        /// </summary>
         public Host Host { get; private set; }
+        
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsEncrypted { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool Opened { get => IsOpened(); }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public List<TcpClient> Clients { get; private set; }
 
         #endregion
@@ -49,6 +64,9 @@ namespace Netly.Tcp
 
         #region Builder
         
+        /// <summary>
+        /// 
+        /// </summary>
         public TcpServer()
         {
             Host = new Host(IPAddress.Any, 0);
@@ -60,6 +78,11 @@ namespace Netly.Tcp
 
         #region Init
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="backlog"></param>
         public void Open(Host host, int backlog = 0)
         {
             if (Opened || _tryOpen || _tryClose) return;
@@ -97,6 +120,9 @@ namespace Netly.Tcp
             });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Close()
         {
             if (!Opened || _tryOpen || _tryClose) return;
@@ -215,6 +241,12 @@ namespace Netly.Tcp
             BeginAccept();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="Exception"></exception>
+        /// <exception cref="NotImplementedException"></exception>
         public void UseEncryption(bool value)
         {
             if (Opened)
@@ -231,11 +263,19 @@ namespace Netly.Tcp
 
         #region Customization Event
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnBeforeOpen(Action<Socket> callback)
         {
             _OnBeforeOpen += (sender, socket) => callback?.Invoke(socket);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnAfterOpen(Action<Socket> callback)
         {
             _OnAfterOpen += (sender, socket) => callback?.Invoke(socket);
@@ -245,36 +285,64 @@ namespace Netly.Tcp
 
         #region Events
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnOpen(Action callback)
         {
             _OnOpen += (sender, args) => callback?.Invoke();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnClose(Action callback)
         {
             _OnClose += (sender, args) => callback?.Invoke();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnError(Action<Exception> callback)
         {
             _OnError += (sender, exception) => callback?.Invoke(exception);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnEnter(Action<TcpClient> callback)
         {
             _OnEnter += (sender, client) => callback?.Invoke(client);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnExit(Action<TcpClient> callback)
         {
             _OnExit += (sender, client) => callback?.Invoke(client);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnData(Action<TcpClient, byte[]> callback)
         {
             _OnData += (sender, value) => callback?.Invoke(value.client, value.data);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback"></param>
         public void OnEvent(Action<TcpClient, string, byte[]> callback)
         {
             _OnEvent += (sender, value) => callback?.Invoke(value.client, value.name, value.data);
