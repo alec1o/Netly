@@ -16,7 +16,7 @@ namespace Netly.Tcp
         /// 
         /// </summary>
         public Host Host { get; private set; }
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -63,7 +63,7 @@ namespace Netly.Tcp
         #endregion
 
         #region Builder
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -298,7 +298,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnBeforeOpen(Action<Socket> callback)
         {
-            _OnBeforeOpen += (sender, socket) => callback?.Invoke(socket);
+            _OnBeforeOpen += (sender, socket) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
         }
 
         /// <summary>
@@ -307,7 +313,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnAfterOpen(Action<Socket> callback)
         {
-            _OnAfterOpen += (sender, socket) => callback?.Invoke(socket);
+            _OnAfterOpen += (sender, socket) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(socket);
+                });
+            };
         }
 
         #endregion
@@ -320,7 +332,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnOpen(Action callback)
         {
-            _OnOpen += (sender, args) => callback?.Invoke();
+            _OnOpen += (sender, args) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke();
+                });
+            };
         }
 
         /// <summary>
@@ -329,7 +347,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnClose(Action callback)
         {
-            _OnClose += (sender, args) => callback?.Invoke();
+            _OnClose += (sender, args) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke();
+                });
+            };
         }
 
         /// <summary>
@@ -338,7 +362,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnError(Action<Exception> callback)
         {
-            _OnError += (sender, exception) => callback?.Invoke(exception);
+            _OnError += (sender, exception) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(exception);
+                });
+            };
         }
 
         /// <summary>
@@ -347,7 +377,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnEnter(Action<TcpClient> callback)
         {
-            _OnEnter += (sender, client) => callback?.Invoke(client);
+            _OnEnter += (sender, client) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(client);
+                });
+            };
         }
 
         /// <summary>
@@ -356,7 +392,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnExit(Action<TcpClient> callback)
         {
-            _OnExit += (sender, client) => callback?.Invoke(client);
+            _OnExit += (sender, client) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(client);
+                });
+            };
         }
 
         /// <summary>
@@ -365,7 +407,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnData(Action<TcpClient, byte[]> callback)
         {
-            _OnData += (sender, value) => callback?.Invoke(value.client, value.data);
+            _OnData += (sender, value) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(value.client, value.data);
+                });
+            };
         }
 
         /// <summary>
@@ -374,7 +422,13 @@ namespace Netly.Tcp
         /// <param name="callback"></param>
         public void OnEvent(Action<TcpClient, string, byte[]> callback)
         {
-            _OnEvent += (sender, value) => callback?.Invoke(value.client, value.name, value.data);
+            _OnEvent += (sender, value) =>
+            {
+                Call.Execute(() =>
+                {
+                    callback?.Invoke(value.client, value.name, value.data);
+                });
+            };
         }
 
         #endregion
