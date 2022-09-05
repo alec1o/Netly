@@ -3,6 +3,7 @@
 <br>
 
 ## Installation
+> #### Sometimes the installation in simple just add the dll in the project. and very common in the case of game engine, like unity
 - ### Download the latest version (.dll)
   ```
   1.Open: https://github.com/zeloot/netly/
