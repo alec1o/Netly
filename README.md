@@ -53,4 +53,4 @@ Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client
 
 <br>
 
-### [© zeloot * rights reserved](https://github.com/zeloot/)
+### [© Kezero](https://github.com/kezerocom/) all rights reserved
