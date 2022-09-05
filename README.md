@@ -48,7 +48,7 @@ Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client
 - #### [Flax Engine](https://flaxengine.com/)
 - #### [MonoGame Engine](https://www.monogame.net/)
 - #### [Stride Engine](https://www.stride3d.net/)
-- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/ALEC1O/NetlyForUnity)
+- #### [Unity Engine](https://www.unity.com/) & [Demo project](https://github.com/alec1o/NetlyUnity)
 - #### [Xamarin](https://dotnet.microsoft.com/apps/xamarin/)
 
 <br>
