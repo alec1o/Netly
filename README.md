@@ -2,6 +2,37 @@
 
 <br>
 
+## Installation
+- ### Download the latest version (.dll)
+  ```
+  1.Open: https://github.com/zeloot/netly/
+  2.Release > Choose Version
+  3.Download all (.ddl)
+  ```
+
+- ### Adding reference (.dll)
+  ````xml
+  <Project Sdk="Microsoft.NET.Sdk">
+      <PropertyGroup>
+          <TargetFramework></TargetFramework>
+      </PropertyGroup>
+
+      <ItemGroup>
+          <Reference Include="Netly.Core">
+              <HintPath>../<path>/Netly.Core.dll</HintPath>
+          </Reference>
+          <Reference Include="Netly.Tcp">
+              <HintPath>../<path>/Netly.Tcp.dll</HintPath>
+          </Reference>
+      </ItemGroup>
+
+  </Project>
+  ````
+  
+<br>
+
+## Abount
+
 
 Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination.
 
