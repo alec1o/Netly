@@ -220,7 +220,6 @@ namespace Netly.Tcp
                 }
                 else
                 {
-                    _stream = new NetworkStream(_socket);
                     _stream.Write(value, 0, value.Length);
                 }
             }
