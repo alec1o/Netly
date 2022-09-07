@@ -33,7 +33,7 @@
   
 <br>
 
-## Abount
+## About
 
 
 Netly is a socket library. It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows) as long as it is compiled with its destination. [API documentation for use](https://zeloot.github.io/netly-docs/api/Netly.Core.html)
