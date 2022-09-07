@@ -280,7 +280,7 @@ namespace Netly.Udp
             client.InitServer();
 
             // add received data
-            target.AddData(data);
+            client.AddData(data);
         }
 
         /// <summary>
