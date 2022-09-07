@@ -223,6 +223,7 @@ namespace Netly.Udp
             {
                 if (target.Host.Port == port && target.Host.Address.ToString() == address.ToString())
                 {
+                    // add received data
                     target.AddData(data);
 
                     if (data.Length <= 0)
@@ -239,6 +240,8 @@ namespace Netly.Udp
             // create new client
 
             UdpClient client = new UdpClient(Guid.NewGuid().ToString(), ref _socket, new Host(address, port));
+            
+            // add this instance in list of all clients connected
             Clients.Add(client);
 
             client.OnOpen(() =>
@@ -273,7 +276,11 @@ namespace Netly.Udp
                 _OnEvent?.Invoke(this, (client, name, value));
             });
 
+            // init this instance for start work
             client.InitServer();
+
+            // add received data
+            target.AddData(data);
         }
 
         /// <summary>
