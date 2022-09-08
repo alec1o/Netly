@@ -1,7 +1,7 @@
 # Netly
 
 ### [Usage Documentation](https://netly.kezero.com)
-### [Source Documentation](https://docs-netly.kezero.com)
+### [Source Documentation](http://docs-netly.kezero.com)
 
 <br>
 
