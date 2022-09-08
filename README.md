@@ -1,5 +1,8 @@
 # Netly
 
+### [Usage Documentation](https://netly.kezero.com)
+### [Source Documentation](https://docs-netly.kezero.com)
+
 <br>
 
 ## Installation
