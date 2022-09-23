@@ -60,6 +60,8 @@
 - [Core] Add other data compression system besides GZIP which is already implemented.
 - [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32
 
+<br>
+
 ## Copyright
 - Maintainer: KEZERO / [@kezerocom](https://github.com/kezerocom)
 - Developed by: ALECIO FURANZE / [@alec1o](https://github.com/ALEC1O)
