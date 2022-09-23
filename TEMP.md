@@ -65,5 +65,5 @@
 ## Copyright
 - Maintainer: KEZERO / [@kezerocom](https://github.com/kezerocom)
 - Developed by: ALECIO FURANZE / [@alec1o](https://github.com/ALEC1O)
-- Support: EMAIL / [CONTACT HERE](support@kezero.com)
+- Support: EMAIL / [CONTACT HERE](mailto://support@kezero.com)
 - License: MIT / [SEE HERE](/LICENSE)
