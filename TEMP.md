@@ -1,3 +1,9 @@
+## Abount
+
+> Netly is a low-level socket library whose main function is to make socket usage easier, readable and productive. Its syntax is minimalistic and inspired by socket.io. It supports using TCP/UDP and Client/Server. The reason for the emergence was aimed at building a multiplayer game server.
+
+<br>
+
 ## Platforms
 
 ### Build Platforms (RUNTIME)
