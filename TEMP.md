@@ -43,7 +43,7 @@
 
 <br>
 
-### Last version
+## Last version
 > Below are some of the highlighted feature added in the current version
 
 - TCP client/server working fine.
@@ -52,7 +52,7 @@
 
 <br>
 
-### Currently missing feature
+## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.
 
 - [TCP client/server] Support SSL/TLS encryption.
