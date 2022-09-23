@@ -40,3 +40,8 @@
 - [MonoGame](https://monogame.net) (Engine)
 - [Stride](https://stride3d.net) (Engine)
 - [CryEngine](https://cryengine.com) (Engine)
+
+### Last version
+- TCP client/server working fine.
+- Creating (dic) to pack and unpack data easily.
+- Udp client/server creation worked, but not finished
