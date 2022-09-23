@@ -15,6 +15,15 @@
 
 <br>
 
+## Package manager
+> This library can be found in some package managers, see below
+
+- Nuget / [SEE HERE](#)
+- Unity AssetStore / [SEE HERE](https://assetstore.unity.com/packages/tools/network/225473)
+
+
+<br>
+
 ## Platforms
 
 ### Build Platforms (RUNTIME)
