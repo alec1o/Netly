@@ -67,7 +67,8 @@
 - [TCP client/server] Support SSL/TLS encryption.
 - [UDP client/server] Detect disconnected connection (using continuous pings and a no-response timeout to identify client-server connection).
 - [Core] Add other data compression system besides GZIP which is already implemented.
-- [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32
+- [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32.
+- [TCP/UDP client/server] Send data in string without having to convert from string to bytes manually.
 
 <br>
 
