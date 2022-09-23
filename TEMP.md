@@ -41,7 +41,11 @@
 - [Stride](https://stride3d.net) (Engine)
 - [CryEngine](https://cryengine.com) (Engine)
 
+<br>
+
 ### Last version
+> Below are some of the highlighted feature added in the current version
+
 - TCP client/server working fine.
 - Creating (dic) to pack and unpack data easily.
-- Udp client/server creation worked, but not finished
+- UDP client/server creation worked, but not finished
