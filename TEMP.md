@@ -18,7 +18,7 @@
 ## Package manager
 > This library can be found in some package managers, see below
 
-- Nuget / [SEE HERE](#)
+- Nuget / [SEE HERE]() (not found)
 - Unity AssetStore / [SEE HERE](https://assetstore.unity.com/packages/tools/network/225473)
 
 
