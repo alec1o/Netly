@@ -49,14 +49,6 @@
 - TCP client/server working fine.
 - Creating (dic) to pack and unpack data easily.
 - UDP client/server creation worked, but not finished.
-<br>
-
-### Last version
-> Below are some of the highlighted feature added in the current version
-
-- TCP client/server working fine.
-- Creating (dic) to pack and unpack data easily.
-- UDP client/server creation worked, but not finished.
 
 <br>
 
