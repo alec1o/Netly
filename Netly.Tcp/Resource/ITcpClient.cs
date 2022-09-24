@@ -23,6 +23,7 @@ namespace Netly.Tcp
         void OnData(Action<byte[]> callback);
         void OnData(Action<string> callback);
         void OnEvent(Action<string, byte[]> callback);
+        void OnEvent(Action<string, string> callback);
 
         void OnBeforeOpen(Action<Socket> callback);
         void OnAfterOpen(Action<Socket> callback);
