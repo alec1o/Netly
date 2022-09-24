@@ -205,7 +205,7 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to send raw data
+        /// Use to send raw data, in bytes
         /// </summary>
         /// <param name="value"></param>
         public void ToData(byte[] value)
@@ -227,6 +227,15 @@ namespace Netly.Tcp
             {
 
             }
+        }
+        
+        /// <summary>
+        /// Use to send raw data, in string
+        /// </summary>
+        /// <param name="value"></param>
+        public void ToData(string value)
+        {
+            this.ToData(Encode.GetBytes(value, Encode.Mode.UTF8));
         }
 
         /// <summary>
