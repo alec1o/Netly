@@ -207,7 +207,7 @@ namespace Netly.Udp
 
         // TODO.
         /// <summary>
-        /// Use to send raw data
+        /// Use to send raw data, using bytes
         /// </summary>
         /// <param name="value"></param>
         public void ToData(byte[] value)
@@ -222,6 +222,16 @@ namespace Netly.Udp
             {
 
             }
+        }
+        
+        // TODO.
+        /// <summary>
+        /// Use to send raw data, using string
+        /// </summary>
+        /// <param name="value"></param>
+        public void ToData(string value)
+        {
+            this.ToData(Encode.GetBytes(value));
         }
 
         /// <summary>
