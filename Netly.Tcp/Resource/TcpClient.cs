@@ -205,7 +205,7 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to send raw data, in bytes
+        /// Use to send raw data, using bytes
         /// </summary>
         /// <param name="value"></param>
         public void ToData(byte[] value)
@@ -230,7 +230,7 @@ namespace Netly.Tcp
         }
         
         /// <summary>
-        /// Use to send raw data, in string
+        /// Use to send raw data, using string
         /// </summary>
         /// <param name="value"></param>
         public void ToData(string value)
@@ -239,13 +239,23 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to send a certain event
+        /// Use to send a certain event, using bytes
         /// </summary>
         /// <param name="name">name</param>
         /// <param name="value">data</param>
         public void ToEvent(string name, byte[] value)
         {
             ToData(Events.Create(name, value));
+        }
+        
+        /// <summary>
+        /// Use to send a certain event, using string
+        /// </summary>
+        /// <param name="name">name</param>
+        /// <param name="value">data</param>
+        public void ToEvent(string name, string value)
+        {
+            ToData(Events.Create(name, Encode.GetBytes(value, Encode.Mode.UTF8)));
         }
 
         private bool Connected()
