@@ -1,6 +1,5 @@
 <h1 align="center"><a href="https://github.com/kezerocom">Kezero</a> Netly</h1>
 <h2 align="center">  
-  <img src="/Logo/netly-logo-1.png" width="200px">
   <img src="/Logo/netly-logo-2.png" width="200px">
   <img src="/Logo/netly-logo-3.png" width="200px">
 </h2>
