@@ -55,20 +55,20 @@
 ## Last version
 > Below are some of the highlighted feature added in the current version
 
-- TCP client/server working fine.
-- Creating (dic) to pack and unpack data easily.
-- UDP client/server creation worked, but not finished.
+- [x] TCP client/server working fine.
+- [x] Creating (dic) to pack and unpack data easily.
+- [x] UDP client/server creation worked, but not finished.
 
 <br>
 
 ## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.
 
-- [TCP client/server] Support SSL/TLS encryption.
-- [UDP client/server] Detect disconnected connection (using continuous pings and a no-response timeout to identify client-server connection).
-- [Core] Add other data compression system besides GZIP which is already implemented.
-- [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32.
-- [TCP/UDP client/server] Send data in string without having to convert from string to bytes manually.
+- [ ] [TCP client/server] Support SSL/TLS encryption.
+- [ ] [UDP client/server] Detect disconnected connection (using continuous pings and a no-response timeout to identify client-server connection).
+- [ ] [Core] Add other data compression system besides GZIP which is already implemented.
+- [ ] [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32.
+- [ ] [TCP/UDP client/server] Send data in string without having to convert from string to bytes manually.
 
 <br>
 
