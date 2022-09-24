@@ -13,7 +13,9 @@ namespace Netly.Udp
         void Close();
 
         void ToData(byte[] value);
+        void ToData(string value);
         void ToEvent(string name, byte[] value);
+        void ToEvent(string name, string value);
 
         void OnOpen(Action callback);
         void OnClose(Action callback);
