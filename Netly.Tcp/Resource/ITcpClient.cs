@@ -15,7 +15,7 @@ namespace Netly.Tcp
         void UseEncryption(bool value);
 
         void ToData(byte[] value);
-        void TiData(string value);        
+        void ToData(string value);        
         void ToEvent(string name, byte[] value);
         void ToEvent(string name, string value);
 
