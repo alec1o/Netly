@@ -15,15 +15,15 @@ namespace Netly.Tcp
         void UseEncryption(bool value);
 
         void ToData(byte[] value);
+        void TiData(string value);        
         void ToEvent(string name, byte[] value);
+        void ToEvent(string name, string value);
 
         void OnOpen(Action callback);
         void OnClose(Action callback);
         void OnError(Action<Exception> callback);
         void OnData(Action<byte[]> callback);
-        void OnData(Action<string> callback);
         void OnEvent(Action<string, byte[]> callback);
-        void OnEvent(Action<string, string> callback);
 
         void OnBeforeOpen(Action<Socket> callback);
         void OnAfterOpen(Action<Socket> callback);
