@@ -70,7 +70,8 @@
 ## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.
 
-- [ ] [TCP client/server] Support SSL/TLS encryption.
+- [ ] [TCP Client/Server] Support SSL/TLS encryption.
+- [ ] [TCP Client] Add auto-reconnect and reconnect timeout
 - [ ] [UDP client/server] Detect disconnected connection (using continuous pings and a no-response timeout to identify client-server connection).
 - [ ] [Core] Add other data compression system besides GZIP which is already implemented.
 - [ ] [Core] Add new binary encoding type like UTF-7, UTF-16, UTF-32.
