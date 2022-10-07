@@ -26,7 +26,7 @@
     - [Server](/Docs/UDP/Server.md)
   - CORE
     - [Async](/Docs/CORE/Async.md)
-    - [Call](/Docs/CORE/Call.md)
+    - [x] [Call](/Docs/CORE/Call.md)
     - [Compare](/Docs/CORE/Compare.md)
     - [Compress](/Docs/CORE/Compress.md)
     - [Concat](/Docs/CORE/Concat.md)
