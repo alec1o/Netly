@@ -41,15 +41,15 @@ namespace Netly.Core
                  Dict dict = new Dict();
                  dict.SetBytes(value);
                  
-                 byte[] prefix = dict.Get(byte[]);
+                 byte[] prefix = dict.Get<byte[]>();
                  
                  if (prefix == null || !Compare.Bytes(prefix, _prefix)) return (null, null);
                  
-                 string name = dict.Get(string);
+                 string name = dict.Get<string>();
                  
                  if (name == null) return (null, null);
                  
-                 byte[] data = dict.Get(byte[]);
+                 byte[] data = dict.Get<byte[]>();
                  
                  if(data == null) return (null, null);
                  
