@@ -45,7 +45,7 @@ namespace Netly.Tcp
         private bool _tryClose;
         private bool _invokeClose;
         private bool _opened;
-        private readonly object _lock = new object():
+        private readonly object _lock = new object();
 
         #region Events
 
