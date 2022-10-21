@@ -112,7 +112,7 @@ namespace Netly.Tcp
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
-                    BeginAccept();
+                    Async.SafePool(BeginAccept);
                 }
                 catch (Exception e)
                 {
@@ -177,33 +177,22 @@ namespace Netly.Tcp
 
         private void BeginAccept()
         {
-            try
+            while (Opened)
             {
-                _socket.BeginAccept(EndAccept, null);
-            }
-            catch
-            {
-                if (Opened)
-                {
-                    BeginAccept();
-                }
+                 try
+                 {
+                     var clientSocket = _socket.Accept();
+                 
+                     if (clientSocket == null) continue;
+                  
+                     EndAccept(clientSocket);
+                 }
+                 catch { }
             }
         }
 
-        private void EndAccept(IAsyncResult result)
+        private void EndAccept(Socket)
         {
-            Socket socket;
-
-            try
-            {
-                socket = _socket.EndAccept(result);
-            }
-            catch
-            {
-                BeginAccept();
-                return;
-            }
-
             TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
             Clients.Add(client);
 
@@ -240,8 +229,6 @@ namespace Netly.Tcp
             });
 
             client.InitServer();
-
-            BeginAccept();
         }
 
         /// <summary>
