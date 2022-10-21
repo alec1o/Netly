@@ -45,6 +45,7 @@ namespace Netly.Tcp
         private bool _tryClose;
         private bool _invokeClose;
         private bool _opened;
+        private readonly object _lock = new object():
 
         #region Events
 
@@ -194,10 +195,37 @@ namespace Netly.Tcp
             }
         }
 
+        private TcpClient Queue(TcpClient client, bool remove)
+        {
+            lock(_lock)
+            {
+                if (remove)
+                {
+                    foreach (TcpClient target in Clients.ToArray())
+                    {
+                        if (client.Id == target.Id)
+                        {
+                            try
+                            {
+                                Clients.Remove(target);
+                                return client;
+                            }
+                            catch { }
+                        }
+                    }
+                    
+                    return null;
+                }
+                
+                Clients.Add(client);
+                return client;
+            }
+        }
+
         private void EndAccept(Socket socket)
         {
             TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
-            Clients.Add(client);
+            Queue(client, false);
 
             client.OnOpen(() =>
             {
@@ -206,19 +234,7 @@ namespace Netly.Tcp
 
             client.OnClose(() =>
             {
-                foreach (TcpClient target in Clients.ToArray())
-                {
-                    if (client.Id == target.Id)
-                    {
-                        try
-                        {
-                            Clients.Remove(target);
-                        }
-                        catch { }
-
-                        _OnExit?.Invoke(this, client);
-                    }
-                }
+                _OnExit?.Invoke(this, Queue(client, true) ?? client);
             });
 
             client.OnData((data) =>
