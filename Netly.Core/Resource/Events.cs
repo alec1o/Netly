@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Netly.Core
 {
@@ -7,20 +7,24 @@ namespace Netly.Core
     /// </summary>
     public static class Events
     {
-        private static readonly byte[] Prefix = Encode.GetBytes(":: NETL ::", Encode.Mode.ASSCI);
+        private static readonly byte[] _prefix = Encode.GetBytes("NETLY://", Encode.Mode.ASSCI);
 
         /// <summary>
         /// Used to revert, check the event
         /// </summary>
         /// <param name="name">Event name</param>
         /// <param name="value">Event data/value</param>
+        
         /// <returns>Returns the data "event" in byte format</returns>
         public static byte[] Create(string name, byte[] value)
         {
-            byte[] data = Encode.GetBytes(name, Encode.Mode.UTF8);
-            byte[] size = BitConverter.GetBytes(data.Length);
+            Dict dict = new Dict();
             
-            return Concat.Bytes(Prefix, size, data, value);
+            dict.Add(_prefix);
+            dict.Add(name);
+            dict.Add(data);
+            
+            return dict.GetBytes();
         }
 
         /// <summary>
@@ -32,63 +36,28 @@ namespace Netly.Core
         {
             try
             {
-                int index = 0;
-
-                #region Verify Prefix
-
-                if (value == null || value.Length < Prefix.Length + 6)
-                {
-                    return (String.Empty, new byte[0]);
-                }
-
-                var prefix = new byte[Prefix.Length];
-                Buffer.BlockCopy(value, 0, prefix, 0, Prefix.Length);
-
-                if(!Compare.Bytes(Prefix, prefix))
-                {
-                    return (String.Empty, new byte[0]);
-                }
-
-                index += Prefix.Length;
-
-                #endregion
-
-                #region Get Name Size
-
-                int nameSize = BitConverter.ToInt32(value, index);
-
-                if (nameSize > value.Length - index)
-                {
-                    return (String.Empty, new byte[0]);
-                }
-
-                index += sizeof(int);
-
-                #endregion
-
-                #region Get Name
-
-                var nameBytes = new byte[nameSize];
-                Buffer.BlockCopy(value, index, nameBytes, 0, nameSize);
-
-                var name = Encode.GetString(nameBytes, Encode.Mode.UTF8);
-
-                index += nameBytes.Length;
-
-                #endregion
-
-                #region Get Data
-
-                var data = new byte[value.Length - index];
-                Array.Copy(value, index, data, 0, data.Length);
-
-                #endregion
-
-                return (name, data);
+                 if (value == null) return (null, null);
+                 
+                 Dict dict = new Dict();
+                 dict.SetBytes(value);
+                 
+                 byte[] prefix = dict.Get(typeof(byte[]));
+                 
+                 if (prefix == null || !Compare.Bytes(prefix, _prefix)) return (null, null);
+                 
+                 string name = dict.Get(typeof(string));
+                 
+                 if (name == null) return (null, null);
+                 
+                 byte[] data = dict.Get(typeof(byte[]));
+                 
+                 if(data == null) return (null, null);
+                 
+                 return (name, data);
             }
             catch
             {
-                return (String.Empty, new byte[0]);
+                return (null, null);
             }
         }
     }
