@@ -197,7 +197,7 @@ namespace Netly.Tcp
 
         private TcpClient Queue(TcpClient client, bool remove)
         {
-            //lock(_lock)
+            lock(_lock)
             {
                 if (remove)
                 {
@@ -205,21 +205,19 @@ namespace Netly.Tcp
                     {
                         if (client.Id == target.Id)
                         {
-                            lock (_lock)
+                            try
                             {
                                 Clients.Remove(target);
                                 return client;
                             }
+                            catch { }
                         }
                     }
                     
                     return null;
                 }
-                
-                lock (_lock)
-                {
-                    Clients.Add(client);
-                }
+
+                Clients.Add(client);
 
                 return client;
             }
