@@ -197,7 +197,7 @@ namespace Netly.Tcp
 
         private TcpClient Queue(TcpClient client, bool remove)
         {
-            if (client == null) return;
+            if (client == null) return null;
 
             lock(_lock)
             {
