@@ -85,6 +85,7 @@ namespace Netly.Tcp
             Id = id;
             _isServer = true;
             _socket = socket;
+            _socket.NoDelay = true;
             Host = new Host(socket.RemoteEndPoint ?? new IPEndPoint(IPAddress.Any, 0));
         }
 
@@ -147,7 +148,7 @@ namespace Netly.Tcp
                 try
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+                    _socket.NoDelay = true;
                     _OnBeforeOpen?.Invoke(this, _socket);
 
                     _socket.Connect(host.EndPoint);
