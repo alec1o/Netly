@@ -97,6 +97,9 @@ namespace Netly.Tcp
                 try
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    _socket.NoDelay = true;
+                    
+                    if (backlog < 1) backlog = 999;
 
                     _OnBeforeOpen?.Invoke(this, _socket);
 
