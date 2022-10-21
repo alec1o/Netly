@@ -191,7 +191,7 @@ namespace Netly.Tcp
             }
         }
 
-        private void EndAccept(socket)
+        private void EndAccept(Socket socket)
         {
             TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
             Clients.Add(client);
