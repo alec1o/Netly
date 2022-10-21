@@ -197,13 +197,15 @@ namespace Netly.Tcp
 
         private TcpClient Queue(TcpClient client, bool remove)
         {
+            if (client == null) return;
+
             lock(_lock)
             {
                 if (remove)
                 {
                     foreach (TcpClient target in Clients.ToArray())
                     {
-                        if (client.Id == target.Id)
+                        if (target != null && client.Id == target.Id)
                         {
                             try
                             {
