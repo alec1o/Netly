@@ -45,6 +45,7 @@ namespace Netly.Tcp
         private bool _tryClose;
         private bool _invokeClose;
         private bool _opened;
+        private readonly object _lock = new object();
 
         #region Events
 
@@ -97,6 +98,9 @@ namespace Netly.Tcp
                 try
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    _socket.NoDelay = true;
+                    
+                    if (backlog < 1) backlog = 999;
 
                     _OnBeforeOpen?.Invoke(this, _socket);
 
@@ -112,7 +116,7 @@ namespace Netly.Tcp
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
-                    BeginAccept();
+                    Async.SafePool(BeginAccept);
                 }
                 catch (Exception e)
                 {
@@ -177,35 +181,54 @@ namespace Netly.Tcp
 
         private void BeginAccept()
         {
-            try
+            while (Opened)
             {
-                _socket.BeginAccept(EndAccept, null);
-            }
-            catch
-            {
-                if (Opened)
-                {
-                    BeginAccept();
-                }
+                 try
+                 {
+                     var clientSocket = _socket.Accept();
+                 
+                     if (clientSocket == null) continue;
+                  
+                     EndAccept(clientSocket);
+                 }
+                 catch { }
             }
         }
 
-        private void EndAccept(IAsyncResult result)
+        private TcpClient Queue(TcpClient client, bool remove)
         {
-            Socket socket;
+            if (client == null) return null;
 
-            try
+            lock(_lock)
             {
-                socket = _socket.EndAccept(result);
-            }
-            catch
-            {
-                BeginAccept();
-                return;
-            }
+                if (remove)
+                {
+                    foreach (TcpClient target in Clients.ToArray())
+                    {
+                        if (target != null && client.Id == target.Id)
+                        {
+                            try
+                            {
+                                Clients.Remove(target);
+                                return client;
+                            }
+                            catch { }
+                        }
+                    }
+                    
+                    return null;
+                }
 
+                Clients.Add(client);
+
+                return client;
+            }
+        }
+
+        private void EndAccept(Socket socket)
+        {
             TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
-            Clients.Add(client);
+            Queue(client, false);
 
             client.OnOpen(() =>
             {
@@ -214,19 +237,7 @@ namespace Netly.Tcp
 
             client.OnClose(() =>
             {
-                foreach (TcpClient target in Clients.ToArray())
-                {
-                    if (client.Id == target.Id)
-                    {
-                        try
-                        {
-                            Clients.Remove(target);
-                        }
-                        catch { }
-
-                        _OnExit?.Invoke(this, client);
-                    }
-                }
+                _OnExit?.Invoke(this, Queue(client, true) ?? client);
             });
 
             client.OnData((data) =>
@@ -240,8 +251,6 @@ namespace Netly.Tcp
             });
 
             client.InitServer();
-
-            BeginAccept();
         }
 
         /// <summary>
