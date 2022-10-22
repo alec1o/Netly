@@ -286,7 +286,7 @@ namespace Netly.Tcp
 
                             byte[] data = new byte[length];
 
-                            Buffer.BlockCopy(buffer, 0, data, 0, data.Length, socketFlags.None);
+                            Buffer.BlockCopy(buffer, 0, data, 0, data.Length, SocketFlags.None);
 
                             var events = Events.Verify(data);
 
