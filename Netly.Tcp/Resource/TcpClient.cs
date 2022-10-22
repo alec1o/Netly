@@ -210,7 +210,7 @@ namespace Netly.Tcp
         /// <summary>
         /// Use to send raw data
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">raw data</param>
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
@@ -230,13 +230,32 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to send a certain event
+        /// Use to send event (certain event) 
         /// </summary>
-        /// <param name="name">name</param>
-        /// <param name="value">data</param>
+        /// <param name="name">event name</param>
+        /// <param name="value">event data</param>
         public void ToEvent(string name, byte[] value)
         {
             ToData(Events.Create(name, value));
+        }
+
+        /// <summary>
+        /// Use to send raw data
+        /// </summary>
+        /// <param name="value">raw data</param>
+        public void ToData(string value)
+        {
+            this.ToData(Encode.GetBytes(value, Encode.Mode.UTF8));
+        }
+        
+        /// <summary>
+        /// Use to send event (certain event)
+        /// </summary>
+        /// <param name="name">event name</param>
+        /// <param name="value">event data</param>
+        public void ToData(string name, string value)
+        {
+            this.ToEvent(name, Encode.GetBytes(value, Encode.Mode.UTF8));
         }
 
         private bool Connected()
