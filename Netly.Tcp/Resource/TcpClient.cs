@@ -1,4 +1,4 @@
-﻿using Netly.Core;
+using Netly.Core;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -85,6 +85,7 @@ namespace Netly.Tcp
             Id = id;
             _isServer = true;
             _socket = socket;
+            _socket.NoDelay = true;
             Host = new Host(socket.RemoteEndPoint ?? new IPEndPoint(IPAddress.Any, 0));
         }
 
@@ -148,6 +149,8 @@ namespace Netly.Tcp
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                    _socket.NoDelay = true;
+
                     _OnBeforeOpen?.Invoke(this, _socket);
 
                     _socket.Connect(host.EndPoint);
@@ -205,9 +208,9 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to send raw data, using bytes
+        /// Use to send raw data
         /// </summary>
-        /// <param name="value"></param>
+        /// <param name="value">raw data</param>
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
@@ -220,42 +223,39 @@ namespace Netly.Tcp
                 }
                 else
                 {
-                    _stream.Write(value, 0, value.Length);
+                    _socket.Send(value, 0, value.Length, SocketFlags.None);
                 }
             }
-            catch
-            {
-
-            }
-        }
-        
-        /// <summary>
-        /// Use to send raw data, using string
-        /// </summary>
-        /// <param name="value"></param>
-        public void ToData(string value)
-        {
-            this.ToData(Encode.GetBytes(value, Encode.Mode.UTF8));
+            catch { }
         }
 
         /// <summary>
-        /// Use to send a certain event, using bytes
+        /// Use to send event (certain event) 
         /// </summary>
-        /// <param name="name">name</param>
-        /// <param name="value">data</param>
+        /// <param name="name">event name</param>
+        /// <param name="value">event data</param>
         public void ToEvent(string name, byte[] value)
         {
             ToData(Events.Create(name, value));
         }
+
+        /// <summary>
+        /// Use to send raw data
+        /// </summary>
+        /// <param name="value">raw data</param>
+        public void ToData(string value)
+        {
+            this.ToData(Encode.GetBytes(value, Encode.Mode.UTF8));
+        }
         
         /// <summary>
-        /// Use to send a certain event, using string
+        /// Use to send event (certain event)
         /// </summary>
-        /// <param name="name">name</param>
-        /// <param name="value">data</param>
+        /// <param name="name">event name</param>
+        /// <param name="value">event data</param>
         public void ToEvent(string name, string value)
         {
-            ToData(Events.Create(name, Encode.GetBytes(value, Encode.Mode.UTF8)));
+            this.ToEvent(name, Encode.GetBytes(value, Encode.Mode.UTF8));
         }
 
         private bool Connected()
@@ -277,10 +277,9 @@ namespace Netly.Tcp
             int length = 0;
             byte[] buffer = new byte[1024 * 8];
 
-            _stream = new NetworkStream(_socket);
-
             if (IsEncrypted)
             {
+                _stream = new NetworkStream(_socket);
                 _sslStream = new SslStream(_stream);
                 throw new NotImplementedException(nameof(IsEncrypted));
             }
@@ -292,7 +291,7 @@ namespace Netly.Tcp
                     {
                         try
                         {
-                            length = _stream.Read(buffer, 0, buffer.Length);
+                            length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
                             if (length <= 0)
                             {
