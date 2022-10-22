@@ -272,7 +272,7 @@ namespace Netly.Tcp
                     {
                         try
                         {
-                            length = _socket.Receive(buffer, 0, buffer.Length);
+                            length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
                             if (length <= 0)
                             {
@@ -286,7 +286,7 @@ namespace Netly.Tcp
 
                             byte[] data = new byte[length];
 
-                            Buffer.BlockCopy(buffer, 0, data, 0, data.Length, SocketFlags.None);
+                            Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
 
                             var events = Events.Verify(data);
 
