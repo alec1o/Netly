@@ -223,7 +223,7 @@ namespace Netly.Tcp
                 }
                 else
                 {
-                    _stream.Write(value, 0, value.Length);
+                    _socket.Send(value, 0, value.Length);
                 }
             }
             catch { }
@@ -258,10 +258,9 @@ namespace Netly.Tcp
             int length = 0;
             byte[] buffer = new byte[1024 * 8];
 
-            _stream = new NetworkStream(_socket);
-
             if (IsEncrypted)
             {
+                _stream = new NetworkStream(_socket);
                 _sslStream = new SslStream(_stream);
                 throw new NotImplementedException(nameof(IsEncrypted));
             }
@@ -273,7 +272,7 @@ namespace Netly.Tcp
                     {
                         try
                         {
-                            length = _stream.Read(buffer, 0, buffer.Length);
+                            length = _socket.Receive(buffer, 0, buffer.Length);
 
                             if (length <= 0)
                             {
