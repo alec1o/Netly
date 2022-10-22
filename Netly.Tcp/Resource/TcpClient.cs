@@ -253,7 +253,7 @@ namespace Netly.Tcp
         /// </summary>
         /// <param name="name">event name</param>
         /// <param name="value">event data</param>
-        public void ToData(string name, string value)
+        public void ToEvent(string name, string value)
         {
             this.ToEvent(name, Encode.GetBytes(value, Encode.Mode.UTF8));
         }
