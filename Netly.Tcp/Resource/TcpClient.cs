@@ -223,7 +223,7 @@ namespace Netly.Tcp
                 }
                 else
                 {
-                    _socket.Send(value, 0, value.Length);
+                    _socket.Send(value, 0, value.Length, SocketFlags.None);
                 }
             }
             catch { }
