@@ -13,6 +13,7 @@ namespace Netly.Core
         /// </summary>
         public static bool Automatic { get; set; } = true;
         private static List<Action> _actions { get; set; } = new List<Action>();
+        private static Object actionListLock = new object ();
 
         /// <summary>
         /// Add an event to the execution queue
@@ -30,7 +31,9 @@ namespace Netly.Core
             }
             else
             {
-                _actions.Add(action);
+                lock(actionListLock) {
+                    _actions.Add(action);
+                }
             }
         }
 
@@ -45,10 +48,15 @@ namespace Netly.Core
             }
             else if (_actions.Count > 0)
             {
-                foreach (var action in _actions.ToArray())
+                Action[] actionArray;
+                lock (actionListLock) {
+                    actionArray = _actions.ToArray ();
+                    _actions.Clear ();
+                }
+
+                foreach (var action in actionArray)
                 {
-                    action();
-                    _actions.Remove(action);
+                    action ();
                 }
             }
         }
