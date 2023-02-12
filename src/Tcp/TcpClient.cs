@@ -66,7 +66,7 @@ namespace Netly
 
         internal void InitServer()
         {
-            _OnOpen?.Invoke(this, null);
+            _OnOpen?.Invoke(null, null);
             Receive();
         }
 
@@ -112,7 +112,7 @@ namespace Netly
 
                     _socket.NoDelay = true;
 
-                    _OnModify?.Invoke(this, _socket);
+                    _OnModify?.Invoke(null, _socket);
 
                     _socket.Connect(host.EndPoint);
 
@@ -120,13 +120,13 @@ namespace Netly
 
                     _invokeClose = false;
 
-                    _OnOpen?.Invoke(this, EventArgs.Empty);
+                    _OnOpen?.Invoke(null, null);
 
                     Receive();
                 }
                 catch (Exception e)
                 {
-                    _OnError?.Invoke(this, e);
+                    _OnError?.Invoke(null, e);
                 }
 
                 _tryOpen = false;
@@ -158,7 +158,7 @@ namespace Netly
                     if (!_invokeClose)
                     {
                         _invokeClose = true;
-                        _OnClose?.Invoke(this, EventArgs.Empty);
+                        _OnClose?.Invoke(null, null);
                     }
                 }
 
@@ -173,7 +173,8 @@ namespace Netly
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
-            _socket?.Send(value, 0, value.Length, SocketFlags.None);
+            _socket.Send(value, SocketFlags.None);
+            Console.WriteLine($"\t<SEND {value.Length} Bytes>");
         }
 
         /// <summary>
@@ -231,48 +232,39 @@ namespace Netly
                 {
                     try
                     {
-                        length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
+                        length = _socket.Receive(buffer, SocketFlags.None);
+                        Console.WriteLine($"\t<RECEIVE {length} Bytes>");
 
                         if (length <= 0)
                         {
-                            if (IsOpened)
-                            {
-                                continue;
-                            }
-
-                            break;
-                        }
-
-                        byte[] data = new byte[length];
-
-                        Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
-
-                        var events = EventParser.Verify(data);
-
-                        if (string.IsNullOrEmpty(events.name))
-                        {
-                            _OnData?.Invoke(this, data);
-                        }
-                        else
-                        {
-                            _OnEvent?.Invoke(this, (events.name, events.data));
-                        }
-                    }
-                    catch
-                    {
-                        if (IsOpened)
-                        {
+                            if (IsOpened is false) break;
                             continue;
                         }
 
-                        break;
+                        byte[] data = new byte[length];
+                        Array.Copy(buffer, 0, data, 0, data.Length);
+
+                        (string name, byte[] data) result = EventParser.Verify(data);
+
+                        if (result.data == null)
+                            _OnData?.Invoke(null, data);
+                        else
+                            _OnEvent?.Invoke(null, (result.name, result.data));
+                    }
+                    catch
+                    {
+                        if (length <= 0)
+                        {
+                            if (IsOpened is false) break;
+                            continue;
+                        }
                     }
                 }
 
                 if (!_tryClose || !_invokeClose)
                 {
                     _invokeClose = true;
-                    _OnClose?.Invoke(this, EventArgs.Empty);
+                    _OnClose?.Invoke(null, null);
                 }
             });
 
