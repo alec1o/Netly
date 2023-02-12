@@ -1,8 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace Netly
 {
@@ -11,36 +10,20 @@ namespace Netly
     /// </summary>
     public class TcpClient : IClient
     {
-        #region Var
-
-        #region Public
+        #region Var        
 
         /// <summary>
-        /// Client identifier
-        /// </summary>
-        public string Id { get; private set; }
-
-        /// <summary>
-        /// Endpoint
+        /// Host
         /// </summary>
         public Host Host { get; private set; }
 
-        /// <summary>
-        /// Returns true if using encryption like SSL, TLS
-        /// </summary>
-        public bool IsEncrypted { get; private set; }
 
         /// <summary>
         /// Returns true if socket is connected
         /// </summary>
-        public bool Opened { get => Connected(); }
+        public bool IsOpened { get => Connected(); }
 
-        #endregion
-
-        #region Private
-
-        private SslStream _sslStream;
-        private NetworkStream _stream;
+        internal string Id;
 
         private Socket _socket;
 
@@ -49,27 +32,20 @@ namespace Netly
         private bool _tryClose;
         private bool _invokeClose;
 
-        #region Events
-
         private EventHandler _OnOpen;
         private EventHandler _OnClose;
         private EventHandler<Exception> _OnError;
         private EventHandler<byte[]> _OnData;
         private EventHandler<(string name, byte[] data)> _OnEvent;
-
-        private EventHandler<Socket> _OnBeforeOpen;
-        private EventHandler<Socket> _OnAfterOpen;
+        private EventHandler<Socket> _OnModify;
 
         #endregion
 
-        #endregion
-
-        #endregion
 
         #region Builder
 
         /// <summary>
-        /// Creating instance
+        /// Netly: TcpClient
         /// </summary>
         public TcpClient()
         {
@@ -102,31 +78,17 @@ namespace Netly
         /// Is called, executes action before socket connect
         /// </summary>
         /// <param name="callback">action/callback</param>
-        public void OnBeforeOpen(Action<Socket> callback)
+        public void OnModify(Action<Socket> callback)
         {
-            _OnBeforeOpen += (sender, socket) =>
+            _OnModify += (sender, socket) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(socket);
                 });
             };
         }
-
-        /// <summary>
-        /// Is called, executes action after socket connect
-        /// </summary>
-        /// <param name="callback">action/callback</param>
-        public void OnAfterOpen(Action<Socket> callback)
-        {
-            _OnAfterOpen += (sender, socket) =>
-            {
-                Call.Execute(() =>
-                {
-                    callback?.Invoke(socket);
-                });
-            };
-        }
+        
 
         #endregion
 
@@ -138,11 +100,11 @@ namespace Netly
         /// <param name="host">Endpoint</param>
         public void Open(Host host)
         {
-            if (Opened || _tryOpen || _tryClose || _isServer) return;
+            if (IsOpened || _tryOpen || _tryClose || _isServer) return;
 
             _tryOpen = true;
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
@@ -150,15 +112,13 @@ namespace Netly
 
                     _socket.NoDelay = true;
 
-                    _OnBeforeOpen?.Invoke(this, _socket);
+                    _OnModify?.Invoke(this, _socket);
 
                     _socket.Connect(host.EndPoint);
 
                     Host = host;
 
                     _invokeClose = false;
-
-                    _OnAfterOpen?.Invoke(this, _socket);
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
@@ -178,13 +138,13 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            if (!Opened || _tryOpen || _tryClose) return;
+            if (!IsOpened || _tryOpen || _tryClose) return;
 
             _tryClose = true;
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
@@ -213,19 +173,7 @@ namespace Netly
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
-
-            try
-            {
-                if (IsEncrypted)
-                {
-                    _sslStream.Write(value, 0, value.Length);
-                }
-                else
-                {
-                    _socket.Send(value, 0, value.Length, SocketFlags.None);
-                }
-            }
-            catch { }
+            _socket?.Send(value, 0, value.Length, SocketFlags.None);
         }
 
         /// <summary>
@@ -235,7 +183,7 @@ namespace Netly
         /// <param name="value">event data</param>
         public void ToEvent(string name, byte[] value)
         {
-            ToData(Events.Create(name, value));
+            ToData(EventParser.Create(name, value));
         }
 
         /// <summary>
@@ -244,7 +192,7 @@ namespace Netly
         /// <param name="value">raw data</param>
         public void ToData(string value)
         {
-            this.ToData(Encode.GetBytes(value, Encode.Mode.UTF8));
+            this.ToData(NE.GetBytes(value, NE.Mode.UTF8));
         }
 
         /// <summary>
@@ -254,7 +202,7 @@ namespace Netly
         /// <param name="value">event data</param>
         public void ToEvent(string name, string value)
         {
-            this.ToEvent(name, Encode.GetBytes(value, Encode.Mode.UTF8));
+            this.ToEvent(name, NE.GetBytes(value, NE.Mode.UTF8));
         }
 
         private bool Connected()
@@ -276,15 +224,8 @@ namespace Netly
             int length = 0;
             byte[] buffer = new byte[1024 * 8];
 
-            if (IsEncrypted)
-            {
-                _stream = new NetworkStream(_socket);
-                _sslStream = new SslStream(_stream);
-                throw new NotImplementedException(nameof(IsEncrypted));
-            }
-            else
-            {
-                Async.SafePool(() =>
+            
+                ThreadPool.QueueUserWorkItem(_ =>
                 {
                     while (!_invokeClose)
                     {
@@ -294,7 +235,7 @@ namespace Netly
 
                             if (length <= 0)
                             {
-                                if (Opened)
+                                if (IsOpened)
                                 {
                                     continue;
                                 }
@@ -306,7 +247,7 @@ namespace Netly
 
                             Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
 
-                            var events = Events.Verify(data);
+                            var events = EventParser.Verify(data);
 
                             if (string.IsNullOrEmpty(events.name))
                             {
@@ -314,12 +255,12 @@ namespace Netly
                             }
                             else
                             {
-                                _OnEvent?.Invoke(this, (events.name, events.value));
+                                _OnEvent?.Invoke(this, (events.name, events.data));
                             }
                         }
                         catch
                         {
-                            if (Opened)
+                            if (IsOpened)
                             {
                                 continue;
                             }
@@ -334,25 +275,7 @@ namespace Netly
                         _OnClose?.Invoke(this, EventArgs.Empty);
                     }
                 });
-            }
-        }
-
-        /// <summary>
-        /// Use to make use of encryption
-        /// </summary>
-        /// <param name="value">Use encryption?</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="NotImplementedException"></exception>
-        public void UseEncryption(bool value)
-        {
-            if (Opened)
-            {
-                throw new Exception("Error, you can't add encryption configuration to an open socket");
-            }
-
-            throw new NotImplementedException(nameof(UseEncryption));
-
-            // IsEncrypted = value;
+            
         }
 
         #endregion
@@ -367,7 +290,7 @@ namespace Netly
         {
             _OnOpen += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -382,7 +305,7 @@ namespace Netly
         {
             _OnClose += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -397,7 +320,7 @@ namespace Netly
         {
             _OnError += (sender, exception) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(exception);
                 });
@@ -412,7 +335,7 @@ namespace Netly
         {
             _OnData += (sender, data) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(data);
                 });
@@ -427,20 +350,11 @@ namespace Netly
         {
             _OnEvent += (sender, result) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(result.name, result.data);
                 });
             };
-        }
-
-        #endregion
-
-        #region Static
-
-        private static bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
-        {
-            return true;
         }
 
         #endregion
