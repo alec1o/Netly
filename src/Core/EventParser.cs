@@ -8,35 +8,25 @@ namespace Netly
         private const string KEY = "KE0://";
         public static (string name, byte[] data) Verify(byte[] buffer)
         {
-            using (Writer w = new Writer(buffer))
+            using (Reader r = new Reader(buffer))
             {
-                using (Reader r = new Reader(w))
-                {
-                    string key = r.Read<string>();
+                string key = r.Read<string>();
+                string name = r.Read<string>();
+                byte[] data = r.Read<byte[]>();
 
-                    if (!r.Success || !string.Equals(key, KEY)) return (null, null);
+                if (r.Success is true && key is KEY) return (name, data);
 
-                    string name = r.Read<string>();
-                    byte[] data = r.Read<byte[]>();
-
-                    if (!r.Success) return (null, null);
-
-                    return (name, data);
-                }
+                return (null, null);
             }
         }
 
         public static byte[] Create(string name, byte[] data)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
-            if (data == null || data.Length <= 0) throw new ArgumentNullException(nameof(data));
-
             using (Writer w = new Writer())
             {
                 w.Write(KEY);
                 w.Write(name);
                 w.Write(data);
-
                 return w.GetBytes();
             }
         }
