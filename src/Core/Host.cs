@@ -4,7 +4,7 @@ using System.Net.Sockets;
 namespace Netly
 {
     /// <summary>
-    /// Host (EndPoint Manager)
+    /// Netly: Host (EndPoint Manager)
     /// </summary>
     public class Host
     {
