@@ -3,16 +3,16 @@
 namespace test;
 using Netly.Core;
 
-public class MessageParserTest
+public class BufferParserTest
 {
     [Fact]
     public void EndToEnd()
     {
         byte[] data = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-        byte[] sendBuffer = MessageParser.SetPrefix(data);
+        byte[] sendBuffer = BufferParser.SetPrefix(data);
 
-        List<byte[]> receivedMessages = MessageParser.GetMessages(sendBuffer);
+        List<byte[]> receivedMessages = BufferParser.GetMessages(sendBuffer);
 
         int _size = receivedMessages.Count;
 
@@ -27,13 +27,13 @@ public class MessageParserTest
         byte[] data2 = { 0, 1, 2, 3, 4, };
         byte[] data3 = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
-        byte[] sendBuffer1 = MessageParser.SetPrefix(data1);
-        byte[] sendBuffer2 = MessageParser.SetPrefix(data2);
-        byte[] sendBuffer3 = MessageParser.SetPrefix(data3);
+        byte[] sendBuffer1 = BufferParser.SetPrefix(data1);
+        byte[] sendBuffer2 = BufferParser.SetPrefix(data2);
+        byte[] sendBuffer3 = BufferParser.SetPrefix(data3);
 
         List<byte[]> buffers = new List<byte[]> { sendBuffer1, sendBuffer2, sendBuffer3 };
 
-        List<byte[]> receivedMessages = MessageParser.GetMessages(buffers.SelectMany(x => x).ToArray());
+        List<byte[]> receivedMessages = BufferParser.GetMessages(buffers.SelectMany(x => x).ToArray());
 
         int _size = receivedMessages.Count;
 
