@@ -40,7 +40,6 @@ namespace Netly
         private EventHandler<(string name, byte[] data)> _OnEvent;
 
         private EventHandler<Socket> _OnModify;
-        private EventHandler<Socket> _OnAfterOpen;
 
         #endregion
 
@@ -96,7 +95,7 @@ namespace Netly
 
             _tryOpen = true;
 
-            ThreadPool.QueueUserWorkItem(_=>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
@@ -111,8 +110,6 @@ namespace Netly
                     _opened = true;
 
                     _invokeClose = false;
-
-                    _OnAfterOpen?.Invoke(this, _socket);
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
@@ -146,7 +143,7 @@ namespace Netly
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            ThreadPool.QueueUserWorkItem(_=>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
@@ -231,7 +228,7 @@ namespace Netly
             byte[] buffer = new byte[1024 * 8];
             EndPoint endpoint = new IPEndPoint(IPAddress.Any, 0);
 
-            ThreadPool.QueueUserWorkItem(_=>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 while (!_invokeClose)
                 {
