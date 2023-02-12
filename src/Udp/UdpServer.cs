@@ -1,19 +1,18 @@
-﻿using Netly.Core;
+﻿using Netly;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
-namespace Netly.Udp
+namespace Netly
 {
     /// <summary>
     /// Netly: UdpServer
     /// </summary>
-    public class UdpServer : IServer
+    public class UdpServer : IUdpServer
     {
         #region Var
-
-        #region Public
 
         /// <summary>
         /// Endpoint
@@ -21,23 +20,14 @@ namespace Netly.Udp
         public Host Host { get; private set; }
 
         /// <summary>
-        /// TODO:
-        /// </summary>
-        public int Timeout { get; private set; }
-
-        /// <summary>
         /// Returns true if socket is connected
         /// </summary>
-        public bool Opened { get => IsOpened(); }
+        public bool IsOpened { get => Connected(); }
 
         /// <summary>
         /// Returns list of UdpClient
         /// </summary>
         public List<UdpClient> Clients { get; private set; }
-
-        #endregion
-
-        #region Private
 
         private Socket _socket;
 
@@ -45,8 +35,6 @@ namespace Netly.Udp
         private bool _tryClose;
         private bool _invokeClose;
         private bool _opened;
-
-        #region Events
 
         private EventHandler _OnOpen;
         private EventHandler _OnClose;
@@ -56,16 +44,10 @@ namespace Netly.Udp
         private EventHandler<(UdpClient client, byte[] data)> _OnData;
         private EventHandler<(UdpClient client, string name, byte[] data)> _OnEvent;
 
-        private EventHandler<Socket> _OnBeforeOpen;
-        private EventHandler<Socket> _OnAfterOpen;
+        private EventHandler<Socket> _OnModify;
 
         #endregion
 
-        #endregion
-
-        #endregion
-
-        #region Builder
 
         /// <summary>
         /// Creating instance
@@ -77,9 +59,13 @@ namespace Netly.Udp
             _socket = new Socket(Host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
         }
 
-        #endregion
-
         #region Init
+
+        /// <summary>
+        ///  Use to open connection
+        /// </summary>
+        /// <param name="host"></param>
+        public void Open(Host host) => Open(host, 0);
 
         /// <summary>
         /// Use to open connection
@@ -88,17 +74,17 @@ namespace Netly.Udp
         /// <param name="backlog">Backlog</param>
         public void Open(Host host, int backlog = 0)
         {
-            if (Opened || _tryOpen || _tryClose) return;
+            if (IsOpened || _tryOpen || _tryClose) return;
 
             _tryOpen = true;
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
-                    _OnBeforeOpen?.Invoke(this, _socket);
+                    _OnModify?.Invoke(this, _socket);
 
                     _socket.Bind(host.EndPoint);
 
@@ -106,8 +92,6 @@ namespace Netly.Udp
 
                     _opened = true;
                     _invokeClose = false;
-
-                    _OnAfterOpen?.Invoke(this, _socket);
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
@@ -127,13 +111,13 @@ namespace Netly.Udp
         /// </summary>
         public void Close()
         {
-            if (!Opened || _tryOpen || _tryClose) return;
+            if (!IsOpened || _tryOpen || _tryClose) return;
 
             _tryClose = true;
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
@@ -167,7 +151,7 @@ namespace Netly.Udp
             });
         }
 
-        private bool IsOpened()
+        private bool Connected()
         {
             if (_socket == null) return false;
 
@@ -198,7 +182,7 @@ namespace Netly.Udp
                     }
                     catch
                     {
-                        if (Opened)
+                        if (IsOpened)
                         {
                             continue;
                         }
@@ -209,7 +193,7 @@ namespace Netly.Udp
             }
             catch
             {
-                if (Opened)
+                if (IsOpened)
                 {
                     BeginAccept();
                 }
@@ -284,26 +268,12 @@ namespace Netly.Udp
         }
 
         /// <summary>
-        /// TODO:
-        /// </summary>
-        /// <param name="value">TODO:</param>
-        public void UseTimeout(int value)
-        {
-            if (Opened)
-            {
-                throw new Exception("Error, you can't add timeout configuration to an open socket");
-            }
-
-            Timeout = Math.Abs(value);
-        }
-
-        /// <summary>
         /// Sends raw data to all connected clients
         /// </summary>
         /// <param name="data">The date to be published</param>
         public void BroadcastToData(byte[] data)
         {
-            if (!Opened || data == null) return;
+            if (!IsOpened || data == null) return;
 
             foreach (UdpClient client in Clients.ToArray())
             {
@@ -318,7 +288,7 @@ namespace Netly.Udp
         /// <param name="data">The date to be published</param>
         public void BroadcastToEvent(string name, byte[] data)
         {
-            if (!Opened || data == null) return;
+            if (!IsOpened || data == null) return;
 
             foreach (UdpClient client in Clients.ToArray())
             {
@@ -328,39 +298,20 @@ namespace Netly.Udp
 
         #endregion
 
-        #region Customization Event
-
         /// <summary>
         /// Is called, executes action before socket connect
         /// </summary>
         /// <param name="callback">action/callback</param>
-        public void OnBeforeOpen(Action<Socket> callback)
+        public void OnModify(Action<Socket> callback)
         {
-            _OnBeforeOpen += (sender, socket) =>
+            _OnModify += (sender, socket) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(socket);
                 });
             };
         }
-
-        /// <summary>
-        /// Is called, executes action after socket connect
-        /// </summary>
-        /// <param name="callback">action/callback</param>
-        public void OnAfterOpen(Action<Socket> callback)
-        {
-            _OnAfterOpen += (sender, socket) =>
-            {
-                Call.Execute(() =>
-                {
-                    callback?.Invoke(socket);
-                });
-            };
-        }
-
-        #endregion
 
         #region Events
 
@@ -372,7 +323,7 @@ namespace Netly.Udp
         {
             _OnOpen += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -387,7 +338,7 @@ namespace Netly.Udp
         {
             _OnClose += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -402,7 +353,7 @@ namespace Netly.Udp
         {
             _OnError += (sender, exception) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(exception);
                 });
@@ -417,7 +368,7 @@ namespace Netly.Udp
         {
             _OnEnter += (sender, client) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -432,7 +383,7 @@ namespace Netly.Udp
         {
             _OnExit += (sender, client) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -447,7 +398,7 @@ namespace Netly.Udp
         {
             _OnData += (sender, value) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(value.client, value.data);
                 });
@@ -462,7 +413,7 @@ namespace Netly.Udp
         {
             _OnEvent += (sender, value) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(value.client, value.name, value.data);
                 });
