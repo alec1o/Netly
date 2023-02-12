@@ -81,12 +81,11 @@ namespace Netly
 
             _tryOpen = true;
 
-            ThreadPool.QueueUserWorkItem(_  =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    _socket.NoDelay = true;
 
                     if (backlog < 1) backlog = 999;
 
@@ -125,7 +124,7 @@ namespace Netly
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            ThreadPool.QueueUserWorkItem(_  =>
+            ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
                 {
