@@ -2,9 +2,9 @@ using System;
 using System.Text;
 using Byter;
 
-namespace Netly
+namespace Netly.Core
 {
-    internal static class MessageParser
+    public static class MessageParser
     {
         private const string KEY = "Ny://";
 
