@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Netly.Core;
 
 namespace Netly
 {
@@ -201,7 +202,7 @@ namespace Netly
         /// <param name="value">data</param>
         public void ToEvent(string name, byte[] value)
         {
-            ToData(EventParser.Create(name, value));
+            ToData(MessageParser.Create(name, value));
         }
 
         /// <summary>
@@ -211,7 +212,7 @@ namespace Netly
         /// <param name="value">data</param>
         public void ToEvent(string name, string value)
         {
-            ToData(EventParser.Create(name, NE.GetBytes(value, NE.Mode.UTF8)));
+            ToData(MessageParser.Create(name, NE.GetBytes(value, NE.Mode.UTF8)));
         }
 
         private bool Connected()
@@ -250,7 +251,7 @@ namespace Netly
 
                         Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
 
-                        var events = EventParser.Verify(data);
+                        var events = MessageParser.Verify(data);
 
                         if (string.IsNullOrEmpty(events.name))
                         {
@@ -283,7 +284,7 @@ namespace Netly
 
         internal void AddData(byte[] data)
         {
-            var events = EventParser.Verify(data);
+            var events = MessageParser.Verify(data);
 
             if (data.Length <= 0)
             {
