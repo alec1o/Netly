@@ -4,9 +4,9 @@ using Byter;
 
 namespace Netly
 {
-    public static class EventParser
+    internal static class MessageParser
     {
-        private const string KEY = "KE0://";
+        private const string KEY = "Ny://";
 
         public static (string name, byte[] data) Verify(byte[] buffer)
         {
