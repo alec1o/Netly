@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Netly.Core
 {
-    public static class MessageParser
+    public static class BufferParser
     {
         public static byte[] SetPrefix(byte[] buffer)
         {
