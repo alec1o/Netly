@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Byter;
+using Netly.Core;
 
 namespace Netly
 {
@@ -173,8 +177,17 @@ namespace Netly
         public void ToData(byte[] value)
         {
             if (_invokeClose) return;
-            _socket.Send(value, SocketFlags.None);
-            Console.WriteLine($"\t<SEND {value.Length} Bytes>");
+
+            List<byte[]> list = new List<byte[]>
+            {
+                BitConverter.GetBytes(value.Length),
+                value
+            };
+
+            byte[] buffer = list.SelectMany(b => b).ToArray();
+
+            _socket.Send(buffer, SocketFlags.None);
+            Console.WriteLine($"\t<SEND {buffer.Length} Bytes>");
         }
 
         /// <summary>
@@ -184,7 +197,7 @@ namespace Netly
         /// <param name="value">event data</param>
         public void ToEvent(string name, byte[] value)
         {
-            ToData(EventParser.Create(name, value));
+            ToData(MessageParser.Create(name, value));
         }
 
         /// <summary>
@@ -244,12 +257,31 @@ namespace Netly
                         byte[] data = new byte[length];
                         Array.Copy(buffer, 0, data, 0, data.Length);
 
-                        (string name, byte[] data) result = EventParser.Verify(data);
-
-                        if (result.data == null)
-                            _OnData?.Invoke(null, data);
+                        int m_size = BitConverter.ToInt32(data, 0);
+                        if (m_size == data.Length - sizeof(Int32))
+                        {
+                            Deploy(data);
+                        }
                         else
-                            _OnEvent?.Invoke(null, (result.name, result.data));
+                        {
+                            int _index = 0;
+                            while (_index < data.Length)
+                            {
+                                int _size = BitConverter.ToInt32(data, _index);
+                                _index += sizeof(Int32);
+
+                                Console.WriteLine("TRY RECEIVE: " + _size);
+
+                                byte[] _data = new byte[_size];
+                                Array.Copy(data, _index + (sizeof(Int16)), _data, 0, _data.Length);
+                                _index += _size;
+
+                                Deploy(_data);
+                            }
+                            Console.WriteLine("FINISH RECEIVE");
+                        }
+
+
                     }
                     catch
                     {
@@ -268,6 +300,16 @@ namespace Netly
                 }
             });
 
+        }
+
+        private void Deploy(byte[] data)
+        {
+            (string name, byte[] data) result = MessageParser.Verify(data);
+
+            if (result.data == null)
+                _OnData?.Invoke(null, data);
+            else
+                _OnEvent?.Invoke(null, (result.name, result.data));
         }
 
         #endregion
