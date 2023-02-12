@@ -194,7 +194,7 @@ namespace Netly
                 {
                     foreach (TcpClient target in Clients.ToArray())
                     {
-                        if (target != null && client.Id == target.Id)
+                        if (target != null && client.uid == target.uid)
                         {
                             try
                             {
@@ -239,7 +239,7 @@ namespace Netly
                 _OnEvent?.Invoke(this, (client, name, data));
             });
 
-            client.InitServer();
+            client.InitServerMode();
         }
 
         /// <summary>
