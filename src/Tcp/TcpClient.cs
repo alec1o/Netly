@@ -88,7 +88,7 @@ namespace Netly
                 });
             };
         }
-        
+
 
         #endregion
 
@@ -224,41 +224,16 @@ namespace Netly
             int length = 0;
             byte[] buffer = new byte[1024 * 8];
 
-            
-                ThreadPool.QueueUserWorkItem(_ =>
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                while (!_invokeClose)
                 {
-                    while (!_invokeClose)
+                    try
                     {
-                        try
-                        {
-                            length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
+                        length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
-                            if (length <= 0)
-                            {
-                                if (IsOpened)
-                                {
-                                    continue;
-                                }
-
-                                break;
-                            }
-
-                            byte[] data = new byte[length];
-
-                            Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
-
-                            var events = EventParser.Verify(data);
-
-                            if (string.IsNullOrEmpty(events.name))
-                            {
-                                _OnData?.Invoke(this, data);
-                            }
-                            else
-                            {
-                                _OnEvent?.Invoke(this, (events.name, events.data));
-                            }
-                        }
-                        catch
+                        if (length <= 0)
                         {
                             if (IsOpened)
                             {
@@ -267,15 +242,40 @@ namespace Netly
 
                             break;
                         }
-                    }
 
-                    if (!_tryClose || !_invokeClose)
-                    {
-                        _invokeClose = true;
-                        _OnClose?.Invoke(this, EventArgs.Empty);
+                        byte[] data = new byte[length];
+
+                        Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
+
+                        var events = EventParser.Verify(data);
+
+                        if (string.IsNullOrEmpty(events.name))
+                        {
+                            _OnData?.Invoke(this, data);
+                        }
+                        else
+                        {
+                            _OnEvent?.Invoke(this, (events.name, events.data));
+                        }
                     }
-                });
-            
+                    catch
+                    {
+                        if (IsOpened)
+                        {
+                            continue;
+                        }
+
+                        break;
+                    }
+                }
+
+                if (!_tryClose || !_invokeClose)
+                {
+                    _invokeClose = true;
+                    _OnClose?.Invoke(this, EventArgs.Empty);
+                }
+            });
+
         }
 
         #endregion
