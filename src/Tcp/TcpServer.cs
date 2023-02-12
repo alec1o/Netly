@@ -3,41 +3,33 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Netly.Tcp
 {
     /// <summary>
     /// Netly: TcpServer
     /// </summary>
-    public class TcpServer : IServer
+    public class TcpServer : ITcpServer
     {
         #region Var
-
-        #region Public
 
         /// <summary>
         /// Endpoint
         /// </summary>
         public Host Host { get; private set; }
 
-        /// <summary>
-        /// Returns true if using encryption like SSL, TLS
-        /// </summary>
-        public bool IsEncrypted { get; private set; }
 
         /// <summary>
         /// Returns true if socket is connected
         /// </summary>
-        public bool Opened { get => IsOpened(); }
+        public bool IsOpened { get => Connected(); }
 
         /// <summary>
         /// Returns list of TcpClient
         /// </summary>
         public List<TcpClient> Clients { get; private set; }
 
-        #endregion
-
-        #region Private
 
         private Socket _socket;
 
@@ -47,8 +39,6 @@ namespace Netly.Tcp
         private bool _opened;
         private readonly object _lock = new object();
 
-        #region Events
-
         private EventHandler _OnOpen;
         private EventHandler _OnClose;
         private EventHandler<Exception> _OnError;
@@ -57,19 +47,13 @@ namespace Netly.Tcp
         private EventHandler<(TcpClient client, byte[] data)> _OnData;
         private EventHandler<(TcpClient client, string name, byte[] data)> _OnEvent;
 
-        private EventHandler<Socket> _OnBeforeOpen;
-        private EventHandler<Socket> _OnAfterOpen;
+        private EventHandler<Socket> _OnModify;
 
         #endregion
 
-        #endregion
-
-        #endregion
-
-        #region Builder
 
         /// <summary>
-        /// Creating instance
+        /// Netly: TcpServer
         /// </summary>
         public TcpServer()
         {
@@ -78,22 +62,26 @@ namespace Netly.Tcp
             _socket = new Socket(Host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 
-        #endregion
-
         #region Init
+
+        /// <summary>
+        ///  Use to open connection
+        /// </summary>
+        /// <param name="host"></param>
+        public void Open(Host host) => Open(host, 0);
 
         /// <summary>
         /// Use to open connection
         /// </summary>
         /// <param name="host">Endpoint</param>
         /// <param name="backlog">Backlog</param>
-        public void Open(Host host, int backlog = 0)
+        public void Open(Host host, int backlog)
         {
-            if (Opened || _tryOpen || _tryClose) return;
+            if (IsOpened || _tryOpen || _tryClose) return;
 
             _tryOpen = true;
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_  =>
             {
                 try
                 {
@@ -102,7 +90,7 @@ namespace Netly.Tcp
 
                     if (backlog < 1) backlog = 999;
 
-                    _OnBeforeOpen?.Invoke(this, _socket);
+                    _OnModify?.Invoke(this, _socket);
 
                     _socket.Bind(host.EndPoint);
                     _socket.Listen(backlog);
@@ -112,11 +100,10 @@ namespace Netly.Tcp
                     _opened = true;
                     _invokeClose = false;
 
-                    _OnAfterOpen?.Invoke(this, _socket);
 
                     _OnOpen?.Invoke(this, EventArgs.Empty);
 
-                    Async.SafePool(BeginAccept);
+                    BeginAccept();
                 }
                 catch (Exception e)
                 {
@@ -132,13 +119,13 @@ namespace Netly.Tcp
         /// </summary>
         public void Close()
         {
-            if (!Opened || _tryOpen || _tryClose) return;
+            if (!IsOpened || _tryOpen || _tryClose) return;
 
             _tryClose = true;
 
             _socket.Shutdown(SocketShutdown.Both);
 
-            Async.SafePool(() =>
+            ThreadPool.QueueUserWorkItem(_  =>
             {
                 try
                 {
@@ -172,7 +159,7 @@ namespace Netly.Tcp
             });
         }
 
-        private bool IsOpened()
+        private bool Connected()
         {
             if (_socket == null) return false;
 
@@ -181,18 +168,21 @@ namespace Netly.Tcp
 
         private void BeginAccept()
         {
-            while (Opened)
+            ThreadPool.QueueUserWorkItem(_ =>
             {
-                try
+                while (IsOpened)
                 {
-                    var clientSocket = _socket.Accept();
+                    try
+                    {
+                        var clientSocket = _socket.Accept();
 
-                    if (clientSocket == null) continue;
+                        if (clientSocket == null) continue;
 
-                    EndAccept(clientSocket);
+                        EndAccept(clientSocket);
+                    }
+                    catch { }
                 }
-                catch { }
-            }
+            });
         }
 
         private TcpClient Queue(TcpClient client, bool remove)
@@ -254,30 +244,12 @@ namespace Netly.Tcp
         }
 
         /// <summary>
-        /// Use to make use of encryption
-        /// </summary>
-        /// <param name="value">Use encryption?</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="NotImplementedException"></exception>
-        public void UseEncryption(bool value)
-        {
-            if (Opened)
-            {
-                throw new Exception("Error, you can't add encryption configuration to an open socket");
-            }
-
-            throw new NotImplementedException(nameof(UseEncryption));
-
-            // IsEncrypted = value;
-        }
-
-        /// <summary>
         /// Sends raw data to all connected clients
         /// </summary>
         /// <param name="data">The date to be published</param>
         public void BroadcastToData(byte[] data)
         {
-            if (!Opened || data == null) return;
+            if (!IsOpened || data == null) return;
 
             foreach (TcpClient client in Clients.ToArray())
             {
@@ -292,7 +264,7 @@ namespace Netly.Tcp
         /// <param name="data">The date to be published</param>
         public void BroadcastToEvent(string name, byte[] data)
         {
-            if (!Opened || data == null) return;
+            if (!IsOpened || data == null) return;
 
             foreach (TcpClient client in Clients.ToArray())
             {
@@ -308,26 +280,11 @@ namespace Netly.Tcp
         /// Is called, executes action before socket connect
         /// </summary>
         /// <param name="callback">action/callback</param>
-        public void OnBeforeOpen(Action<Socket> callback)
+        public void OnModify(Action<Socket> callback)
         {
-            _OnBeforeOpen += (sender, socket) =>
+            _OnModify += (sender, socket) =>
             {
-                Call.Execute(() =>
-                {
-                    callback?.Invoke(socket);
-                });
-            };
-        }
-
-        /// <summary>
-        /// Is called, executes action after socket connect
-        /// </summary>
-        /// <param name="callback">action/callback</param>
-        public void OnAfterOpen(Action<Socket> callback)
-        {
-            _OnAfterOpen += (sender, socket) =>
-            {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(socket);
                 });
@@ -346,7 +303,7 @@ namespace Netly.Tcp
         {
             _OnOpen += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -361,7 +318,7 @@ namespace Netly.Tcp
         {
             _OnClose += (sender, args) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke();
                 });
@@ -376,7 +333,7 @@ namespace Netly.Tcp
         {
             _OnError += (sender, exception) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(exception);
                 });
@@ -391,7 +348,7 @@ namespace Netly.Tcp
         {
             _OnEnter += (sender, client) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -406,7 +363,7 @@ namespace Netly.Tcp
         {
             _OnExit += (sender, client) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(client);
                 });
@@ -421,7 +378,7 @@ namespace Netly.Tcp
         {
             _OnData += (sender, value) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(value.client, value.data);
                 });
@@ -436,7 +393,7 @@ namespace Netly.Tcp
         {
             _OnEvent += (sender, value) =>
             {
-                Call.Execute(() =>
+                MainThread.Add(() =>
                 {
                     callback?.Invoke(value.client, value.name, value.data);
                 });
