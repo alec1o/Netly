@@ -1,5 +1,7 @@
 <h1 align="center">Netly</h1>
 
+# Docs: ServerBroadCast/CoreNE
+
 <h6 align="end">
   License <a href="LICENSE.md">SEE HERE (MIT)</a><br>
   Support <a href="mailto://support@kezero.com">CONTACT HERE</a>
@@ -35,13 +37,13 @@
   ```csharp
   using Netly;
 
-  var host = new Host("0.0.0.0", 3000);
+  var host = new Host("127.0.0.1", 3000);
   var client = new TcpClient();
 
   client.OnOpen(() =>
   {
       Console.WriteLine($"[OPEN]: {host}");
-      client.ToData(NE.GetBytes("hello server"));  // send data to server    
+      client.ToData(NE.GetBytes("hello server"));  // send data to server
       client.ToEvent("ping", NE.GetBytes("ping...")); // send event to server
   });
 
@@ -61,7 +63,6 @@
 - TcpServer
   ```csharp
   using Netly;
-  using System.Text;
 
   var host = new Host("0.0.0.0", 3000);
   var server = new TcpServer();
@@ -76,11 +77,16 @@
 
   server.OnExit((client) => Console.WriteLine($"[EXIT]: {client.Host}"));
 
-  server.OnData((client, data) => Console.WriteLine($"[DATA] {client.Host}: {NE.GetString(data)}"));
+  server.OnData((client, data) =>
+  {
+      client.ToData(data);
+      Console.WriteLine($"[DATA] {client.Host}: {NE.GetString(data)}");
+  });
 
   server.OnEvent((client, name, data) =>
-  {   
+  {
       if (name == "ping") client.ToEvent("pong", NE.GetBytes("pong..."));
+      Console.WriteLine($"[EVENT] {client.Host} -> {name}: {NE.GetString(data)}");
   });
 
   server.Open(host);
