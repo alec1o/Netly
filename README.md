@@ -29,6 +29,66 @@
 - [Unity](https://unity.com) (Engine)
 
 <br>
+  
+## Demo
+- TcpClient
+  ```csharp
+  using Netly;
+
+  var host = new Host("0.0.0.0", 3000);
+  var client = new TcpClient();
+
+  client.OnOpen(() =>
+  {
+      Console.WriteLine($"[OPEN]: {host}");
+      client.ToData(NE.GetBytes("hello server"));  // send data to server    
+      client.ToEvent("ping", NE.GetBytes("ping...")); // send event to server
+  });
+
+  client.OnClose(() => Console.WriteLine($"[CLOSE]: {host}"));
+
+  client.OnError((e) => Console.WriteLine($"[ERROR]: {e}"));
+
+  client.OnData((data) => Console.WriteLine($"[DATA]: {NE.GetString(data)}"));
+
+  client.OnEvent((name, data) => Console.WriteLine($"[EVENT] -> {name}: {NE.GetString(data)}"));
+
+  client.Open(host);
+
+  // block MainThread
+  Console.ReadLine();
+  ```
+- TcpServer
+  ```csharp
+  using Netly;
+  using System.Text;
+
+  var host = new Host("0.0.0.0", 3000);
+  var server = new TcpServer();
+
+  server.OnOpen(() => Console.WriteLine($"[OPEN]: {host}"));
+
+  server.OnClose(() => Console.WriteLine($"[CLOSE]: {host}"));
+
+  server.OnError((e) => Console.WriteLine($"[ERROR]: {e}"));
+
+  server.OnEnter((client) => Console.WriteLine($"[ENTER]: {client.Host}"));
+
+  server.OnExit((client) => Console.WriteLine($"[EXIT]: {client.Host}"));
+
+  server.OnData((client, data) => Console.WriteLine($"[DATA] {client.Host}: {NE.GetString(data)}"));
+
+  server.OnEvent((client, name, data) =>
+  {   
+      if (name == "ping") client.ToEvent("pong", NE.GetBytes("pong..."));
+  });
+
+  server.Open(host);
+
+  // block MainThread
+  Console.ReadLine();
+  ```
+<br>
 
 ## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.
