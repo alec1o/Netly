@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
-
+using UdpClient = Netly.UdpClient;
 namespace Netly
 {
     internal interface IClient
