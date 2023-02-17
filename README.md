@@ -1,7 +1,5 @@
 <h1 align="center">Netly</h1>
 
-# Docs: ServerBroadCast/CoreNE
-
 <h6 align="end">
   License <a href="LICENSE.md">SEE HERE (MIT)</a><br>
   Support <a href="mailto://support@kezero.com">CONTACT HERE</a>
