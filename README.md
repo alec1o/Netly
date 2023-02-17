@@ -112,39 +112,68 @@ $ dotnet build
     // close connection
     client.Close();
   ```
-- TcpServer
+- ### Server
+  _Instance_
   ```csharp
-    using Netly;
+  using Netly;
 
-    var host = new Host("0.0.0.0", 3000);
-    var server = new TcpServer();
+  // Example tcp server instance
+  var server = new TcpServer();
 
-    server.OnOpen(() => Console.WriteLine($"[OPEN]: {host}"));
+  // Example udp server instance
+  var server = new UdpServer();
 
-    server.OnClose(() => Console.WriteLine($"[CLOSE]: {host}"));
+  // Example host instance
+  var host = new Host("0.0.0.0", 3000);
+  ```
+  _Usage_
+  ```csharp
+  server.OnOpen(() =>
+  {
+      // connection opened: server start listen client
+  });
 
-    server.OnError((e) => Console.WriteLine($"[ERROR]: {e}"));
+  server.OnClose(() =>
+  {
+      // connection closed: server stop listen client
+  });
 
-    server.OnEnter((client) => Console.WriteLine($"[ENTER]: {client.Host}"));
+  server.OnError((exception) =>
+  {
+      // error on open connection
+  });
 
-    server.OnExit((client) => Console.WriteLine($"[EXIT]: {client.Host}"));
+  server.OnEnter((client) =>
+  {
+      // client connected: connection accepted
+  });
 
-    server.OnData((client, data) =>
-    {
-        client.ToData(data);
-        Console.WriteLine($"[DATA] {client.Host}: {NE.GetString(data)}");
-    });
+  server.OnExit((client) =>
+  {
+      // client disconnected: connection closed
+  });
 
-    server.OnEvent((client, name, data) =>
-    {
-        if (name == "ping") client.ToEvent("pong", NE.GetBytes("pong..."));
-        Console.WriteLine($"[EVENT] {client.Host} -> {name}: {NE.GetString(data)}");
-    });
+  server.OnData((client, data) =>
+  {
+      // buffer/data received: {client: client instance} {data: buffer/data received} 
+  });
 
-    server.Open(host);
+  server.OnEvent((client, name, data) =>
+  {
+      // event received: {client: client instance} {name: event name} {data: buffer/data received} 
+  });
 
-    // block MainThread
-    Console.ReadLine();
+  // open connection
+  client.Open(host);
+
+  // broadcast data
+  client.BroadcastToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
+
+  // broadcast event
+  client.BroadcastToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
+
+  // close connection
+  client.Close();
   ```
 <br>
 
