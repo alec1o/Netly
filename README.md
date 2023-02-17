@@ -160,7 +160,7 @@ $ dotnet build
 
   server.OnEvent((client, name, data) =>
   {
-      // event received: {client: client instance} {name: event name} {data: buffer/data received} 
+      // event received: {client: client instance} {name: event name} {data: buffer received} 
   });
 
   // open connection
