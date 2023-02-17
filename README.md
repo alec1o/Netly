@@ -62,55 +62,55 @@ $ dotnet build
 - ### Client
   _Instance_
   ```csharp
-      using Netly;
-  
-      // Example udp client instance
-      var client = new UdpClient();
+  using Netly;
 
-      // Example tcp client instance
-      var client = new TcpClient();
-  
-      // Example host instance
-      var host = new Host("127.0.0.1", 3000);    
+  // Example udp client instance
+  var client = new UdpClient();
+
+  // Example tcp client instance
+  var client = new TcpClient();
+
+  // Example host instance
+  var host = new Host("127.0.0.1", 3000);    
   ```
   _Usage_
   ```csharp
-    client.OnOpen(() =>
-    {
-        // connection opened
-    });
+  client.OnOpen(() =>
+  {
+      // connection opened
+  });
 
-    client.OnClose(() =>
-    {
-        // connection closed
-    });
+  client.OnClose(() =>
+  {
+      // connection closed
+  });
 
-    client.OnError((exception) =>
-    {   
-        // error on open connection
-    });
+  client.OnError((exception) =>
+  {   
+      // error on open connection
+  });
 
-    client.OnData((data) => 
-    {
-        // buffer/data received
-    });
+  client.OnData((data) => 
+  {
+      // buffer/data received
+  });
 
-    client.OnEvent((name, data) =>
-    {
-        // event received: {name: event name} {data: buffer/data received} 
-    });
+  client.OnEvent((name, data) =>
+  {
+      // event received: {name: event name} {data: buffer/data received} 
+  });
 
-    // open connection
-    client.Open(host);
-  
-    // send data
-    client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
+  // open connection
+  client.Open(host);
 
-    // send event
-    client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
-  
-    // close connection
-    client.Close();
+  // send data
+  client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
+
+  // send event
+  client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
+
+  // close connection
+  client.Close();
   ```
 - ### Server
   _Instance_
