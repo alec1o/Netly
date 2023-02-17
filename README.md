@@ -23,6 +23,34 @@
 
 <br>
 
+## Dependency
+- ### [Byter](https://github.com/alec1o/byter)
+
+<br>
+
+## Build
+```rb
+# 1. clone repository 
+$ git clone "https://github.com/alec1o/netly.git"
+
+# 2. open source directory 
+$ cd netly/
+
+# 3. download dependency module
+$ git submodule update --init
+
+# 4. optional, update module
+$ git submodule update --remote
+
+# 5. restore dotnet project
+$ dotnet restore
+
+# 6. build dotnet project
+$ dotnet build
+```
+
+<br>
+
 ## List of tested platforms
 - [.NET](https://dotnet.microsoft.com) (SDK)
 - [Mono](https://mono-project.com) (SDK)
