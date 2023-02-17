@@ -164,16 +164,16 @@ $ dotnet build
   });
 
   // open connection
-  client.Open(host);
+  server.Open(host);
 
-  // broadcast data
-  client.BroadcastToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
+  // broadcast data to clients
+  server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
 
-  // broadcast event
-  client.BroadcastToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
+  // broadcast event to clients
+  server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
 
   // close connection
-  client.Close();
+  server.Close();
   ```
 <br>
 
