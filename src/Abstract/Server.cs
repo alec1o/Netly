@@ -61,13 +61,26 @@ namespace Netly.Abstract
 
         public virtual void ToData(string data)
         {
+            ToData(NE.GetBytes(data));
         }
+
         public virtual void ToEvent(string name, byte[] data)
         {
+            foreach (T client in Clients)
+            {
+
+                object m_object = client;
+                IClient m_client = (IClient)client;
+                m_client?.ToEvent(name, data);
+
+            }
         }
+
         public virtual void ToEvent(string name, string data)
         {
+            ToEvent(name, NE.GetBytes(data));
         }
+
         #region Callbacks
 
         public virtual void OnError(Action<Exception> callback)
