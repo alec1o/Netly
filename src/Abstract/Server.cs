@@ -51,6 +51,14 @@ namespace Netly.Abstract
         {
         public virtual void ToData(byte[] data)
         {
+            foreach (T client in Clients)
+            {
+                object m_object = client;
+                IClient m_client = (IClient)client;
+                m_client?.ToData(data);
+            }
+        }
+
         public virtual void ToData(string data)
         {
         }
