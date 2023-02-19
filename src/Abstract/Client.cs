@@ -30,14 +30,20 @@ namespace Netly.Abstract
         protected private EventHandler<Socket> onModifyHandler;
 
         #endregion
+
         protected virtual bool IsConnected()
         {
+            return m_socket == null;
         }
+
         public virtual void Open(Host host)
         {
+            // override...
         }
+
         public virtual void Receive()
         {
+            // override...
         }
 
         public virtual void Close()
@@ -93,6 +99,9 @@ namespace Netly.Abstract
         {
             ToEvent(name, NE.GetBytes((data)));
         }
+
+        #region Callbacks
+
         public virtual void OnError(Action<Exception> callback)
         {
             onErrorHandler += (_, exception) =>
@@ -140,5 +149,7 @@ namespace Netly.Abstract
                 MainThread.Add(() => callback?.Invoke(socket));
             };
         }
+
+        #endregion
     }
 }
