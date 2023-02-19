@@ -22,7 +22,29 @@ namespace Netly.Core
         }
         private void Calc()
         {
+            if (count == 0)
+            {
+                if (bytes.Count < sizeof(Int32)) return;
+
+                count = GetCount();
+
+                if (count == 0) return;
+            }
+
+            if (bytes.Count < count) return;
+
+            byte[] buffer = new byte[count];
+
+            GetBuffer(ref buffer);
+
+            onOutputHandler?.Invoke(null, buffer);
+
+            count = 0;
+
+            Calc();
+            return;
         }
+
         private void GetBuffer(ref byte[] buffer)
         {
             for (int i = 0; i < buffer.Length; i++)
