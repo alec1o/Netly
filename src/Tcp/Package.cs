@@ -28,6 +28,18 @@ namespace Netly.Core
         }
         private int GetCount()
         {
+            byte[] buffer = new byte[sizeof(Int32)];
+
+            for (int i = 0; i < sizeof(Int32); i++)
+            {
+                buffer[i] = bytes[i];
+            }
+
+            bytes.RemoveRange(0, sizeof(Int32));
+
+            int value = BitConverter.ToInt32(buffer, 0);
+
+            return (value > MAX_SIZE) ? 0 : value;
         }
     }
 }
