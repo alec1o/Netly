@@ -13,8 +13,11 @@ public class PackageTest
         byte[] size1 = BitConverter.GetBytes(value1.Length);
         byte[] size2 = BitConverter.GetBytes(value2.Length);
 
-        byte[] data1 = new byte[0];
-        byte[] data2 = new byte[0];
+
+        byte[] result1 = new byte[0];
+        byte[] result2 = new byte[0];
+
+        bool isLast = false;
 
         byte[] buffer = new List<byte[]> { size1, value1, size1 }.SelectMany(x => x).ToArray();
 
@@ -22,21 +25,25 @@ public class PackageTest
 
         package.Output((data) =>
         {
-            if (data1 == null)
+            if (isLast is false)
             {
-                data1 = data;
+                result1 = new byte[data.Length];
+                Array.Copy(data, 0, result1, 0, result1.Length);
             }
             else
             {
-                data2 = data;
+                result2 = new byte[data.Length];
+                Array.Copy(data, 0, result2, 0, result2.Length);
             }
+
+            isLast = !isLast;
         });
 
         package.Input(buffer);
         package.Input(value2);
 
-        Assert.Equal(value1, data1);
-        Assert.Equal(value2, data2);
+        Assert.Equal(value1, result1);
+        Assert.Equal(value2, result2);
     }
 }
 
