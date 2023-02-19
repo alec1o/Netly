@@ -30,5 +30,48 @@ namespace Netly.Abstract
         protected private EventHandler<Socket> onModifyHandler;
 
         #endregion
+        protected virtual bool IsConnected()
+        {
+        }
+        public virtual void Open(Host host)
+        {
+        }
+        public virtual void Receive()
+        {
+        }
+        public virtual void Close()
+        {
+        }
+        public virtual void ToData(byte[] data)
+        {
+        }
+        public virtual void ToData(string data)
+        {
+        }
+        public virtual void ToEvent(string name, byte[] data)
+        {
+        }
+        public virtual void ToEvent(string name, string data)
+        {
+        }
+        public virtual void OnError(Action<Exception> callback)
+        {
+        }
+        public virtual void OnOpen(Action callback)
+        {
+        }
+        public virtual void OnClose(Action callback)
+        {
+        }
+        public virtual void OnData(Action<byte[]> callback)
+        {
+        }
+        public virtual void OnEvent(Action<string, byte[]> callback)
+        {
+        }
+        public virtual void OnModify(Action<Socket> callback)
+        {
+            };
+        }
     }
 }
