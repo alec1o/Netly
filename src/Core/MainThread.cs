@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Netly
+namespace Netly.Core
 {
     /// <summary>
     /// Netly: MainThread
