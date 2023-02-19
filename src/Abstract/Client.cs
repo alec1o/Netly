@@ -39,9 +39,37 @@ namespace Netly.Abstract
         public virtual void Receive()
         {
         }
+
         public virtual void Close()
         {
+            if (!IsOpened || m_connecting || m_closing) return;
+
+            m_closing = true;
+
+            m_socket.Shutdown(SocketShutdown.Both);
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    m_socket.Close();
+                    m_socket.Dispose();
+                }
+                finally
+                {
+                    m_socket = null;
+
+                    if (!m_closed)
+                    {
+                        m_closed = true;
+                        onCloseHandler?.Invoke(null, null);
+                    }
+                }
+
+                m_closing = false;
+            });
         }
+
         public virtual void ToData(byte[] data)
         {
             if (m_closed) return;
