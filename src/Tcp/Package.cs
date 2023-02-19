@@ -17,9 +17,13 @@ namespace Netly.Core
         {
             onOutputHandler += (_, data) => callback?.Invoke(data);
         }
+
         public void Input(byte[] buffer)
         {
+            foreach (byte b in buffer) bytes.Add(b);
+            Calc();
         }
+
         private void Calc()
         {
             if (count == 0)
