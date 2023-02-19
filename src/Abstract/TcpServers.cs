@@ -69,5 +69,34 @@ namespace Netly.Abstract
                 }
             });
 
+            void EndAccept(Socket socket)
+            {
+                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
+                AddOrRemoveClient(client, false);
+
+                client.OnOpen(() =>
+                {
+                    onEnterHandler?.Invoke(null, client);
+                });
+
+                client.OnClose(() =>
+                {
+                    onExitHandler?.Invoke(null, AddOrRemoveClient(client, true));
+                });
+
+                client.OnData((data) =>
+                {
+                    onDataHandler?.Invoke(null, (client, data));
+                });
+
+                client.OnEvent((name, data) =>
+                {
+                    onEventHandler?.Invoke(null, (client, name, data));
+                });
+
+                client.InitServer();
+            }
+        }
+
     }
 }
