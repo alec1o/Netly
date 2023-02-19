@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Netly.Core
+namespace Netly.Abstract
 {
     public class Package
     {
-        public static int MAX_SIZE = (1024 * 8);
+        public static int MAX_SIZE = 1024 * 8;
         private int count = 0;
         private List<byte> bytes = new List<byte>();
         private EventHandler<byte[]> onOutputHandler;
@@ -15,7 +15,7 @@ namespace Netly.Core
         public static byte[] Create(byte[] buffer) => Create(ref buffer);
         public static byte[] Create(ref byte[] buffer)
         {
-            List<byte[]> result = new List<byte[]> { BitConverter.GetBytes((int)(buffer.Length)), buffer };
+            List<byte[]> result = new List<byte[]> { BitConverter.GetBytes(buffer.Length), buffer };
 
             return result.SelectMany(x => x).ToArray();
         }
@@ -36,7 +36,7 @@ namespace Netly.Core
         {
             if (count == 0)
             {
-                if (bytes.Count < sizeof(Int32)) return;
+                if (bytes.Count < sizeof(int)) return;
 
                 count = GetCount();
 
@@ -69,18 +69,18 @@ namespace Netly.Core
 
         private int GetCount()
         {
-            byte[] buffer = new byte[sizeof(Int32)];
+            byte[] buffer = new byte[sizeof(int)];
 
-            for (int i = 0; i < sizeof(Int32); i++)
+            for (int i = 0; i < sizeof(int); i++)
             {
                 buffer[i] = bytes[i];
             }
 
-            bytes.RemoveRange(0, sizeof(Int32));
+            bytes.RemoveRange(0, sizeof(int));
 
             int value = BitConverter.ToInt32(buffer, 0);
 
-            return (value > MAX_SIZE) ? 0 : value;
+            return value > MAX_SIZE ? 0 : value;
         }
     }
 }
