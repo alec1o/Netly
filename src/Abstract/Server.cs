@@ -49,6 +49,46 @@ namespace Netly.Abstract
         {
         public virtual void Close()
         {
+            if (!IsOpened || m_tryOpen || m_tryClose) return;
+
+            m_tryClose = true;
+
+            m_socket.Shutdown(SocketShutdown.Both);
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    m_socket.Close();
+                    m_socket.Dispose();
+                }
+                finally
+                {
+                    m_socket = null;
+
+                    var m_clients = Clients.ToArray();
+
+                    foreach (T client in m_clients)
+                    {
+                        object m_object = client;
+                        IClient m_client = (IClient)client;
+                        m_client?.Close();
+                    }
+
+                    m_opened = false;
+                    Clients.Clear();
+
+                    if (!m_invokeClose)
+                    {
+                        m_invokeClose = true;
+                        onCloseHandler?.Invoke(this, EventArgs.Empty);
+                    }
+                }
+
+                m_tryClose = false;
+            });
+        }
+
         public virtual void ToData(byte[] data)
         {
             foreach (T client in Clients)
