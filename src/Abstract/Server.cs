@@ -34,17 +34,24 @@ namespace Netly.Abstract
 
         protected virtual bool IsConnected()
         {
+            return m_socket == null;
         }
 
         public virtual void Open(Host host)
         {
+            Open(host, 0);
         }
+
         public virtual void Open(Host host, int backlog)
         {
+            // override...
         }
+
         public virtual void AcceptOrReceive()
         {
+            // override...
         }
+
         protected virtual T AddOrRemoveClient(T client, bool removeClient)
         {
             if (client == null) throw new ArgumentNullException(nameof(client));
@@ -157,6 +164,10 @@ namespace Netly.Abstract
 
         public virtual void OnOpen(Action callback)
         {
+            onOpenHandler += (_, @null) =>
+            {
+                MainThread.Add(() => callback?.Invoke());
+            };
         }
 
         public virtual void OnClose(Action callback)
@@ -169,10 +180,18 @@ namespace Netly.Abstract
 
         public virtual void OnEnter(Action<T> callback)
         {
+            onEnterHandler += (_, client) =>
+            {
+                MainThread.Add(() => callback?.Invoke(client));
+            };
         }
 
         public virtual void OnExit(Action<T> callback)
         {
+            onExitHandler += (_, client) =>
+            {
+                MainThread.Add(() => callback?.Invoke(client));
+            };
         }
 
         public virtual void OnData(Action<T, byte[]> callback)
