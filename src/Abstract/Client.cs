@@ -71,6 +71,9 @@ namespace Netly.Abstract
         }
         public virtual void OnModify(Action<Socket> callback)
         {
+            onModifyHandler += (_, socket) =>
+            {
+                MainThread.Add(() => callback?.Invoke(socket));
             };
         }
     }
