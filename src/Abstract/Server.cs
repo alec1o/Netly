@@ -85,6 +85,10 @@ namespace Netly.Abstract
 
         public virtual void OnError(Action<Exception> callback)
         {
+            onErrorHandler += (_, exception) =>
+            {
+                MainThread.Add(() => callback?.Invoke(exception));
+            };
         }
 
         public virtual void OnOpen(Action callback)
