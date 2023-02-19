@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-namespace Netly
+namespace Netly.Core
 {
     /// <summary>
     /// Netly: Host (EndPoint Manager)

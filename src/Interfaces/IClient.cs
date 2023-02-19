@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Netly.Core;
+using System;
 using System.Net.Sockets;
 using UdpClient = Netly.UdpClient;
 namespace Netly
