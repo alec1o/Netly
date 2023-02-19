@@ -1,4 +1,4 @@
-<h1 align="center">Netly</h1>
+<h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
 <h6 align="end">
   License <a href="LICENSE.md">SEE HERE (MIT)</a><br>
