@@ -23,6 +23,14 @@
 
 <br>
 
+## Versions
+| [v1](https://github.com/alec1o/Netly/tree/1.x)                     | [v2](https://github.com/alec1o/Netly/tree/2.x) | [v3](https://github.com/alec1o/Netly/tree/3.x) |
+| ---                        | ---    | ---    |
+| <h5>TCP client/server</h5> | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | SSL client/server  |
+| <h5>UDP client/server</h5> |        |        |
+
+<br>
+
 ## Dependency
 - ### [Byter](https://github.com/alec1o/byter)
 
