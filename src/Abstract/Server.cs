@@ -31,3 +31,70 @@ namespace Netly.Abstract
         protected readonly object m_lock = new object();
 
         #endregion
+
+        protected virtual bool IsConnected()
+        {
+        }
+
+        public virtual void Open(Host host)
+        {
+        }
+        public virtual void Open(Host host, int backlog)
+        {
+        }
+        public virtual void AcceptOrReceive()
+        {
+        }
+        protected virtual T AddOrRemoveClient(T client, bool removeClient)
+        {
+        public virtual void Close()
+        {
+        public virtual void ToData(byte[] data)
+        {
+        public virtual void ToData(string data)
+        {
+        }
+        public virtual void ToEvent(string name, byte[] data)
+        {
+        }
+        public virtual void ToEvent(string name, string data)
+        {
+        }
+        #region Callbacks
+
+        public virtual void OnError(Action<Exception> callback)
+        {
+        }
+
+        public virtual void OnOpen(Action callback)
+        {
+        }
+
+        public virtual void OnClose(Action callback)
+        {
+        }
+
+        public virtual void OnEnter(Action<T> callback)
+        {
+        }
+
+        public virtual void OnExit(Action<T> callback)
+        {
+        }
+
+        public virtual void OnData(Action<T, byte[]> callback)
+        {
+        }
+
+        public virtual void OnEvent(Action<T, string, byte[]> callback)
+        {
+        }
+
+        public virtual void OnModify(Action<Socket> callback)
+        {
+        }
+
+        #endregion
+
+    }
+}
