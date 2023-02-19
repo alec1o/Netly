@@ -28,12 +28,12 @@ public class PackageTest
             if (isLast is false)
             {
                 result1 = new byte[data.Length];
-                result1.CopyTo(data, 0);
+                data.CopyTo(result1, 0);
             }
             else
             {
                 result2 = new byte[data.Length];
-                result2.CopyTo(data, 0);
+                data.CopyTo(result2, 0);
             }
 
             isLast = !isLast;
