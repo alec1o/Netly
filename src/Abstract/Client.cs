@@ -41,6 +41,12 @@ namespace Netly.Abstract
             // override...
         }
 
+        internal virtual void InitServer()
+        {
+            onOpenHandler?.Invoke(null, null);
+            Receive();
+        }
+
         public virtual void Receive()
         {
             // override...
