@@ -44,10 +44,18 @@ namespace Netly.Abstract
         }
         public virtual void ToData(byte[] data)
         {
+            if (m_closed) return;
+
+            byte[] buffer = Package.Create(ref data);
+
+            m_socket.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
+
         public virtual void ToData(string data)
         {
+            ToData(NE.GetBytes(data));
         }
+
         public virtual void ToEvent(string name, byte[] data)
         {
             ToData(MessageParser.Create(name, data));
