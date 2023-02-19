@@ -84,6 +84,10 @@ namespace Netly.Abstract
 
         public virtual void OnData(Action<T, byte[]> callback)
         {
+            onDataHandler += (_, data) =>
+            {
+                MainThread.Add(() => callback?.Invoke(data.client, data.buffer));
+            };
         }
 
         public virtual void OnEvent(Action<T, string, byte[]> callback)
