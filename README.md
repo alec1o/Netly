@@ -188,5 +188,3 @@ $ dotnet build
 > Below are some missing features that are planned to be added in later versions.
 
 - [ ] [SslClient and SslServer] Tcp protocol with SSL/TLS encryption.
-- [ ] [UDP client/server] Detect connection (using continuous pings and a no-response timeout to identify client/server connection).
-- [ ] [ TCP/UDP/SSL Send data in string without having to convert from string to bytes manually.
