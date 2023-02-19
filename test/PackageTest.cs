@@ -13,8 +13,8 @@ public class PackageTest
         byte[] size1 = BitConverter.GetBytes(value1.Length);
         byte[] size2 = BitConverter.GetBytes(value2.Length);
 
-        byte[] data1 = null;
-        byte[] data2 = null;
+        byte[] data1 = new byte[0];
+        byte[] data2 = new byte[0];
 
         byte[] buffer = new List<byte[]> { size1, value1, size1 }.SelectMany(x => x).ToArray();
 
