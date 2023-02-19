@@ -57,9 +57,9 @@ $ dotnet build
 <br>
 
 ## List of tested platforms
-- [.NET](https://dotnet.microsoft.com) (SDK)
-- [Mono](https://mono-project.com) (SDK)
-- [Unity](https://unity.com) (Engine)
+- ###### [.NET](https://dotnet.microsoft.com) (SDK)
+- ###### [Mono](https://mono-project.com) (SDK)
+- ###### [Unity](https://unity.com) (Engine)
 
 <br>
   
