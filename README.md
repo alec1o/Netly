@@ -29,6 +29,11 @@
 <br>
 
 ## Build
+- ### Build dependencies
+  ###### [Git](http://git-scm.com/)  
+  ###### [MONO](http://mono-project.com) or [.NET](http://dot.net)
+  
+- ### Build step-by-step 
 ```rb
 # 1. clone repository 
 $ git clone "https://github.com/alec1o/netly.git"
