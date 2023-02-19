@@ -11,7 +11,7 @@ namespace Netly
     /// <summary>
     /// Netly: TcpServer
     /// </summary>
-    public class TcpServer : ITcpServer
+    public class TcpServer : IServer<TcpClient>
     {
         #region Var
 

@@ -1,11 +1,10 @@
 ﻿using Netly.Core;
 using System;
 using System.Net.Sockets;
-using TcpClient = Netly.TcpClient;
 
 namespace Netly
 {
-    internal interface ITcpServer
+    internal interface IServer<T>
     {
         Host Host { get; }
         bool IsOpened { get; }
@@ -17,11 +16,11 @@ namespace Netly
         void Close();
         void OnClose(Action callback);
 
-        void OnEnter(Action<TcpClient> callback);
-        void OnExit(Action<TcpClient> callback);
+        void OnEnter(Action<T> callback);
+        void OnExit(Action<T> callback);
 
-        void OnData(Action<TcpClient, byte[]> callback);
-        void OnEvent(Action<TcpClient, string, byte[]> callback);
+        void OnData(Action<T, byte[]> callback);
+        void OnEvent(Action<T, string, byte[]> callback);
 
         void OnModify(Action<Socket> callback);
     }
