@@ -68,7 +68,12 @@ namespace Netly.Abstract
         }
         public virtual void OnEvent(Action<string, byte[]> callback)
         {
+            onEventHandler += (_, data) =>
+            {
+                MainThread.Add(() => callback?.Invoke(data.name, data.buffer));
+            };
         }
+
         public virtual void OnModify(Action<Socket> callback)
         {
             onModifyHandler += (_, socket) =>
