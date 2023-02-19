@@ -50,9 +50,12 @@ namespace Netly.Abstract
         }
         public virtual void ToEvent(string name, byte[] data)
         {
+            ToData(MessageParser.Create(name, data));
         }
+
         public virtual void ToEvent(string name, string data)
         {
+            ToEvent(name, NE.GetBytes((data)));
         }
         public virtual void OnError(Action<Exception> callback)
         {
