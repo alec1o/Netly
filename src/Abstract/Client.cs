@@ -59,7 +59,12 @@ namespace Netly.Abstract
         }
         public virtual void OnOpen(Action callback)
         {
+            onOpenHandler += (_, @null) =>
+            {
+                MainThread.Add(() => callback?.Invoke());
+            };
         }
+
         public virtual void OnClose(Action callback)
         {
             onCloseHandler += (_, @null) =>
