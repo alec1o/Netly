@@ -43,5 +43,13 @@ namespace Netly.Abstract
                 m_tryOpen = false;
             });
         }
+
+        protected override bool IsConnected()
+        {
+            if (m_socket == null) return false;
+
+            return m_opened;
+        }
+
     }
 }
