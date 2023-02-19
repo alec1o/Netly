@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Netly
+namespace Netly.Core
 {
     /// <summary>
     /// Netly: NE (Netly Encode). It is a module that redraws the (System.Text.Encoding) syntax
