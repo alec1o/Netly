@@ -16,10 +16,12 @@ namespace Netly
         void Close();
         void OnClose(Action callback);
 
-        void ToData(byte[] value);
+        void ToData(byte[] data);
+        void ToData(string data);
         void OnData(Action<byte[]> callback);
 
-        void ToEvent(string name, byte[] value);
+        void ToEvent(string name, byte[] data);
+        void ToEvent(string name, string data);
         void OnEvent(Action<string, byte[]> callback);
 
         void OnModify(Action<Socket> callback);
