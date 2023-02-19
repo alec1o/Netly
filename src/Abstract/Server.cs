@@ -47,6 +47,30 @@ namespace Netly.Abstract
         }
         protected virtual T AddOrRemoveClient(T client, bool removeClient)
         {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            lock (m_lock)
+            {
+                if (removeClient is false)
+                {
+                    Clients.Add(client);
+                }
+                else
+                {
+                    foreach (T currentUser in Clients)
+                    {
+                        if (client.Equals(currentUser))
+                        {
+                            Clients.Remove(currentUser);
+                            return client;
+                        }
+                    }
+                }
+
+                return client;
+            }
+        }
+
         public virtual void Close()
         {
             if (!IsOpened || m_tryOpen || m_tryClose) return;
