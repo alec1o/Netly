@@ -25,7 +25,14 @@ namespace Netly.Core
         }
         private void GetBuffer(ref byte[] buffer)
         {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = bytes[i];
+            }
+
+            bytes.RemoveRange(0, buffer.Length);
         }
+
         private int GetCount()
         {
             byte[] buffer = new byte[sizeof(Int32)];
