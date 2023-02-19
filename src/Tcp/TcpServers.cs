@@ -1,11 +1,12 @@
-﻿using Netly.Core;
+﻿using Netly.Abstract;
+using Netly.Core;
 using System;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Netly.Abstract
+namespace Netly
 {
-    public class TcpServers : Server<TcpClient>, IServer<TcpClient>
+    public class TcpServer : Server<TcpClient>, IServer<TcpClient>
     {
         public override void Open(Host host, int backlog)
         {
