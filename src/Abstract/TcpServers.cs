@@ -51,5 +51,23 @@ namespace Netly.Abstract
             return m_opened;
         }
 
+        public override void AcceptOrReceive()
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                while (IsOpened)
+                {
+                    try
+                    {
+                        var clientSocket = m_socket.Accept();
+
+                        if (clientSocket == null) continue;
+
+                        EndAccept(clientSocket);
+                    }
+                    catch { }
+                }
+            });
+
     }
 }
