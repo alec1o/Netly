@@ -10,9 +10,7 @@ namespace Netly
     {
         public override void Open(Host host, int backlog)
         {
-            Console.WriteLine($"TRY OPEN 1: {IsOpened}, {m_tryOpen}, {m_tryClose}");
             if (IsOpened || m_tryOpen || m_tryClose) return;
-            Console.WriteLine($"TRY OPEN 2: {IsOpened}, {m_tryOpen}, {m_tryClose}");
 
             m_tryOpen = true;
 
