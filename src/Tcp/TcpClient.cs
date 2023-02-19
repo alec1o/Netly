@@ -117,28 +117,28 @@ namespace Netly
             });
         }
 
-        public void ToData(byte[] value)
+        public void ToData(byte[] data)
         {
             if (_closed) return;
 
-            byte[] buffer = BufferParser.SetPrefix(ref value);
+            byte[] buffer = Package.Create(ref data);
 
             _socket.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
 
-        public void ToEvent(string name, byte[] value)
+        public void ToEvent(string name, byte[] data)
         {
-            ToData(MessageParser.Create(name, value));
+            ToData(MessageParser.Create(name, data));
         }
 
-        public void ToData(string value)
+        public void ToData(string data)
         {
-            this.ToData(NE.GetBytes(value, NE.Mode.UTF8));
+            this.ToData(NE.GetBytes(data, NE.Mode.UTF8));
         }
 
-        public void ToEvent(string name, string value)
+        public void ToEvent(string name, string data)
         {
-            this.ToEvent(name, NE.GetBytes(value, NE.Mode.UTF8));
+            this.ToEvent(name, NE.GetBytes(data, NE.Mode.UTF8));
         }
 
         private bool Connected()
@@ -157,47 +157,50 @@ namespace Netly
 
         private void Receive()
         {
-            int length = 0;
-            byte[] buffer = new byte[1024 * 8];
+            int m_length = 0;
+            byte[] m_buffer = new byte[Package.MAX_SIZE];
+            Package m_package = new Package();
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
+                m_package.Output((buffer) =>
+                {
+                    (string name, byte[] buffer) content = MessageParser.Verify(buffer);
+
+                    if (content.buffer == null)
+                        onDataHandler?.Invoke(null, buffer);
+                    else
+                        onEventHandler?.Invoke(null, (content.name, content.buffer));
+                });
+
                 while (!_closed)
                 {
                     try
                     {
-                        length = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
+                        m_length = _socket.Receive(m_buffer, 0, m_buffer.Length, SocketFlags.None);
 
-                        if (length <= 0)
+                        if (m_length <= 0)
                         {
                             if (IsOpened is false) break;
                             continue;
                         }
 
-                        byte[] data = new byte[length];
-                        Array.Copy(buffer, 0, data, 0, data.Length);
+                        byte[] buffer = new byte[m_length];
+                        Array.Copy(m_buffer, 0, buffer, 0, buffer.Length);
 
-                        List<byte[]> messages = BufferParser.GetMessages(ref data);
-
-                        foreach (byte[] message in messages)
-                        {
-                            (string name, byte[] buffer) content = MessageParser.Verify(message);
-
-                            if (content.buffer == null)
-                                onDataHandler?.Invoke(null, data);
-                            else
-                                onEventHandler?.Invoke(null, (content.name, content.buffer));
-                        }
+                        m_package.Input(buffer);
                     }
                     catch
                     {
-                        if (length <= 0)
+                        if (m_length <= 0)
                         {
                             if (IsOpened is false) break;
                             continue;
                         }
                     }
                 }
+
+                m_package = null;
 
                 if (!_closing || !_closed)
                 {
