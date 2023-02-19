@@ -63,6 +63,7 @@ $ dotnet build
   _Instance_
   ```csharp
   using Netly;
+  using Netly.Core;
 
   // Example udp client instance
   var client = new UdpClient();
@@ -116,6 +117,7 @@ $ dotnet build
   _Instance_
   ```csharp
   using Netly;
+  using Netly.Core;
 
   // Example tcp server instance
   var server = new TcpServer();
