@@ -28,6 +28,7 @@ namespace Netly.Abstract
         protected private EventHandler<byte[]> onDataHandler;
         protected private EventHandler<(string name, byte[] buffer)> onEventHandler;
         protected private EventHandler<Socket> onModifyHandler;
+        private object destroyLock = new object();
 
         #endregion
 
@@ -54,31 +55,11 @@ namespace Netly.Abstract
 
         public virtual void Close()
         {
-            if (!IsOpened || m_connecting || m_closing) return;
-
-            m_closing = true;
-
-            m_socket.Shutdown(SocketShutdown.Both);
+            if (!IsOpened || m_connecting || m_closing) return;            
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                try
-                {
-                    m_socket.Close();
-                    m_socket.Dispose();
-                }
-                finally
-                {
-                    m_socket = null;
-
-                    if (!m_closed)
-                    {
-                        m_closed = true;
-                        onCloseHandler?.Invoke(null, null);
-                    }
-                }
-
-                m_closing = false;
+                Destroy();
             });
         }
 
@@ -104,6 +85,26 @@ namespace Netly.Abstract
         public virtual void ToEvent(string name, string data)
         {
             ToEvent(name, NE.GetBytes((data)));
+        }
+
+        protected virtual void Destroy()
+        {
+            lock (destroyLock)
+            {
+                m_socket?.Shutdown(SocketShutdown.Both);
+                m_socket?.Close();
+                m_socket?.Dispose();
+
+                if (m_closed is false && m_closing is false)
+                {
+                    m_closing = true;
+                    onCloseHandler?.Invoke(null, null);
+                    m_closed = true;
+                    m_closing = false;
+                }
+
+                m_socket = null;
+            }
         }
 
         #region Callbacks
