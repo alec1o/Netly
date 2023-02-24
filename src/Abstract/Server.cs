@@ -47,7 +47,7 @@ namespace Netly.Abstract
             // override...
         }
 
-        public virtual void AcceptOrReceive()
+        protected virtual void AcceptOrReceive()
         {
             // override...
         }

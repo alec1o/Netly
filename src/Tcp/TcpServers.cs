@@ -50,7 +50,7 @@ namespace Netly
             return m_opened;
         }
 
-        public override void AcceptOrReceive()
+        protected override void AcceptOrReceive()
         {
             ThreadPool.QueueUserWorkItem(_ =>
             {
