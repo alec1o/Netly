@@ -96,11 +96,14 @@ namespace Netly
                 }
 
                 _package = null;
+                m_socket?.Shutdown(SocketShutdown.Both);
 
                 if (!m_closing || !m_closed)
                 {
                     m_closed = true;
                     onCloseHandler?.Invoke(null, null);
+                    m_socket?.Dispose();
+                    m_socket = null;
                 }
             });
         }
