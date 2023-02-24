@@ -54,7 +54,7 @@ namespace Netly
             });
         }
 
-        public override void Receive()
+        protected override void Receive()
         {
             int _length = 0;
             byte[] _buffer = new byte[Package.MAX_SIZE];
