@@ -55,7 +55,7 @@ namespace Netly.Abstract
 
         public virtual void Close()
         {
-            if (!IsOpened || m_connecting || m_closing) return;            
+            if (!IsOpened || m_connecting || m_closing) return;
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
@@ -91,7 +91,6 @@ namespace Netly.Abstract
         {
             lock (destroyLock)
             {
-                m_socket?.Shutdown(SocketShutdown.Both);
                 m_socket?.Close();
                 m_socket?.Dispose();
 
