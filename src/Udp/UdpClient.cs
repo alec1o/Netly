@@ -96,12 +96,13 @@ namespace Netly
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
+                // init timer
+                UpdateTimeoutConnection();
+
                 while (IsOpened)
                 {
                     try
-                    {
-                        UpdateTimeoutConnection();
-
+                    {                       
                         length = m_socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
 
                         if (length <= 0)
@@ -115,6 +116,9 @@ namespace Netly
                         Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
 
                         (string name, byte[] buffer) content = MessageParser.Verify(data);
+
+                        // update timer
+                        UpdateTimeoutConnection();
 
                         if (content.buffer == null)
                             onDataHandler?.Invoke(null, data);
