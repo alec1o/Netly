@@ -10,8 +10,8 @@ namespace Netly
     public class UdpClient : Client
     {
         private bool _opened;
-        private bool _timeoutInited;
-        private DateTime _lastUpdate;
+        private bool useTimeoutConnection;
+        private DateTime connectionTimer;
         public const int DEFAULT_TIMEOUT = 5000;
         public const int MIN_TIMEOUT = 500;
 
@@ -99,6 +99,8 @@ namespace Netly
                 {
                     try
                     {
+                        UpdateTimeoutConnection();
+
                         length = m_socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
 
                         if (length <= 0)
@@ -125,18 +127,20 @@ namespace Netly
                     }
                 }
 
-                if (!m_closing || !m_closed)
-                {
-                    m_closed = true;
-                    m_socket.Dispose();
-                    onCloseHandler?.Invoke(null, null);
-                    m_socket = null;
-                }
+                Destroy();
             });
+        }
+
+        public override void OnClose(Action callback)
+        {
+            Timeout = 0;
+            base.OnClose(callback);
         }
 
         internal void AddData(byte[] data)
         {
+            UpdateTimeoutConnection();
+
             (string name, byte[] buffer) content = MessageParser.Verify(data);
 
             if (content.buffer == null)
@@ -145,37 +149,37 @@ namespace Netly
                 onEventHandler?.Invoke(null, (content.name, content.buffer));
         }
 
-        private void ResetTimer()
+        private void UpdateTimeoutConnection()
         {
             if (Timeout == 0) return;
 
-            _lastUpdate = DateTime.Now.AddMilliseconds(Timeout);
+            connectionTimer = DateTime.Now.AddMilliseconds(Timeout);
 
-            if (_timeoutInited) return;
-            _timeoutInited = true;
-
-            ThreadPool.QueueUserWorkItem(_ =>
+            if (useTimeoutConnection is false)
             {
-                while (m_socket != null)
+                useTimeoutConnection = true;
+
+                ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    Thread.Sleep(Timeout);
-
-                    if (_lastUpdate < DateTime.Now)
+                    while (IsOpened)
                     {
-                        m_socket?.Shutdown(SocketShutdown.Both);
+                        Thread.Sleep(Timeout);
 
-                        if (!m_closing || !m_closed)
+                        if (connectionTimer < DateTime.Now)
                         {
-                            m_closed = true;
-                            onCloseHandler?.Invoke(null, null);
-                            m_socket?.Dispose();
-                            m_socket = null;
+                            Destroy();
                         }
                     }
-                }
 
-                _timeoutInited = false;
-            });
+                    useTimeoutConnection = false;
+                });
+            }
+        }
+
+        protected override void Destroy()
+        {
+            base.Destroy();
+            if (m_closed) _opened = false;
         }
     }
 }
