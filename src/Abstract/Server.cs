@@ -15,9 +15,9 @@ namespace Netly.Abstract
         public bool IsOpened => IsConnected();
 
         protected Socket m_socket;
-        protected bool m_tryOpen;
-        protected bool m_tryClose;
-        protected bool m_invokeClose;
+        protected bool m_connecting;
+        protected bool m_closing;
+        protected bool m_closed;
         protected bool m_opened;
 
         protected private EventHandler onOpenHandler;
@@ -28,6 +28,7 @@ namespace Netly.Abstract
         protected private EventHandler<(T client, byte[] buffer)> onDataHandler;
         protected private EventHandler<(T client, string name, byte[] buffer)> onEventHandler;
         protected private EventHandler<Socket> onModifyHandler;
+        private object destroyLock = new object();
         protected readonly object m_lock = new object();
 
         #endregion
@@ -50,6 +51,26 @@ namespace Netly.Abstract
         protected virtual void AcceptOrReceive()
         {
             // override...
+        }
+
+        protected virtual void Destroy()
+        {
+            lock (destroyLock)
+            {
+                m_socket?.Shutdown(SocketShutdown.Both);
+                m_socket?.Close();
+                m_socket?.Dispose();
+
+                if (m_closed is false && m_closing is false)
+                {
+                    m_closing = true;
+                    onCloseHandler?.Invoke(null, null);
+                    m_closed = true;
+                    m_closing = false;
+                }
+
+                m_socket = null;
+            }
         }
 
         protected virtual T AddOrRemoveClient(T client, bool removeClient)
@@ -80,43 +101,23 @@ namespace Netly.Abstract
 
         public virtual void Close()
         {
-            if (!IsOpened || m_tryOpen || m_tryClose) return;
-
-            m_tryClose = true;
-
-            m_socket.Shutdown(SocketShutdown.Both);
+            if (!IsOpened || m_connecting || m_closing) return;
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                try
+                Destroy();
+                
+                if(m_closed) m_opened = false;
+
+                T[] clients = Clients.ToArray();
+                Clients.Clear();
+
+                foreach (T client in clients)
                 {
-                    m_socket.Close();
-                    m_socket.Dispose();
+                    object m_object = client;
+                    IClient m_client = (IClient)client;
+                    m_client?.Close();
                 }
-                finally
-                {
-                    m_socket = null;
-
-                    var m_clients = Clients.ToArray();
-
-                    foreach (T client in m_clients)
-                    {
-                        object m_object = client;
-                        IClient m_client = (IClient)client;
-                        m_client?.Close();
-                    }
-
-                    m_opened = false;
-                    Clients.Clear();
-
-                    if (!m_invokeClose)
-                    {
-                        m_invokeClose = true;
-                        onCloseHandler?.Invoke(this, EventArgs.Empty);
-                    }
-                }
-
-                m_tryClose = false;
             });
         }
 
