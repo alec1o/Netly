@@ -23,6 +23,7 @@ namespace Netly
             UUID = uuid;
             m_socket = socket;
             Host = host;
+            m_serverMode = true;
         }
 
         public void Open(Host host, int timeout)
@@ -178,6 +179,15 @@ namespace Netly
 
         protected override void Destroy()
         {
+            if (m_serverMode)
+            {
+                _opened = false;
+                m_closed = true;
+                m_closing = false;
+                onCloseHandler?.Invoke(null, null);
+                return;
+            }
+
             base.Destroy();
             if (m_closed) _opened = false;
         }
