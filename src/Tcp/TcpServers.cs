@@ -10,9 +10,9 @@ namespace Netly
     {
         public override void Open(Host host, int backlog)
         {
-            if (IsOpened || m_tryOpen || m_tryClose) return;
+            if (IsOpened || m_connecting || m_closing) return;
 
-            m_tryOpen = true;
+            m_connecting = true;
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
@@ -28,7 +28,7 @@ namespace Netly
                     Host = host;
 
                     m_opened = true;
-                    m_invokeClose = false;
+                    m_closed = false;
 
                     onOpenHandler?.Invoke(null, null);
 
@@ -39,7 +39,7 @@ namespace Netly
                     onErrorHandler?.Invoke(null, e);
                 }
 
-                m_tryOpen = false;
+                m_connecting = false;
             });
         }
 
