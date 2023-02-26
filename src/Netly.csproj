@@ -1,10 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	
-	<ItemGroup>		
-		<ProjectReference Include="..\vendor\byter\src\Byter.csproj" />		
-		<None Include="..\README.md" Pack="true" PackagePath="\"/>
-		<None Include="..\LICENSE.md" Pack="true" PackagePath="\"/>
-		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\"/>		
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\LICENSE.md" Pack="true" PackagePath="\" />
+		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\" />		
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Byter" Version="1.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>		
