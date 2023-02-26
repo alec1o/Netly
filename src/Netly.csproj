@@ -1,11 +1,42 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+	<ItemGroup>		
+		<ProjectReference Include="..\vendor\byter\src\Byter.csproj" />		
+		<None Include="..\README.md" Pack="true" PackagePath="\"/>
+		<None Include="..\LICENSE.md" Pack="true" PackagePath="\"/>
+		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\"/>		
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\vendor\byter\src\Byter.csproj" />
-  </ItemGroup>
+	<PropertyGroup>		
+		<PackageId>Netly</PackageId>
+		<Version>2.0.0</Version>
+		<Authors>alec1o</Authors>
+		<Company>alec1o</Company>
+		<Copyright>alec1o</Copyright>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageTags>TCP, UDP, SSL, SOCKET, EASY</PackageTags>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
+		<PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
+		<PackageIconUrl>netly-logo-3.png</PackageIconUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageReleaseNotes>
+			+ TCP client/server
+			+ UDP client/server
+			+ TCP/IP Message Framing
+			+ TCP/UDP performance improvement
+			- SSL client/server (nonexistent)
+			- Add documentation and samples for SSL (nonexistent)
+		</PackageReleaseNotes>
+		<Description>
+			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-
+			Docs: https://netly.docs.kezero.com
+			Sample: https://netly.docs.kezero.com/overview/quick-start
+			Fork me: https://github.com/alec1o/Netly
+		</Description>
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+	
 </Project>
