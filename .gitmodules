@@ -1,4 +1,0 @@
-[submodule "byter"]
-	path = vendor/byter
-	url = https://github.com/alec1o/byter
-	branch = 1.x
