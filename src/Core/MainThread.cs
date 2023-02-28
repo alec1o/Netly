@@ -33,7 +33,7 @@ namespace Netly.Core
         /// </summary>
         public static void Clean()
         {
-            if (Automatic && _callbacks.Count > 0)
+            if (Automatic is false && _callbacks.Count > 0)
             {
                 for (int i = 0; i < _callbacks.Count; i++)
                 {
