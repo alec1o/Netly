@@ -7,12 +7,12 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="Byter" Version="1.0.0" />
+	  <PackageReference Include="Byter" Version="1.1.0" />
 	</ItemGroup>
 
 	<PropertyGroup>		
 		<PackageId>Netly</PackageId>
-		<Version>2.0.0</Version>
+		<Version>2.1.0</Version>
 		<Authors>alec1o</Authors>
 		<Company>alec1o</Company>
 		<Copyright>alec1o</Copyright>
@@ -25,12 +25,8 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageReleaseNotes>
-			+ TCP client/server
-			+ UDP client/server
-			+ TCP/IP Message Framing
-			+ TCP/UDP performance improvement
-			- SSL client/server (nonexistent)
-			- Add documentation and samples for SSL (nonexistent)
+			+ Fix. MainThread error
+			+ Add. Byter v1.1.0
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
