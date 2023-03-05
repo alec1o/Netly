@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
 		<None Include="..\LICENSE.md" Pack="true" PackagePath="\" />
+		<None Include="..\content\nuget\README.md" Pack="true" PackagePath="\" />
 		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\" />		
 	</ItemGroup>
 	
@@ -12,7 +12,7 @@
 
 	<PropertyGroup>		
 		<PackageId>Netly</PackageId>
-		<Version>2.1.0</Version>
+		<Version>2.1.1</Version>
 		<Authors>alec1o</Authors>
 		<Company>alec1o</Company>
 		<Copyright>alec1o</Copyright>
@@ -25,8 +25,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageReleaseNotes>
-			+ Fix. MainThread error
-			+ Add. Byter v1.1.0
+			+ Fix. nuget readme
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
