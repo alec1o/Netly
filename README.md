@@ -1,8 +1,8 @@
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
 <h6 align="end">
-  License <a href="LICENSE.md">SEE HERE (MIT)</a><br>
-  Support <a href="mailto://support@kezero.com">CONTACT HERE</a>
+  <a href="mailto://support@kezero.com">Support</a> - 
+  <a href="LICENSE.md">License</a>  
 </h6>
 
 <h6 align="center">
