@@ -1,8 +1,9 @@
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
 <h6 align="end">
-  License <a href="LICENSE.md">SEE HERE (MIT)</a><br>
-  Support <a href="mailto://support@kezero.com">CONTACT HERE</a>
+  <a href="https://netly.docs.kezero.com">Docs</a> -   
+  <a href="mailto://support@kezero.com">Support</a> - 
+  <a href="LICENSE.md">License</a>  
 </h6>
 
 <h6 align="center">
@@ -49,12 +50,6 @@ $ git clone "https://github.com/alec1o/netly.git"
 
 # 2. open source directory 
 $ cd netly/
-
-# 3. download dependency module
-$ git submodule update --init
-
-# 4. optional, update module
-$ git submodule update --remote
 
 # 5. restore dotnet project
 $ dotnet restore
