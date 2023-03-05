@@ -50,12 +50,6 @@ $ git clone "https://github.com/alec1o/netly.git"
 # 2. open source directory 
 $ cd netly/
 
-# 3. download dependency module
-$ git submodule update --init
-
-# 4. optional, update module
-$ git submodule update --remote
-
 # 5. restore dotnet project
 $ dotnet restore
 
