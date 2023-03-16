@@ -25,7 +25,7 @@ namespace Netly
                     m_socket.Bind(host.EndPoint);
                     m_socket.Listen(backlog);
 
-                    Host = host;
+                    Host = new Host(m_socket.RemoteEndPoint);
 
                     m_opened = true;
                     m_closed = false;
