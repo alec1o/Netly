@@ -1,28 +1,9 @@
-<h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
-
-<h6 align="end">
-  <a href="https://netly.docs.kezero.com">Docs</a> -   
-  <a href="mailto://support@kezero.com">Support</a> - 
-  <a href="LICENSE.md">License</a>  
-</h6>
-
-<h6 align="center">
-  powered by <a href="https://github.com/alec1o">ALEC1O</a>
-</h6>
-
-<h6 align="center">
-  <img align="center" src="content/logo/netly-logo-3.png" width="128px">
-<h6>
-
 ## About
 > Netly is a open source socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows, ...) as long as it is compiled with its destination.
 
-<br>
 
 ## Docs
 > ### See the documentation [here!](http://netly.docs.kezero.com)
-
-<br>
 
 ## Install
 ###### Official publisher
@@ -30,7 +11,6 @@
 | ---   | ---               |
 | Install on [Nuget](https://www.nuget.org/packages/Netly)| Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)|
 
-<br>
 
 ## Versions
 ###### Notable changes
@@ -39,12 +19,12 @@
 | TCP client/server | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | SSL client/server  |
 | UDP client/server | TCP/UDP performance improvement | Add documentation and samples for SSL |
 
-<br>
+ 
 
 ## Dependency
 - ##### [Byter](https://github.com/alec1o/byter)
 
-<br>
+ 
 
 ## Build
 - ### Build dependencies
@@ -66,14 +46,14 @@ $ dotnet restore
 $ dotnet build
 ```
 
-<br>
+ 
 
 ## List of tested platforms
 - ###### [.NET](https://dotnet.microsoft.com) (SDK)
 - ###### [Mono](https://mono-project.com) (SDK)
 - ###### [Unity](https://unity.com) (Engine)
 
-<br>
+ 
   
 ## Demo
 - ### Client
@@ -194,7 +174,7 @@ $ dotnet build
   // close connection
   server.Close();
   ```
-<br>
+ 
 
 ## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.

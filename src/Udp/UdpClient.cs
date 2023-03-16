@@ -12,7 +12,6 @@ namespace Netly
         private bool _opened;
         private bool useTimeoutConnection;
         private DateTime connectionTimer;
-        public const int DEFAULT_TIMEOUT = 5000;
         public const int MIN_TIMEOUT = 500;
 
         public int Timeout { get; internal set; }
@@ -45,8 +44,6 @@ namespace Netly
 
             m_connecting = true;
 
-            if (Timeout < MIN_TIMEOUT) Timeout = MIN_TIMEOUT;
-
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
@@ -57,7 +54,7 @@ namespace Netly
 
                     m_socket.Connect(host.EndPoint);
 
-                    Host = host;
+                    Host = new Host(m_socket.RemoteEndPoint);
 
                     _opened = true;
 
