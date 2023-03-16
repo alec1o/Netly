@@ -34,7 +34,7 @@ namespace Netly
 
                     m_socket.Bind(host.EndPoint);
 
-                    Host = host;
+                    Host = new Host(m_socket.RemoteEndPoint);
 
                     m_opened = true;
                     m_closed = false;
