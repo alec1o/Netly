@@ -45,8 +45,6 @@ namespace Netly
 
             m_connecting = true;
 
-            if (Timeout < MIN_TIMEOUT) Timeout = MIN_TIMEOUT;
-
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
