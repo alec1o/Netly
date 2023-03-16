@@ -5,6 +5,12 @@
 ## Docs
 > ### See the documentation [here!](http://netly.docs.kezero.com)
 
+## Install
+###### Official publisher
+| Nuget | Unity Asset Store |
+| ---   | ---               |
+| Install on [Nuget](https://www.nuget.org/packages/Netly)| Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)|
+
 
 ## Versions
 ###### Notable changes
