@@ -24,6 +24,14 @@
 
 <br>
 
+## Install
+###### Official publisher
+| Nuget | Unity Asset Store |
+| ---   | ---               |
+| Install on [Nuget](https://www.nuget.org/packages/Netly)| Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)|
+
+<br>
+
 ## Versions
 ###### Notable changes
 | [v1](https://github.com/alec1o/Netly/tree/1.x) (old)                     | [v2](https://github.com/alec1o/Netly/tree/2.x) (current) | [v3](https://github.com/alec1o/Netly/tree/3.x) (nonexistent) |
