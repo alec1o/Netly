@@ -12,7 +12,6 @@ namespace Netly
         private bool _opened;
         private bool useTimeoutConnection;
         private DateTime connectionTimer;
-        public const int DEFAULT_TIMEOUT = 5000;
         public const int MIN_TIMEOUT = 500;
 
         public int Timeout { get; internal set; }
