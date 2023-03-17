@@ -54,7 +54,7 @@ namespace Netly
 
                     m_socket.Connect(host.EndPoint);
 
-                    Host = new Host(m_socket.LocalEndPoint);
+                    Host = new Host(m_socket.RemoteEndPoint);
 
                     _opened = true;
 
