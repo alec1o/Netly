@@ -2,8 +2,7 @@
 
 <h6 align="end">
   <a href="https://netly.docs.kezero.com">Docs</a> -   
-  <a href="mailto://support@kezero.com">Support</a> - 
-  <a href="LICENSE.md">License</a>  
+  <a href="LICENSE.md">License</a>
 </h6>
 
 <h6 align="center">
