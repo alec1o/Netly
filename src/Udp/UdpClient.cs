@@ -81,7 +81,7 @@ namespace Netly
 
         public override void ToData(byte[] data)
         {
-            if (data == null) return;
+            if (data == null || m_closed || m_closing) return;
             m_socket?.SendTo(data, SocketFlags.None, Host.EndPoint);
         }
 
@@ -99,7 +99,7 @@ namespace Netly
                 while (IsOpened)
                 {
                     try
-                    {                       
+                    {
                         length = m_socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
 
                         if (length <= 0)

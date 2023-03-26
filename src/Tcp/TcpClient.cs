@@ -96,7 +96,6 @@ namespace Netly
                 }
 
                 _package = null;
-                m_socket?.Shutdown(SocketShutdown.Both);
 
                 Destroy();
             });
