@@ -56,7 +56,7 @@ namespace Netly.Abstract
         public virtual void Close()
         {
             if (!IsOpened || m_connecting || m_closing) return;
-
+            m_closing = true;
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 Destroy();
@@ -65,11 +65,11 @@ namespace Netly.Abstract
 
         public virtual void ToData(byte[] data)
         {
-            if (m_closed) return;
+            if (m_closing || m_closed) return;
 
             byte[] buffer = Package.Create(ref data);
 
-            m_socket.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            m_socket?.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
 
         public virtual void ToData(string data)
@@ -91,18 +91,17 @@ namespace Netly.Abstract
         {
             lock (destroyLock)
             {
-                m_socket?.Close();
-                m_socket?.Dispose();
+                m_closing = true;
 
-                if (m_closed is false && m_closing is false)
+                if (m_closed is false)
                 {
-                    m_closing = true;
+                    m_socket?.Close();
                     onCloseHandler?.Invoke(null, null);
-                    m_closed = true;
-                    m_closing = false;
                 }
 
+                m_closed = true;
                 m_socket = null;
+                m_closing = false;
             }
         }
 
