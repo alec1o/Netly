@@ -43,7 +43,7 @@ namespace Netly.Abstract
             Open(host, 0);
         }
 
-        public virtual void Open(Host host, int backlog)
+        public virtual void Open(Host host, int backlogOrTimeout)
         {
             // override...
         }
@@ -57,19 +57,17 @@ namespace Netly.Abstract
         {
             lock (destroyLock)
             {
-                m_socket?.Shutdown(SocketShutdown.Both);
-                m_socket?.Close();
-                m_socket?.Dispose();
+                m_closing = true;
 
-                if (m_closed is false && m_closing is false)
+                if (m_closed is false)
                 {
-                    m_closing = true;
+                    m_socket?.Close();
                     onCloseHandler?.Invoke(null, null);
-                    m_closed = true;
-                    m_closing = false;
                 }
 
+                m_closed = true;
                 m_socket = null;
+                m_closing = false;
             }
         }
 
@@ -103,11 +101,13 @@ namespace Netly.Abstract
         {
             if (!IsOpened || m_connecting || m_closing) return;
 
+            m_closing = true;
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 Destroy();
-                
-                if(m_closed) m_opened = false;
+
+                if (m_closed) m_opened = false;
 
                 T[] clients = Clients.ToArray();
                 Clients.Clear();
@@ -123,6 +123,8 @@ namespace Netly.Abstract
 
         public virtual void ToData(byte[] data)
         {
+            if (m_closing || m_closed) return;
+
             foreach (T client in Clients)
             {
                 object m_object = client;
@@ -138,6 +140,8 @@ namespace Netly.Abstract
 
         public virtual void ToEvent(string name, byte[] data)
         {
+            if (m_closing || m_closed) return;
+
             foreach (T client in Clients)
             {
 
