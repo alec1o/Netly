@@ -20,7 +20,7 @@ public class PackageTest
 
         bool isLast = false;
 
-        byte[] buffer = new List<byte[]> { size1, value1, size1 }.SelectMany(x => x).ToArray();
+        byte[] buffer = new List<byte[]> { size1, value1, size2 }.SelectMany(x => x).ToArray();
 
         Package package = new Package();
 
