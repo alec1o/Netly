@@ -8,8 +8,8 @@ public class PackageTest
     [Fact]
     public void EndToEnd()
     {
-        byte[] value1 = NE.GetBytes("HELLO");
-        byte[] value2 = NE.GetBytes("WORLD");
+        byte[] value1 = NE.GetBytes("HELLO WORLD");
+        byte[] value2 = NE.GetBytes("NETLY IS EASY");
 
         byte[] size1 = BitConverter.GetBytes(value1.Length);
         byte[] size2 = BitConverter.GetBytes(value2.Length);
@@ -20,7 +20,7 @@ public class PackageTest
 
         bool isLast = false;
 
-        byte[] buffer = new List<byte[]> { size1, value1, size1 }.SelectMany(x => x).ToArray();
+        byte[] buffer = new List<byte[]> { size1, value1, size2 }.SelectMany(x => x).ToArray();
 
         Package package = new Package();
 
