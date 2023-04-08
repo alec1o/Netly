@@ -17,8 +17,6 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 7.0.x
-    - name: init gitmodules
-      run: git submodule update --init
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
