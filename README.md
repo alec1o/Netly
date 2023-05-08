@@ -1,8 +1,7 @@
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
 <h6 align="end">
-  <a href="https://netly.docs.kezero.com">Docs</a> -   
-  <a href="LICENSE.md">License</a>
+  <a href="https://netly.docs.kezero.com">DOCUMENTATION</a>
 </h6>
 
 <h6 align="center">
@@ -13,17 +12,12 @@
   <img align="center" src="content/logo/netly-logo-3.png" width="128px">
 <h6>
 
-## About
-> Netly is a open source socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows, ...) as long as it is compiled with its destination.
+### About
+> Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux, Windows...)
 
 <br>
 
-## Docs
-> ### See the documentation [here!](http://netly.docs.kezero.com)
-
-<br>
-
-## Install
+### Install
 ###### Official publisher
 | Nuget | Unity Asset Store |
 | ---   | ---               |
@@ -31,26 +25,32 @@
 
 <br>
 
-## Versions
+### Versions
 ###### Notable changes
-| [v1](https://github.com/alec1o/Netly/tree/1.x) (old)                     | [v2](https://github.com/alec1o/Netly/tree/2.x) (current) | [v3](https://github.com/alec1o/Netly/tree/3.x) (nonexistent) |
-| ---                        | ---    | ---    |
-| TCP client/server | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | SSL client/server  |
-| UDP client/server | TCP/UDP performance improvement | Add documentation and samples for SSL |
+| <h5>v1 (old)</h5>                     | <h5>v2 (current)</h5> | <h5>v3 (nonexistent)</h5> | <h5>v4 (nonexistent)</h5> |
+| ---                          | ---          | ---              | ---              |
+|<h6>TCP (client/server)</h6>| <h6> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</h64> | <h6>TLS/SSL (client/server)</h6> | <h6>Websocket (client/server)</h6> |
+| <h6 valign="center">UDP</h6> | <h6 valign="center">TCP/UDP performance improvement</h6> | <h6>Include docs/sample (SSL/TLS)</h6> |  <h6>Include docs/sample (Websocket)</h6> | 
 
 <br>
 
-## Dependency
-- ##### [Byter](https://github.com/alec1o/byter)
+### Feature
+> Below are some missing features that are planned to be added in later versions.
+
+- [ ] SSL/TLS (client/server) 3.x (2023)
+- [ ] Websocket (client/server) 4.x (2024)
 
 <br>
 
-## Build
-- ### Build dependencies
+### Dependency
+- ###### [Byter](https://github.com/alec1o/byter)
+
+### Build
+- #### Build dependencies
   ###### [Git](http://git-scm.com/)  
   ###### [MONO](http://mono-project.com) or [.NET](http://dot.net)
   
-- ### Build step-by-step 
+- #### Build step-by-step 
 ```rb
 # 1. clone repository 
 $ git clone "https://github.com/alec1o/netly.git"
@@ -67,15 +67,15 @@ $ dotnet build
 
 <br>
 
-## List of tested platforms
+### List of tested platforms
 - ###### [.NET](https://dotnet.microsoft.com) (SDK)
 - ###### [Mono](https://mono-project.com) (SDK)
 - ###### [Unity](https://unity.com) (Engine)
 
 <br>
   
-## Demo
-- ### Client
+### Demo
+- #### Client
   ```csharp
   using Netly;
   using Netly.Core;
@@ -127,7 +127,7 @@ $ dotnet build
       // modify socket instance
   });
   ```
-- ### Server
+- #### Server
   ```csharp
   using Netly;
   using Netly.Core;
@@ -190,8 +190,3 @@ $ dotnet build
   });
   ```
 <br>
-
-## Currently missing feature
-> Below are some missing features that are planned to be added in later versions.
-
-- [ ] [SslClient and SslServer] Tcp protocol with SSL/TLS encryption.
