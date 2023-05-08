@@ -192,4 +192,3 @@
       // modify socket instance
   });
   ```
-<br>
