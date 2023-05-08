@@ -186,7 +186,7 @@ $ dotnet build
   
   server.OnModify((socket) =>
   {
-      // mofify socket instance
+      // modify socket instance
   });
   ```
 <br>
