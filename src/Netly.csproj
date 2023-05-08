@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+	<ItemGroup>
+		<None Include="..\LICENSE.md" Pack="true" PackagePath="\" />
+		<None Include="..\content\nuget\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\" />		
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Byter" Version="1.1.0" />
+	</ItemGroup>
+
+	<PropertyGroup>		
+		<PackageId>Netly</PackageId>
+		<Version>2.4.0</Version>
+		<Authors>alec1o</Authors>
+		<Company>alec1o</Company>
+		<Copyright>alec1o</Copyright>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageTags>TCP, UDP, SSL, SOCKET, EASY</PackageTags>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
+		<PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
+		<PackageIconUrl>netly-logo-3.png</PackageIconUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+		<PackageReleaseNotes>
+			+ Fix. Socket.Shutdown Exception
+		</PackageReleaseNotes>
+		<Description>
+			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
+
+			Docs: https://netly.docs.kezero.com
+			Sample: https://netly.docs.kezero.com/overview/quick-start
+			Fork me: https://github.com/alec1o/Netly
+		</Description>
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+	
+</Project>
