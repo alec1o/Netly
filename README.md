@@ -18,7 +18,8 @@
 <br>
 
 ##### Install
-  <sub>Official publisher</sub>
+>  <sub>Official publisher</sub>
+  
   | <sub>Nuget</sub> | <sub>Unity Asset Store</sub> |
 | ---   | ---               |
   | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub>| <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub>|
@@ -26,7 +27,8 @@
 <br>
 
 ##### Versions
-  <sub>Notable changes</sub>
+>  <sub>Notable changes</sub>
+  
 | <sub>v1 (old)</sub>                     | <sub>v2 (current)</sub> | <sub>v3 (nonexistent)</sub> | <sub>v4 (nonexistent)</sub> |
 | ---                          | ---          | ---              | ---              |
 |<sub>TCP (client/server)</sub>| <sub> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</sub> | <sub>TLS/SSL (client/server)</sub> | <sub>Websocket (client/server)</sub> |
@@ -34,69 +36,70 @@
 
 <br>
 
-### Feature
-> Below are some missing features that are planned to be added in later versions.
-
-- ###### SSL/TLS (client/server) 3.x (2023)
-- ###### Websocket (client/server) 4.x (2024)
-
-<br>
-
-### Dependency
-- ###### [Byter](https://github.com/alec1o/byter)
-
-### Build
-- #### Build dependencies
-  ###### [Git](http://git-scm.com/)  
-  ###### [MONO](http://mono-project.com) or [.NET](http://dot.net)
+##### List of tested platforms
+  - <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
+  - <sub>[Mono](https://mono-project.com) (SDK)</sub>
+  - <sub>[Unity](https://unity.com) (Engine)</sub>
   
-- #### Build step-by-step 
-```rb
-# 1. clone repository 
-$ git clone "https://github.com/alec1o/netly.git"
+<br>
 
-# 2. open source directory 
-$ cd netly/
-
-# 5. restore dotnet project
-$ dotnet restore
-
-# 6. build dotnet project
-$ dotnet build
-```
+##### Feature
+> <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
+  - <sub>SSL/TLS (v3)</sub>
+  - <sub>Websocket (v4)</sub>
 
 <br>
 
-### List of tested platforms
-- ###### [.NET](https://dotnet.microsoft.com) (SDK)
-- ###### [Mono](https://mono-project.com) (SDK)
-- ###### [Unity](https://unity.com) (Engine)
+##### Dependency
+  - <sub>[Byter](https://github.com/alec1o/byter)</sub>
 
 <br>
   
-### Demo
-- #### Client
+##### Build
+> ###### Build dependencies
+  - <sub>[Git](http://git-scm.com/)</sub>
+  - <sub>[.NET](http://dot.net)</sub>
+  
+> ###### Build step-by-step 
+  ```rb
+  # 1. clone repository 
+  $ git clone "https://github.com/alec1o/netly.git"
+
+  # 2. open source directory 
+  $ cd netly/
+
+  # 5. restore dotnet project
+  $ dotnet restore
+
+  # 6. build dotnet project
+  $ dotnet build
+  ```
+
+<br>
+  
+##### Demo
+> <sub>Client</sub>
   ```csharp
   using Netly;
   using Netly.Core;
-  
+
   /* ================ Instances ================ */
-  
+
   var client = new TcpClient(); 
   var host = new Host("127.0.0.1", 3000); 
-  
+
   /* ================ Triggers ================= */
- 
+
   client.Open(host); // open connection
-  
+
   client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // send raw data
-  
+
   client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // send event
-  
+
   client.Close(); // close connection
-  
+
   /* ================ Callbacks ================ */
-  
+
   client.OnOpen(() =>
   {
       // connection opened
@@ -121,34 +124,34 @@ $ dotnet build
   {
       // event received: {name: event name} {data: buffer/data received} 
   });
-  
+
   client.OnModify((socket) =>
   {
       // modify socket instance
   });
   ```
-- #### Server
+> <sub>Server</sub>
   ```csharp
   using Netly;
   using Netly.Core;
-  
+
   /* ================ Instances ================ */
-  
+
   var server = new TcpServer();
   var host = new Host("0.0.0.0", 3000);
-  
+
   /* ================ Triggers ================= */  
-  
+
   server.Open(host); // open connection
-  
+
   server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // broadcast data
-  
+
   server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // broadcast event
-  
+
   server.Close(); // close connection
-  
+
   /* ================ Callbacks ================ */  
-  
+
   server.OnOpen(() =>
   {
       // connection opened: server start listen client
@@ -183,7 +186,7 @@ $ dotnet build
   {
       // event received: {client: client instance} {name: event name} {data: buffer received} 
   });
-  
+
   server.OnModify((socket) =>
   {
       // modify socket instance
