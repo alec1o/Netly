@@ -4,41 +4,41 @@
   <a href="https://netly.docs.kezero.com">DOCUMENTATION</a>
 </h6>
 
-<h6 align="center">
-  powered by <a href="https://github.com/alec1o">ALEC1O</a>
+<h6 align="center"><sub>
+  powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
 
 <h6 align="center">
   <img align="center" src="content/logo/netly-logo-3.png" width="128px">
 <h6>
 
-### About
-> Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux, Windows...)
+##### About
+> <sub>Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux, Windows...)</sub>
 
 <br>
 
-### Install
-###### Official publisher
-| Nuget | Unity Asset Store |
+##### Install
+  <sub>Official publisher</sub>
+  | <sub>Nuget</sub> | <sub>Unity Asset Store</sub> |
 | ---   | ---               |
-| Install on [Nuget](https://www.nuget.org/packages/Netly)| Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)|
+  | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub>| <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub>|
 
 <br>
 
-### Versions
-###### Notable changes
-| <h5>v1 (old)</h5>                     | <h5>v2 (current)</h5> | <h5>v3 (nonexistent)</h5> | <h5>v4 (nonexistent)</h5> |
+##### Versions
+  <sub>Notable changes</sub>
+| <sub>v1 (old)</sub>                     | <sub>v2 (current)</sub> | <sub>v3 (nonexistent)</sub> | <sub>v4 (nonexistent)</sub> |
 | ---                          | ---          | ---              | ---              |
-|<h6>TCP (client/server)</h6>| <h6> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</h64> | <h6>TLS/SSL (client/server)</h6> | <h6>Websocket (client/server)</h6> |
-| <h6 valign="center">UDP</h6> | <h6 valign="center">TCP/UDP performance improvement</h6> | <h6>Include docs/sample (SSL/TLS)</h6> |  <h6>Include docs/sample (Websocket)</h6> | 
+|<sub>TCP (client/server)</sub>| <sub> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</sub> | <sub>TLS/SSL (client/server)</sub> | <sub>Websocket (client/server)</sub> |
+| <sub>UDP</sub> | <sub>TCP/UDP performance improvement</sub> | <sub>Include docs/sample (SSL/TLS)</sub> |  <sub>Include docs/sample (Websocket)</sub> | 
 
 <br>
 
 ### Feature
 > Below are some missing features that are planned to be added in later versions.
 
-- [ ] SSL/TLS (client/server) 3.x (2023)
-- [ ] Websocket (client/server) 4.x (2024)
+- ###### SSL/TLS (client/server) 3.x (2023)
+- ###### Websocket (client/server) 4.x (2024)
 
 <br>
 
