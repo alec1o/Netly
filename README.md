@@ -76,22 +76,27 @@ $ dotnet build
   
 ## Demo
 - ### Client
-  _Instance_
   ```csharp
   using Netly;
   using Netly.Core;
-
-  // Example udp client instance
-  var client = new UdpClient();
-
-  // Example tcp client instance
-  var client = new TcpClient();
-
-  // Example host instance
-  var host = new Host("127.0.0.1", 3000);    
-  ```
-  _Usage_
-  ```csharp
+  
+  /* ================ Instances ================ */
+  
+  var client = new TcpClient(); 
+  var host = new Host("127.0.0.1", 3000); 
+  
+  /* ================ Triggers ================= */
+ 
+  client.Open(host); // open connection
+  
+  client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // send raw data
+  
+  client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // send event
+  
+  client.Close(); // close connection
+  
+  /* ================ Callbacks ================ */
+  
   client.OnOpen(() =>
   {
       // connection opened
@@ -116,36 +121,34 @@ $ dotnet build
   {
       // event received: {name: event name} {data: buffer/data received} 
   });
-
-  // open connection
-  client.Open(host);
-
-  // send data
-  client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
-
-  // send event
-  client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
-
-  // close connection
-  client.Close();
+  
+  client.OnModify((socket) =>
+  {
+      // modify socket instance
+  });
   ```
 - ### Server
-  _Instance_
   ```csharp
   using Netly;
   using Netly.Core;
-
-  // Example tcp server instance
+  
+  /* ================ Instances ================ */
+  
   var server = new TcpServer();
-
-  // Example udp server instance
-  var server = new UdpServer();
-
-  // Example host instance
   var host = new Host("0.0.0.0", 3000);
-  ```
-  _Usage_
-  ```csharp
+  
+  /* ================ Triggers ================= */  
+  
+  server.Open(host); // open connection
+  
+  server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // broadcast data
+  
+  server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // broadcast event
+  
+  server.Close(); // close connection
+  
+  /* ================ Callbacks ================ */  
+  
   server.OnOpen(() =>
   {
       // connection opened: server start listen client
@@ -180,18 +183,11 @@ $ dotnet build
   {
       // event received: {client: client instance} {name: event name} {data: buffer received} 
   });
-
-  // open connection
-  server.Open(host);
-
-  // broadcast data to clients
-  server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
-
-  // broadcast event to clients
-  server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
-
-  // close connection
-  server.Close();
+  
+  server.OnModify((socket) =>
+  {
+      // mofify socket instance
+  });
   ```
 <br>
 
