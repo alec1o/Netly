@@ -1,9 +1,5 @@
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
-<h6 align="end">
-  <a href="https://netly.docs.kezero.com">DOCUMENTATION</a>
-</h6>
-
 <h6 align="center"><sub>
   powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
@@ -14,6 +10,11 @@
 
 ##### About
 > <sub>Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux, Windows...)</sub>
+
+<br>
+  
+##### Documentation 
+> <sub>Netly docs ([HERE](https://netly.docs.kezero.com))</sub>
 
 <br>
 
