@@ -52,7 +52,7 @@
 <br>
 
 ##### Dependency
-  - <sub>[Byter](https://github.com/alec1o/byter)</sub>
+  - <sub>[Byter](https://github.com/alec1o/Byter)</sub>
 
 <br>
   
