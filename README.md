@@ -79,6 +79,11 @@
 <br>
   
 ##### Demo
+> <sub>Warning `MessageFraming`</sub>
+  ```php
+MessageFraming: just set this to false if you want to use netly to communicate with another tcp library.
+true case: this will improve data security, but both client and server must have the same configuration.
+  ```
 > <sub>Client</sub>
   ```csharp
   using Netly;
@@ -86,7 +91,7 @@
 
   /* ================ Instances ================ */
 
-  var client = new TcpClient(); 
+  var client = new TcpClient(messageFraming: true); 
   var host = new Host("127.0.0.1", 3000); 
 
   /* ================ Triggers ================= */
@@ -138,7 +143,7 @@
 
   /* ================ Instances ================ */
 
-  var server = new TcpServer();
+  var server = new TcpServer(messageFraming: true);
   var host = new Host("0.0.0.0", 3000);
 
   /* ================ Triggers ================= */  
