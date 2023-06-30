@@ -8,6 +8,15 @@ namespace Netly
 {
     public class TcpServer : Server<TcpClient>, IServer<TcpClient>
     {
+        /// <summary>
+        /// TCP server: Instance
+        /// </summary>
+        /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
+        public TcpServer(bool messageFraming)
+        {
+            MessageFraming = messageFraming;
+        }
+
         public override void Open(Host host, int backlog)
         {
             if (IsOpened || m_connecting || m_closing) return;
@@ -70,7 +79,7 @@ namespace Netly
 
             void EndAccept(Socket socket)
             {
-                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket);
+                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, MessageFraming);
                 AddOrRemoveClient(client, false);
 
                 client.OnOpen(() =>
