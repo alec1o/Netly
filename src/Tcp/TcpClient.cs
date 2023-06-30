@@ -10,14 +10,23 @@ namespace Netly
 {
     public class TcpClient : Client
     {
-        public TcpClient() { }
 
-        internal TcpClient(string uuid, Socket socket)
+        /// <summary>
+        /// TCP client: Instance
+        /// </summary>
+        /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
+        public TcpClient(bool messageFraming)
+        {
+            MessageFraming = messageFraming;
+        }
+
+        internal TcpClient(string uuid, Socket socket, bool messageFramming)
         {
             UUID = uuid;
             m_socket = socket;
+            MessageFraming = messageFramming;
             Host = new Host(socket.RemoteEndPoint);
-        } 
+        }
 
         public override void Open(Host host)
         {
@@ -62,15 +71,22 @@ namespace Netly
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                _package.Output((buffer) =>
+                if (MessageFraming)
                 {
-                    (string name, byte[] buffer) content = MessageParser.Verify(buffer);
+                    _package.Output((buffer) =>
+                    {
+                        (string name, byte[] buffer) content = MessageParser.Verify(buffer);
 
-                    if (content.buffer == null)
-                        onDataHandler?.Invoke(null, buffer);
-                    else
-                        onEventHandler?.Invoke(null, (content.name, content.buffer));
-                });
+                        if (content.buffer == null)
+                        {
+                            onDataHandler?.Invoke(null, buffer);
+                        }
+                        else
+                        {
+                            onEventHandler?.Invoke(null, (content.name, content.buffer));
+                        }
+                    });
+                }
 
                 while (m_socket != null)
                 {
@@ -87,7 +103,23 @@ namespace Netly
                         byte[] buffer = new byte[_length];
                         Array.Copy(_buffer, 0, buffer, 0, buffer.Length);
 
-                        _package.Input(buffer);
+                        if (MessageFraming)
+                        {
+                            _package.Input(buffer);
+                        }
+                        else
+                        {
+                            (string name, byte[] buffer) content = MessageParser.Verify(buffer);
+
+                            if (content.buffer == null)
+                            {
+                                onDataHandler?.Invoke(null, buffer);
+                            }
+                            else
+                            {
+                                onEventHandler?.Invoke(null, (content.name, content.buffer));
+                            }
+                        }
                     }
                     catch
                     {
