@@ -11,6 +11,7 @@ namespace Netly.Abstract
     {
         #region Props
 
+        public bool MessageFraming { get; protected set; }
         public string UUID { get; protected set; }
         public Host Host { get; protected set; }
 
