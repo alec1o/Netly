@@ -7,7 +7,7 @@ namespace Netly.Abstract
 {
     public class Package
     {
-        public static int MAX_SIZE = 1024 * 8;
+        public static int MAX_SIZE = (1024 /* 1KB */ * 1024 /* 1MB */) * 8 /* 8MB */;
         private int count = 0;
         private List<byte> bytes = new List<byte>();
         private EventHandler<byte[]> onOutputHandler;
