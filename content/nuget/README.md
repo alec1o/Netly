@@ -56,6 +56,11 @@ $ dotnet build
  
   
 ## Demo
+```rb
+messageFraming: just set this to false if you want to use netly to communicate with another tcp library.
+true case: this will improve data security, but both client and server must have the same configuration.
+```
+
 - ### Client
   _Instance_
   ```csharp
@@ -66,7 +71,7 @@ $ dotnet build
   var client = new UdpClient();
 
   // Example tcp client instance
-  var client = new TcpClient();
+  var client = new TcpClient(messageFraming: true); 
 
   // Example host instance
   var host = new Host("127.0.0.1", 3000);    
@@ -117,7 +122,7 @@ $ dotnet build
   using Netly.Core;
 
   // Example tcp server instance
-  var server = new TcpServer();
+  var server = new TcpServer(messageFraming: true);
 
   // Example udp server instance
   var server = new UdpServer();
