@@ -12,7 +12,7 @@
 
 	<PropertyGroup>		
 		<PackageId>Netly</PackageId>
-		<Version>2.4.0</Version>
+		<Version>2.5.0</Version>
 		<Authors>alec1o</Authors>
 		<Company>alec1o</Company>
 		<Copyright>alec1o</Copyright>
@@ -25,7 +25,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageReleaseNotes>
-			+ Fix. Socket.Shutdown Exception
+			+ Message framing is optional (feature)
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
