@@ -2,7 +2,9 @@
 using Netly.Core;
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
@@ -11,6 +13,7 @@ namespace Netly
     public class TcpClient : Client
     {
         public bool IsEncrypted { get; private set; }
+        private readonly TcpServer Server;
 
         /// <summary>
         /// TCP client: Instance
@@ -19,16 +22,30 @@ namespace Netly
         public TcpClient(bool messageFraming)
         {
             IsEncrypted = false;
+            m_serverMode = false;
             MessageFraming = messageFraming;
         }
 
-        internal TcpClient(string uuid, Socket socket, bool isEncrypted, bool messageFramming)
+        internal TcpClient(string uuid, Socket socket, TcpServer server)
         {
             UUID = uuid;
             m_socket = socket;
-            IsEncrypted = isEncrypted;
-            MessageFraming = messageFramming;
+            Server = server;
+            m_serverMode = true;
+            IsEncrypted = Server.IsEncrypted;
+            MessageFraming = Server.MessageFraming;
             Host = new Host(socket.RemoteEndPoint);
+
+            try
+            {
+                Auth();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+
+                Destroy();
+            }
         }
 
         public void UseEncryption(bool value)
@@ -38,7 +55,10 @@ namespace Netly
                 throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
             }
 
-            IsEncrypted = value;
+            if (!m_serverMode)
+            {
+                IsEncrypted = value;
+            }
         }
 
         public override void Open(Host host)
@@ -53,19 +73,25 @@ namespace Netly
                 {
                     m_socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                    m_socket.NoDelay = true;
-
                     onModifyHandler?.Invoke(null, m_socket);
 
                     m_socket.Connect(host.EndPoint);
 
                     Host = new Host(m_socket.RemoteEndPoint);
 
+                    m_stream = new NetworkStream(m_socket);
+                    m_sslStream = null;
+
+                    if (IsEncrypted)
+                    {
+                        Auth();
+                    }
+
                     m_closed = false;
 
-                    onOpenHandler?.Invoke(null, null);
-
                     Receive();
+
+                    onOpenHandler?.Invoke(null, null);
                 }
                 catch (Exception e)
                 {
@@ -74,6 +100,73 @@ namespace Netly
 
                 m_connecting = false;
             });
+        }
+
+        public override void ToData(byte[] data)
+        {
+            if (m_closing || m_closed) return;
+
+            byte[] buffer = (MessageFraming) ? Package.Create(ref data) : data;
+
+            m_socket?.Send(buffer, 0, buffer.Length, SocketFlags.None);
+
+            if (IsEncrypted)
+            {
+                m_sslStream?.Write(buffer, 0, buffer.Length);
+            }
+            else
+            {
+                m_stream?.Write(buffer, 0, buffer.Length);
+            }
+        }
+
+        public virtual bool EncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+            {
+                return true;
+            }
+
+            // Do not allow this client to communicate with unauthenticated servers.
+            return false;
+        }
+
+        private bool Auth()
+        {
+            if (m_socket == null) throw new NullReferenceException(nameof(m_socket));
+
+            if (IsEncrypted)
+            {
+                if (m_serverMode)
+                {
+                    m_sslStream = new SslStream(m_stream, false);
+
+                    m_sslStream.AuthenticateAsServer
+                    (
+                        clientCertificateRequired: false,
+                        checkCertificateRevocation: true,
+                        serverCertificate: Server.Certificate,
+                        enabledSslProtocols: Server.EncryptionProtocol
+                    );
+                }
+                else
+                {
+                    m_sslStream = new SslStream
+                    (
+                        innerStream: m_stream,
+                        leaveInnerStreamOpen: false,
+                        userCertificateSelectionCallback: null,
+                        userCertificateValidationCallback: new RemoteCertificateValidationCallback(EncryptionValidation)
+                    );
+
+                    m_sslStream.AuthenticateAsClient(string.Empty);
+                }
+
+                m_sslStream.ReadTimeout = 5000;
+                m_sslStream.WriteTimeout = 5000;
+            }
+
+            return false;
         }
 
         protected override void Receive()
@@ -102,10 +195,12 @@ namespace Netly
                 }
 
                 while (m_socket != null)
-                {
+                {                 
                     try
                     {
-                        _length = m_socket.Receive(_buffer, 0, _buffer.Length, SocketFlags.None);
+                        _length = IsEncrypted is false
+                            ? m_stream.Read(_buffer, 0, _buffer.Length)
+                            : m_sslStream.Read(_buffer, 0, _buffer.Length);
 
                         if (_length <= 0)
                         {

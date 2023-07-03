@@ -2,6 +2,8 @@
 using Netly.Core;
 using System;
 using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 namespace Netly
@@ -9,7 +11,8 @@ namespace Netly
     public class TcpServer : Server<TcpClient>, IServer<TcpClient>
     {
         public bool IsEncrypted { get; private set; }
-        private string EncryptionKey;
+        internal X509Certificate Certificate { get; private set; }
+        public SslProtocols EncryptionProtocol { get; private set; }
 
         /// <summary>
         /// TCP server: Instance
@@ -63,20 +66,21 @@ namespace Netly
             return m_opened;
         }
 
-        public void UseEncryption(bool value, string perm)
+        public void UseEncryption(byte[] certificate, SslProtocols encryptionProtocol)
         {
             if (IsOpened)
             {
                 throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
             }
 
-            if (value && String.IsNullOrWhiteSpace(perm))
+            if (certificate == null || certificate.Length <= 0)
             {
-                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(value)} is true and ({nameof(perm)}) is null/empty");
+                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(IsEncrypted)} is true and ({nameof(certificate)}) is null/empty");
             }
 
-            IsEncrypted = value;
-            EncryptionKey = perm;
+            IsEncrypted = true;
+            EncryptionProtocol = encryptionProtocol;
+            Certificate = new X509Certificate(certificate);
         }
 
         protected override void AcceptOrReceive()
@@ -99,7 +103,7 @@ namespace Netly
 
             void EndAccept(Socket socket)
             {
-                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, isEncrypted: IsEncrypted, messageFramming: MessageFraming);
+                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, this);
                 AddOrRemoveClient(client, false);
 
                 client.OnOpen(() =>

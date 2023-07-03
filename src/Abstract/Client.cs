@@ -1,6 +1,7 @@
 ﻿using Netly.Core;
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -18,6 +19,8 @@ namespace Netly.Abstract
         public bool IsOpened => IsConnected();
 
         protected Socket m_socket;
+        protected NetworkStream m_stream;
+        protected SslStream m_sslStream;
         protected bool m_closed;
         protected bool m_closing;
         protected bool m_connecting;
@@ -45,6 +48,7 @@ namespace Netly.Abstract
 
         internal virtual void InitServer()
         {
+            m_serverMode = true;
             onOpenHandler?.Invoke(null, null);
             Receive();
         }
@@ -97,6 +101,8 @@ namespace Netly.Abstract
                 if (m_closed is false)
                 {
                     m_socket?.Close();
+                    m_stream?.Close();
+                    m_sslStream?.Close();
                     onCloseHandler?.Invoke(null, null);
                 }
 
