@@ -10,6 +10,7 @@ namespace Netly
 {
     public class TcpClient : Client
     {
+        public bool IsEncrypted { get; private set; }
 
         /// <summary>
         /// TCP client: Instance
@@ -17,15 +18,27 @@ namespace Netly
         /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
         public TcpClient(bool messageFraming)
         {
+            IsEncrypted = false;
             MessageFraming = messageFraming;
         }
 
-        internal TcpClient(string uuid, Socket socket, bool messageFramming)
+        internal TcpClient(string uuid, Socket socket, bool isEncrypted, bool messageFramming)
         {
             UUID = uuid;
             m_socket = socket;
+            IsEncrypted = isEncrypted;
             MessageFraming = messageFramming;
             Host = new Host(socket.RemoteEndPoint);
+        }
+
+        public void UseEncryption(bool value)
+        {
+            if (IsOpened)
+            {
+                throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
+            }
+
+            IsEncrypted = value;
         }
 
         public override void Open(Host host)

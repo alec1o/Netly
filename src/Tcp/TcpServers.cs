@@ -8,12 +8,16 @@ namespace Netly
 {
     public class TcpServer : Server<TcpClient>, IServer<TcpClient>
     {
+        public bool IsEncrypted { get; private set; }
+        private string EncryptionKey;
+
         /// <summary>
         /// TCP server: Instance
         /// </summary>
         /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
         public TcpServer(bool messageFraming)
         {
+            IsEncrypted = false;
             MessageFraming = messageFraming;
         }
 
@@ -59,6 +63,22 @@ namespace Netly
             return m_opened;
         }
 
+        public void UseEncryption(bool value, string perm)
+        {
+            if (IsOpened)
+            {
+                throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
+            }
+
+            if (value && String.IsNullOrWhiteSpace(perm))
+            {
+                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(value)} is true and ({nameof(perm)}) is null/empty");
+            }
+
+            IsEncrypted = value;
+            EncryptionKey = perm;
+        }
+
         protected override void AcceptOrReceive()
         {
             ThreadPool.QueueUserWorkItem(_ =>
@@ -79,7 +99,7 @@ namespace Netly
 
             void EndAccept(Socket socket)
             {
-                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, MessageFraming);
+                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, isEncrypted: IsEncrypted, messageFramming: MessageFraming);
                 AddOrRemoveClient(client, false);
 
                 client.OnOpen(() =>
