@@ -36,6 +36,9 @@ namespace Netly
             MessageFraming = Server.MessageFraming;
             Host = new Host(socket.RemoteEndPoint);
 
+            m_stream = new NetworkStream(m_socket);
+            m_sslStream = null;
+
             try
             {
                 Auth();
