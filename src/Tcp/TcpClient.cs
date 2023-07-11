@@ -121,19 +121,15 @@ namespace Netly
             }
         }
 
-        public virtual bool EncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        public virtual bool OnEncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            /*
-            if (sslPolicyErrors == SslPolicyErrors.None )
+            if (sslPolicyErrors == SslPolicyErrors.None)
             {
                 return true;
             }
 
             // Do not allow this client to communicate with unauthenticated servers.
             return false;
-            */
-
-            return true;
         }
 
         private bool Auth()
@@ -161,7 +157,7 @@ namespace Netly
                         innerStream: m_stream,
                         leaveInnerStreamOpen: false,
                         userCertificateSelectionCallback: null,
-                        userCertificateValidationCallback: new RemoteCertificateValidationCallback(EncryptionValidation)
+                        userCertificateValidationCallback: new RemoteCertificateValidationCallback(OnEncryptionValidation)
                     );
 
                     m_sslStream.AuthenticateAsClient(string.Empty);
