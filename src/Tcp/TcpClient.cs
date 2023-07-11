@@ -111,8 +111,6 @@ namespace Netly
 
             byte[] buffer = (MessageFraming) ? Package.Create(ref data) : data;
 
-            m_socket?.Send(buffer, 0, buffer.Length, SocketFlags.None);
-
             if (IsEncrypted)
             {
                 m_sslStream?.Write(buffer, 0, buffer.Length);
