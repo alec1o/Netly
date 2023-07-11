@@ -1,11 +1,9 @@
 ﻿using Netly.Abstract;
 using Netly.Core;
 using System;
-using System.Collections.Generic;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 
 namespace Netly
@@ -14,6 +12,7 @@ namespace Netly
     {
         public bool IsEncrypted { get; private set; }
         private readonly TcpServer Server;
+        private Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> _onValidation = null;
 
         /// <summary>
         /// TCP client: Instance
@@ -26,7 +25,7 @@ namespace Netly
             MessageFraming = messageFraming;
         }
 
-        internal TcpClient(string uuid, Socket socket, TcpServer server)
+        internal TcpClient(string uuid, Socket socket, TcpServer server, out bool success)
         {
             UUID = uuid;
             m_socket = socket;
@@ -42,17 +41,20 @@ namespace Netly
             try
             {
                 Auth();
+                success = true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-
+                success = false;
+                onErrorHandler?.Invoke(null, e);
                 Destroy();
             }
         }
 
-        public void UseEncryption(bool value)
+        public void UseEncryption(bool enableEncryption, Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> onValidation = null)
         {
+            _onValidation = onValidation;
+
             if (IsOpened)
             {
                 throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
@@ -60,7 +62,7 @@ namespace Netly
 
             if (!m_serverMode)
             {
-                IsEncrypted = value;
+                IsEncrypted = enableEncryption;
             }
         }
 
@@ -121,18 +123,18 @@ namespace Netly
             }
         }
 
-        public virtual bool OnEncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        private bool OnEncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (sslPolicyErrors == SslPolicyErrors.None)
+            if (_onValidation == null)
             {
                 return true;
             }
 
-            // Do not allow this client to communicate with unauthenticated servers.
-            return false;
+            // return result of own validation callback
+            return _onValidation(sender, certificate, chain, sslPolicyErrors);
         }
 
-        private bool Auth()
+        private void Auth()
         {
             if (m_socket == null) throw new NullReferenceException(nameof(m_socket));
 
@@ -166,8 +168,6 @@ namespace Netly
                 m_sslStream.ReadTimeout = 5000;
                 m_sslStream.WriteTimeout = 5000;
             }
-
-            return false;
         }
 
         protected override void Receive()
