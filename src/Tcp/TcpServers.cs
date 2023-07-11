@@ -12,6 +12,10 @@ namespace Netly
     {
         public bool IsEncrypted { get; private set; }
         public SslProtocols EncryptionProtocol { get; private set; }
+
+        private byte[] _pfxCertificate;
+        private string _pfxPassword;
+
         internal X509Certificate Certificate { get; private set; }
 
         /// <summary>
@@ -34,6 +38,11 @@ namespace Netly
             {
                 try
                 {
+                    if (IsEncrypted)
+                    {
+                        Certificate = new X509Certificate2(_pfxCertificate, _pfxPassword);
+                    }
+
                     m_socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                     onModifyHandler?.Invoke(null, m_socket);
@@ -66,7 +75,7 @@ namespace Netly
             return m_opened;
         }
 
-        public void UseEncryption(byte[] pfxCertificate, string pfxPassowrd, SslProtocols encryptionProtocol)
+        public void UseEncryption(byte[] pfxCertificate, string pfxPassword, SslProtocols encryptionProtocol)
         {
             if (IsOpened)
             {
@@ -80,7 +89,8 @@ namespace Netly
 
             IsEncrypted = true;
             EncryptionProtocol = encryptionProtocol;
-            Certificate = new X509Certificate2(pfxCertificate, pfxPassowrd);
+            _pfxCertificate = pfxCertificate;
+            _pfxPassword = pfxPassword;
         }
 
         protected override void AcceptOrReceive()
