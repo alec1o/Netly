@@ -114,30 +114,34 @@ namespace Netly
 
             void EndAccept(Socket socket)
             {
-                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, this);
-                AddOrRemoveClient(client, false);
-
-                client.OnOpen(() =>
+                TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, this, out bool success);
+                
+                if (success)
                 {
-                    onEnterHandler?.Invoke(null, client);
-                });
+                    AddOrRemoveClient(client, false);
 
-                client.OnClose(() =>
-                {
-                    onExitHandler?.Invoke(null, AddOrRemoveClient(client, true));
-                });
+                    client.OnOpen(() =>
+                    {
+                        onEnterHandler?.Invoke(null, client);
+                    });
 
-                client.OnData((data) =>
-                {
-                    onDataHandler?.Invoke(null, (client, data));
-                });
+                    client.OnClose(() =>
+                    {
+                        onExitHandler?.Invoke(null, AddOrRemoveClient(client, true));
+                    });
 
-                client.OnEvent((name, data) =>
-                {
-                    onEventHandler?.Invoke(null, (client, name, data));
-                });
+                    client.OnData((data) =>
+                    {
+                        onDataHandler?.Invoke(null, (client, data));
+                    });
 
-                client.InitServer();
+                    client.OnEvent((name, data) =>
+                    {
+                        onEventHandler?.Invoke(null, (client, name, data));
+                    });
+
+                    client.InitServer();
+                }
             }
         }
 
