@@ -125,13 +125,17 @@ namespace Netly
 
         public virtual bool EncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (sslPolicyErrors == SslPolicyErrors.None)
+            /*
+            if (sslPolicyErrors == SslPolicyErrors.None )
             {
                 return true;
             }
 
             // Do not allow this client to communicate with unauthenticated servers.
             return false;
+            */
+
+            return true;
         }
 
         private bool Auth()
@@ -198,7 +202,7 @@ namespace Netly
                 }
 
                 while (m_socket != null)
-                {                 
+                {
                     try
                     {
                         _length = IsEncrypted is false

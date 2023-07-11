@@ -11,8 +11,8 @@ namespace Netly
     public class TcpServer : Server<TcpClient>, IServer<TcpClient>
     {
         public bool IsEncrypted { get; private set; }
-        internal X509Certificate Certificate { get; private set; }
         public SslProtocols EncryptionProtocol { get; private set; }
+        internal X509Certificate Certificate { get; private set; }
 
         /// <summary>
         /// TCP server: Instance
@@ -66,21 +66,21 @@ namespace Netly
             return m_opened;
         }
 
-        public void UseEncryption(byte[] certificate, SslProtocols encryptionProtocol)
+        public void UseEncryption(byte[] pfxCertificate, string pfxPassowrd, SslProtocols encryptionProtocol)
         {
             if (IsOpened)
             {
                 throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
             }
 
-            if (certificate == null || certificate.Length <= 0)
+            if (pfxCertificate == null || pfxCertificate.Length <= 0)
             {
-                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(IsEncrypted)} is true and ({nameof(certificate)}) is null/empty");
+                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(IsEncrypted)} is true and ({nameof(pfxCertificate)}) is null/empty");
             }
 
             IsEncrypted = true;
             EncryptionProtocol = encryptionProtocol;
-            Certificate = new X509Certificate(certificate);
+            Certificate = new X509Certificate2(pfxCertificate, pfxPassowrd);
         }
 
         protected override void AcceptOrReceive()
