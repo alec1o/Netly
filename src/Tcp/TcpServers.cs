@@ -41,7 +41,7 @@ namespace Netly
                 {
                     if (IsEncrypted)
                     {
-                        Certificate = new X509Certificate2(_pfxCertificate, _pfxPassword);
+                        Certificate = new X509Certificate(_pfxCertificate, _pfxPassword);
                     }
 
                     m_socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
