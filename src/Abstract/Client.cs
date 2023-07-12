@@ -72,7 +72,7 @@ namespace Netly.Abstract
         {
             if (m_closing || m_closed) return;
 
-            byte[] buffer = (MessageFraming) ? Package.Create(ref data) : data;
+            byte[] buffer = (MessageFraming) ? Package.Create(data) : data;
 
             m_socket?.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }

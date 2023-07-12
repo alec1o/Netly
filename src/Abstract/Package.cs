@@ -12,8 +12,7 @@ namespace Netly.Abstract
         private List<byte> bytes = new List<byte>();
         private EventHandler<byte[]> onOutputHandler;
 
-        public static byte[] Create(byte[] buffer) => Create(ref buffer);
-        public static byte[] Create(ref byte[] buffer)
+        public static byte[] Create(byte[] buffer)
         {
             List<byte[]> result = new List<byte[]> { BitConverter.GetBytes(buffer.Length), buffer };
 

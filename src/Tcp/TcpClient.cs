@@ -111,7 +111,7 @@ namespace Netly
         {
             if (m_closing || m_closed) return;
 
-            byte[] buffer = (MessageFraming) ? Package.Create(ref data) : data;
+            byte[] buffer = (MessageFraming) ? Package.Create(data) : data;
 
             if (IsEncrypted)
             {
