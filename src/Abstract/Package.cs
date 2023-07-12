@@ -9,7 +9,7 @@ namespace Netly.Abstract
     {
         public static int MAX_SIZE = (1024 /* 1KB */ * 1024 /* 1MB */) * 8 /* 8MB */;
         private int count = 0;
-        private List<byte> bytes = new List<byte>();
+        private readonly List<byte> bytes = new List<byte>();
         private EventHandler<byte[]> onOutputHandler;
 
         public static byte[] Create(byte[] buffer)

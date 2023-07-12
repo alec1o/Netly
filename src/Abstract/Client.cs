@@ -32,7 +32,7 @@ namespace Netly.Abstract
         protected private EventHandler<byte[]> onDataHandler;
         protected private EventHandler<(string name, byte[] buffer)> onEventHandler;
         protected private EventHandler<Socket> onModifyHandler;
-        private object destroyLock = new object();
+        private readonly object destroyLock = new object();
 
         #endregion
 
