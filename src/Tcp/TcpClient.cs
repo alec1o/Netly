@@ -173,7 +173,7 @@ namespace Netly
         protected override void Receive()
         {
             int _length = 0;
-            byte[] _buffer = new byte[Package.MAX_SIZE];
+            byte[] _buffer = new byte[1024 * 32]; // 32 KB
             Package _package = new Package();
 
             ThreadPool.QueueUserWorkItem(_ =>
