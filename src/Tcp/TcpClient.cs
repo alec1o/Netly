@@ -195,6 +195,17 @@ namespace Netly
                     });
                 }
 
+                if (IsEncrypted)
+                {
+                    m_sslStream.ReadTimeout = 5000;
+                    m_sslStream.WriteTimeout = 5000;
+                }
+                else
+                {
+                    m_stream.ReadTimeout = 5000;
+                    m_stream.WriteTimeout = 5000;
+                }
+
                 while (m_socket != null)
                 {
                     try
