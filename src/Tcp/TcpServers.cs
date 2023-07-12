@@ -114,6 +114,9 @@ namespace Netly
 
             void EndAccept(Socket socket)
             {
+                socket.SendBufferSize = m_socket.SendBufferSize;
+                socket.ReceiveBufferSize = m_socket.ReceiveBufferSize;
+
                 TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, this, out bool success);
                 
                 if (success)
