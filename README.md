@@ -30,7 +30,7 @@
 ##### Versions
 >  <sub>Notable changes</sub>
   
-| <sub>v1 (old)</sub>                     | <sub>v2 (current)</sub> | <sub>v3 (nonexistent)</sub> | <sub>v4 (nonexistent)</sub> |
+| <sub>v1 (old)</sub>                     | <sub>v2 (stable)</sub> | <sub>v3 (in dev)</sub> | <sub>v4 (nonexistent)</sub> |
 | ---                          | ---          | ---              | ---              |
 |<sub>TCP (client/server)</sub>| <sub> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</sub> | <sub>TLS/SSL (client/server)</sub> | <sub>Websocket (client/server)</sub> |
 | <sub>UDP</sub> | <sub>TCP/UDP performance improvement</sub> | <sub>Include docs/sample (SSL/TLS)</sub> |  <sub>Include docs/sample (Websocket)</sub> | 
