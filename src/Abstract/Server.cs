@@ -28,7 +28,7 @@ namespace Netly.Abstract
         protected private EventHandler<(T client, byte[] buffer)> onDataHandler;
         protected private EventHandler<(T client, string name, byte[] buffer)> onEventHandler;
         protected private EventHandler<Socket> onModifyHandler;
-        private object destroyLock = new object();
+        private readonly object destroyLock = new object();
         protected readonly object m_lock = new object();
 
         #endregion
@@ -127,7 +127,6 @@ namespace Netly.Abstract
 
             foreach (T client in Clients)
             {
-                object m_object = client;
                 IClient m_client = (IClient)client;
                 m_client?.ToData(data);
             }
@@ -143,12 +142,9 @@ namespace Netly.Abstract
             if (m_closing || m_closed) return;
 
             foreach (T client in Clients)
-            {
-
-                object m_object = client;
+            {                
                 IClient m_client = (IClient)client;
                 m_client?.ToEvent(name, data);
-
             }
         }
 
