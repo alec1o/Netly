@@ -1,5 +1,5 @@
 - Overview
-  - [Why Netly](/ "Why use netly socket library")
+  - [Why Netly](why-netly.md "Why use netly socket library")
   - [Features](/ "Netly version features")
 - Installing
   - [Nuget](/ "Install netly using nuget packages manager")  
