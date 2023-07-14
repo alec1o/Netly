@@ -88,7 +88,7 @@ namespace Netly
         protected override void Receive()
         {
             int length = 0;
-            byte[] buffer = new byte[Package.MAX_SIZE];
+            byte[] buffer = new byte[1024 * 32];
             EndPoint endpoint = new IPEndPoint(IPAddress.Any, 0);
 
             ThreadPool.QueueUserWorkItem(_ =>
@@ -143,12 +143,12 @@ namespace Netly
         {
             UpdateTimeoutConnection();
 
-            (string name, byte[] buffer) content = MessageParser.Verify(data);
+            (string name, byte[] buffer) _content = MessageParser.Verify(data);
 
-            if (content.buffer == null)
+            if (_content.buffer == null)
                 onDataHandler?.Invoke(null, data);
             else
-                onEventHandler?.Invoke(null, (content.name, content.buffer));
+                onEventHandler?.Invoke(null, (_content.name, _content.buffer));
         }
 
         private void UpdateTimeoutConnection()
