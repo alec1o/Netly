@@ -13,5 +13,5 @@
 - Supported by multiple vendors: Nuget and Unity asset store
 - Source code available
 
-<a herf="https://github.com/alec1o/Netly/" style="border-color: #2050ce;">GitHub Repository</a>
+<a href="https://github.com/alec1o/Netly/" style="border-color: #2050ce;">GitHub Repository</a>
 <a href="/Overview" style="border-color: #2050ce; background-color: #2050ce;">Netly Documentation</a>
