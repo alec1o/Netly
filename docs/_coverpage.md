@@ -9,7 +9,7 @@
 - Supports: TCP, UDP, SSL, TLS
 - Continuously updated
 - Attractive and easy-to-understand syntax
-- Soon will support: Websocket: ``v4``, HTTP/S: ``v5`` both supporting client and server
+- Soon will support: Websocket (v.4) and HTTP/S (v.5), both supporting client and server
 - Supported by multiple vendors: Nuget and Unity asset store
 - Source code available
 
