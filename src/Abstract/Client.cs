@@ -12,7 +12,7 @@ namespace Netly.Abstract
     {
         #region Props
 
-        public bool MessageFraming { get; protected set; }
+        public bool Framing { get; protected set; }
         public string UUID { get; protected set; }
         public Host Host { get; protected set; }
 
@@ -72,7 +72,7 @@ namespace Netly.Abstract
         {
             if (m_closing || m_closed) return;
 
-            byte[] buffer = (MessageFraming) ? Package.Create(data) : data;
+            byte[] buffer = (Framing) ? MessageFraming.CreateMessage(data) : data;
 
             m_socket?.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
