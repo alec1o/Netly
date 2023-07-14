@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace Netly.Core
 {
+    /// <summary>
+    /// Netly: Message framing
+    /// </summary>
     public class MessageFraming
     {
         /// <summary>
