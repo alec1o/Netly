@@ -10,7 +10,7 @@ namespace Netly.Core
         /// <summary>
         /// Are the supported encoders method
         /// </summary>
-        public enum Mode { ASSCI, UTF8, UNICODE }
+        public enum Mode { ASCII, UTF8, UNICODE }
 
         /// <summary>
         /// Is the default (generic) encoder used when encoding is not specified
@@ -41,7 +41,7 @@ namespace Netly.Core
                     {
                         return Encoding.UTF8.GetString(value);
                     }
-                case Mode.ASSCI:
+                case Mode.ASCII:
                     {
                         return Encoding.ASCII.GetString(value);
                     }
@@ -80,7 +80,7 @@ namespace Netly.Core
                     {
                         return Encoding.UTF8.GetBytes(value);
                     }
-                case Mode.ASSCI:
+                case Mode.ASCII:
                     {
                         return Encoding.ASCII.GetBytes(value);
                     }
