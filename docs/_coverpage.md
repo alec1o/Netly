@@ -14,4 +14,4 @@
 - Source code available
 
 <a href="https://github.com/alec1o/Netly/" style="color: #2050ce; border-color: #2050ce;">GitHub Repository</a>
-<a href="/Overview" style="color: white; border-color: #2050ce; background-color: #2050ce;">Netly Documentation</a>
+<a href="#/Overview" style="color: white; border-color: #2050ce; background-color: #2050ce;">Netly Documentation</a>
