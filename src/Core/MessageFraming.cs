@@ -41,7 +41,7 @@ namespace Netly.Core
         /// <summary>
         /// Create message framing bytes (attach prefix)<br/>
         /// Protocol:
-        /// <br/> 1 -> [ 0, 8, 16, 32, 64 ] --size: 6 bytes --value: {0, 8, 16, 32, 64}
+        /// <br/> 1 -> [ 0, 8, 16, 32, 64, 128 ] --size: 6 bytes --value: {0, 8, 16, 32, 64, 128}
         /// <br/> 2 -> [ buffer length ] --size: 4 bytes --value: dynamic
         /// <br/> 3 -> [ buffer ] --size: dynamic --value: dynamic
         /// </summary>
