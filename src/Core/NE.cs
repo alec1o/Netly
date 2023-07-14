@@ -10,7 +10,7 @@ namespace Netly.Core
         /// <summary>
         /// Are the supported encoders method
         /// </summary>
-        public enum Mode { ASCII, UTF8, UNICODE }
+        public enum Mode { ASCII = 0, UTF8 = 1, UNICODE = 2 }
 
         /// <summary>
         /// Is the default (generic) encoder used when encoding is not specified
