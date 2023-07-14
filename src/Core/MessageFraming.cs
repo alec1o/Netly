@@ -16,6 +16,7 @@ namespace Netly.Core
         public static readonly byte[] PREFIX = new byte[] { 0, 8, 16, 32, 64, 128 };
 
         private static int _MaxSize = (1024 * 1024) * 32; // 32 MB
+        private static int _MaxUdpPackage = (1024 * 1024); // 32 MB
         private readonly object _lock = new object();
 
         private Action<byte[]> _onData;
@@ -36,6 +37,15 @@ namespace Netly.Core
         {
             get { return _MaxSize; }
             set { if (value > 0) _MaxSize = value; }
+        }
+
+        /// <summary>
+        /// Max udp package (prevent memory leak). Default is 1.048.576 (1MB)
+        /// </summary>
+        public static int MaxUdpPackage
+        {
+            get { return _MaxUdpPackage; }
+            set { if (value > 0) _MaxUdpPackage = value; }
         }
 
         /// <summary>
