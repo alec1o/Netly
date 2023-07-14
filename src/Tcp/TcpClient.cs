@@ -192,7 +192,7 @@ namespace Netly
                 {
                     _framing.OnData((buffer) =>
                     {
-                        (string name, byte[] buffer) content = MessageParser.Verify(buffer);
+                        (string name, byte[] buffer) content = EventManager.Verify(buffer);
 
                         if (content.buffer == null)
                         {
@@ -247,7 +247,7 @@ namespace Netly
                         }
                         else
                         {
-                            (string name, byte[] buffer) content = MessageParser.Verify(buffer);
+                            (string name, byte[] buffer) content = EventManager.Verify(buffer);
 
                             if (content.buffer == null)
                             {

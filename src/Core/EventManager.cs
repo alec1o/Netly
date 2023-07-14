@@ -4,7 +4,7 @@ using Byter;
 
 namespace Netly.Core
 {
-    public static class MessageParser
+    public static class EventManager
     {
         private const string KEY = "Ny://";
 

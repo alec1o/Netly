@@ -9,9 +9,9 @@ public class MessageParserTest
         string eventName = "sample";
         byte[] eventData = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-        byte[] buffer = MessageParser.Create(eventName, eventData);
+        byte[] buffer = EventManager.Create(eventName, eventData);
 
-        var result = MessageParser.Verify(buffer);
+        var result = EventManager.Verify(buffer);
 
         string bufferName = result.name;
         byte[] bufferData = result.data;

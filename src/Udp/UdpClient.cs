@@ -112,7 +112,7 @@ namespace Netly
 
                         Buffer.BlockCopy(buffer, 0, data, 0, data.Length);
 
-                        (string name, byte[] buffer) content = MessageParser.Verify(data);
+                        (string name, byte[] buffer) content = EventManager.Verify(data);
 
                         // update timer
                         UpdateTimeoutConnection();
@@ -143,7 +143,7 @@ namespace Netly
         {
             UpdateTimeoutConnection();
 
-            (string name, byte[] buffer) _content = MessageParser.Verify(data);
+            (string name, byte[] buffer) _content = EventManager.Verify(data);
 
             if (_content.buffer == null)
                 onDataHandler?.Invoke(null, data);

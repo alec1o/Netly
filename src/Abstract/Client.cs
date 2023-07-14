@@ -84,7 +84,7 @@ namespace Netly.Abstract
 
         public virtual void ToEvent(string name, byte[] data)
         {
-            ToData(MessageParser.Create(name, data));
+            ToData(EventManager.Create(name, data));
         }
 
         public virtual void ToEvent(string name, string data)
