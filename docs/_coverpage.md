@@ -1,4 +1,4 @@
-![logo](https://media.githubusercontent.com/media/alec1o/Netly/main/docs/_media/netly.png)
+<img alt="netly logo" width="128px" height="auto" src="https://media.githubusercontent.com/media/alec1o/Netly/main/docs/_media/netly.png" />
 
 # Netly <small>2.5.2</small>
 
