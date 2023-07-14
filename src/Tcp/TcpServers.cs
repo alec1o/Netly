@@ -20,13 +20,22 @@ namespace Netly
         internal X509Certificate Certificate { get; private set; }
 
         /// <summary>
-        /// TCP server: Instance
+        /// TCP server: Instance<br/><br/>
+        /// framing: Enable or disable Netly MessageFraming<code>Netly.Core.MessageFraming</code><br/><br/>
+        /// --------------- (recommended)<br/>
+        /// *True: netly will use its own message framing protocol <br/><br/>
+        /// --------------- (not recommended)<br/>
+        /// *False: you will receive raw stream data.<br/>
+        /// Just recommended if your server is not netly and you want to communicate with other libraries or use own framing protocol
+        /// <code>
+        /// TcpServer.OnData((byte[] rawdata) => { raw tcp stream, todo: make own framing })
+        /// </code>
         /// </summary>
-        /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
-        public TcpServer(bool messageFraming)
+        /// <param name="framing">Enable or disable Netly MessageFraming</param>
+        public TcpServer(bool framing)
         {
             IsEncrypted = false;
-            Framing = messageFraming;
+            Framing = framing;
         }
 
         public override void Open(Host host, int backlog)

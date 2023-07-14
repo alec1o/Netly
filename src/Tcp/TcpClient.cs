@@ -23,7 +23,6 @@ namespace Netly
         /// *False: you will receive raw stream data.<br/>
         /// Just recommended if your server is not netly and you want to communicate with other libraries or use own framing protocol
         /// <code>
-        /// TcpServer.OnData((byte[] rawdata) => { raw tcp stream, todo: make own framing })
         /// TcpClient.OnData((byte[] rawdata) => { raw tcp stream, todo: make own framing })
         /// </code>
         /// </summary>
