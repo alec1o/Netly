@@ -55,7 +55,7 @@ namespace Netly
         protected override void AcceptOrReceive()
         {
             int length = 0;
-            byte[] buffer = new byte[1024*64];
+            byte[] buffer = new byte[MessageFraming.MaxUdpPackage];
             EndPoint endpoint = new IPEndPoint(IPAddress.Any, 0);
 
             ThreadPool.QueueUserWorkItem(_ =>

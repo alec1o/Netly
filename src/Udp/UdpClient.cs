@@ -88,7 +88,7 @@ namespace Netly
         protected override void Receive()
         {
             int length = 0;
-            byte[] buffer = new byte[1024 * 32];
+            byte[] buffer = new byte[MessageFraming.MaxUdpPackage];
             EndPoint endpoint = new IPEndPoint(IPAddress.Any, 0);
 
             ThreadPool.QueueUserWorkItem(_ =>
