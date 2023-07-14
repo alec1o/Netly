@@ -32,7 +32,7 @@ namespace Netly
         /// </code>
         /// </summary>
         /// <param name="framing">Enable or disable Netly MessageFraming</param>
-        public TcpServer(bool framing)
+        public TcpServer(bool framing = true)
         {
             IsEncrypted = false;
             Framing = framing;
@@ -127,7 +127,7 @@ namespace Netly
                 socket.ReceiveBufferSize = m_socket.ReceiveBufferSize;
 
                 TcpClient client = new TcpClient(Guid.NewGuid().ToString(), socket, this, out bool success);
-                
+
                 if (success)
                 {
                     AddOrRemoveClient(client, false);
