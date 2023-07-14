@@ -13,7 +13,8 @@ namespace Netly.Core
         public enum Mode { ASCII = 0, UTF8 = 1, UNICODE = 2 }
 
         /// <summary>
-        /// Is the default (generic) encoder used when encoding is not specified
+        /// Is the default (generic) encoder used when encoding is not specified<br/>
+        /// Default value is: UTF8
         /// </summary>
         public static Mode Default { get; set; } = Mode.UTF8;
 
