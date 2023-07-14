@@ -26,7 +26,7 @@ namespace Netly
         public TcpServer(bool messageFraming)
         {
             IsEncrypted = false;
-            MessageFraming = messageFraming;
+            Framing = messageFraming;
         }
 
         public override void Open(Host host, int backlog)

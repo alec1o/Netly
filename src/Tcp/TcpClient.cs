@@ -15,14 +15,24 @@ namespace Netly
         private Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> _onValidation = null;
 
         /// <summary>
-        /// TCP client: Instance
+        /// TCP client: Instance<br/><br/>
+        /// framing: Enable or disable Netly MessageFraming<code>Netly.Core.MessageFraming</code><br/><br/>
+        /// --------------- (recommended)<br/>
+        /// *True: netly will use its own message framing protocol <br/><br/>
+        /// --------------- (not recommended)<br/>
+        /// *False: you will receive raw stream data.<br/>
+        /// Just recommended if your server is not netly and you want to communicate with other libraries or use own framing protocol
+        /// <code>
+        /// TcpServer.OnData((byte[] rawdata) => { raw tcp stream, todo: make own framing })
+        /// TcpClient.OnData((byte[] rawdata) => { raw tcp stream, todo: make own framing })
+        /// </code>
         /// </summary>
-        /// <param name="messageFraming">true: netly will use its own message framing protocol, set false if your server is not netly and you want to communicate with other libraries</param>
-        public TcpClient(bool messageFraming)
+        /// <param name="framing">Enable or disable Netly MessageFraming</param>
+        public TcpClient(bool framing = true)
         {
             IsEncrypted = false;
             m_serverMode = false;
-            MessageFraming = messageFraming;
+            Framing = framing;
         }
 
         internal TcpClient(string uuid, Socket socket, TcpServer server, out bool success)
@@ -32,7 +42,7 @@ namespace Netly
             Server = server;
             m_serverMode = true;
             IsEncrypted = Server.IsEncrypted;
-            MessageFraming = Server.MessageFraming;
+            Framing = Server.Framing;
             Host = new Host(socket.RemoteEndPoint);
 
             m_stream = new NetworkStream(m_socket);
@@ -111,7 +121,7 @@ namespace Netly
         {
             if (m_closing || m_closed) return;
 
-            byte[] buffer = (MessageFraming) ? Package.Create(data) : data;
+            byte[] buffer = (Framing) ? MessageFraming.CreateMessage(data) : data;
 
             if (IsEncrypted)
             {
@@ -174,13 +184,13 @@ namespace Netly
         {
             int _length = 0;
             byte[] _buffer = new byte[1024 * 32]; // 32 KB
-            Package _package = new Package();
+            MessageFraming _framing = new MessageFraming();
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                if (MessageFraming)
+                if (Framing)
                 {
-                    _package.Output((buffer) =>
+                    _framing.OnData((buffer) =>
                     {
                         (string name, byte[] buffer) content = MessageParser.Verify(buffer);
 
@@ -192,6 +202,14 @@ namespace Netly
                         {
                             onEventHandler?.Invoke(null, (content.name, content.buffer));
                         }
+                    });
+
+                    _framing.OnError((e) =>
+                    {
+                        _framing?.Clear();
+                        _framing = null;
+                        onErrorHandler?.Invoke(null, e);
+                        Destroy();
                     });
                 }
 
@@ -223,9 +241,9 @@ namespace Netly
                         byte[] buffer = new byte[_length];
                         Array.Copy(_buffer, 0, buffer, 0, buffer.Length);
 
-                        if (MessageFraming)
+                        if (Framing)
                         {
-                            _package.Input(buffer);
+                            _framing.Add(buffer);
                         }
                         else
                         {
@@ -247,7 +265,8 @@ namespace Netly
                     }
                 }
 
-                _package = null;
+                _framing?.Clear();
+                _framing = null;
 
                 Destroy();
             });

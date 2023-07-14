@@ -9,7 +9,7 @@ namespace Netly.Abstract
     public abstract class Server<T>
     {
         #region Props
-        public bool MessageFraming { get; protected set; }
+        public bool Framing { get; protected set; }
         public Host Host { get; protected set; }
         public List<T> Clients { get; protected set; } = new List<T>();
         public bool IsOpened => IsConnected();
