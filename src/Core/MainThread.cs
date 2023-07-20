@@ -8,11 +8,13 @@ namespace Netly.Core
     /// </summary>
     public static class MainThread
     {
+        private readonly static List<Action> _callbacks = new List<Action>();
+        private readonly static object _lock = new object();
+
         /// <summary>
         /// Automatic clean callbacks
         /// </summary>
         public static bool Automatic { get; set; } = true;
-        private static List<Action> _callbacks { get; set; } = new List<Action>();
 
         /// <summary>
         /// Add callback to execute on (Main/Own)Thread
@@ -23,9 +25,16 @@ namespace Netly.Core
             if (callback == null) return;
 
             if (Automatic)
+            {
                 callback.Invoke();
+            }
             else
-                _callbacks.Add(callback);
+            {
+                lock(_lock)
+                {
+                    _callbacks.Add(callback);
+                }
+            }
         }
 
         /// <summary>
@@ -33,12 +42,19 @@ namespace Netly.Core
         /// </summary>
         public static void Clean()
         {
-            if (Automatic is false && _callbacks.Count > 0)
+            if (Automatic) return;
+            
+            lock(_lock)
             {
-                for (int i = 0; i < _callbacks.Count; i++)
+                if (_callbacks.Count > 0)
                 {
-                    _callbacks[0].Invoke();
-                    _callbacks.RemoveAt(0);
+                    Action[] callbackArray = _callbacks.ToArray();
+                    _callbacks.Clear();
+
+                    foreach(var action in callbackArray)
+                    {
+                        action?.Invoke();
+                    }
                 }
             }
         }
