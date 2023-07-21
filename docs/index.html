@@ -1,27 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Netly</title>
   <link rel="icon" href="_https://media.githubusercontent.com/media/alec1o/Netly/main/docs/_media/netly.png" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="description" content="Netly c# (c-sharp) socket library, open-source and free.">
-  <meta name="keywords" content="netly, netly socket, c# socket, udp, tcp, ssl, tls, socket, networking, c# networking, c# server, c# client, c#, tcp client, udp client, tcp server, udp server, free library, unity socket, unity, unity asset, ssl client, ssl server, tls cliemt, tls server, http client, http server, websocket, ws, ws client, ws server, websocket server, websocket client, alec1o, alecio, alecio furanze, furanze, socket network"  />
+  <meta name="keywords"
+    content="netly, netly socket, c# socket, udp, tcp, ssl, tls, socket, networking, c# networking, c# server, c# client, c#, tcp client, udp client, tcp server, udp server, free library, unity socket, unity, unity asset, ssl client, ssl server, tls cliemt, tls server, http client, http server, websocket, ws, ws client, ws server, websocket server, websocket client, alec1o, alecio, alecio furanze, furanze, socket network" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
   <style>
+    * {
+      letter-spacing: 1px;
+    }
+
     .github-corner svg {
       fill: #2050ce;
     }
+
     section.cover.show {
       background: none !important;
       background-color: white !important;
     }
+
     .app-name-link {
       color: #2050ce !important;
     }
   </style>
 </head>
+
 <body>
   <div id="app"></div>
   <script>
@@ -33,10 +42,26 @@
       loadNavbar: true,
       search: 'auto',
       coverpage: true,
+      'flexible-alerts': {
+        note: {
+          label: "Note"
+        },
+        tip: {
+          label: "Tip"
+        },
+        warning: {
+          label: "Warning"
+        },
+        attention: {
+          label: "Alert"
+        }
+      }
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  <script src="https://unpkg.com/docsify-plugin-flexible-alerts"></script>
 </body>
+
 </html>
