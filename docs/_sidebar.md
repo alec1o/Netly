@@ -2,9 +2,7 @@
   - [Why Netly](why-netly.md "Why use netly socket library")
   - [Features](features.md "Netly version features")
 - Installing
-  - [Nuget](/ "Install netly using nuget packages manager")  
-  - [Unity](/ "Install netly using unity asset store")
-  - [Source](/ "Build netly source code and get dll")
+  - [Installing netly on your project](install.md "Install netly on unity application using AssetStore, Install netly using nuget, Install netly from source code")
 - TCP
   - [TcpClient](/ "Netly tcp client")
   - [TcpServer](/ "Netly tcp server")
