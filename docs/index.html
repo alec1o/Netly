@@ -115,8 +115,33 @@
       background-color: rgba(66, 185, 131, .05) !important;
     }
 
-    .alert.flat {}
+    .sidebar-toggle {
+      border: 2px solid #2050ce;
+      background-color: rgb(30, 40, 50, .95);
+      border-right: none;
+      border-bottom: none;
+      width: 100px !important;
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: start;
+      align-items: center;
+    }
 
+    .sidebar-toggle::before {
+      margin-left: 5px;
+      font-size: 9px;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: rgb(220, 220, 230);
+      font-family: Arial;
+      content: "show & hide";
+      white-space: nowrap !important;
+      letter-spacing: normal !important;
+    }
+
+    .sidebar-toggle-button span {
+      background-color: white !important;
+    }
 
     hr {
       color: #42b983 !important;
