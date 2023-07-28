@@ -18,8 +18,11 @@
     ```
 
 ## Properties
-- OnOpen ``bool`` <br>
+- IsOpened ``bool`` <br>
     <sub>Return true when the socket is connected and returns false when the socket is disconnected.</sub>
+    
+- UUID ``string`` <br>
+    <sub>UUID is (unique user identifier) just not null when client is a server instance</sub>
 
 - Host ``Netly.Core.Host`` <br>
     <sub>It is an object that helps to care for and share a host's credentials.</sub>
