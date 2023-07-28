@@ -70,18 +70,22 @@
   - <sub>[.NET](http://dot.net)</sub>
   
 > ###### Build step-by-step 
-  ```rb
+  ```php
   # 1. clone repository 
-  $ git clone "https://github.com/alec1o/netly.git"
+  $ git clone "https://github.com/alec1o/netly" netly/
 
-  # 2. open source directory 
-  $ cd netly/
+  # 2. build netly project
+  $ dotnet build -C Release netly/
+    # dll have on: netly/src/bin/netstandard2.0/Netly.dll
 
-  # 5. restore dotnet project
-  $ dotnet restore
+  # 3. For use Netly.dll you need Byter.dll (a Netly dependecy)
+  $ git clone "https://github.com/alec1o/byter" byter/
 
-  # 6. build dotnet project
-  $ dotnet build
+  # 4. build byter project
+  $ dotnet build -C Release byter/
+    # dll have on: byter/src/bin/netstandard2.0/Byter.dll
+
+  # WARNING: if you wanna use Netly.dll it require Byter.dll if you are using Nuget dont require it.  
   ```
 
 <br>
