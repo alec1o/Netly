@@ -4,7 +4,17 @@
 ## Construtors
 - Default
     ```cs
-    TcpClient client = new TcpClient();
+    TcpClient client = new TcpClient(framing: true);
+    ```
+    - Framing
+    ```txt
+    Framing:
+        Enable or disable netly message framing    
+    True:
+        Netly will use its own message framing protocol    
+    False:
+        you will receive raw stream data without framing middleware.
+        For receive raw data use "TcpClient.OnData(Action<byte[]> callback)"   
     ```
 
 ## Properties
