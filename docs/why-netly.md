@@ -23,6 +23,49 @@ Netly contains an ecosystem that is constantly evolving and it supports multiple
 
     var client = new TcpClient(framing: true);
 
+    // Enable SSL/TLS (onValidate delegate is optional)
+    client.UseEncryption(enableEncryption: true, onValidate = null);
+
+    client.OnOpen(() => 
+    {
+
+    });
+
+    client.OnClose(() =>
+    {
+        
+    });
+    
+    client.OnError((Exception exception) =>
+    {
+
+    });
+
+    client.OnData((byte[] data) =>
+    {
+
+    });    
+    
+    client.OnModify((Socket socket) =>
+    {
+        
+    });
+
+    client.OnEvent((string name, byte[] data) =>
+    {
+
+    });
+    
+    client.Open(new Host("127.0.0.1", 8080));
+    ```
+
+- UDP Client
+    ```cs
+    using Netly;
+    using Netly.Core;
+
+    var client = new UdpClient(connection: true, connectionTimeout: 5000);    
+
     client.OnOpen(() => 
     {
 

@@ -4,7 +4,7 @@
 - Installing
   - [Installing netly on your project](install.md "Install netly on unity application using AssetStore, Install netly using nuget, Install netly from source code")
 - TCP
-  - [TcpClient](/ "Netly tcp client")
+  - [TcpClient](tcp-client.md "Netly tcp client")
   - [TcpServer](/ "Netly tcp server")
   - [SSL/TLS](/ "Netly ssl and tls")
   - [MessageFraming](/ "Netly tcp message framing")

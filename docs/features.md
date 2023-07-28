@@ -14,4 +14,5 @@
     - [+] New docs (Gitbook -> Docsify)
     - [>] New MessageFraming protocol
     - [>] Udp set max buffer size
+    - [>] Udp connection detection (timeout/ping-pong)
     - [!] MainThread null reference exception
