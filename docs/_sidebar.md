@@ -13,6 +13,6 @@
   - [UdpServer](/ "Netly udp server")
   - [MessageFraming](/ "Netly udp message framing")
 - Core
-  - [NE](/ "Netly Encoding")
+  - [NE](ne.md "Netly Encoding")
   - [Host](/ "Netly Host")
   - [MainThread](/ "Netly Main thread") 

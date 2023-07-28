@@ -24,7 +24,7 @@ Netly contains an ecosystem that is constantly evolving and it supports multiple
     var client = new TcpClient(framing: true);
 
     // Enable SSL/TLS (onValidate delegate is optional)
-    client.UseEncryption(enableEncryption: true, onValidate = null);
+    client.UseEncryption(enableEncryption: true, onValidate: null);
 
     client.OnOpen(() => 
     {
