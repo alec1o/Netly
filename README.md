@@ -27,6 +27,11 @@
 
 <br>
 
+##### Sponsor and Supporter
+> <sub>Well, this project is open source and only development can be supported by suggestions for improvements, bug reports or the like. (for those who want to financially support this resource is not available at this time)</sub>
+
+<br>
+
 ##### Versions
 >  <sub>Notable changes</sub>
   
