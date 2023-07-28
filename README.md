@@ -87,122 +87,114 @@
 <br>
   
 ##### Demo
-> <sub>Warning `MessageFraming`</sub>
-  ```php
-MessageFraming: just set this to false if you want to use netly to communicate with another tcp library.
-true case: this will improve data security, but both client and server must have the same configuration.
-  ```
-> <sub>Client</sub>
+> <sub>TcpClient ``Syntax``</sub>
   ```csharp
   using Netly;
   using Netly.Core;
-
-  /* ================ Instances ================ */
-
-  var client = new TcpClient(messageFraming: true); 
-  var host = new Host("127.0.0.1", 3000); 
-
-  /* ================ Triggers ================= */
-
-  client.Open(host); // open connection
-
-  client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // send raw data
-
-  client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // send event
-
-  client.Close(); // close connection
-
-  /* ================ Callbacks ================ */
-
-  client.OnOpen(() =>
+  
+  var client = new TcpClient(framing: true);
+  
+  // Enable SSL/TLS (onValidate delegate is optional)
+  client.UseEncryption(enableEncryption: true, onValidate: null);
+  
+  client.OnOpen(() => 
   {
-      // connection opened
+  
   });
-
+  
   client.OnClose(() =>
   {
-      // connection closed
+      
   });
-
-  client.OnError((exception) =>
-  {   
-      // error on open connection
-  });
-
-  client.OnData((data) => 
+  
+  client.OnError((Exception exception) =>
   {
-      // buffer/data received
+  
   });
-
-  client.OnEvent((name, data) =>
+  
+  client.OnData((byte[] data) =>
   {
-      // event received: {name: event name} {data: buffer/data received} 
+  
   });
-
-  client.OnModify((socket) =>
+  
+  client.OnEvent((string name, byte[] data) =>
   {
-      // modify socket instance
+  
   });
+  
+  client.OnModify((Socket socket) =>
+  {
+      
+  });
+  
+  client.Open(new Host("127.0.0.1", 8080));
   ```
-> <sub>Server</sub>
+
+> <sub>TcpServer ``Syntax``</sub>
   ```csharp
   using Netly;
   using Netly.Core;
-
-  /* ================ Instances ================ */
-
-  var server = new TcpServer(messageFraming: true);
-  var host = new Host("0.0.0.0", 3000);
-
-  /* ================ Triggers ================= */  
-
-  server.Open(host); // open connection
-
-  server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9}); // broadcast data
-
-  server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6}); // broadcast event
-
-  server.Close(); // close connection
-
-  /* ================ Callbacks ================ */  
-
-  server.OnOpen(() =>
+  
+  var server = new TcpServer(framing: true);
+  
+  // Enable SSL/TLS
+  byte[] pfxCert = <DO_SOMETHING>;
+  string pfxPass = <DO_SOMETHING>;
+  
+  server.UseEncryption(pfxCert, pfxPass, SslProtocols.Tls13); // TLS v1.3
+  
+  server.OnOpen(() => 
   {
-      // connection opened: server start listen client
+  
   });
-
+  
   server.OnClose(() =>
   {
-      // connection closed: server stop listen client
+      
   });
-
-  server.OnError((exception) =>
+  
+  server.OnError((Exception exception) =>
   {
-      // error on open connection
+  
   });
-
-  server.OnEnter((client) =>
+  
+  server.OnData((TcpClient client, byte[] data) =>
   {
-      // client connected: connection accepted
+  
   });
-
-  server.OnExit((client) =>
+  
+  server.OnEvent((TcpClient client, string name, byte[] data) =>
   {
-      // client disconnected: connection closed
+  
   });
-
-  server.OnData((client, data) =>
+  
+  server.OnEnter((TcpClient client) =>
   {
-      // buffer/data received: {client: client instance} {data: buffer/data received} 
+      client.OnClose(() =>
+      {
+          // alternative of: TcpServer.OnClose
+      });
+      
+      client.OnData(() =>
+      {
+          // alternative of: TcpServer.OnData
+      });
+      
+      client.OnEvent(() =>
+      {
+          // alternative of: TcpServer.OnEvent
+      });
   });
-
-  server.OnEvent((client, name, data) =>
+  
+  server.OnExit((TcpClient client) =>
   {
-      // event received: {client: client instance} {name: event name} {data: buffer received} 
+     
   });
-
-  server.OnModify((socket) =>
+  
+  server.OnModify((Socket socket) =>
   {
-      // modify socket instance
+      
   });
+  
+  server.Open(new Host("127.0.0.1", 8080));
   ```
