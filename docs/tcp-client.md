@@ -1,6 +1,12 @@
 # TcpClient
 ``TcpClient`` is a ``class`` from the ``netly library`` that facilitates and simplifies the use of a ``tcp`` connection as a client
 
+## Construtors
+- Default
+    ```cs
+    TcpClient client = new TcpClient();
+    ```
+
 ## Properties
 - OnOpen ``bool`` <br>
     <sub>Return true when the socket is connected and returns false when the socket is disconnected.</sub>
