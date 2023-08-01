@@ -16,44 +16,37 @@ namespace Netly.Core
         public static readonly byte[] PREFIX = new byte[] { 0, 8, 16, 32, 64, 128 };
 
         private static int _MaxSize = (1024 * 1024) * 32; // 32 MB
-        private static int _MaxUdpPackage = (1024 * 1024); // 32 MB
+        private static int _UdpBuffer = (1024 * 1024); // 1 MB
         private readonly object _lock = new object();
 
         private Action<byte[]> _onData;
         private Action<Exception> _onError;
 
-        public List<byte> _buffer = new List<byte>();
+        private List<byte> _buffer = new List<byte>();
         private int _size;
-
-        /// <summary>
-        /// Return true if message framing is started
-        /// </summary>
-        public bool Started { get; private set; }
 
         /// <summary>
         /// Max buffer size (prevent memory leak). Default is 33.554.432 (32MB)
         /// </summary>
         public static int MaxSize
         {
-            get { return _MaxSize; }
-            set { if (value > 0) _MaxSize = value; }
+            get => _MaxSize;
+            set => _MaxSize = value > 0 ? value : _MaxSize; // prevent negative value
         }
 
         /// <summary>
         /// Max udp package (prevent memory leak). Default is 1.048.576 (1MB)
         /// </summary>
-        public static int MaxUdpPackage
+        public static int UdpBuffer
         {
-            get { return _MaxUdpPackage; }
-            set { if (value > 0) _MaxUdpPackage = value; }
+            get => _UdpBuffer;
+            set => _UdpBuffer = value > 0 ? value : _UdpBuffer; // prevent negative value
         }
 
         /// <summary>
         /// Create message framing bytes (attach prefix)<br/>
         /// Protocol:
-        /// <br/> 1 -> [ 0, 8, 16, 32, 64, 128 ] --size: 6 bytes --value: {0, 8, 16, 32, 64, 128}
-        /// <br/> 2 -> [ buffer length ] --size: 4 bytes --value: dynamic
-        /// <br/> 3 -> [ buffer ] --size: dynamic --value: dynamic
+        /// <br/> [ 0, 8, 16, 32, 64, 128 ] + [ BUFFER_LENGTH ] + [ BUFFER ]
         /// </summary>
         /// <param name="value">Input</param>
         /// <returns></returns>
@@ -89,7 +82,7 @@ namespace Netly.Core
             lock (_lock)
             {
                 _buffer.Clear();
-                _buffer = new byte[0].ToList();
+                _buffer = Array.Empty<byte>().ToList();
             }
         }
 
