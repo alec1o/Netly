@@ -85,7 +85,7 @@
   $ dotnet build -C Release byter/
     # dll have on: byter/src/bin/netstandard2.0/Byter.dll
 
-  # WARNING: if you wanna use Netly.dll it require Byter.dll if you are using Nuget dont require it.  
+  # WARNING: when use Netly.dll must include Byter.dll  
   ```
 
 <br>
