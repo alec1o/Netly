@@ -76,14 +76,14 @@
 
   # 2. build netly project
   $ dotnet build -C Release netly/
-    # dll have on: netly/src/bin/netstandard2.0/Netly.dll
+    # DLL_PATH: netly/src/bin/netstandard2.0/Netly.dll
 
   # 3. For use Netly.dll you need Byter.dll (a Netly dependecy)
   $ git clone "https://github.com/alec1o/byter" byter/
 
   # 4. build byter project
   $ dotnet build -C Release byter/
-    # dll have on: byter/src/bin/netstandard2.0/Byter.dll
+    # DLL_PATH: byter/src/bin/netstandard2.0/Byter.dll
 
   # WARNING: when use Netly.dll must include Byter.dll  
   ```
