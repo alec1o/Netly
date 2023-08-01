@@ -30,7 +30,7 @@ namespace Netly.Core
             }
             else
             {
-                lock(_lock)
+                lock (_lock)
                 {
                     _callbacks.Add(callback);
                 }
@@ -38,24 +38,27 @@ namespace Netly.Core
         }
 
         /// <summary>
-        /// Use to clean/publish callbacks: work if (Automatic is false)
+        /// Use to clean/publish callbacks <br/> 
+        /// WARNING: only if "Automatic == false"
         /// </summary>
         public static void Clean()
         {
             if (Automatic) return;
-            
-            lock(_lock)
+
+            Action[] actions = Array.Empty<Action>();
+
+            lock (_lock)
             {
                 if (_callbacks.Count > 0)
                 {
-                    Action[] callbackArray = _callbacks.ToArray();
+                    actions = _callbacks.ToArray();
                     _callbacks.Clear();
-
-                    foreach(var action in callbackArray)
-                    {
-                        action?.Invoke();
-                    }
                 }
+            }
+
+            foreach (Action action in actions)
+            {
+                action.Invoke();
             }
         }
     }
