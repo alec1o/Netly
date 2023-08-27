@@ -64,7 +64,8 @@ Netly contains an ecosystem that is constantly evolving and it supports multiple
     using Netly;
     using Netly.Core;
 
-    var client = new UdpClient(connection: true, connectionTimeout: 5000);    
+    // Create UdpClient instance and enable udp connection
+    var client = new UdpClient(useConnection: true);    
 
     client.OnOpen(() => 
     {
