@@ -10,7 +10,7 @@
   - [MessageFraming](/ "Netly tcp message framing")
 - UDP
   - [UdpClient](udp-client.md "Netly udp client")
-  - [UdpServer](/ "Netly udp server")
+  - [UdpServer](udp-server.md "Netly udp server")
   - [MessageFraming](/ "Netly udp message framing")
 - Core
   - [NE](ne.md "Netly Encoding")

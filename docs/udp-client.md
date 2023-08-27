@@ -37,6 +37,11 @@ using Netly;
 
 <br>
 
+- ##### <return>string</return> UUID
+  <sub>``UUID`` or (Unique User Identifier) is a unique string value that link a user, only ``server-side`` client.</sub>
+
+<br>
+
 ## Methods
 > Triggers
 
@@ -70,7 +75,7 @@ using Netly;
 <br>
 
 
-- ##### <return>void</return> OnError(<params>Action<Exception> callback</params>)
+- ##### <return>void</return> OnError(<params>Action&lt;Exception&gt; callback</params>)
   <sub>Event responsible for receiving an error when opening a connection, the ``Exception`` contains the error information.</sub>
   - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
 
@@ -84,21 +89,21 @@ using Netly;
 <br>
 
 
-- ##### <return>void</return> OnData(<params>Action<byte[]> callback</params>)
+- ##### <return>void</return> OnData(<params>Action&lt;byte[]&gt; callback</params>)
   <sub>Event responsible for receiving raw data (buffer) from the server</sub>
   - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
 
 <br>
 
 
-- ##### <return>void</return> OnEvent(<params>Action<string, byte[]> callback</params>)
+- ##### <return>void</return> OnEvent(<params>Action&lt;string, byte[]&gt; callback</params>)
   <sub>Event responsible for receiving events (netly-events) from the server</sub>
   - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
 
 <br>
 
 
-- ##### <return>void</return> OnModify(<params>Action<Socket> socket</params>)
+- ##### <return>void</return> OnModify(<params>Action&lt;Socket&gt; socket</params>)
   <sub>This event 'is responsible for executing modifications in ``Socket``, this event is executed in the connection creation step, and you will have access to ``Socket`` that will be used internally</sub>
   - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
 
