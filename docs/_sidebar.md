@@ -14,5 +14,5 @@
   - [UdpBuffer](udp-message-framing.md "Netly udp buffer, from message-framing")
 - Core
   - [NE](ne.md "Netly Encoding")
-  - [Host](/ "Netly Host")
+  - [Host](host.md "Netly Host")
   - [MainThread](main-thread.md "Netly Main thread") 

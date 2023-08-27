@@ -1,4 +1,4 @@
-# <return>explication</return> Udp Message Framing
+# <return>explication</return> UdpBuffer
 
 ## Udp Buffer
 The Udp buffer is the maximum amount of data (bytes) that udp will receive.

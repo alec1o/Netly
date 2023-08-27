@@ -15,8 +15,8 @@ namespace Netly.Core
         /// </summary>
         public static readonly byte[] PREFIX = new byte[] { 0, 8, 16, 32, 64, 128 };
 
-        private static int _MaxSize = (1024 * 1024) * 32; // 32 MB
-        private static int _UdpBuffer = (1024 * 1024); // 1 MB
+        private static int _MaxSize = (1024 * 1024) * 8; // 8 MB
+        private static int _UdpBuffer = (1024 * 1024) * 1; // 1 MB
         private readonly object _lock = new object();
 
         private Action<byte[]> _onData;
@@ -26,7 +26,7 @@ namespace Netly.Core
         private int _size;
 
         /// <summary>
-        /// Max buffer size (prevent memory leak). Default is 33.554.432 (32MB)
+        /// Max buffer size (prevent memory leak). Default is 8.388.608 (8MB)
         /// </summary>
         public static int MaxSize
         {
