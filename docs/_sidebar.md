@@ -15,4 +15,4 @@
 - Core
   - [NE](ne.md "Netly Encoding")
   - [Host](/ "Netly Host")
-  - [MainThread](/ "Netly Main thread") 
+  - [MainThread](main-thread.md "Netly Main thread") 
