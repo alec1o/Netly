@@ -9,7 +9,7 @@
   - [SSL/TLS](/ "Netly ssl and tls")
   - [MessageFraming](/ "Netly tcp message framing")
 - UDP
-  - [UdpClient](/ "Netly udp client")
+  - [UdpClient](udp-client.md "Netly udp client")
   - [UdpServer](/ "Netly udp server")
   - [MessageFraming](/ "Netly udp message framing")
 - Core

@@ -42,7 +42,6 @@
 |                |                                            | <sub>``Message Framing`` memory and performance improve</sub> |                            | 
 |                |                                            | <sub>``Message Framing`` new protocol</sub> |                            |
 |                |                                            | <sub>``UDP`` impl connection with udp (ping/timeout)</sub> |                            | 
-|            |        | <sub>``Docsify`` collaborative documentation </sub> |    |
 
 <br>
 

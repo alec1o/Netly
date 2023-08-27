@@ -2,259 +2,304 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Netly</title>
-  <link rel="icon" href="_https://media.githubusercontent.com/media/alec1o/Netly/main/docs/_media/netly.png" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Netly c# (c-sharp) socket library, open-source and free.">
-  <meta name="keywords"
-    content="netly, netly socket, c# socket, udp, tcp, ssl, tls, socket, networking, c# networking, c# server, c# client, c#, tcp client, udp client, tcp server, udp server, free library, unity socket, unity, unity asset, ssl client, ssl server, tls cliemt, tls server, http client, http server, websocket, ws, ws client, ws server, websocket server, websocket client, alec1o, alecio, alecio furanze, furanze, socket network" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
-  <style>
-    body,
-    .sidebar {
-      background: rgb(20, 30, 40) !important;
-    }
+    <meta charset="UTF-8">
+    <title>Netly</title>
+    <link rel="icon" href="_https://media.githubusercontent.com/media/alec1o/Netly/main/docs/_media/netly.png"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="description" content="Netly c# (c-sharp) socket library, open-source and free.">
+    <meta name="keywords"
+          content="netly, netly socket, c# socket, udp, tcp, ssl, tls, socket, networking, c# networking, c# server, c# client, c#, tcp client, udp client, tcp server, udp server, free library, unity socket, unity, unity asset, ssl client, ssl server, tls cliemt, tls server, http client, http server, websocket, ws, ws client, ws server, websocket server, websocket client, alec1o, alecio, alecio furanze, furanze, socket network"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+    <style>
+        body,
+        .sidebar {
+            background: rgb(20, 30, 40) !important;
+        }
 
-    .sidebar a {
-      color: rgb(220, 220, 230) !important;
-    }
+        .sidebar a {
+            color: rgb(220, 220, 230) !important;
+        }
 
-    .sidebar li {
-      cursor: progress;
-      color: #42b983;
-      font-weight: bold;
-      text-transform: capitalize;
-    }
+        .sidebar li {
+            cursor: progress;
+            color: #42b983;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
 
-    * {
-      letter-spacing: 1px;
-    }
+        * {
+            letter-spacing: 1px;
+        }
 
-    code * {
-      letter-spacing: normal !important;
-    }
+        code * {
+            letter-spacing: normal !important;
+        }
 
-    span,
-    p,
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      border-color: rgb(220, 220, 230) !important;
-      color: rgb(220, 220, 230) !important;
-    }
+        span,
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            border-color: rgb(220, 220, 230) !important;
+            color: rgb(220, 220, 230) !important;
+        }
 
-    .github-corner svg {
-      fill: #2050ce;
-    }
+        .github-corner svg {
+            fill: #2050ce;
+        }
 
-    section.cover.show {
-      background: none !important;
-      background-color: transparent !important;
-    }
+        section.cover.show {
+            background: none !important;
+            background-color: transparent !important;
+        }
 
-    .cover {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        .cover {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .cover-main {
-      max-width: 75%;
-      margin: 0 auto;
-    }
+        .cover-main {
+            max-width: 75%;
+            margin: 0 auto;
+        }
 
-    .cover-main ul {
-      display: flex;
-      flex-direction: column;
-      align-items: start;
-      justify-content: start;
-      max-width: 100% !important;
-      border: 2px solid #2050ce;
-      padding: 12px 32px !important;
-      border-radius: 10px;
-    }
+        .cover-main ul {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+            max-width: 100% !important;
+            border: 2px solid #2050ce;
+            padding: 12px 32px !important;
+            border-radius: 10px;
+        }
 
-    .cover-main li {
-      list-style: circle;
-      color: #42b983;
-      color: rgb(220, 220, 230);
-    }
+        .cover-main li {
+            list-style: circle;
+            color: #42b983;
+            color: rgb(220, 220, 230);
+        }
 
-    .sidebar .app-name .app-name-link {
-      color: #2050ce !important;
-      font-weight: bold;
-      font-size: 26px;
-    }
+        .sidebar .app-name .app-name-link {
+            color: #2050ce !important;
+            font-weight: bold;
+            font-size: 26px;
+        }
 
-    .sidebar-nav {
-      margin-top: 50px !important;
-    }
+        .sidebar-nav {
+            margin-top: 50px !important;
+        }
 
-    .alert {
-      border-width: 2px !important;
-    }
+        .alert {
+            border-width: 2px !important;
+        }
 
-    ul>li {
-      color: rgb(220, 220, 230) !important;
-    }
+        ul > li {
+            color: rgb(220, 220, 230) !important;
+        }
 
-    .icon.icon-note {
-      background-color: #42b983 !important;
-      border-radius: 50%;
-      box-shadow: 0 0 5px 1px #42b983;
-    }
+        .icon.icon-note {
+            background-color: #42b983 !important;
+            border-radius: 50%;
+            box-shadow: 0 0 5px 1px #42b983;
+        }
 
-    .note>.title {
-      color: #42b983 !important;
-    }
+        .note > .title {
+            color: #42b983 !important;
+        }
 
-    .alert.note {
-      border-radius: 0 !important;
-      border-color: #42b983 !important;
-      background-color: rgba(66, 185, 131, .05) !important;
-    }
+        .alert.note {
+            border-radius: 0 !important;
+            border-color: #42b983 !important;
+            background-color: rgba(66, 185, 131, .05) !important;
+        }
 
-    .sidebar-toggle {
-      border: 2px solid #2050ce;
-      background-color: rgb(30, 40, 50, .95);
-      border-right: none;
-      border-bottom: none;
-      width: 100px !important;
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: start;
-      align-items: center;
-    }
+        .sidebar-toggle {
+            border: 2px solid #2050ce;
+            background-color: rgb(30, 40, 50, .95);
+            border-right: none;
+            border-bottom: none;
+            width: 100px !important;
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: start;
+            align-items: center;
+        }
 
-    .sidebar-toggle::before {
-      margin-left: 5px;
-      font-size: 9px;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: rgb(220, 220, 230);
-      font-family: Arial;
-      content: "show & hide";
-      white-space: nowrap !important;
-      letter-spacing: normal !important;
-    }
+        .sidebar-toggle::before {
+            margin-left: 5px;
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: rgb(220, 220, 230);
+            font-family: Arial;
+            content: "show & hide";
+            white-space: nowrap !important;
+            letter-spacing: normal !important;
+        }
 
-    .sidebar-toggle-button span {
-      background-color: white !important;
-    }
+        .sidebar-toggle-button span {
+            background-color: white !important;
+        }
 
-    hr {
-      color: #42b983 !important;
-      border-color: #2050ce !important;
-    }
+        hr {
+            color: #42b983 !important;
+            border-color: #2050ce !important;
+        }
 
-    .app-name-link::after,
-    .app-name-link::before {
-      white-space: nowrap;
-      position: absolute;
-      font-size: 12px;
-      content: "Powered by";
-      transform: translate(-32px, 32px);
-    }
+        .app-name-link::after,
+        .app-name-link::before {
+            white-space: nowrap;
+            position: absolute;
+            font-size: 12px;
+            content: "Powered by";
+            transform: translate(-32px, 32px);
+        }
 
-    .app-name-link::before {
-      content: "@alec1o";
-      transform: translate(105px, 32px);
-      color: #42b983;
-    }
+        .app-name-link::before {
+            content: "@alec1o";
+            transform: translate(105px, 32px);
+            color: #42b983;
+        }
 
-    .search {
-      padding: 20px !important;
-      border: none !important;
-    }
+        .search {
+            padding: 20px !important;
+            border: none !important;
+        }
 
-    .search input {
-      background-color: transparent;
-      border: 2px solid #2050ce !important;
-      border-radius: 15px;
-      color: rgb(220, 220, 230);
-      text-decoration: none;
-      text-transform: none;
-      box-shadow: none !important;
-      transition: 0.3s ease-in;
-    }
+        .search input {
+            background-color: transparent;
+            border: 2px solid #2050ce !important;
+            border-radius: 15px;
+            color: rgb(220, 220, 230);
+            text-decoration: none;
+            text-transform: none;
+            box-shadow: none !important;
+            transition: 0.3s ease-in;
+        }
 
-    .search input::placeholder {
-      color: rgb(220, 220, 230);
-    }
+        .search input::placeholder {
+            color: rgb(220, 220, 230);
+        }
 
-    .search input:focus {
-      border-radius: 5px;
-    }
-  </style>
+        .search input:focus {
+            border-radius: 5px;
+        }
+    </style>
 
-  <style>
-    /* C-SHARP THEME */
-    .token {
-      color: whitesmoke !important;
-    }
+    <style>
+        /* C-SHARP THEME */
+        .token {
+            color: whitesmoke !important;
+        }
 
-    .token.namespace {
-      color: #2050ce !important;
-    }
+        .token.namespace {
+            color: #2050ce !important;
+        }
 
-    .markdown-section code,
-    .markdown-section pre {
-      background-color: rgb(40, 45, 55) !important;
-    }
+        .markdown-section code,
+        .markdown-section pre {
+            background-color: rgb(40, 45, 55) !important;
+        }
 
-    .token.punctuation,
-    .lang-cs {
-      color: #fff !important;
-    }
+        .token.punctuation,
+        .lang-cs {
+            color: #fff !important;
+        }
 
-    .token.class-name,
-    .token.function,
-    .token.keyword {
-      color: rgb(255, 123, 114) !important;
-      color: dodgerblue !important;
-      color: aquamarine !important;
-    }
-  </style>
+        .token.class-name,
+        .token.function,
+        .token.keyword {
+            color: rgb(255, 123, 114) !important;
+            color: dodgerblue !important;
+            color: aquamarine !important;
+        }
+    </style>
+
+    <style>
+        .markdown-section pre {
+            padding: 8px !important;
+            
+        }
+        .markdown-section pre>code {
+            font-size: 13px !important;
+            padding: 8px !important;
+        }
+        
+        li>p{
+            margin: 2px !important;
+        }
+        li>h5 {
+            margin: 0 !important;
+            margin-top: 16px !important;
+        }
+
+        .markdown-section code{
+            color: #42b983;
+            font-size: 10px !important;
+        }
+    </style>
+    
+    <style>
+        return {
+            position: relative;
+            display: inline;
+            background: #ce2050;
+            border-radius: 5px;
+            font-size: 10px;
+            padding: 1px 3px;
+            margin: 0 5px;
+        }
+        params {
+            position: relative;
+            display: inline;
+            background: #2050ce;
+            border-radius: 5px;
+            font-size: 12px;
+            padding: 2px 5px;
+            margin: 0 2px;
+        }
+    </style>
 </head>
 
 <body>
-  <div id="app"></div>
-  <script>
+<div id="app"></div>
+<script>
     window.$docsify = {
-      name: 'Netly',
-      repo: 'https://github.com/alec1o/Netly/',
-      loadSidebar: true,
-      subMaxLevel: 2,
-      loadNavbar: true,
-      search: 'auto',
-      coverpage: true,
-      'flexible-alerts': {
-        note: {
-          label: "Note"
-        },
-        tip: {
-          label: "Tip"
-        },
-        warning: {
-          label: "Warning"
-        },
-        attention: {
-          label: "Alert"
+        name: 'Netly',
+        repo: 'https://github.com/alec1o/Netly/',
+        loadSidebar: true,
+        subMaxLevel: 2,
+        loadNavbar: true,
+        search: 'auto',
+        coverpage: true,
+        'flexible-alerts': {
+            note: {
+                label: "Note"
+            },
+            tip: {
+                label: "Tip"
+            },
+            warning: {
+                label: "Warning"
+            },
+            attention: {
+                label: "Alert"
+            }
         }
-      }
     }
-  </script>
-  <!-- Docsify v4 -->
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-  <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
-  <script src="https://unpkg.com/docsify-plugin-flexible-alerts"></script>
-  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-csharp.min.js"></script>
+</script>
+<!-- Docsify v4 -->
+<script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+<script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+<script src="https://unpkg.com/docsify-plugin-flexible-alerts"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-csharp.min.js"></script>
 
 </body>
 
