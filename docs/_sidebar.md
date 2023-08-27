@@ -11,7 +11,7 @@
 - UDP
   - [UdpClient](udp-client.md "Netly udp client")
   - [UdpServer](udp-server.md "Netly udp server")
-  - [Udp MessageFraming](udp-message-framing.md "Netly udp message framing")
+  - [UdpBuffer](udp-message-framing.md "Netly udp buffer, from message-framing")
 - Core
   - [NE](ne.md "Netly Encoding")
   - [Host](/ "Netly Host")

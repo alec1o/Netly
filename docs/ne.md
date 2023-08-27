@@ -1,42 +1,75 @@
-# NE (Netly Encoding)
-``NE`` is a ``class`` it is a ``System.Text.Encoding`` wrapper
+# <return>static class</return> NE (Netly Encoding)
+
+###### ``NE`` is ``System.Text.Encoding`` wrapper
 
 ## Properties
-- Mode ``enum`` <br>
+- ##### <return>enum</return> Mode
     <sub>Encoding protocols</sub>
-    ```
-    enum Mode { ASCII = 0, UTF8 = 1, UNICODE = 2 }
+    ```cs
+    enum Mode { ASCII = 0, UTF7 = 1, UTF8 = 2, UTF16 = 3, UTF32 = 4, UNICODE = 5 }
     ```
 
-- Defaut ``NE.Mode`` <br>
+<br>
+
+- ##### <return>NE.Mode</return> Default
     <sub>Default (explicitly) and global encoding and decoding ``default value is UTF8``</sub>
-    ```cs
-    NE.Default = NE.Mode.ASCII;
-    string sampleString = NE.GetString(new byte[] {0, 1, 2, 3}); // NE.Mode is ASCII
 
-    NE.Default = NE.Mode.UTF8;
-    string utfString = NE.GetString(new byte[] {0, 1, 2, 3}); // NE.Mode is UTF8
+
+## Methods
+- ##### <return>string</return> GetString(<params>byte[] buffer</params>) <br> <return>string</return> GetString(<params>byte[] buffer</params>, <params>NE.Mode mode</params>)
+    <sub>Return string from bytes (byte[])</sub>
+    - ``buffer`` Is bytes (byte[]) the source that can be converted to string
+    - ``mode`` Encoding protocol
+
+<br>
+
+- ##### <return>string</return> GetBytes(<params>string buffer</params>) <br> <return>string</return> GetBytes(<params>string buffer</params>, <params>NE.Mode mode</params>)
+  <sub>Return bytes (byte[]) from string</sub>
+  - ``buffer`` Is string the source that can be converted to bytes (byte[])
+  - ``mode`` Encoding protocol
+    
+
+## Example
+
+- Convert ``string`` to ``bytes``
+    ```cs
+    // *********************************************** SOURCE
+    string DATA = "@alec1o";
+  
+    // *********************************************** NE.Default   
+    byte[] data1 = NE.GetBytes(DATA);
+    byte[] data2 = NE.GetBytes(DATA, NE.Default);
+  
+    // *********************************************** NE.Mode.UTF8 
+    byte[] data3 = NE.GetBytes(DATA, NE.Mode.UTF8);
+  
+    // *********************************************** NE.Mode.ASCII
+    string data4 = NE.GetBytes(DATA, NE.Mode.ASCII);
+    ```
+  
+- Convert ``bytes`` to ``string``
+    ```cs
+    // *********************************************** SOURCE
+    byte[] DATA = NE.GetBytes("@alec1o");     
+  
+    // *********************************************** NE.Default   
+    string data1 = NE.GetString(DATA);
+    string data2 = NE.GetString(DATA, NE.Default);
+  
+    // *********************************************** NE.Mode.UTF8 
+    string data3 = NE.GetString(DATA, NE.Mode.UTF8);
+  
+    // *********************************************** NE.Mode.ASCII
+    string data4 = NE.GetString(DATA, NE.Mode.ASCII);
     ```
 
 
-## Methods (Static)
-- GetString ``string(byte[] buffer)`` ``string(byte[] buffer, NE.Mode mode)`` <br>
-    <sub>Convert string to bytes (byte[])</sub>
-    ```cs
-    // NE.Mode is NE.Default (global)
-    string defaultEncoding = NE.GetString(new byte[] { 0, 1, 2, 3 });
 
-    string utf8String = NE.GetString(new byte[] { 0, 1, 2, 3 }, NE.Mode.UTF8);
-    string asciiString = NE.GetString(new byte[] { 0, 1, 2, 3 }, NE.Mode.ASCII);
-    string unicodeString = NE.GetString(new byte[] { 0, 1, 2, 3 }, NE.Mode.UNICODE);
-    ```
-- GetBytes ``byte[](string buffer)`` ``byte[](string buffer, NE.Mode mode)`` <br>
-    <sub>Convert bytes (byte[]) to string</sub>
-    ```cs
-    // NE.Mode is NE.Default (global)
-    byte[] defaultEncoding = NE.GetBytes("😅 Alecio is funny");
 
-    byte[] utf8Bytes = NE.GetBytes("😅 Alecio is funny", NE.Mode.UTF8);
-    byte[] asciiBytes = NE.GetBytes("😅 Alecio is funny", NE.Mode.ASCII);
-    byte[] unicodeBytes = NE.GetBytes("😅 Alecio is funny", NE.Mode.UNICODE);
-    ```
+
+
+
+
+
+
+
