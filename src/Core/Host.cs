@@ -58,10 +58,10 @@ namespace Netly.Core
         /// <summary>
         /// Create instance of (host)
         /// </summary>
-        /// <param name="endpoint">IPEndPoint</param>
-        public Host(IPEndPoint endpoint)
+        /// <param name="ipEndpoint">IPEndPoint</param>
+        public Host(IPEndPoint ipEndpoint)
         {
-            _endpoint = new IPEndPoint(endpoint.Address, endpoint.Port);
+            _endpoint = new IPEndPoint(ipEndpoint.Address, ipEndpoint.Port);
         }
 
         /// <summary>
