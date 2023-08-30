@@ -1,10 +1,17 @@
 ﻿using Netly.Abstract;
 using Netly.Core;
+using Xunit.Abstractions;
 
 namespace test;
 
-public class PackageTest
+public class MessageFramingTest
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+    public MessageFramingTest(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
     [Fact]
     public void EndToEnd()
     {
@@ -20,11 +27,11 @@ public class PackageTest
 
         bool isLast = false;
 
-        byte[] buffer = new List<byte[]> { size1, value1, size2 }.SelectMany(x => x).ToArray();
+        byte[] buffer = new List<byte[]> { MessageFraming.PREFIX, size1, value1, MessageFraming.PREFIX, size2 }.SelectMany(x => x).ToArray();
 
-        Package package = new Package();
+        MessageFraming package = new MessageFraming();
 
-        package.Output((data) =>
+        package.OnData((data) =>
         {
             if (isLast is false)
             {
@@ -39,9 +46,14 @@ public class PackageTest
 
             isLast = !isLast;
         });
+        
+        package.OnError((error) =>
+        {
+            _testOutputHelper.WriteLine($"OnError: {error}");
+        });
 
-        package.Input(buffer);
-        package.Input(value2);
+        package.Add(buffer);
+        package.Add(value2);
 
         Assert.Equal(value1, result1);
         Assert.Equal(value2, result2);
