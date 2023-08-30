@@ -1,142 +1,121 @@
-# TcpClient
-``TcpClient`` is a ``class`` from the ``netly library`` that facilitates and simplifies the use of a ``tcp`` connection as a client
+# <return>class</return> TcpClient
 
-## Construtors
-- Default
-    ```cs
-    TcpClient client = new TcpClient(framing: true);
-    ```
-    - Framing
-    ```txt
-    Framing:
-        Enable or disable netly message framing    
-    True:
-        Netly will use its own message framing protocol    
-    False:
-        you will receive raw stream data without framing middleware.
-        For receive raw data use "TcpClient.OnData(Action<byte[]> callback)"   
-    ```
+###### Tcp client implementation
+
+## Namespace
+```cs
+using Netly;
+```
+
+<br>
+
+## Constructors
+- ##### <return>TcpClient</return> TcpClient(<params>bool framing</params>)
+    - ``framing`` Enable or disable ``Netly.Core.MessageFraming``.
+      - ``true`` Netly will use its own message framing protocol.
+      - ``false`` You will receive raw stream data without framing middleware (for receive raw data use ``TcpClient.OnData(Action<byte[]> callback)``)
+
+<br>
+
 
 ## Properties
-- IsOpened ``bool`` <br>
-    <sub>Return true when the socket is connected and returns false when the socket is disconnected.</sub>
-    
-- UUID ``string`` <br>
-    <sub>UUID is (unique user identifier) just not null when client is a server instance</sub>
+- ##### <return>bool</return> IsOpened
+  <sub>Return ``true`` when connection be connected, and ``false`` when connection isn't connected.</sub>
 
-- Host ``Netly.Core.Host`` <br>
-    <sub>It is an object that helps to care for and share a host's credentials.</sub>
+<br>
 
-- Framing ``bool`` <br>
-    <sub>Return true when the instance is using ``MessageFraming protocol`` connection and false when the connection is not using ``MessageFraming protocol``</sub>
+- ##### <return>Host</return> Host
+  <sub>``Host class`` is endpoint container, and contain (ip address, port, ip type), it's endpoint metadata.</sub>
 
-- IsEncrypted ``bool`` <br>
-    <sub>Return true when the instance is using ``TLS/SSL`` and false when isn't using this.</sub>
+<br>
 
-## Methods (Trigger)
-- Open ``void(Host host)`` <br>
-    <sub>Used for open connection with server</sub>
-    ```cs
-    Host host = new Host("127.0.0.1", 8080);
-    TcpClient.Open(host);
-    ```
-- Close ``void()`` <br>
-    <sub>Used for close connection with server</sub>
-    ```cs
-    TcpClient.Close();
-    ```
-- ToData ``void(byte[] buffer)`` ``void(string buffer)`` <br>
-    <sub>Used for send raw buffer for server</sub>
-    ```cs
-    string stringBuffer = "Hello world!";
-    TcpClient.ToData(stringBuffer);
+- ##### <return>bool</return> Framing
+  <sub>Return true when the instance is using ``MessageFraming protocol`` connection and false when the connection is not using ``MessageFraming protocol``</sub>
 
-    byte[] bytesBuffer = NE.GetBytes("Hello world!");
-    TcpClient.ToData(bytesBuffer);
-    ```
-- ToEvent ``void(string name, byte[] buffer)`` ``void(string name, string buffer)`` <br>
-    <sub>Used for send event (NETLY_EVENT_PROTOCOL) for server</sub>
-    ```cs
-    string stringBuffer = "Hello world!";
-    TcpClient.ToEvent("ping-its-string", stringBuffer);
+<br>
 
-    byte[] bytesBuffer = NE.GetBytes("Hello world!");
-    TcpClient.ToEvent("ping-its-bytes", bytesBuffer);
-    ```
-- UseEncryption ``void(bool enableEncryption, Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> onValidation = null)`` <br>
-    <sub>Used for enable TLS/SSL from client side</sub>
-    ```cs
-    // Default way for enable and verify tls/ssl from client side
-    TcpClient.UseEncryption(true);
+- ##### <return>bool</return> IsEncrypted
+  <sub>Return true when the instance is using ``TLS/SSL`` and false when isn't using this.</sub>
 
-    // Example of custom way for enable and verify tls/ssl from client side
-    TcpClient.UseEncryption(true, (sender, cert, chain, erros) => {
-        if (cert == null) return false;
-        if (chain.ChainElements.Count != 3) return false;
-        if (errors != SslPolicyErrors.None) return false;
-        return true;
-    })
-    ```
+<br>
+
+- ##### <return>string</return> UUID
+  <sub>``UUID`` or (Unique User Identifier) is a unique string value that link a user, only ``server-side`` client.</sub>
+
+<br>
+
+## Methods
+> Triggers
+
+- ##### <return>void</return> Open(<params>Host host</params>)
+  <sub>Open connection, if connection not be open will call and expose exception on ``OnError`` callback.</sub>
+    - <sub>``Host`` Netly host instance (endpoint metadata)<sub/>
+
+<br>
+
+- ##### <return>void</return> UseEncryption(<params>bool enableEncryption</params>, <params>Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> onValidation = null</params>)
+  <sub>Enable TLS/SSL connection on ``client side``. (Must used before ``TcpClient.Open(Host host)``)</sub>
+    - <sub>``enableEncryption`` Set <params>true</params> for enable ``TLS/SSL`` and set <params>false</params> don't enable ``SSL/TLS``<sub/>
+    - <sub>``onValidation`` Is a ``Func`` that will executed for validate server certificate. Default behaviour return ``true`` without validate any argument. See examples on ``TLS/SSL`` session.
+<br>
+
+- ##### <return>void</return> Close()
+  <sub>Close connection, if you need close connection use this method.</sub>
+
+<br>
+
+- ##### <return>void</return> ToData(<params>byte[] buffer</params>) <br> <return>void</return> ToData(<params>string buffer</params>)
+  <sub>Send raw buffer to server, ``buffer`` is ``string`` or ``byte[]`` (bytes).</sub>
+
+<br>
+
+- ##### <return>void</return> ToEvent(<params>string name</params>, <params>byte[] buffer</params>) <br> <return>void</return> ToEvent(<params>string name</params>, <params>string buffer</params>)
+  <sub>Send event (netly-event) to server, ``name`` is event identifier, ``buffer`` is event buffer (data), buffer is ``string`` or ``byte[]`` (bytes), if send buffer as string, netly will use ``NE.Default`` as encoding protocol.</sub>
+
+<br>
+
+> Callbacks
+
+- ##### <return>void</return> OnOpen(<params>Action callback</params>)
+  <sub>Event responsible for receiving the connection opening information successfully</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
+
+<br>
 
 
+- ##### <return>void</return> OnError(<params>Action&lt;Exception&gt; callback</params>)
+  <sub>Event responsible for receiving an error when opening a connection, the ``Exception`` contains the error information.</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
 
-## Methods (Callback)
-- OnOpen ``void(Action callback)`` <br>
-    <sub>Invoke ``callback`` when connection opened</sub>
-    ```cs
-    TcpClient.OnOpen(() =>
-    {
-        print("😅 Alecio is funny");
-    });
-    ```
-- OnClose ``void(Action callback)`` <br>
-    <sub>Invoke ``callback`` when connection closed</sub>
-    ```cs
-    TcpClient.OnClose(() =>
-    {
-        print("😅 Alecio is funny");
-    });
-    ```
-- OnError ``void(Action<Exception> callback)`` <br>
-    <sub>Invoke ``callback``when the instance receives a internal error on opening connection or when receive invalid buffer (when MessageFraming are enabled)</sub>
-    ```cs
-    TcpClient.OnError((Exception e) =>
-    {
-        print("😅 Alecio is funny");
-    });
-    ```
-- OnData ``void(Action<byte[]> callback)`` <br>
-    <sub>Invoke ``callback``when receive a buffer (data)</sub>
-    ```cs
-    TcpClient.OnData((byte[] data) =>
-    {
-        print("😅 Alecio is funny");
-    });
-    ```
-- OnEvent ``void(Action<string, byte[]> callback)`` <br>
-    <sub>Invoke ``callback`` when receive a event (NETLY_EVENT_PROTOCOL)</sub>
-    ```cs
-    TcpClient.OnEvent((string name, byte[] data) =>
-    {
-        if(name == "hello")
-        {
-            print("😅 Alecio is funny");
-        }
-        else
-        {
-            print("😅 Netly is fast");
-        }
-    });
-    ```
-- OnModify ``void(Action<Socket> callback)`` <br>
-    <sub>Invoke ``callback`` when mouting socket instance for custom socket config (before open connection)</sub>
-    ```cs
-    TcpClient.OnModify((Socket socket) =>
-    {
-        socket.NoDelay = true;
-        print("😅 Alecio is funny");
-    });
-    ```
+<br>
+
+
+- ##### <return>void</return> OnClose(<params>Action callback</params>)
+  <sub>Event responsible for receiving information about closing or terminating the connection with the server.</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
+
+<br>
+
+
+- ##### <return>void</return> OnData(<params>Action&lt;byte[]&gt; callback</params>)
+  <sub>Event responsible for receiving raw data (buffer) from the server</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
+
+<br>
+
+
+- ##### <return>void</return> OnEvent(<params>Action&lt;string, byte[]&gt; callback</params>)
+  <sub>Event responsible for receiving events (netly-events) from the server</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
+
+<br>
+
+
+- ##### <return>void</return> OnModify(<params>Action&lt;Socket&gt; socket</params>)
+  <sub>This event 'is responsible for executing modifications in ``Socket``, this event is executed in the connection creation step, and you will have access to ``Socket`` that will be used internally</sub>
+    - <sub>``callback`` is the "function" responsible for handling the received event.<sub/>
+
+<br>
 
 ## Example (dotnet >= 6.0)
 ```cs
@@ -148,15 +127,43 @@ int pingCounter = 0;
 Host host = new Host("127.0.0.1", 8080);
 TcpClient client = new TcpClient(framing: true);
 
+// Enable TLS/SSL
+// onValidation is optional, default behaviour return true without check any data.
+client.UseConnection(enableConnection: true, onValidation: (sender, cert, chain, policyErrors) =>
+{
+#if DEBUG
+    
+    /*
+        Default behaviour, Ignore certificate validation.
+    */
+    
+    return true;
+    
+#else 
+    /*
+        Custom validation callback;
+    */
+    
+    if (sslPolicyErrors == SslPolicyErrors.None) return true;
+    
+    // ignore chain errors as where self signed
+    if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors) return true;
+    
+    // Invalid SSL connection
+    return false;
+#endif
+});
+
 client.OnOpen(() =>
 {
+    // connection opened
     client.ToEvent("welcome", "hello server!");
     Console.WriteLine("Client connected!");
 });
 
 client.OnError((e) =>
 {
-    // called when connection not opened or server isnt using framing protocol
+    // called when connection not opened or server isn't using framing protocol (if framing is enabled)
     Console.WriteLine($"Connection error: {e}");
 });
 
