@@ -7,7 +7,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <PackageReference Include="Byter" Version="1.1.0" />
+	  <PackageReference Include="Byter" Version="2.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>		
