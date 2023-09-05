@@ -21,6 +21,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
 		<PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
+		<PackageIcon>>netly-logo-3.png</PackageIcon>
 		<PackageIconUrl>netly-logo-3.png</PackageIconUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
