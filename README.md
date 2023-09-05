@@ -5,7 +5,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
 
 <h6 align="center">
-  <img align="center" src="contents/logo/netly-logo-3.png" width="128px" alt="netly logo">
+  <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
 <h6>
 
 ##### About
