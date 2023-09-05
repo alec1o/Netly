@@ -4,15 +4,17 @@
 
 		<!--
 		_____________________________________________________________________________
-		| IGNORE MAIN README BECAUSE NUGET NOT FORMAT HTML TAG'S AND MAIN (GITHUB)	|
-		| README HAVE CUSTOM STYLE AND HTML TAGS									|
-		|___________________________________________________________________________|
+		| IGNORE MAIN README BECAUSE NUGET NOT FORMAT HTML TAG'S AND MAIN (GITHUB)	 |
+		| README HAVE CUSTOM STYLE AND HTML TAGS									 |
+		|____________________________________________________________________________|
 			
-		<None Include="..\LICENSE.md" Pack="true" PackagePath="\" />
+		<Content Include="../README.md" Pack="true" PackagePath="." />
 		-->
 
-		<None Include="..\static\nuget\README.md" Pack="true" PackagePath="\" />
-		<None Include="..\static\logo\netly-logo-3.png" Pack="true" PackagePath="\" />
+		<Content Pack="true" PackagePath="." Include="../LICENSE.md" />
+		<Content Pack="true" PackagePath="." Include="../static/nuget/README.md" />
+		<Content Pack="true" PackagePath="." Include="../static/logo/netly-logo-3.png" />
+
 	</ItemGroup>
 
 	<ItemGroup>
@@ -30,7 +32,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
 		<PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
-		<PackageIcon>>netly-logo-3.png</PackageIcon>
+		<PackageIcon>netly-logo-3.png</PackageIcon>
 		<PackageIconUrl>netly-logo-3.png</PackageIconUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
