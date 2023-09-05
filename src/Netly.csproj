@@ -1,16 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
+
 	<ItemGroup>
+
+		<!--
+		_____________________________________________________________________________
+		| IGNORE MAIN README BECAUSE NUGET NOT FORMAT HTML TAG'S AND MAIN (GITHUB)	|
+		| README HAVE CUSTOM STYLE AND HTML TAGS									|
+		|___________________________________________________________________________|
+			
 		<None Include="..\LICENSE.md" Pack="true" PackagePath="\" />
-		<None Include="..\content\nuget\README.md" Pack="true" PackagePath="\" />
-		<None Include="..\content\logo\netly-logo-3.png" Pack="true" PackagePath="\" />		
-	</ItemGroup>
-	
-	<ItemGroup>
-	  <PackageReference Include="Byter" Version="2.0.0" />
+		-->
+
+		<None Include="..\static\nuget\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\static\logo\netly-logo-3.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<PropertyGroup>		
+	<ItemGroup>
+		<PackageReference Include="Byter" Version="2.0.0" />
+	</ItemGroup>
+
+	<PropertyGroup>
 		<PackageId>Netly</PackageId>
 		<Version>2.5.2</Version>
 		<Authors>alec1o</Authors>
@@ -37,5 +46,5 @@
 		</Description>
 		<TargetFramework>netstandard2.0</TargetFramework>
 	</PropertyGroup>
-	
+
 </Project>
