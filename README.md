@@ -36,7 +36,11 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 > <sub>Well, this project is open source and only development can be supported by suggestions for improvements, bug
 > reports or the like. (for those who want to financially support this resource is not available at this time)</sub>
 
-<img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="48px" />
+<div>
+  <a href="https://www.jetbrains.com/community/opensource/">
+    <img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="48px" />
+  </a>
+</div>
 
 <br>
 
