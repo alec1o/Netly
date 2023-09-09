@@ -38,7 +38,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 <div>
   <a href="https://www.jetbrains.com/community/opensource/">
-    <img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="48px" />
+    <img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" />
   </a>
 </div>
 
