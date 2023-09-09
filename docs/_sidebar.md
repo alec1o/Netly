@@ -6,7 +6,7 @@
 - TCP
   - [TcpClient](tcp-client.md "Netly tcp client")
   - [TcpServer](tcp-server.md "Netly tcp server")
-  - [SSL/TLS](/ "Netly ssl and tls")
+  - [SSL/TLS](ssl-tls.md "Netly ssl and tls")
   - [MessageFraming](/ "Netly tcp message framing")
 - UDP
   - [UdpClient](udp-client.md "Netly udp client")

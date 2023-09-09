@@ -59,6 +59,11 @@ using Netly;
 
 <br>
 
+- ##### <return>void</return> UseEncryption(<params>byte[] pfxCertificate</params>, <params>string pfxPassword</params>, <params>SslProtocols encryptionProtocol</params>)
+  <sub>Used for enable TLS/SSL from server side.</sub>
+    
+<br>
+
 - ##### <return>void</return> ToData(<params>byte[] buffer</params>) <br> <return>void</return> ToData(<params>string buffer</params>)
   <sub>Broadcast raw buffer to all connected clients from <params>Clients</params> array, ``buffer`` is ``string`` or ``byte[]`` (bytes).</sub>
 
