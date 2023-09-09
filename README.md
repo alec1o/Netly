@@ -56,6 +56,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 |                                |                                                                                                                                              | <sub>``Message Framing`` new protocol</sub>                   |                                            |
 |                                |                                                                                                                                              | <sub>``UDP`` impl connection with udp (ping/timeout)</sub>    |                                            | 
 |                                |                                                                                                                                              | <sub>collaborative documentation ``docsify``</sub>            |                                            | 
+|                                |                                                                                                                                              | <sub>Byter ``2.0``</sub>                                      |                                            | 
 
 <br>
 

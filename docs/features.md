@@ -18,3 +18,4 @@
     - [>] Udp set max buffer size
     - [>] Udp connection detection (timeout/ping-pong)
     - [!] MainThread null reference exception
+    - [>] [Byter 2.0](https://github.com/alec1o/Byter)
