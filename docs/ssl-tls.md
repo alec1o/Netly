@@ -58,20 +58,22 @@ For use/enable ``SSL/TLS`` on ``Netly`` with ``TcpServer`` instance use code bel
     // Warning: See about generate pfx on SSL/TLS page now we will see about startup this!
     // Warning: Convert pfx file for bytes only using UTF8 for prevent erros
 
-	byte[] pfx = <class>.<method-get-fpx-buffer>();
+    byte[] pfx = <class>.<method-get-pfx-buffer>();
     string pfxPassword = <class>.<method-get-pfx-password>();
 
     // Enable SSL/TLS
     TcpServer.UseEncryption(pfx, pfxPassword, SslProtocols.Tls12); // TLS v1.2
 
-	// If password or PFX buffer is invalid you will receive error message on <TcpServer.OnError(Actiion<Exception> callback)>
+#if false
+	If password or PFX buffer is invalid you will receive error message on <TcpServer.OnError(Action<Exception> callback)>
+#endif
 ```
 
 ## Create PFX (PKCS #12)
 * Requirement ``OpenSSL``
 	- linux: Use package manager
 		- Ubuntu: ``sudo apt install openssl`` or ``sudo apt install libssl-dev``
-		- Windows:
-			- Download windows: https://wiki.openssl.org/index.php/Binaries
-			- Add OpenSSL folder on ``path`` (``Environment Variables``)
+	- Windows:
+		- Download windows: https://wiki.openssl.org/index.php/Binaries
+		- Add OpenSSL folder on ``path`` (``Environment Variables``)
 	- Generate ``PFX (PKCS #12)``: https://www.ibm.com/docs/en/api-connect/10.0.x?topic=overview-generating-self-signed-certificate-using-openssl
