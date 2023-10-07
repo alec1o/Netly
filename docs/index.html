@@ -19,6 +19,11 @@
     <!-- Netly code highlight theme-->
     <link rel="stylesheet" href="_media/css/code.css" />
 
+    <!-- Edit on github, plugin -->
+    <script src="_media/js/edit-on-github.js"></script>
+    <link rel="stylesheet" href="_media/css/edit-on-github.css" />
+
+
     <style>
     </style>
 
@@ -69,7 +74,10 @@
                 attention: {
                     label: "Alert"
                 }
-            }
+            },
+            plugins: [
+              EditOnGithubPlugin.create("https://github.com/alec1o/Netly/blob/main/docs/"),
+            ]
         }
 
          window.$docsify = data;
