@@ -23,7 +23,7 @@
 
 	<PropertyGroup>
 		<PackageId>Netly</PackageId>
-		<Version>2.5.2</Version>
+		<Version>3.0</Version>
 		<Authors>alec1o</Authors>
 		<Company>alec1o</Company>
 		<Copyright>alec1o</Copyright>
@@ -37,7 +37,21 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
 		<PackageReleaseNotes>
-			+ Update default MAX_SIZE 8kb to 8MB (Package.MAX_SIZE -&gt; MesssageFraming encode/decode)
+			Note
+				[+] Added
+				[-] Removed
+				[!] Fixed
+				[>] Updated
+
+			[+] SSL/TLS protocol
+			[+] Include docs/sample (SSL/TLS)
+			[+] New docs (Gitbook -> Docsify)
+			[>] New MessageFraming protocol
+			[>] Message Framing memory and performance improve
+			[>] Udp set max buffer size
+			[>] Udp connection detection (timeout/ping-pong)
+			[!] MainThread null reference exception
+			[>] Byter 2.0
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).

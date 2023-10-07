@@ -1,187 +1,210 @@
-## About
-> Netly is a open source socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server) with which it is compatible (Android, iOS, macOS, Linux, Windows, ...) as long as it is compiled with its destination.
+##### About
+
+> Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux,
+> Windows...)
 
 
-## Docs
-> ### See the documentation [here!](http://netly.docs.kezero.com)
 
-## Install
-###### Official publisher
-| Nuget | Unity Asset Store |
-| ---   | ---               |
-| Install on [Nuget](https://www.nuget.org/packages/Netly)| Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)|
+##### Documentation
+
+> Netly docs ([HERE](https://netly.docs.kezero.com))
 
 
-## Versions
-###### Notable changes
-| [v1](https://github.com/alec1o/Netly/tree/1.x) (old)                     | [v2](https://github.com/alec1o/Netly/tree/2.x) (current) | [v3](https://github.com/alec1o/Netly/tree/3.x) (nonexistent) |
-| ---                        | ---    | ---    |
-| TCP client/server | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | SSL client/server  |
-| UDP client/server | TCP/UDP performance improvement | Add documentation and samples for SSL |
 
- 
+##### Install
 
-## Dependency
-- ##### [Byter](https://github.com/alec1o/byter)
+> Official publisher
 
- 
+| Nuget                                                    | Unity Asset Store                                                                     |
+|--------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Install on [Nuget](https://www.nuget.org/packages/Netly) | Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473) |
 
-## Build
-- ### Build dependencies
-  ###### [Git](http://git-scm.com/)  
-  ###### [MONO](http://mono-project.com) or [.NET](http://dot.net)
-  
-- ### Build step-by-step 
-```rb
-# 1. clone repository 
-$ git clone "https://github.com/alec1o/netly.git"
 
-# 2. open source directory 
-$ cd netly/
 
-# 5. restore dotnet project
-$ dotnet restore
+##### Sponsor and Supporter
 
-# 6. build dotnet project
-$ dotnet build
-```
+> Well, this project is open source and only development can be supported by suggestions for improvements, bug
+> reports or the like. (for those who want to financially support this resource is not available at this time)
 
- 
 
-## List of tested platforms
-- ###### [.NET](https://dotnet.microsoft.com) (SDK)
-- ###### [Mono](https://mono-project.com) (SDK)
-- ###### [Unity](https://unity.com) (Engine)
+##### Versions
 
- 
-  
-## Demo
-```rb
-messageFraming: just set this to false if you want to use netly to communicate with another tcp library.
-true case: this will improve data security, but both client and server must have the same configuration.
-```
+> Notable changes
 
-- ### Client
-  _Instance_
-  ```csharp
-  using Netly;
-  using Netly.Core;
+| v1 (old)            | v2 (old)                                                                                                                         | v3 (stable)                                        | v4 (nonexistent)                |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|---------------------------------|
+| TCP (client/server) | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | TLS/SSL (client/server)                            | Websocket (client/server)       |
+| UDP                 | TCP/UDP performance improvement                                                                                                  | Include docs/sample (SSL/TLS)                      | Include docs/sample (Websocket) | 
+|                     |                                                                                                                                  | ``Message Framing`` memory and performance improve |                                 | 
+|                     |                                                                                                                                  | ``Message Framing`` new protocol                   |                                 |
+|                     |                                                                                                                                  | ``UDP`` impl connection with udp (ping/timeout)    |                                 | 
+|                     |                                                                                                                                  | collaborative documentation ``docsify``            |                                 | 
+|                     |                                                                                                                                  | Byter ``2.0``                                      |                                 | 
 
-  // Example udp client instance
-  var client = new UdpClient();
 
-  // Example tcp client instance
-  var client = new TcpClient(messageFraming: true); 
 
-  // Example host instance
-  var host = new Host("127.0.0.1", 3000);    
-  ```
-  _Usage_
-  ```csharp
-  client.OnOpen(() =>
-  {
-      // connection opened
-  });
+##### List of tested platforms
 
-  client.OnClose(() =>
-  {
-      // connection closed
-  });
+- [.NET](https://dotnet.microsoft.com) (SDK)
+- [Mono](https://mono-project.com) (SDK)
+- [Unity](https://unity.com) (Engine)
 
-  client.OnError((exception) =>
-  {   
-      // error on open connection
-  });
 
-  client.OnData((data) => 
-  {
-      // buffer/data received
-  });
 
-  client.OnEvent((name, data) =>
-  {
-      // event received: {name: event name} {data: buffer/data received} 
-  });
+##### Feature
 
-  // open connection
-  client.Open(host);
-
-  // send data
-  client.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
-
-  // send event
-  client.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
-
-  // close connection
-  client.Close();
-  ```
-- ### Server
-  _Instance_
-  ```csharp
-  using Netly;
-  using Netly.Core;
-
-  // Example tcp server instance
-  var server = new TcpServer(messageFraming: true);
-
-  // Example udp server instance
-  var server = new UdpServer();
-
-  // Example host instance
-  var host = new Host("0.0.0.0", 3000);
-  ```
-  _Usage_
-  ```csharp
-  server.OnOpen(() =>
-  {
-      // connection opened: server start listen client
-  });
-
-  server.OnClose(() =>
-  {
-      // connection closed: server stop listen client
-  });
-
-  server.OnError((exception) =>
-  {
-      // error on open connection
-  });
-
-  server.OnEnter((client) =>
-  {
-      // client connected: connection accepted
-  });
-
-  server.OnExit((client) =>
-  {
-      // client disconnected: connection closed
-  });
-
-  server.OnData((client, data) =>
-  {
-      // buffer/data received: {client: client instance} {data: buffer/data received} 
-  });
-
-  server.OnEvent((client, name, data) =>
-  {
-      // event received: {client: client instance} {name: event name} {data: buffer received} 
-  });
-
-  // open connection
-  server.Open(host);
-
-  // broadcast data to clients
-  server.ToData(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9});
-
-  // broadcast event to clients
-  server.ToEvent("name", new byte[] { 1, 2, 3, 4, 5, 6});
-
-  // close connection
-  server.Close();
-  ```
- 
-
-## Currently missing feature
 > Below are some missing features that are planned to be added in later versions.
 
-- [ ] [SslClient and SslServer] Tcp protocol with SSL/TLS encryption.
+- Websocket (v4)
+
+
+##### Dependency
+
+- [Byter](https://github.com/alec1o/Byter)
+
+
+##### Build
+
+> ###### Build dependencies
+
+- [Git](http://git-scm.com/)
+- [.NET](http://dot.net)
+
+> ###### Build step-by-step
+
+  ```php
+  # 1. clone repository 
+  $ git clone "https://github.com/alec1o/netly" netly/
+
+  # 2. build netly project
+  $ dotnet build -C Release netly/
+    # DLL_PATH: netly/src/bin/netstandard2.0/Netly.dll
+
+  # 3. For use Netly.dll you need Byter.dll (a Netly dependecy)
+  $ git clone "https://github.com/alec1o/byter" byter/
+
+  # 4. build byter project
+  $ dotnet build -C Release byter/
+    # DLL_PATH: byter/src/bin/netstandard2.0/Byter.dll
+
+  # WARNING: when use Netly.dll must include Byter.dll  
+  ```
+
+
+##### Demo
+
+> TcpClient ``Syntax``
+
+  ```csharp
+  using Netly;
+  using Netly.Core;
+  
+  var client = new TcpClient(framing: true);
+  
+  // Enable SSL/TLS (onValidate delegate is optional)
+  client.UseEncryption(enableEncryption: true, onValidate: null);
+  
+  client.OnOpen(() => 
+  {
+      // client connected
+  });
+  
+  client.OnClose(() =>
+  {
+      // client disconnected
+  });
+  
+  client.OnError((Exception exception) =>
+  {
+      // connection close because: 1.Error on connecting, 2.Invalid framing data
+  });
+  
+  client.OnData((byte[] data) =>
+  {
+      // raw data received
+  });
+  
+  client.OnEvent((string name, byte[] data) =>
+  {
+      // event received (event use netly protocol) 
+  });
+  
+  client.OnModify((Socket socket) =>
+  {
+      // you can modify socket, called before open connection
+  });
+  
+  client.Open(new Host("127.0.0.1", 8080));
+  ```
+
+> TcpServer ``Syntax``
+
+  ```csharp
+  using Netly;
+  using Netly.Core;
+  
+  var server = new TcpServer(framing: true);
+  
+  // Enable SSL/TLS
+  byte[] pfxCert = <DO_SOMETHING>;
+  string pfxPass = <DO_SOMETHING>;
+  
+  server.UseEncryption(pfxCert, pfxPass, SslProtocols.Tls13); // TLS v1.3
+  
+  server.OnOpen(() => 
+  {
+      // server start listen
+  });
+  
+  server.OnClose(() =>
+  {
+      // server stop listen
+  });
+  
+  server.OnError((Exception exception) =>
+  {
+      // error on start listen (connecting)
+  });
+  
+  server.OnData((TcpClient client, byte[] data) =>
+  {
+      // a client receive raw data
+  });
+  
+  server.OnEvent((TcpClient client, string name, byte[] data) =>
+  {
+      // a client receive event (event use netly protocol)
+  });
+  
+  server.OnEnter((TcpClient client) =>
+  {
+      // a client connected on server
+      
+      client.OnClose(() =>
+      {
+          // alternative of: TcpServer.OnClose
+      });
+      
+      client.OnData(() =>
+      {
+          // alternative of: TcpServer.OnData
+      });
+      
+      client.OnEvent(() =>
+      {
+          // alternative of: TcpServer.OnEvent
+      });
+  });
+  
+  server.OnExit((TcpClient client) =>
+  {
+      // a client disconnected from server
+  });
+  
+  server.OnModify((Socket socket) =>
+  {
+      // you can modify socket, called before listen and bind a port 
+  });
+  
+  server.Open(new Host("127.0.0.1", 8080));
+  ```
