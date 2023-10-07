@@ -7,7 +7,6 @@
   - [TcpClient](tcp-client.md "Netly tcp client")
   - [TcpServer](tcp-server.md "Netly tcp server")
   - [SSL/TLS](ssl-tls.md "Netly ssl and tls")
-  - [MessageFraming](/ "Netly tcp message framing")
 - UDP
   - [UdpClient](udp-client.md "Netly udp client")
   - [UdpServer](udp-server.md "Netly udp server")
@@ -16,3 +15,4 @@
   - [NE](ne.md "Netly Encoding")
   - [Host](host.md "Netly Host")
   - [MainThread](main-thread.md "Netly Main thread") 
+  - [MessageFraming](framing.md "Netly tcp message framing")
