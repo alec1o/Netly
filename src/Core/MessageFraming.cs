@@ -86,7 +86,7 @@ namespace Netly.Core
             }
         }
 
-        private bool IsPrefix(byte[] buffer)
+        private static bool IsPrefix(byte[] buffer)
         {
             if (buffer == null || !(buffer.Length >= PREFIX.Length)) return false;
 
