@@ -4,9 +4,9 @@
 powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
 
-<h6 align="center">
+<div align="center">
   <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
-<h6>
+<div>
 
 ##### About
 
