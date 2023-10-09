@@ -13,7 +13,7 @@ $ dotnet add package netly
 # or
 $ dotnet add package netly --version 3.0.0
 ```
-> [Netly on nuget (C# package manager), here](https://assetstore.unity.com/packages/tools/network/225473)
+> [Netly on nuget (C# package manager), here](https://www.nuget.org/packages/Netly)
 
 
 # Build source code
