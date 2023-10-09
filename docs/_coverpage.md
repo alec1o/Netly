@@ -1,6 +1,6 @@
 <img alt="netly logo" width="128px" height="auto" src="_media/logo/netly-logo-3.png" />
 
-# Netly <small>3.0.0</small>
+# Netly <small>3.1.0</small>
 
 > Netly is a flexible socket library built on C# (c-sharp)
 

@@ -23,7 +23,7 @@
 
 	<PropertyGroup>
 		<PackageId>Netly</PackageId>
-		<Version>3.0</Version>
+		<Version>3.1.0</Version>
 		<Authors>alec1o</Authors>
 		<Company>alec1o</Company>
 		<Copyright>alec1o</Copyright>
@@ -42,16 +42,19 @@
 				[-] Removed
 				[!] Fixed
 				[>] Updated
-
-			[+] SSL/TLS protocol
-			[+] Include docs/sample (SSL/TLS)
-			[+] New docs (Gitbook -> Docsify)
-			[>] New MessageFraming protocol
-			[>] Message Framing memory and performance improve
-			[>] Udp set max buffer size
-			[>] Udp connection detection (timeout/ping-pong)
-			[!] MainThread null reference exception
-			[>] Byter 2.0
+			3.0.0
+				[+] SSL/TLS protocol
+				[+] Include docs/sample (SSL/TLS)
+				[+] New docs (Gitbook -> Docsify)
+				[>] New MessageFraming protocol
+				[>] Message Framing memory and performance improve
+				[>] Udp set max buffer size
+				[>] Udp connection detection (timeout/ping-pong)
+				[!] MainThread null reference exception
+				[>] Byter 2.0
+				
+			3.1.0
+				[!] Fix auto-disconnect because socket timeout. set -1 (infinite) as default timeout.
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).

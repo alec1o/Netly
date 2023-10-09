@@ -9,7 +9,7 @@
     
 <hr>
 
-> * v3.0
+> * v3.0.0
     - [+] SSL/TLS protocol
     - [+] Include docs/sample (SSL/TLS)
     - [+] New docs (Gitbook -> Docsify)
@@ -19,3 +19,6 @@
     - [>] Udp connection detection (timeout/ping-pong)
     - [!] MainThread null reference exception
     - [>] [Byter 2.0](https://github.com/alec1o/Byter)
+
+> * v3.1.0
+    - [!] Fix auto-disconnect because socket timeout. set -1 (infinite) as default timeout.	
