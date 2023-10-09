@@ -10,6 +10,7 @@ namespace Netly
 {
     public class TcpClient : Client
     {
+        private const int SOCKET_TIMEOUT = -1;
         public bool IsEncrypted { get; private set; }
         private readonly TcpServer Server;
         private Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> _onValidation = null;
@@ -173,11 +174,26 @@ namespace Netly
 
                     m_sslStream.AuthenticateAsClient(string.Empty);
                 }
+            }
 
-                m_sslStream.ReadTimeout = 5000;
-                m_sslStream.WriteTimeout = 5000;
+            UpdateTimeout();
+        }
+
+        private void UpdateTimeout()
+        {
+            m_socket.SendTimeout = SOCKET_TIMEOUT;
+            m_socket.ReceiveTimeout = SOCKET_TIMEOUT;
+
+            m_stream.ReadTimeout = SOCKET_TIMEOUT;
+            m_stream.WriteTimeout = SOCKET_TIMEOUT;
+
+            if (IsEncrypted)
+            {
+                m_sslStream.ReadTimeout = SOCKET_TIMEOUT;
+                m_sslStream.WriteTimeout = SOCKET_TIMEOUT;
             }
         }
+
 
         protected override void Receive()
         {
@@ -185,44 +201,35 @@ namespace Netly
             byte[] _buffer = new byte[1024 * 32]; // 32 KB
             MessageFraming _framing = new MessageFraming();
 
+            UpdateTimeout();
+
+            if (Framing)
+            {
+                _framing.OnData((buffer) =>
+                {
+                    (string name, byte[] buffer) content = EventManager.Verify(buffer);
+
+                    if (content.buffer == null)
+                    {
+                        onDataHandler?.Invoke(null, buffer);
+                    }
+                    else
+                    {
+                        onEventHandler?.Invoke(null, (content.name, content.buffer));
+                    }
+                });
+
+                _framing.OnError((e) =>
+                {
+                    _framing?.Clear();
+                    _framing = null;
+                    onErrorHandler?.Invoke(null, e);
+                    Destroy();
+                });
+            }            
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                if (Framing)
-                {
-                    _framing.OnData((buffer) =>
-                    {
-                        (string name, byte[] buffer) content = EventManager.Verify(buffer);
-
-                        if (content.buffer == null)
-                        {
-                            onDataHandler?.Invoke(null, buffer);
-                        }
-                        else
-                        {
-                            onEventHandler?.Invoke(null, (content.name, content.buffer));
-                        }
-                    });
-
-                    _framing.OnError((e) =>
-                    {
-                        _framing?.Clear();
-                        _framing = null;
-                        onErrorHandler?.Invoke(null, e);
-                        Destroy();
-                    });
-                }
-
-                if (IsEncrypted)
-                {
-                    m_sslStream.ReadTimeout = 5000;
-                    m_sslStream.WriteTimeout = 5000;
-                }
-                else
-                {
-                    m_stream.ReadTimeout = 5000;
-                    m_stream.WriteTimeout = 5000;
-                }
-
                 while (m_socket != null)
                 {
                     try
