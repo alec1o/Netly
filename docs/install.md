@@ -18,17 +18,14 @@ $ dotnet add package netly --version 3.0.0
 
 # Build source code
 ```bash
-# Build netly project
-$ git clone https://github.com/alec1o/Netly netly
-$ dotnet build -c Release netly/
-# --- copy netly dll
-$ mkdir output && mv netly/src/bin/Release/netstandard2.0/Netly.dll output/ 
+# 1. clone project
+$ git clone https://github.com/alec1o/Netly netly 
 
-# Build byter project (netly dependecy)
-$ git clone https://github.com/alec1o/Byter byter
-$ dotnet build -c Release byter/  
-# --- copy byter dll
-$ mv byter/src/bin/Release/netstandard2.0/Byter.dll  output/ 
+# 2. build project
+$ dotnet build netly/ -c Release -o netly/bin/
 
+# NOTE:
+# Netly.dll require Byter.dll because is Netly dependency
+# Netly.dll and Byter.dll have on build folder <netly-path>/bin/
 ```
-> At this time you have Netly.dll and Byter.dll in output folder, you can use dlls for add on Unity projet (is a example), anyway you have dlls for use! ``(*_*)``
+> You might use Netly.dll & Byter.dll on your project, e.g: you may use netly with language like (java, c++ or etc).

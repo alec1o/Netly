@@ -91,23 +91,17 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 > ###### Build step-by-step
 
-  ```php
-  # 1. clone repository 
-  $ git clone "https://github.com/alec1o/netly" netly/
+```rb
+# 1. clone project
+$ git clone "https://github.com/alec1o/Netly" netly 
 
-  # 2. build netly project
-  $ dotnet build -C Release netly/
-    # DLL_PATH: netly/src/bin/netstandard2.0/Netly.dll
+# 2. build project
+$ dotnet build netly/ -c Release -o netly/bin/
 
-  # 3. For use Netly.dll you need Byter.dll (a Netly dependecy)
-  $ git clone "https://github.com/alec1o/byter" byter/
-
-  # 4. build byter project
-  $ dotnet build -C Release byter/
-    # DLL_PATH: byter/src/bin/netstandard2.0/Byter.dll
-
-  # WARNING: when use Netly.dll must include Byter.dll  
-  ```
+# NOTE:
+# Netly.dll require Byter.dll because is Netly dependency
+# Netly.dll and Byter.dll have on build folder <netly-path>/bin/
+```
 
 
 <br>
