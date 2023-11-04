@@ -38,6 +38,53 @@ namespace Netly
 
         public void Open(Uri uri)
         {
+            if (IsOpened || _tryConnecting || _tryClosing) return;
+
+            _tryConnecting = true;
+
+            ThreadPool.QueueUserWorkItem(SubTask);
+
+            async void SubTask(object _)
+            {
+                try
+                {
+                    var ws = new ClientWebSocket();
+                    _onModify?.Invoke(null, ws);
+                    await ws.ConnectAsync(uri, CancellationToken);
+
+                    _websocket = ws;
+                    Uri = uri;
+
+                    // TODO: IMP -> CACHING COOKIES (REQUIRE REFLECTIONS)
+                    // TODO: IMP -> CACHING HEADERS (REQUIRE REFLECTIONS)
+
+                    _onOpen?.Invoke(null, null);
+
+                    _ReceiveData();
+                }
+                catch (Exception e)
+                {
+                    try
+                    {
+                        await _websocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                    finally
+                    {
+                        _websocket = null;
+                    }
+
+                    _onError?.Invoke(null, e);
+                }
+                finally
+                {
+                    _tryClosing = false;
+                    _tryConnecting = false;
+                }
+            }
         }
 
 
