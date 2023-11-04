@@ -19,6 +19,7 @@ namespace Netly
         private EventHandler<WebSocketCloseStatus> _onClose;
         private EventHandler<ClientWebSocket> _onModify;
         private EventHandler<Exception> _onError;
+        private EventHandler _onOpen;
         private ClientWebSocket _websocket;
         public WebSocketClient()
         {
@@ -65,6 +66,11 @@ namespace Netly
 
         public void OnOpen(Action callback)
         {
+            _onOpen += (_, __) =>
+            {
+                // Run Task on custom thread
+                MainThread.Add(() => callback?.Invoke());
+            };
         }
 
         public void OnClose(Action<WebSocketCloseStatus> callback)
