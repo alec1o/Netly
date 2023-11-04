@@ -14,6 +14,7 @@ namespace Netly
         public Headers Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
 
+        private CancellationToken CancellationToken => CancellationToken.None;
         private EventHandler<(string name, byte[] buffer, WebSocketMessageType type)> _onEvent;
         private EventHandler<(byte[] buffer, WebSocketMessageType type)> _onData;
         private EventHandler<WebSocketCloseStatus> _onClose;
@@ -21,12 +22,17 @@ namespace Netly
         private EventHandler<Exception> _onError;
         private EventHandler _onOpen;
         private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList;
+        private bool _tryConnecting, _tryClosing;
         private readonly object _bufferLock;
         private ClientWebSocket _websocket;
+
+
         public WebSocketClient()
         {
             _bufferList = new List<(byte[] buffer, BufferType bufferType)>();
             _bufferLock = new object();
+            _tryConnecting = false;
+            _tryClosing = false;
         }
 
 
@@ -47,11 +53,41 @@ namespace Netly
 
         public void Close()
         {
+            Close(WebSocketCloseStatus.Empty);
         }
 
 
         public void Close(WebSocketCloseStatus status)
         {
+            if (!IsOpened || _tryClosing || _tryConnecting) return;
+            _tryClosing = true;
+
+            ThreadPool.QueueUserWorkItem(InternalTask);
+
+            async void InternalTask(object _)
+            {
+                try
+                {
+                    await _websocket.CloseAsync(status, String.Empty, CancellationToken);
+                    _websocket.Dispose();
+                }
+                catch (Exception e)
+                {
+                    // TODO: FIX IT
+                    Console.WriteLine(e);
+                }
+                finally
+                {
+                    lock (_bufferLock)
+                    {
+                        _bufferList.Clear();
+                    }
+
+                    _websocket = null;
+                    _tryClosing = false;
+                    _onClose(null, status);
+                }
+            }
         }
 
         public void ToData(byte[] buffer, BufferType bufferType = BufferType.Binary)
