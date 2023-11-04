@@ -43,11 +43,105 @@ namespace Netly
 
         private void _ReceiveData()
         {
+            ThreadPool.QueueUserWorkItem(InternalReceiveTask);
+
+            async void InternalSendTask(object _)
+            {
+                while (IsOpened)
+                {
+                    try
+                    {
+                        // ReSharper disable once InconsistentlySynchronizedField
+                        // ^^^ Because if check before will prevent lock target object to just check if is empty
+                        // And just lock object when detected that might have any buffer to send
+                        if (_bufferList.Count > 0)
+                        {
+                            bool success = false;
+                            WebSocketMessageType messageType = WebSocketMessageType.Close;
+
+                            // Is Always true because our send all buffer on same moment is internal
+                            // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
+                            const bool endOfMessage = true;
+
+                            byte[] buffer = null;
+
+                            lock (_bufferLock)
+                            {
+                                if (_bufferList.Count > 0)
+                                {
+                                    messageType = BufferTypeWrapper.ToWebsocketMessageType(_bufferList[0].bufferType);
+                                    buffer = _bufferList[0].buffer;
+                                    success = true;
+
+                                    _bufferList.RemoveAt(0);
+                                }
+                            }
+
+                            if (success)
+                            {
+                                await _websocket.SendAsync
+                                (
+                                    new ArraySegment<byte>(buffer),
+                                    messageType, endOfMessage,
+                                    CancellationToken
+                                );
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
             }
 
 
             async void InternalReceiveTask(object _)
             {
+                WebSocketCloseStatus closeStatus = WebSocketCloseStatus.Empty;
+
+                try
+                {
+                    ThreadPool.QueueUserWorkItem(InternalSendTask);
+
+                    const int size = 1024 * 8;
+                    ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[size], 0, size);
+
+                    while (IsOpened)
+                    {
+                        var result = await _websocket.ReceiveAsync(buffer, CancellationToken);
+
+                        if (result.MessageType == WebSocketMessageType.Close || buffer.Array == null)
+                        {
+                            closeStatus = result.CloseStatus ?? closeStatus;
+                            break;
+                        }
+
+                        var data = new byte[result.Count];
+
+                        Array.Copy(buffer.Array, 0, data, 0, data.Length);
+
+                        var eventData = EventManager.Verify(data);
+
+                        if (eventData.data != null && eventData.name != null)
+                        {
+                            _onEvent?.Invoke(null, (eventData.name, eventData.data, result.MessageType));
+                        }
+                        else
+                        {
+                            _onData?.Invoke(null, (data, result.MessageType));
+                        }
+                    }
+                }
+                catch
+                {
+                    closeStatus = WebSocketCloseStatus.EndpointUnavailable;
+                }
+                finally
+                {
+                    Close(closeStatus);
+                }
+            }
         }
 
 
