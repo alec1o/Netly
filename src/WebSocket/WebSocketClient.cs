@@ -14,6 +14,7 @@ namespace Netly
         public Headers Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
 
+        private EventHandler<WebSocketCloseStatus> _onClose;
         private EventHandler<ClientWebSocket> _onModify;
         private ClientWebSocket _websocket;
         public WebSocketClient()
@@ -69,6 +70,11 @@ namespace Netly
 
         public void OnClose(Action callback)
         {
+            _onClose += (_, __) =>
+            {
+                // Run Task on custom thread
+                MainThread.Add(() => callback?.Invoke());
+            };
         }
 
         public void OnError(Action<Exception> callback)
