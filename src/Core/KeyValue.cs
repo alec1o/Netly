@@ -1,11 +1,10 @@
 ﻿namespace Netly.Core
 {
-    public struct KeyValue<KeyType, ValueType>
+    public struct KeyValue<TKey, TValue>
     {
-        public KeyType Key { get; internal set; }
-        public ValueType Value { get; internal set; }
-            
-        public KeyValue(KeyType key, ValueType value)
+        public TKey Key { get; internal set; }
+        public TValue Value { get; internal set; }
+        public KeyValue(TKey key, TValue value)
         {
             this.Key = key;
             this.Value = value;
