@@ -14,6 +14,7 @@ namespace Netly
         public Headers Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
 
+        private EventHandler<(string name, byte[] buffer, WebSocketMessageType type)> _onEvent;
         private EventHandler<WebSocketCloseStatus> _onClose;
         private EventHandler<ClientWebSocket> _onModify;
         private EventHandler<Exception> _onError;
@@ -93,6 +94,11 @@ namespace Netly
 
         public void OnEvent(Action<string, byte[], BufferType> callback)
         {
+            _onEvent += (_, container) =>
+            {
+                // Run Task on custom thread
+                MainThread.Add(() => callback?.Invoke(container.name, container.buffer,
+                    BufferTypeWrapper.FromWebsocketMessageType(container.type)));
             };
         }
 
