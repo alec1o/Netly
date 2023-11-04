@@ -20,9 +20,13 @@ namespace Netly
         private EventHandler<ClientWebSocket> _onModify;
         private EventHandler<Exception> _onError;
         private EventHandler _onOpen;
+        private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList;
+        private readonly object _bufferLock;
         private ClientWebSocket _websocket;
         public WebSocketClient()
         {
+            _bufferList = new List<(byte[] buffer, BufferType bufferType)>();
+            _bufferLock = new object();
         }
 
 
@@ -52,10 +56,20 @@ namespace Netly
 
         public void ToData(byte[] buffer, BufferType bufferType = BufferType.Binary)
         {
+            if (IsOpened)
+            {
+                lock (_bufferLock)
+                {
+                    _bufferList.Add((buffer, bufferType));
+                }
+            }
         }
 
         public void ToData(string buffer, BufferType bufferType = BufferType.Text)
+        {
+            ToData(NE.GetBytes(buffer, NE.Default), bufferType);
         }
+
         public void ToEvent(string name, byte[] buffer)
         {
             ToData(EventManager.Create(name, buffer), BufferType.Binary);
