@@ -58,10 +58,12 @@ namespace Netly
         }
         public void ToEvent(string name, byte[] buffer)
         {
+            ToData(EventManager.Create(name, buffer), BufferType.Binary);
         }
 
         public void ToEvent(string name, string buffer)
         {
+            ToEvent(name, NE.GetBytes(buffer, NE.Mode.UTF8));
         }
 
         public void OnOpen(Action callback)
