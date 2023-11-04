@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Netly.Core
+﻿namespace Netly.Core
 {
     public struct KeyValue<KeyType, ValueType>
     {
