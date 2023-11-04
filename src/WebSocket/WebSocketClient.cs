@@ -29,6 +29,8 @@ namespace Netly
 
         public WebSocketClient()
         {
+            Cookies = Array.Empty<Cookie>();
+            Headers = new Headers();
             _bufferList = new List<(byte[] buffer, BufferType bufferType)>();
             _bufferLock = new object();
             _tryConnecting = false;
