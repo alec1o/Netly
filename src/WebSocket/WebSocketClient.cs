@@ -69,6 +69,11 @@ namespace Netly
 
         public void OnClose(Action<WebSocketCloseStatus> callback)
         {
+            _onClose += (_, status) =>
+            {
+                // Run Task on custom thread
+                MainThread.Add(() => callback?.Invoke(status));
+            };
         }
 
         public void OnClose(Action callback)
