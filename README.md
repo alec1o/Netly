@@ -10,8 +10,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 ##### About
 
-> <sub>Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux,
-> Windows...)</sub>
+> <sub> Netly is a powerful C# socket library that simplifies network communication. It supports TCP, SSL/TLS, and UDP protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
 <br>
 
@@ -32,9 +31,14 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <br>
 
 ##### Sponsor and Supporter
+> ###### Why Contribute to Netly?
+  > <sub><code>Solve Real-World Challenges</code> Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</br></sub>  
+  > <sub><code>Learn and Grow</code> Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</br></br></sub>
+  > <sub><code>Be Part of Something Bigger</code> Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
+  > <sub><code>Unique Contribution Model (No Money Involved)</code> ``No Financial Transactions`` Netly doesn’t accept monetary contributions. Instead, we value your time, expertise, and passion.</br></br></sub>
+  > <sub><code>Code, Ideas, and Feedback</code> Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 
-> <sub>Well, this project is open source and only development can be supported by suggestions for improvements, bug
-> reports or the like. (for those who want to financially support this resource is not available at this time)</sub>
+</br>
 
 <div>
   <a href="https://www.jetbrains.com/community/opensource/">
