@@ -3,45 +3,36 @@
 > Netly is a flexible socket library built on c-sharp. It is compatible with (Android, iOS, Linux,
 > Windows...)
 
-
-
 ##### Documentation
 
 > Netly docs ([HERE](https://netly.docs.kezero.com))
-
-
 
 ##### Install
 
 > Official publisher
 
 | Nuget                                                    | Unity Asset Store                                                                     |
-|--------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+|----------------------------------------------------------|---------------------------------------------------------------------------------------|
 | Install on [Nuget](https://www.nuget.org/packages/Netly) | Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473) |
-
-
 
 ##### Sponsor and Supporter
 
 > Well, this project is open source and only development can be supported by suggestions for improvements, bug
 > reports or the like. (for those who want to financially support this resource is not available at this time)
 
-
 ##### Versions
 
 > Notable changes
 
-| v1 (old)            | v2 (old)                                                                                                                         | v3 (stable)                                        | v4 (nonexistent)                |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|---------------------------------|
-| TCP (client/server) | TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html) | TLS/SSL (client/server)                            | Websocket (client/server)       |
-| UDP                 | TCP/UDP performance improvement                                                                                                  | Include docs/sample (SSL/TLS)                      | Include docs/sample (Websocket) | 
-|                     |                                                                                                                                  | ``Message Framing`` memory and performance improve |                                 | 
-|                     |                                                                                                                                  | ``Message Framing`` new protocol                   |                                 |
-|                     |                                                                                                                                  | ``UDP`` impl connection with udp (ping/timeout)    |                                 | 
-|                     |                                                                                                                                  | collaborative documentation ``docsify``            |                                 | 
-|                     |                                                                                                                                  | Byter ``2.0``                                      |                                 | 
-
-
+| v1 (old)            | v2 (old)                                                 | v3 (stable)                                        | v4 (nonexistent)                |
+|---------------------|----------------------------------------------------------|----------------------------------------------------|---------------------------------|
+| TCP (client/server) | TCP/IP [Message Framing](https://bit.ly/message-framing) | TLS/SSL (client/server)                            | Websocket (client/server)       |
+| UDP (client/server) | TCP/UDP performance improvement                          | Include docs/sample (SSL/TLS)                      | Include docs/sample (Websocket) | 
+|                     |                                                          | ``Message Framing`` memory and performance improve | HTTP (client/server)            | 
+|                     |                                                          | ``Message Framing`` new protocol                   | Include docs/sample (HTTP)      |
+|                     |                                                          | ``UDP`` impl connection with udp (ping/timeout)    |                                 | 
+|                     |                                                          | Collaborative documentation ``docsify``            |                                 | 
+|                     |                                                          | Byter ``2.0``                                      |                                 | 
 
 ##### List of tested platforms
 
@@ -49,19 +40,15 @@
 - [Mono](https://mono-project.com) (SDK)
 - [Unity](https://unity.com) (Engine)
 
-
-
 ##### Feature
 
 > Below are some missing features that are planned to be added in later versions.
 
 - Websocket (v4)
 
-
 ##### Dependency
 
 - [Byter](https://github.com/alec1o/Byter)
-
 
 ##### Build
 
@@ -89,7 +76,6 @@
 
   # WARNING: when use Netly.dll must include Byter.dll  
   ```
-
 
 ##### Demo
 

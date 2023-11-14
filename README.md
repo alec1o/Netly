@@ -17,7 +17,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 ##### Documentation
 
-> <sub>Netly docs ([HERE](https://netly.docs.kezero.com))</sub>
+> <sub>Netly docs ([netly.docs.kezero.com](https://netly.docs.kezero.com))</sub>
 
 <br>
 
@@ -48,15 +48,14 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 > <sub>Notable changes</sub>
 
-| <sub>v1 (old)</sub>            | <sub>v2 (old)</sub>                                                                                                                          | <sub>v3 (stable)</sub>                                        | <sub>v4 (In development)</sub>                |
-|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|-----------------------------------------------|
-| <sub>TCP (client/server)</sub> | <sub> TCP/IP [Message Framing](https://web.archive.org/web/20230219220947/https://blog.stephencleary.com/2009/04/message-framing.html)</sub> | <sub>TLS/SSL (client/server)</sub>                            | <sub>Websocket (client/server)</sub>          |
-| <sub>UDP</sub>                 | <sub>TCP/UDP performance improvement</sub>                                                                                                   | <sub>Include docs/sample (SSL/TLS)</sub>                      | <sub>Include docs/sample (Websocket)</sub>    | 
-|                                |                                                                                                                                              | <sub>``Message Framing`` memory and performance improve</sub> |                                               | 
-|                                |                                                                                                                                              | <sub>``Message Framing`` new protocol</sub>                   |                                               |
-|                                |                                                                                                                                              | <sub>``UDP`` impl connection with udp (ping/timeout)</sub>    |                                               | 
-|                                |                                                                                                                                              | <sub>collaborative documentation ``docsify``</sub>            |                                               | 
-|                                |                                                                                                                                              | <sub>Byter ``2.0``</sub>                                      |                                               | 
+| <sub>v1 (old)</sub>                  | <sub>v2 (old)</sub>                                                 | <sub>v3 (stable)</sub>                                          | <sub>v4 (In development)</sub>             |
+|--------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------------|
+| <sub>TCP ``client`` ``server``</sub> | <sub>TCP/IP [Message Framing](https://bit.ly/message-framing)</sub> | <sub>TLS/SSL ``client`` ``server``</sub>                        | <sub>WebSocket ``client`` ``server``</sub> |
+| <sub>UDP ``client`` ``server``</sub> | <sub>TCP/UDP ``performance improvement``</sub>                      | <sub>UDP ``impl dgram connection using ping and timeout``</sub> | <sub>HTTP ``client`` ``server``</sub>      | 
+|                                      |                                                                     | <sub>Message Framing ``memory and performance improve``</sub>   |                                            | 
+|                                      |                                                                     | <sub>Message Framing ``new protocol``</sub>                     |                                            |
+|                                      |                                                                     | <sub>Byter ``2.0``</sub>                                        |                                            | 
+|                                      |                                                                     | <sub>Collaborative documentation ``docsify``</sub>              |                                            |
 
 <br>
 
@@ -103,123 +102,127 @@ $ dotnet build netly/ -c Release -o netly/bin/
 # Netly.dll and Byter.dll have on build folder <netly-path>/bin/
 ```
 
-
 <br>
 
 ##### Demo
+- <sub>[TCP](#demo)</sub>
+- <sub>[UDP](#demo)</sub>
+- <sub>[HTTP](#demo)</sub>
+- <sub>[WebSocket](#demo)</sub>
 
-> <sub>TcpClient ``Syntax``</sub>
+<br/>
 
-  ```csharp
-  using Netly;
-  using Netly.Core;
-  
-  var client = new TcpClient(framing: true);
-  
-  // Enable SSL/TLS (onValidate delegate is optional)
-  client.UseEncryption(enableEncryption: true, onValidate: null);
-  
-  client.OnOpen(() => 
-  {
-      // client connected
-  });
-  
-  client.OnClose(() =>
-  {
-      // client disconnected
-  });
-  
-  client.OnError((Exception exception) =>
-  {
-      // connection close because: 1.Error on connecting, 2.Invalid framing data
-  });
-  
-  client.OnData((byte[] data) =>
-  {
-      // raw data received
-  });
-  
-  client.OnEvent((string name, byte[] data) =>
-  {
-      // event received (event use netly protocol) 
-  });
-  
-  client.OnModify((Socket socket) =>
-  {
-      // you can modify socket, called before open connection
-  });
-  
-  client.Open(new Host("127.0.0.1", 8080));
-  ```
-
-> <sub>TcpServer ``Syntax``</sub>
-
-  ```csharp
-  using Netly;
-  using Netly.Core;
-  
-  var server = new TcpServer(framing: true);
-  
-  // Enable SSL/TLS
-  byte[] pfxCert = <DO_SOMETHING>;
-  string pfxPass = <DO_SOMETHING>;
-  
-  server.UseEncryption(pfxCert, pfxPass, SslProtocols.Tls13); // TLS v1.3
-  
-  server.OnOpen(() => 
-  {
-      // server start listen
-  });
-  
-  server.OnClose(() =>
-  {
-      // server stop listen
-  });
-  
-  server.OnError((Exception exception) =>
-  {
-      // error on start listen (connecting)
-  });
-  
-  server.OnData((TcpClient client, byte[] data) =>
-  {
-      // a client receive raw data
-  });
-  
-  server.OnEvent((TcpClient client, string name, byte[] data) =>
-  {
-      // a client receive event (event use netly protocol)
-  });
-  
-  server.OnEnter((TcpClient client) =>
-  {
-      // a client connected on server
+##### TCP Demo
+-   <sub>``class`` <strong>TcpClient</strong></sub>
+    ```csharp
+      using Netly;
+      using Netly.Core;
+      
+      var client = new TcpClient(framing: true);
+      
+      // Enable SSL/TLS (onValidate delegate is optional)
+      client.UseEncryption(enableEncryption: true, onValidate: null);
+      
+      client.OnOpen(() => 
+      {
+          // client connected
+      });
       
       client.OnClose(() =>
       {
-          // alternative of: TcpServer.OnClose
+          // client disconnected
       });
       
-      client.OnData(() =>
+      client.OnError((Exception exception) =>
       {
-          // alternative of: TcpServer.OnData
+          // connection close because: 1.Error on connecting, 2.Invalid framing data
       });
       
-      client.OnEvent(() =>
+      client.OnData((byte[] data) =>
       {
-          // alternative of: TcpServer.OnEvent
+          // raw data received
       });
-  });
-  
-  server.OnExit((TcpClient client) =>
-  {
-      // a client disconnected from server
-  });
-  
-  server.OnModify((Socket socket) =>
-  {
-      // you can modify socket, called before listen and bind a port 
-  });
-  
-  server.Open(new Host("127.0.0.1", 8080));
-  ```
+      
+      client.OnEvent((string name, byte[] data) =>
+      {
+          // event received (event use netly protocol) 
+      });
+      
+      client.OnModify((Socket socket) =>
+      {
+          // you can modify socket, called before open connection
+      });
+      
+      client.Open(new Host("127.0.0.1", 8080));
+    ```
+
+-   <sub>``class`` <strong>TcpServer</strong></sub>    
+    ```csharp
+    using Netly;
+    using Netly.Core;
+    
+    var server = new TcpServer(framing: true);
+    
+    // Enable SSL/TLS
+    byte[] pfxCert = <DO_SOMETHING>;
+    string pfxPass = <DO_SOMETHING>;
+    
+    server.UseEncryption(pfxCert, pfxPass, SslProtocols.Tls13); // TLS v1.3
+    
+    server.OnOpen(() => 
+    {
+        // server start listen
+    });
+    
+    server.OnClose(() =>
+    {
+        // server stop listen
+    });
+    
+    server.OnError((Exception exception) =>
+    {
+        // error on start listen (connecting)
+    });
+    
+    server.OnData((TcpClient client, byte[] data) =>
+    {
+        // a client receive raw data
+    });
+    
+    server.OnEvent((TcpClient client, string name, byte[] data) =>
+    {
+        // a client receive event (event use netly protocol)
+    });
+    
+    server.OnEnter((TcpClient client) =>
+    {
+        // a client connected on server
+        
+        client.OnClose(() =>
+        {
+            // alternative of: TcpServer.OnClose
+        });
+        
+        client.OnData(() =>
+        {
+            // alternative of: TcpServer.OnData
+        });
+        
+        client.OnEvent(() =>
+        {
+            // alternative of: TcpServer.OnEvent
+        });
+    });
+    
+    server.OnExit((TcpClient client) =>
+    {
+        // a client disconnected from server
+    });
+    
+    server.OnModify((Socket socket) =>
+    {
+        // you can modify socket, called before listen and bind a port 
+    });
+    
+    server.Open(new Host("127.0.0.1", 8080));
+    ```
