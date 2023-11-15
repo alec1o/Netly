@@ -172,6 +172,38 @@ namespace Netly
                         var request = new Request(context.Request);
                         var response = new Response(context.Response);
 
+                        // TODO: Only show on debug mode
+                        {
+                            string headerDebug = "\n\tHeaders:";
+                            foreach (var header in request.Headers.AllKeyValue)
+                            {
+                                headerDebug += $"\n\t{header.Key}:{header.Value}";
+                            }
+
+                            string cookiesDebug = "\n\tCookies:";
+                            foreach (var cookie in request.Cookies)
+                            {
+                                cookiesDebug += $"\n\t{cookie.Name}:{cookie.Value} [{cookie.Port}:{cookie.Path}]";
+                            }
+
+                            string queriesDebug = "\n\t:Queries:";
+                            foreach (var query in request.Queries.AllKeyValue)
+                            {
+                                queriesDebug += $"\n\t{query.Key}:{query.Value}";
+                            }
+
+                            Console.WriteLine
+                            (
+                                "Receive connection" +
+                                $"\n\tUrl: {request.RawRequest.Url.AbsoluteUri}" +
+                                $"\n\tPath: {request.RawRequest.Url.AbsolutePath}" +
+                                $"\n\tLocal Path: {request.RawRequest.Url.LocalPath}" +
+                                $"\n\tIs Websocket: {context.Request.IsWebSocketRequest}" +
+                                $"\n\n{headerDebug}" +
+                                $"\n\n{queriesDebug}" +
+                                $"\n\n{cookiesDebug}"
+                            );
+                        }
 
                         if (context.Request.IsWebSocketRequest is false)
                         {
