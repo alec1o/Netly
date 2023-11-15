@@ -1,3 +1,9 @@
+﻿using System;
+using System.Net;
+using System.Text;
+using System.Threading;
+using Netly.Core;
+
 namespace Netly
 {
     public class Response
@@ -29,5 +35,9 @@ namespace Netly
             });
         }
 
+        public void Send(int statusCode, string buffer)
+        {
+            Send(statusCode, NE.GetBytes(buffer, NE.Mode.UTF8));
+        }
     }
 }
