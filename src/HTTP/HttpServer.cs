@@ -1,10 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics.SymbolStore;
+using System.Net;
+using System.Threading;
+using Netly.Core;
+
 namespace Netly
 {
     public class HttpServer : IHttpServer
     {
         private HttpListener _listener;
         private EventHandler<object> _onOpen, _onClose, _onError, _onPath, _onWebsocket;
+        private bool _tryOpen, _tryClose;
         private readonly List<(string url, bool isWebSocket)> _paths;
 
         public bool IsOpen => _listener != null && _listener.IsListening;
@@ -50,7 +58,35 @@ namespace Netly
 
         public void Close()
         {
+            if (_tryOpen || _tryClose || _listener == null) return;
 
+            _tryClose = true;
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    if (_listener != null)
+                    {
+                        _listener.Stop();
+                        _listener.Abort();
+                        _listener.Close();
+                    }
+
+                    // TODO: Close all http connection
+
+                    // TODO: Close all websocket connection
+                }
+                catch
+                {
+                    // Ignored
+                }
+                finally
+                {
+                    _listener = null;
+                    _onClose(null, null);
+                }
+            });
         }
 
         public void OnClose(Action callback)
