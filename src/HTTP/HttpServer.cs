@@ -145,5 +145,109 @@ namespace Netly
 
         public void OnWebsocket(string path, Action<Request, WebSocketClient> callback)
         {
+            if (string.IsNullOrWhiteSpace(path)) return;
 
+            _paths.Add((path.Trim(), true));
+
+            _onWebsocket += (_, o) =>
+            {
+                var pathContainer = (PathContainer)o;
+
+                if (pathContainer.Request.ComparePath(path))
+                {
+                    MainThread.Add(() => callback?.Invoke(pathContainer.Request, pathContainer.WebSocket));
+                }
+            };
         }
+
+        private void _ReceiveRequests()
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                while (IsOpen)
+                {
+                    try
+                    {
+                        var context = _listener.GetContext();
+                        var request = new Request(context.Request);
+                        var response = new Response(context.Response);
+
+
+                        if (context.Request.IsWebSocketRequest is false)
+                        {
+                            bool answer = false;
+
+                            foreach (var path in _paths)
+                            {
+                                if (request.ComparePath(path.url))
+                                {
+                                    if (path.isWebSocket)
+                                    {
+                                        response.Send(426, "Only websocket connection for use this router");
+                                    }
+                                    else
+                                    {
+                                        _onPath?.Invoke(null, new PathContainer(request, response, null));
+                                    }
+
+                                    answer = true;
+                                }
+                            }
+
+                            if (!answer)
+                            {
+                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+                                response.Send(404, data);
+                            }
+                        }
+                        else
+                        {
+                            bool answer = false;
+
+                            foreach (var path in _paths)
+                            {
+                                if (request.ComparePath(path.url))
+                                {
+                                    if (path.isWebSocket)
+                                    {
+                                        answer = true;
+                                    }
+                                }
+                            }
+
+                            if (answer is false)
+                            {
+                                // TODO: Check best way for refuse connection.
+                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+                                response.Send(404, data);
+                            }
+                            else
+                            {
+                                ThreadPool.QueueUserWorkItem(async __ =>
+                                {
+                                    var ws = await context.AcceptWebSocketAsync("ws");
+
+                                    var websocket = new WebSocketClient(ws.WebSocket)
+                                    {
+                                        Headers = request.Headers,
+                                        Cookies = request.Cookies,
+                                    };
+
+                                    _onWebsocket?.Invoke(null, new PathContainer(request, response, websocket));
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // Ignored
+                        // TODO: DEBUG ERROR
+                        Console.WriteLine(e);
+                    }
+                }
+
+                Close();
+            });
+        }
+    }
+}
