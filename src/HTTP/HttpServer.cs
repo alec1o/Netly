@@ -39,7 +39,37 @@ namespace Netly
 
         public void Open(Host host)
         {
+            if (IsOpen || _tryClose || _tryOpen) return;
+            _tryOpen = true;
 
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    HttpListener server = new HttpListener();
+
+                    string protocol = "http://";
+                    string url = $"{protocol}{host.Address}:{host.Port}/";
+                    Console.WriteLine(url);
+                    server.Prefixes.Add(url);
+
+                    server.Start();
+
+                    _listener = server;
+
+                    _onOpen?.Invoke(null, null);
+
+                    _ReceiveRequests();
+                }
+                catch (Exception e)
+                {
+                    _onError?.Invoke(null, e);
+                }
+                finally
+                {
+                    _tryOpen = false;
+                }
+            });
         }
 
         public void OnOpen(Action callback)
