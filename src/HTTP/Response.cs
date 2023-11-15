@@ -9,6 +9,25 @@ namespace Netly
             RawResponse = httpListenerResponse;
         }
 
+        public void Send(int statusCode, byte[] buffer)
+        {
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    RawResponse.StatusCode = statusCode;
+                    RawResponse.ContentEncoding = Encoding.UTF8;
+                    RawResponse.ContentLength64 = buffer.Length;
+                    RawResponse.OutputStream.Write(buffer, 0, buffer.Length);
+                    RawResponse.Close();
+                }
+                catch (Exception e)
+                {
+                    // TODO: Handle it
+                    Console.WriteLine(e);
+                }
+            });
+        }
 
     }
 }
