@@ -30,7 +30,9 @@ namespace Netly
 
         public void OnClose(Action callback)
         {
+            if (callback == null) return;
 
+            _onClose += (_, __) => MainThread.Add(() => callback?.Invoke());
         }
 
         public void On(string path, Action<Request, Response> callback)
