@@ -22,9 +22,11 @@ namespace Netly
         private EventHandler<Exception> _onError;
         private EventHandler _onOpen;
         private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList;
-        private bool _tryConnecting, _tryClosing;
+        private bool _tryConnecting, _tryClosing, _initServerSide;
+        private readonly bool _serverSide;
         private readonly object _bufferLock;
         private ClientWebSocket _websocket;
+        private WebSocket _ws;
 
 
         public WebSocketClient()
@@ -38,10 +40,22 @@ namespace Netly
             _serverSide = false;
         }
 
+        internal WebSocketClient(WebSocket websocket)
+        {
+            _serverSide = true;
+            _ws = websocket;
+        }
+
+        internal void InitWebSocketServerSide()
+        {
+            if(_initServerSide) return;
+            _ReceiveData();
+            _initServerSide = true;
+        }
 
         public void Open(Uri uri)
         {
-            if (IsOpened || _tryConnecting || _tryClosing) return;
+            if (IsOpened || _tryConnecting || _tryClosing || _serverSide) return;
 
             _tryConnecting = true;
 
