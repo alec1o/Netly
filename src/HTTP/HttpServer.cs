@@ -21,6 +21,9 @@ namespace Netly
 
         public void OnError(Action<Exception> callback)
         {
+            if (callback == null) return;
+
+            _onError += (_, o) => MainThread.Add(() => callback?.Invoke((Exception)o));
         }
 
         public void Close()
