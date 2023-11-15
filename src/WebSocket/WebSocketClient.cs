@@ -11,7 +11,7 @@ namespace Netly
     {
         public bool IsOpened => _websocket != null && _websocket.State == WebSocketState.Open;
         public Uri Uri { get; internal set; }
-        public Headers Headers { get; internal set; }
+        public KeyValueContainer Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
 
         private CancellationToken CancellationToken => CancellationToken.None;
@@ -30,11 +30,12 @@ namespace Netly
         public WebSocketClient()
         {
             Cookies = Array.Empty<Cookie>();
-            Headers = new Headers();
+            Headers = new KeyValueContainer();
             _bufferList = new List<(byte[] buffer, BufferType bufferType)>();
             _bufferLock = new object();
             _tryConnecting = false;
             _tryClosing = false;
+            _serverSide = false;
         }
 
 

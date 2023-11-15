@@ -9,7 +9,7 @@ namespace Netly
     {
         bool IsOpened { get; }
         Uri Uri { get; }
-        Headers Headers { get; }
+        KeyValueContainer Headers { get; }
         Cookie[] Cookies { get; }
 
         void Open(Uri uri);
