@@ -16,7 +16,16 @@ namespace Netly
         void Close();
         void OnClose(Action callback);
 
-        void On(string path, Action<Request, Response> callback);
-        void OnWebsocket(string path, Action<Request, WebSocketClient> callback);
+        void MapAll(string path, Action<Request, Response> callback);
+        void MapGet(string path, Action<Request, Response> callback);
+        void MapPut(string path, Action<Request, Response> callback);
+        void MapHead(string path, Action<Request, Response> callback);
+        void MapPost(string path, Action<Request, Response> callback);
+        void MapPatch(string path, Action<Request, Response> callback);
+        void MapTrace(string path, Action<Request, Response> callback);
+        void MapDelete(string path, Action<Request, Response> callback);
+        void MapOptions(string path, Action<Request, Response> callback);
+        
+        void MapWebSocket(string path, Action<Request, WebSocketClient> callback);
     }
 }

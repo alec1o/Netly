@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Diagnostics.SymbolStore;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -11,16 +12,22 @@ namespace Netly
     public class HttpServer : IHttpServer
     {
         private HttpListener _listener;
-        private EventHandler<object> _onOpen, _onClose, _onError, _onPath, _onWebsocket;
+        private EventHandler<object> _onOpen, _onClose, _onError, _onWebsocket;
         private bool _tryOpen, _tryClose;
-        private readonly List<(string url, bool isWebSocket)> _paths;
+
+        private readonly List<(string path, bool mapAllMethod, HttpMethod method, Action<Request, Response> callback)>
+            _httpMap;
+
+        private readonly List<(string path, Action<Request, WebSocketClient> callback)> _wsMap;
 
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Host Host { get; private set; } = new Host(IPAddress.Any, 0);
 
         public HttpServer()
         {
-            _paths = new List<(string url, bool isWebSocket)>();
+            _httpMap =
+                new List<(string path, bool mapAllMethod, HttpMethod method, Action<Request, Response> callback)>();
+            _wsMap = new List<(string path, Action<Request, WebSocketClient> callback)>();
         }
 
         private struct PathContainer
@@ -126,43 +133,71 @@ namespace Netly
             _onClose += (_, __) => MainThread.Add(() => callback?.Invoke());
         }
 
-        public void On(string path, Action<Request, Response> callback)
+        public void MapAll(string path, Action<Request, Response> callback)
         {
-            if (string.IsNullOrWhiteSpace(path)) return;
-
-            _paths.Add((path.Trim(), false));
-
-            _onPath += (_, o) =>
-            {
-                var pathContainer = (PathContainer)o;
-
-                if (pathContainer.Request.ComparePath(path))
-                {
-                    MainThread.Add(() => callback?.Invoke(pathContainer.Request, pathContainer.Response));
-                }
-            };
+            InternalMap(path, true, HttpMethod.Options, callback);
         }
 
-        public void OnWebsocket(string path, Action<Request, WebSocketClient> callback)
+        public void MapGet(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Get, callback);
+        }
+
+        public void MapPut(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Put, callback);
+        }
+
+        public void MapHead(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Head, callback);
+        }
+
+        public void MapPost(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Post, callback);
+        }
+
+        public void MapPatch(string path, Action<Request, Response> callback)
+        {
+            // I DON'T KNOW WHY!
+            // But (HttpMethod.Patch) don't exist.
+            // Creating manual HttpMethod.
+            // TODO: Fix it for use HttpMethod.Patch
+            var method = new HttpMethod("PATCH");
+            InternalMap(path, false, method, callback);
+        }
+
+        public void MapTrace(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Trace, callback);
+        }
+
+        public void MapDelete(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Delete, callback);
+        }
+
+        public void MapOptions(string path, Action<Request, Response> callback)
+        {
+            InternalMap(path, false, HttpMethod.Options, callback);
+        }
+
+        private void InternalMap(string path, bool mapAllMethods, HttpMethod method, Action<Request, Response> callback)
         {
             if (string.IsNullOrWhiteSpace(path)) return;
+            _httpMap.Add((path.Trim(), mapAllMethods, method, callback));
+        }
 
-            _paths.Add((path.Trim(), true));
-
-            _onWebsocket += (_, o) =>
-            {
-                var pathContainer = (PathContainer)o;
-
-                if (pathContainer.Request.ComparePath(path))
-                {
-                    MainThread.Add(() => callback?.Invoke(pathContainer.Request, pathContainer.WebSocket));
-                }
-            };
+        public void MapWebSocket(string path, Action<Request, WebSocketClient> callback)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+            _wsMap.Add((path.Trim(), callback));
         }
 
         private void _ReceiveRequests()
         {
-            ThreadPool.QueueUserWorkItem(_ =>
+            Task.Run(() =>
             {
                 while (IsOpen)
                 {
@@ -171,6 +206,9 @@ namespace Netly
                         var context = _listener.GetContext();
                         var request = new Request(context.Request);
                         var response = new Response(context.Response);
+                        var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+
+                        #region Debug
 
                         // TODO: Only show on debug mode
                         {
@@ -205,71 +243,49 @@ namespace Netly
                             );
                         }
 
-                        bool foundPath = false;
+                        #endregion
 
-                        if (request.IsWebSocket is false) // IS HTTP CONNECTION
+                        if (request.IsWebSocket == false) // IS HTTP CONNECTION
                         {
-                            foreach (var path in _paths)
-                            {
-                                if (request.ComparePath(path.url))
-                                {
-                                    if (path.isWebSocket)
-                                    {
-                                        response.Send(426, "Only websocket connection for use this router");
-                                    }
-                                    else
-                                    {
-                                        _onPath?.Invoke(null, new PathContainer(request, response, null));
-                                    }
+                            var paths = _httpMap.FindAll(x => request.ComparePath(x.path) && request.Method == x.method)
+                                .ToArray();
 
-                                    foundPath = true;
-                                }
+                            if (paths.Length <= 0)
+                            {
+                                response.Send(404, notFoundMessage);
+                                continue;
+                            }
+
+                            foreach (var path in paths)
+                            {
+                                path.callback?.Invoke(request, response);
                             }
                         }
-                        else
+                        else // IS WEBSOCKET CONNECTION
                         {
-                            foreach (var path in _paths)
+                            var paths = _wsMap.FindAll(x => x.path == request.Path);
+
+                            if (paths.Count <= 0)
                             {
-                                if (request.ComparePath(path.url))
+                                response.Send(404, notFoundMessage);
+                                continue;
+                            }
+
+                            Task.Run(async () =>
+                            {
+                                var ws = await context.AcceptWebSocketAsync("ws");
+
+                                var websocket = new WebSocketClient(ws.WebSocket)
                                 {
-                                    if (path.isWebSocket)
-                                    {
-                                        foundPath = true;
-                                    }
+                                    Headers = request.Headers,
+                                    Cookies = request.Cookies,
+                                };
+
+                                foreach (var path in paths)
+                                {
+                                    path.callback?.Invoke(request, websocket);
                                 }
-                            }
-
-                            if (foundPath)
-                            {
-                                ThreadPool.QueueUserWorkItem(async __ =>
-                                {
-                                    var ws = await context.AcceptWebSocketAsync("ws");
-
-                                    var websocket = new WebSocketClient(ws.WebSocket)
-                                    {
-                                        Headers = request.Headers,
-                                        Cookies = request.Cookies,
-                                    };
-
-                                    _onWebsocket?.Invoke(null, new PathContainer(request, response, websocket));
-                                });
-                            }
-                        }
-
-                        if (foundPath is false)
-                        {
-                            if (request.IsWebSocket)
-                            {
-                                // TODO: Check best way for refuse websocket connection.
-                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
-                                response.Send(404, data);
-                            }
-                            else
-                            {
-                                // TODO: Check best may for refuse http connection.
-                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
-                                response.Send(404, data);
-                            }
+                            });
                         }
                     }
                     catch (Exception e)
