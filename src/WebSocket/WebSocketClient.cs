@@ -37,13 +37,12 @@ namespace Netly
             _bufferLock = new object();
             _tryConnecting = false;
             _tryClosing = false;
-            _serverSide = false;
         }
 
         internal WebSocketClient(WebSocket websocket)
         {
-            _serverSide = true;
-            _ws = websocket;
+            _isServerSide = true;
+            _websocketServerSide = websocket;
         }
 
         internal void InitWebSocketServerSide()
@@ -279,7 +278,15 @@ namespace Netly
                         _bufferList.Clear();
                     }
 
-                    _websocket = null;
+                    if (_isServerSide)
+                    {
+                        _websocketServerSide = null;
+                    }
+                    else
+                    {
+                        _websocket = null;
+                    }
+
                     _tryClosing = false;
                     _onClose(null, status);
                 }
