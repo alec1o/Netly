@@ -99,7 +99,7 @@ namespace Netly
 
             _tryClose = true;
 
-            ThreadPool.QueueUserWorkItem(_ =>
+            Task.Run(() =>
             {
                 try
                 {
@@ -247,7 +247,8 @@ namespace Netly
 
                         if (request.IsWebSocket == false) // IS HTTP CONNECTION
                         {
-                            var paths = _httpMap.FindAll(x => request.ComparePath(x.path) && (request.Method == x.method || x.mapAllMethod))
+                            var paths = _httpMap.FindAll(x =>
+                                    request.ComparePath(x.path) && (request.Method == x.method || x.mapAllMethod))
                                 .ToArray();
 
                             if (paths.Length <= 0)
@@ -273,7 +274,7 @@ namespace Netly
 
                             Task.Run(async () =>
                             {
-                                var ws = await context.AcceptWebSocketAsync("ws");
+                                var ws = await context.AcceptWebSocketAsync(subProtocol: null);
 
                                 var websocket = new WebSocketClient(ws.WebSocket)
                                 {
