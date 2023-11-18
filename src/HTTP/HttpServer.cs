@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -28,20 +27,6 @@ namespace Netly
             _httpMap =
                 new List<(string path, bool mapAllMethod, HttpMethod method, Action<Request, Response> callback)>();
             _wsMap = new List<(string path, Action<Request, WebSocketClient> callback)>();
-        }
-
-        private struct PathContainer
-        {
-            public Request Request { get; private set; }
-            public Response Response { get; private set; }
-            public WebSocketClient WebSocket { get; private set; }
-
-            public PathContainer(Request request, Response response, WebSocketClient webSocketClient)
-            {
-                this.Request = request;
-                this.Response = response;
-                this.WebSocket = webSocketClient;
-            }
         }
 
         public void Open(Host host)
