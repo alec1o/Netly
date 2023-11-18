@@ -10,7 +10,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 ##### About
 
-> <sub> Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, and UDP protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
+> <sub> Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
 <br>
 
@@ -99,7 +99,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 $ git clone "https://github.com/alec1o/Netly" netly 
 
 # 2. build project
-$ dotnet build netly/ -c Release -o netly/bin/
+$ dotnet build "netly/" -c Release -o "netly/bin/"
 
 # NOTE:
 # Netly.dll require Byter.dll because is Netly dependency
@@ -109,9 +109,9 @@ $ dotnet build netly/ -c Release -o netly/bin/
 <br>
 
 ##### Demo
+- <sub>[HTTP](#demo)</sub>
 - <sub>[TCP](#demo)</sub>
 - <sub>[UDP](#demo)</sub>
-- <sub>[HTTP](#demo)</sub>
 - <sub>[WebSocket](#demo)</sub>
 
 <br/>
