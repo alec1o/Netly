@@ -280,6 +280,7 @@ namespace Netly
                                 {
                                     Headers = request.Headers,
                                     Cookies = request.Cookies,
+                                    Uri = request.RawRequest.Url,
                                 };
 
                                 foreach (var path in paths)
