@@ -14,7 +14,7 @@ namespace Netly
         public KeyValueContainer Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
 
-        private CancellationToken CancellationToken => CancellationToken.None;
+        private CancellationToken NoneCancellationToken => CancellationToken.None;
         private EventHandler<(string name, byte[] buffer, WebSocketMessageType type)> _onEvent;
         private EventHandler<(byte[] buffer, WebSocketMessageType type)> _onData;
         private EventHandler<WebSocketCloseStatus> _onClose;
@@ -23,10 +23,10 @@ namespace Netly
         private EventHandler _onOpen;
         private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList;
         private bool _tryConnecting, _tryClosing, _initServerSide;
-        private readonly bool _serverSide;
+        private readonly bool _isServerSide;
         private readonly object _bufferLock;
         private ClientWebSocket _websocket;
-        private WebSocket _ws;
+        private WebSocket _websocketServerSide;
 
 
         public WebSocketClient()
@@ -67,7 +67,7 @@ namespace Netly
                 {
                     var ws = new ClientWebSocket();
                     _onModify?.Invoke(null, ws);
-                    await ws.ConnectAsync(uri, CancellationToken);
+                    await ws.ConnectAsync(uri, NoneCancellationToken);
 
                     _websocket = ws;
                     Uri = uri;
@@ -83,7 +83,7 @@ namespace Netly
                 {
                     try
                     {
-                        await _websocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken);
+                        await _websocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, NoneCancellationToken);
                     }
                     catch
                     {
@@ -155,12 +155,28 @@ namespace Netly
 
                             if (success)
                             {
-                                await _websocket.SendAsync
-                                (
-                                    new ArraySegment<byte>(buffer),
-                                    messageType, endOfMessage,
-                                    CancellationToken
-                                );
+                                var bufferToSend = new ArraySegment<byte>(buffer);
+
+                                if (_isServerSide)
+                                {
+                                    await _websocketServerSide.SendAsync
+                                    (
+                                        bufferToSend,
+                                        messageType,
+                                        endOfMessage,
+                                        NoneCancellationToken
+                                    );
+                                }
+                                else
+                                {
+                                    await _websocket.SendAsync
+                                    (
+                                        bufferToSend,
+                                        messageType,
+                                        endOfMessage,
+                                        NoneCancellationToken
+                                    );
+                                }
                             }
                         }
                     }
@@ -185,7 +201,9 @@ namespace Netly
 
                     while (IsOpened)
                     {
-                        var result = await _websocket.ReceiveAsync(buffer, CancellationToken);
+                        WebSocketReceiveResult result = _isServerSide
+                            ? await _websocketServerSide.ReceiveAsync(buffer, NoneCancellationToken)
+                            : await _websocket.ReceiveAsync(buffer, NoneCancellationToken);
 
                         if (result.MessageType == WebSocketMessageType.Close || buffer.Array == null)
                         {
@@ -238,8 +256,16 @@ namespace Netly
             {
                 try
                 {
-                    await _websocket.CloseAsync(status, String.Empty, CancellationToken);
-                    _websocket.Dispose();
+                    if (_isServerSide)
+                    {
+                        await _websocketServerSide.CloseAsync(status, string.Empty, NoneCancellationToken);
+                        _websocketServerSide.Dispose();
+                    }
+                    else
+                    {
+                        await _websocket.CloseAsync(status, String.Empty, NoneCancellationToken);
+                        _websocket.Dispose();
+                    }
                 }
                 catch (Exception e)
                 {
