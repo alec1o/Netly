@@ -20,7 +20,7 @@ namespace Netly
         private readonly List<(string path, Action<Request, WebSocketClient> callback)> _wsMap;
 
         public bool IsOpen => _listener != null && _listener.IsListening;
-        public Host Host { get; private set; } = new Host(IPAddress.Any, 0);
+        public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
         public HttpServer()
         {
@@ -29,7 +29,7 @@ namespace Netly
             _wsMap = new List<(string path, Action<Request, WebSocketClient> callback)>();
         }
 
-        public void Open(Host host)
+        public void Open(Uri host)
         {
             if (IsOpen || _tryClose || _tryOpen) return;
             _tryOpen = true;
@@ -40,12 +40,13 @@ namespace Netly
                 {
                     HttpListener server = new HttpListener();
 
-                    string protocol = "http://";
-                    string url = $"{protocol}{host.Address}:{host.Port}/";
-                    Console.WriteLine(url);
-                    server.Prefixes.Add(url);
+                    string httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
+
+                    server.Prefixes.Add(httpUrl);
 
                     server.Start();
+
+                    Host = host;
 
                     _listener = server;
 
@@ -272,16 +273,14 @@ namespace Netly
                                 {
                                     path.callback?.Invoke(request, websocket);
                                 }
-                                
+
                                 websocket.InitWebSocketServerSide();
                             });
                         }
                     }
-                    catch (Exception e)
+                    catch
                     {
                         // Ignored
-                        // TODO: DEBUG ERROR
-                        Console.WriteLine(e);
                     }
                 }
 

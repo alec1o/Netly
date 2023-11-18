@@ -6,9 +6,9 @@ namespace Netly
     internal interface IHttpServer
     {
         bool IsOpen { get; }
-        Host Host { get; }
+        Uri Host { get; }
         
-        void Open(Host host);
+        void Open(Uri host);
         void OnOpen(Action callback);
 
         void OnError(Action<Exception> exception);
