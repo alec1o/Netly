@@ -37,6 +37,7 @@ namespace Netly
             _bufferLock = new object();
             _tryConnecting = false;
             _tryClosing = false;
+            _isServerSide = false;
         }
 
         internal WebSocketClient(WebSocket websocket)

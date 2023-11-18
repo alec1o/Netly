@@ -287,6 +287,8 @@ namespace Netly
                                 {
                                     path.callback?.Invoke(request, websocket);
                                 }
+                                
+                                websocket.InitWebSocketServerSide();
                             });
                         }
                     }
