@@ -12,7 +12,7 @@ namespace Netly
     public class HttpServer : IHttpServer
     {
         private HttpListener _listener;
-        private EventHandler<object> _onOpen, _onClose, _onError, _onWebsocket;
+        private EventHandler<object> _onOpen, _onClose, _onError;
         private bool _tryOpen, _tryClose;
 
         private readonly List<(string path, bool mapAllMethod, HttpMethod method, Action<Request, Response> callback)>
@@ -247,7 +247,7 @@ namespace Netly
 
                         if (request.IsWebSocket == false) // IS HTTP CONNECTION
                         {
-                            var paths = _httpMap.FindAll(x => request.ComparePath(x.path) && request.Method == x.method)
+                            var paths = _httpMap.FindAll(x => request.ComparePath(x.path) && (request.Method == x.method || x.mapAllMethod))
                                 .ToArray();
 
                             if (paths.Length <= 0)
