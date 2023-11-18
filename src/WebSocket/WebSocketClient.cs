@@ -21,20 +21,27 @@ namespace Netly
         private EventHandler<ClientWebSocket> _onModify;
         private EventHandler<Exception> _onError;
         private EventHandler _onOpen;
-        private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList;
-        private bool _tryConnecting, _tryClosing, _initServerSide;
-        private readonly bool _isServerSide;
-        private readonly object _bufferLock;
+
+        private bool
+            _tryConnecting,
+            _tryClosing,
+            _initServerSide;
+
         private ClientWebSocket _websocket;
         private WebSocket _websocketServerSide;
+
+        private readonly bool _isServerSide;
+
+        private readonly object _bufferLock = new object();
+
+        private readonly List<(byte[] buffer, BufferType bufferType)> _bufferList =
+            new List<(byte[] buffer, BufferType bufferType)>();
 
 
         public WebSocketClient()
         {
             Cookies = Array.Empty<Cookie>();
             Headers = new KeyValueContainer();
-            _bufferList = new List<(byte[] buffer, BufferType bufferType)>();
-            _bufferLock = new object();
             _tryConnecting = false;
             _tryClosing = false;
             _isServerSide = false;
@@ -248,7 +255,7 @@ namespace Netly
         public void Close(WebSocketCloseStatus status)
         {
             if (_tryClosing || _tryConnecting) return;
-            
+
             if (_isServerSide)
             {
                 if (_websocketServerSide == null) return;
