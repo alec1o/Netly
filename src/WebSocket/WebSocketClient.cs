@@ -9,7 +9,7 @@ namespace Netly
 {
     public class WebSocketClient : IWebsocketClient
     {
-        public bool IsOpened => _websocket != null && _websocket.State == WebSocketState.Open;
+        public bool IsOpened => _IsConnected();
         public Uri Uri { get; internal set; }
         public KeyValueContainer Headers { get; internal set; }
         public Cookie[] Cookies { get; internal set; }
@@ -48,14 +48,14 @@ namespace Netly
 
         internal void InitWebSocketServerSide()
         {
-            if(_initServerSide) return;
+            if (_initServerSide) return;
             _ReceiveData();
             _initServerSide = true;
         }
 
         public void Open(Uri uri)
         {
-            if (IsOpened || _tryConnecting || _tryClosing || _serverSide) return;
+            if (IsOpened || _tryConnecting || _tryClosing || _isServerSide) return;
 
             _tryConnecting = true;
 
@@ -104,6 +104,18 @@ namespace Netly
             }
         }
 
+
+        private bool _IsConnected()
+        {
+            if (_isServerSide)
+            {
+                return _websocketServerSide != null && _websocketServerSide.State == WebSocketState.Open;
+            }
+            else
+            {
+                return _websocket != null && _websocket.State == WebSocketState.Open;
+            }
+        }
 
         private void _ReceiveData()
         {
