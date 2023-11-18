@@ -205,10 +205,10 @@ namespace Netly
                             );
                         }
 
-                        if (context.Request.IsWebSocketRequest is false)
-                        {
-                            bool answer = false;
+                        bool foundPath = false;
 
+                        if (request.IsWebSocket is false) // IS HTTP CONNECTION
+                        {
                             foreach (var path in _paths)
                             {
                                 if (request.ComparePath(path.url))
@@ -222,38 +222,24 @@ namespace Netly
                                         _onPath?.Invoke(null, new PathContainer(request, response, null));
                                     }
 
-                                    answer = true;
+                                    foundPath = true;
                                 }
-                            }
-
-                            if (!answer)
-                            {
-                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
-                                response.Send(404, data);
                             }
                         }
                         else
                         {
-                            bool answer = false;
-
                             foreach (var path in _paths)
                             {
                                 if (request.ComparePath(path.url))
                                 {
                                     if (path.isWebSocket)
                                     {
-                                        answer = true;
+                                        foundPath = true;
                                     }
                                 }
                             }
 
-                            if (answer is false)
-                            {
-                                // TODO: Check best way for refuse connection.
-                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
-                                response.Send(404, data);
-                            }
-                            else
+                            if (foundPath)
                             {
                                 ThreadPool.QueueUserWorkItem(async __ =>
                                 {
@@ -267,6 +253,22 @@ namespace Netly
 
                                     _onWebsocket?.Invoke(null, new PathContainer(request, response, websocket));
                                 });
+                            }
+                        }
+
+                        if (foundPath is false)
+                        {
+                            if (request.IsWebSocket)
+                            {
+                                // TODO: Check best way for refuse websocket connection.
+                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+                                response.Send(404, data);
+                            }
+                            else
+                            {
+                                // TODO: Check best may for refuse http connection.
+                                string data = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+                                response.Send(404, data);
                             }
                         }
                     }
