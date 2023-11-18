@@ -247,7 +247,17 @@ namespace Netly
 
         public void Close(WebSocketCloseStatus status)
         {
-            if (!IsOpened || _tryClosing || _tryConnecting) return;
+            if (_tryClosing || _tryConnecting) return;
+            
+            if (_isServerSide)
+            {
+                if (_websocketServerSide == null) return;
+            }
+            else
+            {
+                if (_websocket == null) return;
+            }
+
             _tryClosing = true;
 
             ThreadPool.QueueUserWorkItem(InternalTask);
