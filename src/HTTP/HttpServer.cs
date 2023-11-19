@@ -195,7 +195,7 @@ namespace Netly
                         var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
 
                         #region Debug
-
+#if false
                         // TODO: Only show on debug mode
                         {
                             string headerDebug = "\n\tHeaders:";
@@ -228,7 +228,7 @@ namespace Netly
                                 $"\n\n{cookiesDebug}"
                             );
                         }
-
+#endif
                         #endregion
 
                         if (request.IsWebSocket == false) // IS HTTP CONNECTION
