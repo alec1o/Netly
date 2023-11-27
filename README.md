@@ -159,7 +159,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
         // get email from http form.
         string email = request.Body.Form.GetString("email");
         // get password from http from.
-        string email = request.Body.Form.GetString("email");
+        string password = request.Body.Form.GetString("password");
         // get uploaded file from http form. (<form method="post" enctype="multipart/form-data">).
         byte[] picture = request.Body.Form.GetBytes("upload");  
   });
