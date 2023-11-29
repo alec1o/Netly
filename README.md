@@ -441,7 +441,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 
 
 ##### WebSocket
--   <sub><strong>WebsocketClient</strong></sub>
+-   <sub><strong>Websocket Client</strong></sub>
     ```csharp
     using System;
     using Netly;
@@ -495,7 +495,8 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
     // open connection.
     client.Open(new Uri("ws://localhost:3000/"));
     ```
--   <sub><strong>WebsocketServer</strong></sub>
+    
+-   <sub><strong>Websocket Server</strong></sub>
     ```csharp
     server.OnOpen(() =>
     {
