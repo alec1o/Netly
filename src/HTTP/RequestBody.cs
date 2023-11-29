@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using Netly.Core;
 
 namespace Netly
@@ -47,6 +48,11 @@ namespace Netly
             }
 
             return _form;
+        }
+
+        public HttpContent GetHttpContent()
+        {
+            throw new NotImplementedException();
         }
     }
 }

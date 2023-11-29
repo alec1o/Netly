@@ -9,6 +9,8 @@ namespace Netly
     public class Request
     {
         public readonly HttpListenerRequest RawRequest;
+        public readonly HttpResponseMessage RawResponse;
+        
         public readonly KeyValueContainer Headers;
         public readonly KeyValueContainer Queries;
         public readonly Cookie[] Cookies;
@@ -22,9 +24,16 @@ namespace Netly
         public readonly bool IsEncrypted;
         public readonly RequestBody Body;
 
-        public Request(HttpListenerRequest httpListenerRequest)
+        internal Request(HttpResponseMessage httpResponseMessage)
+        {
+            RawRequest = null;
+            RawResponse = httpResponseMessage;
+        }
+        
+        internal Request(HttpListenerRequest httpListenerRequest)
         {
             RawRequest = httpListenerRequest;
+            RawResponse = null;
 
             #region Headers
 
