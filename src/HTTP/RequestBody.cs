@@ -5,15 +5,19 @@ namespace Netly
 {
     public class RequestBody
     {
-        public readonly byte[] Buffer;
-        public readonly int Length;
+        public byte[] Buffer { get; internal set; }
+        public int Length => Buffer.Length;
         public KeyValueContainer Form => GetForm();
         public string PlainText => GetPlainText();
 
+        public RequestBody()
+        {
+            Buffer = Array.Empty<byte>();
+        }
+        
         public RequestBody(byte[] bodyBuffer)
         {
             Buffer = bodyBuffer ?? Array.Empty<byte>();
-            Length = Buffer.Length;
         }
 
         private string _plainText = string.Empty;
