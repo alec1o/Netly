@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Net.Http;
 
 namespace Netly
 {
-    public interface IHttpClient
+    internal interface IHttpClient
     {
+        HttpMethod Method { get; }
         KeyValueContainer Headers { get; }
         KeyValueContainer Queries { get; }
         RequestBody Body { get; set; }
