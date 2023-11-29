@@ -151,10 +151,13 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
         body.Add("name", "Video.mp4");
         // set filebuffer.
         body.Add("file", new byte[]{ 1, 3, 4, 5, 6, 7, 8, 9, 0 });
+        
+        // set request body.
+        client.Body = body;
   
     // Don't block main thread, run on threadpolls.
     // Send POST request.
-    client.Send("POST", new Uri("http://drive.kezero.com/upload?timeout=1h"), body);
+    client.Send("POST", new Uri("http://drive.kezero.com/upload?timeout=1h"));
     ```
 
 - <sub><strong>HTTP Server</strong></sub>
