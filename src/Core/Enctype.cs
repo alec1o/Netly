@@ -1,4 +1,4 @@
-﻿namespace Netly
+﻿namespace Netly.Core
 {
     public enum Enctype
     {

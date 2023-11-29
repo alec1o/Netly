@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using Netly.Core;
 using NativeHttpClient = System.Net.Http.HttpClient;
 
 namespace Netly

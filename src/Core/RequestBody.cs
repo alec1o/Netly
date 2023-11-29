@@ -2,7 +2,7 @@
 using System.Net.Http;
 using Netly.Core;
 
-namespace Netly
+namespace Netly.Core
 {
     public class RequestBody
     {
