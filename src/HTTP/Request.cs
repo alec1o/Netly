@@ -107,7 +107,7 @@ namespace Netly
         public bool ComparePath(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return false;
-            if (string.IsNullOrWhiteSpace(Path)) return false;
+            if (string.IsNullOrWhiteSpace(this.Path)) return false;
 
             return Path.Trim() == path.Trim();
         }
