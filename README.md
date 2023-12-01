@@ -55,10 +55,10 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 | <sub>v1 (old)</sub>                  | <sub>v2 (old)</sub>                                                 | <sub>v3 (stable)</sub>                                          | <sub>v4 (In development)</sub>             |
 |--------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------------|
 | <sub>TCP ``client`` ``server``</sub> | <sub>TCP/IP [Message Framing](https://bit.ly/message-framing)</sub> | <sub>TLS/SSL ``client`` ``server``</sub>                        | <sub>WebSocket ``client`` ``server``</sub> |
-| <sub>UDP ``client`` ``server``</sub> | <sub>TCP/UDP ``performance improvement``</sub>                      | <sub>UDP ``connection from (ping/timeout)``</sub>                | <sub>HTTP ``client`` ``server``</sub>      | 
-|                                      |                                                                     | <sub>Message Framing ``memory/performance improve``</sub>   |                                            | 
-|                                      |                                                                     | <sub>Message Framing ``new protocol``</sub>                     |                                            |
-|                                      |                                                                     | <sub>Byter ``2.0``</sub>                                        |                                            | 
+| <sub>UDP ``client`` ``server``</sub> | <sub>TCP/UDP ``performance improvement``</sub>                      | <sub>UDP ``connection from (ping/timeout)``</sub>               | <sub>HTTP ``client`` ``server``</sub>      | 
+|                                      |                                                                     | <sub>Message Framing ``memory/performance improve``</sub>       | <sub>TCP ``internal improve``<sub/>        | 
+|                                      |                                                                     | <sub>Message Framing ``new protocol``</sub>                     | <sub>Documentation ``improve``</sub>       |
+|                                      |                                                                     | <sub>Byter ``2.0``</sub>                                        | <sub>XML description ``improve``<sub>      | 
 |                                      |                                                                     | <sub>Collaborative documentation ``docsify``</sub>              |                                            |
 
 <br>
