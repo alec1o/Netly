@@ -350,113 +350,123 @@ server.Open(new Host("127.0.0.1", 8080));
 
 <br/>
 
+
 ##### UDP
--   <sub><strong>Udp Client</strong></sub>
-    ```csharp
-      using Netly;
-      using Netly.Core;
-      
-      var client = new UdpClient(useConnection: true, timeout: 10000 /* 10s */);
-            
-      client.OnOpen(() => 
-      {
-          // client connected
-      });
-      
-      client.OnClose(() =>
-      {
-          // client disconnected
-      });
-      
-      client.OnError((Exception exception) =>
-      {
-          // connection close because: 1.Error on connecting, 2.Invalid framing data
-      });
-      
-      client.OnData((byte[] data) =>
-      {
-          // raw data received
-      });
-      
-      client.OnEvent((string name, byte[] data) =>
-      {
-          // event received (event use netly protocol) 
-      });
-      
-      client.OnModify((Socket socket) =>
-      {
-          // you can modify socket, called before open connection
-      });
-      
-      client.Open(new Host("127.0.0.1", 8080));
-    ```
 
--   <sub><strong>Udp Server</strong></sub>    
-    ```csharp
-    using Netly;
-    using Netly.Core;
-    
-    var server = new UdpServer(useConnection: true, timeout: 15000 /* 15s */);
+<details>
+    <summary><sub><strong>Udp Client</strong></sub></summary>
 
-    server.OnOpen(() => 
-    {
-        // server start listen
-    });
-    
-    server.OnClose(() =>
-    {
-        // server stop listen
-    });
-    
-    server.OnError((Exception exception) =>
-    {
-        // error on start listen (connecting)
-    });
-    
-    server.OnData((UdpClient client, byte[] data) =>
-    {
-        // a client receive raw data
-    });
-    
-    server.OnEvent((UdpClient client, string name, byte[] data) =>
-    {
-        // a client receive event (event use netly protocol)
-    });
-    
-    server.OnEnter((UdpClient client) =>
-    {
-        // a client connected on server
+```csharp
+  using Netly;
+  using Netly.Core;
+  
+  var client = new UdpClient(useConnection: true, timeout: 10000 /* 10s */);
         
-        client.OnClose(() =>
-        {
-            // alternative of: TcpServer.OnClose
-        });
-        
-        client.OnData(() =>
-        {
-            // alternative of: TcpServer.OnData
-        });
-        
-        client.OnEvent(() =>
-        {
-            // alternative of: TcpServer.OnEvent
-        });
-    });
-    
-    server.OnExit((UdpClient client) =>
-    {
-        // a client disconnected from server
-    });
-    
-    server.OnModify((Socket socket) =>
-    {
-        // you can modify socket, called before listen and bind a port 
-    });
-    
-    server.Open(new Host("127.0.0.1", 8080));
-    ```
+  client.OnOpen(() => 
+  {
+      // client connected
+  });
+  
+  client.OnClose(() =>
+  {
+      // client disconnected
+  });
+  
+  client.OnError((Exception exception) =>
+  {
+      // connection close because: 1.Error on connecting, 2.Invalid framing data
+  });
+  
+  client.OnData((byte[] data) =>
+  {
+      // raw data received
+  });
+  
+  client.OnEvent((string name, byte[] data) =>
+  {
+      // event received (event use netly protocol) 
+  });
+  
+  client.OnModify((Socket socket) =>
+  {
+      // you can modify socket, called before open connection
+  });
+  
+  client.Open(new Host("127.0.0.1", 8080));
+```
 
-<br/><hr/><br/>
+</details>
+
+<details>
+    <summary><sub><strong>Udp Server</strong></sub></summary>
+
+```csharp
+using Netly;
+using Netly.Core;
+
+var server = new UdpServer(useConnection: true, timeout: 15000 /* 15s */);
+
+server.OnOpen(() => 
+{
+    // server start listen
+});
+
+server.OnClose(() =>
+{
+    // server stop listen
+});
+
+server.OnError((Exception exception) =>
+{
+    // error on start listen (connecting)
+});
+
+server.OnData((UdpClient client, byte[] data) =>
+{
+    // a client receive raw data
+});
+
+server.OnEvent((UdpClient client, string name, byte[] data) =>
+{
+    // a client receive event (event use netly protocol)
+});
+
+server.OnEnter((UdpClient client) =>
+{
+    // a client connected on server
+    
+    client.OnClose(() =>
+    {
+        // alternative of: TcpServer.OnClose
+    });
+    
+    client.OnData(() =>
+    {
+        // alternative of: TcpServer.OnData
+    });
+    
+    client.OnEvent(() =>
+    {
+        // alternative of: TcpServer.OnEvent
+    });
+});
+
+server.OnExit((UdpClient client) =>
+{
+    // a client disconnected from server
+});
+
+server.OnModify((Socket socket) =>
+{
+    // you can modify socket, called before listen and bind a port 
+});
+
+server.Open(new Host("127.0.0.1", 8080));
+```
+
+</details>
+
+<br/>
 
 
 ##### WebSocket
