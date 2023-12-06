@@ -598,10 +598,6 @@ server.MapWebsocket("/chat", (request, client) =>
 server.Open(new Uri("http://localhost:8080"));
 ```
 
-<<<<<<< HEAD
 </details>
 
 <br/>
-=======
-<br/><hr/><br/>
->>>>>>> 022af06671f1aa974601925bb59699a662c2a045
