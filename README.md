@@ -114,7 +114,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 - <sub>[UDP](#udp)</sub>
 - <sub>[WebSocket](#websocket)</sub>
 
-<br/><hr/><br/>
+<hr/>
 
 ##### HTTP
 <details>
@@ -470,125 +470,133 @@ server.Open(new Host("127.0.0.1", 8080));
 
 
 ##### WebSocket
--   <sub><strong>Websocket Client</strong></sub>
-    ```csharp
-    using System;
-    using Netly;
-    using Netly.Core;
-    
-    var client = new WebsocketClient();
-    
-    client.OnOpen(() =>
-    {
-        // websocket client connected.
+
+<details>
+    <summary><sub><strong>Websocket Client</strong></sub></summary>
+
+```csharp
+using System;
+using Netly;
+using Netly.Core;
+
+var client = new WebsocketClient();
+
+client.OnOpen(() =>
+{
+    // websocket client connected.
+});
+
+client.OnClose(() =>
+{
+    // websocket client disconnected.
+});
+
+client.OnError((exception) =>
+{
+    // error on connect to server.
+});
+
+client.OnData((bytes, bufferType) =>
+{
+    // websocket client received some data.
+    // EXAMPLE:
+        // send text data to server.
+        client.ToData("hello world!");
+        // send bynary data to server.
+        client.ToData(new byte[]{ 1, 2, 3 });
+});
+
+client.OnEvent((name, bytes, bufferType) =>
+{
+    // websocket receives Netly event (Only Netly)
+        // EXAMPLE:
+        if (name == "client quit")
+        {
+            // send event to server
+            client.ToEvent("goodbye", "Some data here");
+            // close connection.
+            client.Close();
+        }
+});
+
+client.OnModify((ws) =>
+{
+    // modify socket
+});
+
+// open connection.
+client.Open(new Uri("ws://localhost:3000/"));
+```
+
+</details>
+
+<details>
+    <summary><sub><strong>Websocket Server</strong></sub></summary>
+
+```csharp
+server.OnOpen(() =>
+{
+    //  server started.
+});
+
+server.OnClose(() =>
+{
+    // server closed.
+});
+
+server.OnError((exception) =>
+{
+    // error on open server connection.
+});
+
+// create websocket echo server.
+server.MapWebsocket("/echo", (request, client) =>
+{
+    client.OnData((bytes, bufferType) =>
+    { 
+        // echo data.
+        client.ToData(bytes, bufferType);
     });
+
+    client.OnEvent((name, bytes, bufferType) =>
+    { 
+        // echo event.
+        client.ToEvent(name, bytes, bufferType);
+    });
+});
+
+// websocket server run on "/chat" route.
+server.MapWebsocket("/chat", (request, client) =>
+{    
+    // websocket client connected.
     
+    // EXAMPLE:
+        // send data to client.
+        client.ToData("some data");
+        // send event to client.
+        client.ToEvent("hello_client", "some data");
+
+    // receive data
+    client.OnData((bytes, bufferType) =>
+    {
+        // websocket connected receive some data.
+    });
+
     client.OnClose(() =>
     {
         // websocket client disconnected.
     });
-    
-    client.OnError((exception) =>
-    {
-        // error on connect to server.
-    });
-    
-    client.OnData((bytes, bufferType) =>
-    {
-        // websocket client received some data.
-        // EXAMPLE:
-            // send text data to server.
-            client.ToData("hello world!");
-            // send bynary data to server.
-            client.ToData(new byte[]{ 1, 2, 3 });
-    });
-    
+
+    // receive event.
     client.OnEvent((name, bytes, bufferType) =>
     {
-        // websocket receives Netly event (Only Netly)
-            // EXAMPLE:
-            if (name == "client quit")
-            {
-                // send event to server
-                client.ToEvent("goodbye", "Some data here");
-                // close connection.
-                client.Close();
-            }
+        // websocket connected receive some event.
     });
-    
-    client.OnModify((ws) =>
-    {
-        // modify socket
-    });
-    
-    // open connection.
-    client.Open(new Uri("ws://localhost:3000/"));
-    ```
-    
--   <sub><strong>Websocket Server</strong></sub>
-    ```csharp
-    server.OnOpen(() =>
-    {
-        //  server started.
-    });
-    
-    server.OnClose(() =>
-    {
-        // server closed.
-    });
-    
-    server.OnError((exception) =>
-    {
-        // error on open server connection.
-    });
-    
-    // create websocket echo server.
-    server.MapWebsocket("/echo", (request, client) =>
-    {
-        client.OnData((bytes, bufferType) =>
-        { 
-            // echo data.
-            client.ToData(bytes, bufferType);
-        });
-    
-        client.OnEvent((name, bytes, bufferType) =>
-        { 
-            // echo event.
-            client.ToEvent(name, bytes, bufferType);
-        });
-    });
-    
-    // websocket server run on "/chat" route.
-    server.MapWebsocket("/chat", (request, client) =>
-    {    
-        // websocket client connected.
-        
-        // EXAMPLE:
-            // send data to client.
-            client.ToData("some data");
-            // send event to client.
-            client.ToEvent("hello_client", "some data");
-    
-        // receive data
-        client.OnData((bytes, bufferType) =>
-        {
-            // websocket connected receive some data.
-        });
-    
-        client.OnClose(() =>
-        {
-            // websocket client disconnected.
-        });
-    
-        // receive event.
-        client.OnEvent((name, bytes, bufferType) =>
-        {
-            // websocket connected receive some event.
-        });
-    });
-    
-    server.Open(new Uri("http://localhost:8080"));
-    ```
+});
 
+server.Open(new Uri("http://localhost:8080"));
+```
 
-<br/><hr/><br/>
+</details>
+
+<br/>
