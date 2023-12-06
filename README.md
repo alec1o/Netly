@@ -111,7 +111,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 
 ##### Demo
 
-> <sub>HTTP</sub>
+> ###### HTTP
 
 <ul>
 
@@ -221,9 +221,9 @@ server.Open(new Uri("http://localhost:8080"));
 </details>
 
 </ul>
+<br>
 
-
-> <sub>TCP</sub>
+> ###### TCP
 
 <ul>
 
@@ -350,8 +350,9 @@ server.Open(new Host("127.0.0.1", 8080));
 </details>
 
 </ul>
+<br>
 
-> <sub>UDP</sub>
+> ###### UDP
 
 <ul>
 
@@ -469,8 +470,9 @@ server.Open(new Host("127.0.0.1", 8080));
 </details>
 
 </ul>
+<br>
 
-> <sub>WebSocket</sub>
+> ###### WebSocket
 
 <ul>
 
@@ -603,5 +605,4 @@ server.Open(new Uri("http://localhost:8080"));
 </details>
 
 </ul>
-
 <br>
