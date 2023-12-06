@@ -117,102 +117,111 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 <br/><hr/><br/>
 
 ##### HTTP
-- <sub><strong>HTTP Client</strong></sub>
-    ```csharp
-    using System;
-    using Netly;
-  
-    var client = new HttpClient();
-  
-    // error callback
-    client.OnError((exception) =>
-    {
-        // request exception error. when connection doesn't open, null uri,...
-    });
-  
-    // success callback
-    client.OnSuccess((request) =>
-    {
-        // get status code
-        int statusCode = request.StatusCode;
-        // get server response as plain-text
-        string bodyAsPlainText =  request.Body.PlainText;   
-    });  
+<details>
+    <summary><sub><strong>HTTP Client</strong></sub></summary>
+
+```csharp
+using System;
+using Netly;
+
+var client = new HttpClient();
+
+// error callback
+client.OnError((exception) =>
+{
+    // request exception error. when connection doesn't open, null uri,...
+});
+
+// success callback
+client.OnSuccess((request) =>
+{
+    // get status code
+    int statusCode = request.StatusCode;
+    // get server response as plain-text
+    string bodyAsPlainText =  request.Body.PlainText;   
+});  
+
+// EXAMPLE:
+    // set header
+    client.Headers.Add("content-type", "multipart/form-data");
+    // set url query
+    client.Queries.Add("timeout", "1h");
+      
+    // create form data
+    var body = new RequestBody(Enctype.Multipart);
+    // set filename.
+    body.Add("name", "Video.mp4");
+    // set filebuffer.
+    body.Add("file", new byte[]{ 1, 3, 4, 5, 6, 7, 8, 9, 0 });
+    
+    // set request body.
+    client.Body = body;
+
+// Don't block main thread, run on threadpolls.
+// Send POST request.
+client.Send("POST", new Uri("http://drive.kezero.com/upload?timeout=1h"));
+```
+
+</details>
+
+<details>
+    <summary><sub><strong>HTTP Server</strong></sub></summary>
+
+```csharp
+using System;
+using Netly;
+
+var server = new HttpServer();
+
+server.OnOpen(() =>
+{
+    //  server started.
+});
+
+server.OnClose(() =>
+{
+    // server closed.
+});
+
+server.OnError((exception) =>
+{
+    // error on open server connection.
+});
+
+server.MapAll("/foo", (request, response) =>
+{
+    // receives request from all http methods.
     
     // EXAMPLE:
-        // set header
-        client.Headers.Add("content-type", "multipart/form-data");
-        // set url query
-        client.Queries.Add("timeout", "1h");
-          
-        // create form data
-        var body = new RequestBody(Enctype.Multipart);
-        // set filename.
-        body.Add("name", "Video.mp4");
-        // set filebuffer.
-        body.Add("file", new byte[]{ 1, 3, 4, 5, 6, 7, 8, 9, 0 });
-        
-        // set request body.
-        client.Body = body;
-  
-    // Don't block main thread, run on threadpolls.
-    // Send POST request.
-    client.Send("POST", new Uri("http://drive.kezero.com/upload?timeout=1h"));
-    ```
+        // Send response for client.
+        response.Send(200, $"Hello World. this http method is [{request.Method}]");
+});
 
-- <sub><strong>HTTP Server</strong></sub>
-    ```csharp
-  using System;
-  using Netly;
+server.MapGet("/", (request, response) =>
+{
+    // received GET request at "/" path.
+});
+
+server.MapPost("/login", (request, response) =>
+{
+    // received POST request at "/login" path.
+
+    // EXAMPLE:
+        // request body on plain text.
+        string text = request.Body.PlainText;  
+        // get email from http form.
+        string email = request.Body.Form.GetString("email");
+        // get password from http from.
+        string password = request.Body.Form.GetString("password");
+        // get uploaded file from http form. (<form method="post" enctype="multipart/form-data">).
+        byte[] picture = request.Body.Form.GetBytes("upload");  
+});
+
+server.Open(new Uri("http://localhost:8080"));
+```
+
+</details>  
   
-  var server = new HttpServer();
-  
-  server.OnOpen(() =>
-  {
-        //  server started.
-  });
-  
-  server.OnClose(() =>
-  {
-        // server closed.
-  });
-  
-  server.OnError((exception) =>
-  {
-        // error on open server connection.
-  });
-  
-  server.MapAll("/foo", (request, response) =>
-  {
-        // receives request from all http methods.
-        
-        // EXAMPLE:
-            // Send response for client.
-            response.Send(200, $"Hello World. this http method is [{request.Method}]");
-  });
-  
-  server.MapGet("/", (request, response) =>
-  {
-        // received GET request at "/" path.
-  });
-  
-  server.MapPost("/login", (request, response) =>
-  {
-        // received POST request at "/login" path.
-  
-        // EXAMPLE:
-            // request body on plain text.
-            string text = request.Body.PlainText;  
-            // get email from http form.
-            string email = request.Body.Form.GetString("email");
-            // get password from http from.
-            string password = request.Body.Form.GetString("password");
-            // get uploaded file from http form. (<form method="post" enctype="multipart/form-data">).
-            byte[] picture = request.Body.Form.GetBytes("upload");  
-  });
-  
-  server.Open(new Uri("http://localhost:8080"));
-  ```
 
 <br/><hr/><br/>
 
