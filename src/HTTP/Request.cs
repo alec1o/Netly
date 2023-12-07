@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using Netly.Core;
@@ -23,18 +24,26 @@ namespace Netly
         public readonly bool IsLocalRequest;
         public readonly bool IsEncrypted;
         public readonly RequestBody Body;
+        public readonly int StatusCode = -1;
 
         internal Request(HttpResponseMessage httpResponseMessage)
         {
             RawRequest = null;
             RawResponse = httpResponseMessage;
+
+            StatusCode = (int)httpResponseMessage.StatusCode;
+
+            var content = httpResponseMessage.Content;
+            var buffer = content.ReadAsByteArrayAsync().Result;
+            
+            Body = new RequestBody(buffer);
         }
         
         internal Request(HttpListenerRequest httpListenerRequest)
         {
             RawRequest = httpListenerRequest;
             RawResponse = null;
-
+            
             #region Headers
 
             Headers = new KeyValueContainer();

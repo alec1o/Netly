@@ -77,7 +77,8 @@ namespace Netly
 
                     NativeHttpClient client = new NativeHttpClient();
 
-                    client.Timeout = TimeSpan.FromMilliseconds(Timeout);
+                    // TODO: FIX IT. Its create exception
+                    // client.Timeout = TimeSpan.FromMilliseconds(Timeout);
 
                     HttpRequestMessage req = new HttpRequestMessage(Method, uri);
 
