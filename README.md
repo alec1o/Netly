@@ -539,6 +539,11 @@ client.Open(new Uri("ws://localhost:3000/"));
     <summary><sub><strong>Websocket Server</strong></sub></summary>
 
 ```csharp
+using System;
+using Netly;
+
+var server = new HttpServer();
+
 server.OnOpen(() =>
 {
     //  server started.
