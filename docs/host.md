@@ -18,6 +18,11 @@ using Netly.Core;
 <br>
 
 ## Properties
+- ##### <return>Host</return> Default
+  <sub>Return default Host instance, the default host is (0.0.0:0).</sub>
+
+<br>
+
 - ##### <return>IPAddress</return> Address
   <sub>Return IPAddress (The IP address of the endpoint).</sub>
 

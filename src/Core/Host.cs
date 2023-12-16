@@ -10,6 +10,12 @@ namespace Netly.Core
     public class Host
     {
         /// <summary>
+        /// Return default Host instance: (0.0.0.0:0)
+        /// </summary>
+        /// <returns>Return default host instance: (0.0.0.0:0)</returns>
+        public static readonly Host Default = new Host(IPAddress.Any, 0);
+        
+        /// <summary>
         /// Return IPAddress
         /// </summary>
         public IPAddress Address => _endpoint.Address;
