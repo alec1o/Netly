@@ -14,7 +14,7 @@ namespace Netly.Abstract
 
         public bool Framing { get; protected set; }
         public string UUID { get; protected set; }
-        public Host Host { get; protected set; }
+        public Host Host { get; protected set; } = Host.Default;
 
         public bool IsOpened => IsConnected();
 

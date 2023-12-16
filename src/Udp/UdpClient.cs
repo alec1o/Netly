@@ -25,7 +25,7 @@ namespace Netly
         /// <summary>
         /// Host container
         /// </summary>
-        public Host Host { get; private set; }
+        public Host Host { get; private set; } = Host.Default;
 
         /// <summary>
         /// Return true when connection is enabled (using ping)
@@ -69,7 +69,6 @@ namespace Netly
             _opened = false;
             _serverside = false;
             _socket = null;
-            Host = new Host(IPAddress.Loopback, 0);
             Init();
         }
 

@@ -16,7 +16,7 @@ namespace Netly
         /// <summary>
         /// Host container
         /// </summary>
-        public Host Host { get; private set; }
+        public Host Host { get; private set; } = Host.Default;
 
         /// <summary>
         /// Connection timeout

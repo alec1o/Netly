@@ -10,7 +10,7 @@ namespace Netly.Abstract
     {
         #region Props
         public bool Framing { get; protected set; }
-        public Host Host { get; protected set; }
+        public Host Host { get; protected set; } = Host.Default;
         public List<T> Clients { get; protected set; } = new List<T>();
         public bool IsOpened => IsConnected();
 
