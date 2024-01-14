@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
 using System.Threading.Tasks;
+using System.Web;
 using Netly.Core;
 using NativeHttpClient = System.Net.Http.HttpClient;
 
@@ -26,11 +25,11 @@ namespace Netly
             }
         }
 
-        public KeyValueContainer Headers { get; }
-        public KeyValueContainer Queries { get; }
+        public KeyValueContainer<string> Headers { get; }
+        public KeyValueContainer<string> Queries { get; }
         public RequestBody Body { get; set; }
-        public HttpMethod Method { get; internal set; }
-        
+        public HttpMethod Method { get; private set; }
+
 
         private EventHandler<Request> _onSuccess;
         private EventHandler<Exception> _onError;
@@ -38,8 +37,8 @@ namespace Netly
 
         public HttpClient()
         {
-            Headers = new KeyValueContainer();
-            Queries = new KeyValueContainer();
+            Headers = new KeyValueContainer<string>();
+            Queries = new KeyValueContainer<string>();
             Body = new RequestBody();
             Method = HttpMethod.Get;
         }
@@ -60,7 +59,7 @@ namespace Netly
         {
             _onModify += (_, httpClient) => MainThread.Add(() => callback?.Invoke(httpClient));
         }
-        
+
         public void Send(string method, Uri uri)
         {
             Task.Run(async () =>
@@ -73,6 +72,23 @@ namespace Netly
                         ? throw new ArgumentNullException(nameof(method))
                         : method.Trim().ToUpper();
 
+                    if (Queries != null && Queries.Length > 0)
+                    {
+                        var uriBuilder = new UriBuilder(uri);
+                        var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                        foreach (var query in Queries.AllKeyValue)
+                        {
+                            if (!string.IsNullOrWhiteSpace(query.Key))
+                            {
+                                queryBuilder.Add(query.Key, query.Value ?? string.Empty);
+                            }
+                        }
+
+                        uriBuilder.Query = queryBuilder.ToString();
+                        uri = new Uri(uriBuilder.ToString());
+                    }
+                    
                     Method = new HttpMethod(methodStr);
 
                     NativeHttpClient client = new NativeHttpClient();
@@ -89,18 +105,19 @@ namespace Netly
                         req.Headers.Add(header.Key, header.Value);
                     }
 
-                    req.Content = Body.GetHttpContent();
+
+                    req.Content = Body.HttpContent;
 
                     req.Method = Method;
 
                     req.RequestUri = uri;
-                    
+
                     _onModify?.Invoke(null, client);
-                    
+
                     var httpResponseMessage = await client.SendAsync(req);
 
                     var request = new Request(httpResponseMessage);
-                    
+
                     _onSuccess?.Invoke(null, request);
                 }
                 catch (Exception e)

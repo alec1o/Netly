@@ -9,8 +9,8 @@ namespace Netly
     {
         int Timeout { get; set; }
         HttpMethod Method { get; }
-        KeyValueContainer Headers { get; }
-        KeyValueContainer Queries { get; }
+        KeyValueContainer<string> Headers { get; }
+        KeyValueContainer<string> Queries { get; }
         RequestBody Body { get; set; }
         void OnSuccess(Action<Request> callback);
         void OnError(Action<Exception> callback);

@@ -1,65 +1,65 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly.Core
 {
     public class RequestBody
     {
-        public byte[] Buffer { get; internal set; }
-        public int Length => Buffer.Length;
-        public KeyValueContainer Form => GetForm();
-        public string PlainText => GetPlainText();
+        public readonly string Text;
+        public readonly byte[] Bytes;
+        public readonly Enctype Enctype;
+        public readonly NE.Mode Encoding;
+        public KeyValueContainer<string> TextForm;
+        public KeyValueContainer<byte[]> BytesForm;
+        public int Length => Bytes.Length;
+        public HttpContent HttpContent => GetHttpContent();
 
-        public RequestBody()
+
+        public RequestBody() : this(Array.Empty<byte>(), Enctype.PlainText, NE.Mode.UTF8)
         {
-            Buffer = Array.Empty<byte>();
         }
-        
-        public RequestBody(byte[] bodyBuffer)
-        {
-            Buffer = bodyBuffer ?? Array.Empty<byte>();
-        }
 
-        private string _plainText = string.Empty;
-        private bool _initPlainText = false;
-
-        private string GetPlainText()
+        public RequestBody(byte[] buffer, Enctype enctype, NE.Mode encoding)
         {
-            if (_initPlainText is false)
+            this.Bytes = buffer ?? Array.Empty<byte>();
+            this.Enctype = enctype;
+            this.Encoding = encoding;
+            this.Text = Bytes.Length > 0 ? NE.GetString(this.Bytes, this.Encoding) : string.Empty;
+            this.TextForm = new KeyValueContainer<string>();
+            this.BytesForm = new KeyValueContainer<byte[]>();
+
+            if (enctype != Enctype.PlainText)
             {
-                _plainText = NE.GetString(Buffer, NE.Mode.UTF8);
-                _initPlainText = true;
-            }
+                #region Fill ByteForm
 
-            return _plainText;
+                // TODO: Decode enctype and get values
+
+                #endregion
+
+                #region Fill TextForm
+
+                if (this.BytesForm.Length > 0)
+                {
+                    var textFormAsList = BytesForm.AllKeyValue
+                        .Select((x) => new KeyValue<string, string>(x.Key, NE.GetString(x.Value, this.Encoding)))
+                        .ToArray();
+
+                    this.TextForm.AddRange(textFormAsList);
+                }
+
+                #endregion
+            }
         }
 
-        private KeyValueContainer _form = null;
-        private bool _initForm = false;
-
-        private KeyValueContainer GetForm()
-        {
-            if (_initForm is false)
-            {
-                _form = new KeyValueContainer();
-                // TODO: SEARCH Add element on form
-                _initForm = true;
-            }
-
-            return _form;
-        }
-
-        public HttpContent GetHttpContent()
+        private HttpContent GetHttpContent()
         {
             return new InternalHttpContent(this);
         }
-        
+
         private class InternalHttpContent : HttpContent
         {
             private readonly RequestBody _request;
@@ -68,10 +68,10 @@ namespace Netly.Core
             {
                 _request = request;
             }
-            
+
             protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
             {
-                return stream.WriteAsync(_request.Buffer, 0, _request.Length);
+                return stream.WriteAsync(_request.Bytes, 0, _request.Length);
             }
 
             protected override bool TryComputeLength(out long length)

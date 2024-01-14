@@ -11,9 +11,9 @@ namespace Netly
     {
         public readonly HttpListenerRequest RawRequest;
         public readonly HttpResponseMessage RawResponse;
-        
-        public readonly KeyValueContainer Headers;
-        public readonly KeyValueContainer Queries;
+
+        public readonly KeyValueContainer<string> Headers;
+        public readonly KeyValueContainer<string> Queries;
         public readonly Cookie[] Cookies;
         public readonly HttpMethod Method;
         public readonly string Url;
@@ -28,6 +28,12 @@ namespace Netly
 
         internal Request(HttpResponseMessage httpResponseMessage)
         {
+            Url = httpResponseMessage.RequestMessage.RequestUri.ToString();
+            Cookies = Array.Empty<Cookie>();
+            Headers = new KeyValueContainer<string>();
+            Queries = new KeyValueContainer<string>();
+            Method = httpResponseMessage.RequestMessage.Method;
+
             RawRequest = null;
             RawResponse = httpResponseMessage;
 
@@ -35,18 +41,43 @@ namespace Netly
 
             var content = httpResponseMessage.Content;
             var buffer = content.ReadAsByteArrayAsync().Result;
-            
-            Body = new RequestBody(buffer);
+
+            // TODO: Get enctype from Header
+            // TODO: Get encoding from Header
+            Body = new RequestBody(buffer, Enctype.PlainText, NE.Mode.UTF8);
+
+            foreach (var header in httpResponseMessage.Headers)
+            {
+                string value = "";
+                int count = header.Value.Count();
+
+                if (count > 1)
+                {
+                    bool isFirst = true;
+                    foreach (var i in header.Value)
+                    {
+                        if (!isFirst) value += "; ";
+                        value += i;
+                        isFirst = false;
+                    }
+                }
+                else if (count == 1)
+                {
+                    value = header.Value.ToArray()[0];
+                }
+
+                Headers.Add(header.Key, value);
+            }
         }
-        
+
         internal Request(HttpListenerRequest httpListenerRequest)
         {
             RawRequest = httpListenerRequest;
             RawResponse = null;
-            
+
             #region Headers
 
-            Headers = new KeyValueContainer();
+            Headers = new KeyValueContainer<string>();
 
             if (RawRequest.Headers.Count > 0)
             {
@@ -61,7 +92,7 @@ namespace Netly
 
             #region Queries
 
-            Queries = new KeyValueContainer();
+            Queries = new KeyValueContainer<string>();
 
             if (RawRequest.QueryString.Count > 0)
             {
@@ -116,7 +147,9 @@ namespace Netly
                 _ = RawRequest.InputStream.Read(bodyBytes, 0, bodyBytes.Length);
             }
 
-            Body = new RequestBody(bodyBytes);
+            // TODO: Get Enctype from Header
+            // TODO: Get Encoding from Header
+            Body = new RequestBody(bodyBytes, Enctype.PlainText, NE.Mode.UTF8);
 
             #endregion
         }
