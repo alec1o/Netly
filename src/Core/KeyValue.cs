@@ -11,12 +11,12 @@
         /// Key (name) 
         /// </summary>
         public TKey Key { get; internal set; }
-        
+
         /// <summary>
         /// Value (data)
         /// </summary>
         public TValue Value { get; internal set; }
-        
+
         /// <summary>
         /// Create instance of Generic Key-Value
         /// </summary>
@@ -26,6 +26,11 @@
         {
             this.Key = key;
             this.Value = value;
+        }
+
+        public override string ToString()
+        {
+            return "{" + $"\"{Key}\":\"{Value}\"" + "}";
         }
     }
 }
