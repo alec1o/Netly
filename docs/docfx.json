@@ -33,13 +33,19 @@
     "output": "_site",
     "template": [
       "default",
-      "modern"
+      "modern",
+      "netly-theme"
     ],
     "globalMetadata": {
       "_appName": "Netly",
       "_appTitle": "Netly",
+      "_appFooter": "<div id='footer-content'><span>Copyright &copy; 2022-2024 by <a href='http://www.alecio.me'>Alecio Furanze</a></span><span>Hosting provided by <a href='http://www.kezero.com'>KeZero</a></span></div>",
       "_enableSearch": true,
-      "pdf": true
+      "_appLogoPath": "images/netly-logo-3.png",
+      "_appFaviconPath": "images/netly-logo-8.png",
+      "pdf": false,
+      "_gitUrlPattern": "https://github.com/alec1o/Netly",
+      "_gitContribute": "https://github.com/alec1o/Netly/dev"
     }
   }
 }

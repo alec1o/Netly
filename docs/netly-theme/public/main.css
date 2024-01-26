@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+* {
+    font-family: "Inter", "Roboto", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    letter-spacing: 0.65px;
+}
+
+#logo {
+    position: relative;
+    display: block;
+    height: 42px;
+    width: auto;
+    object-fit: contain;
+}
+
+header .navbar-brand {
+    color: #2050ce;
+    font-size: 14px;
+    letter-spacing: 1.25px;
+    font-weight: bold;
+}
+
+    header .navbar-brand:hover {
+        color: #2050ce;
+    }
+
+
+#home_target_contents {
+    position: relative;
+    width: 90%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+}
+
+    #home_target_contents a {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 256px;
+    }
+
+
+.text {
+    text-align: center;
+    max-width: 70%;
+    font-size: 13px;
+    width: 100%;
+    margin: 7px auto;
+}
+
+#footer-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+}
+
+    #footer-content span {
+        margin-top: 2.5px;
+        font-weight: normal;
+        font-size: 13px;
+    }
+
+    #footer-content a {
+        color: inherit;
+        font-weight: bold;
+        text-decoration: underline;
+    }
