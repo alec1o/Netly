@@ -47,7 +47,7 @@ _layout: landing
 	<a href="#" target="_self">
 		<img src="images/manual_background.png" alt="Manual image" />
 		<h2>Manual</h2>
-		<p>Learn how to create use Netly!</>
+		<p>Learn how to use Netly!</>
 	</a>
 	<a href="#" target="_self">
 		<img src="images/csharp_api_background.png" alt="C# api image" />
