@@ -10,6 +10,39 @@ _layout: landing
 
 </br>
 
+<h2 class="available-title">Available On</h2>
+<nav class='available-container'>
+	<a target='_blank' href='https://www.nuget.org/packages/Netly'><img src='/images/nuget.png' alt='icon'`/>Nuget</a>
+	<a target='_blank' href='https://u3d.as/2RUX'><img src='/images/unity.png' alt='icon'`/>Asset Store</a>
+	<a target='_blank' href='https://github.com/alec1o/Netly'><img src='/images/github.svg' alt='icon'`/>GitHub</a>
+</nav>
+
+</br>
+
+<section class='section-container'>
+	<article>
+		<h1>What is Netly?</h1>
+		<p>Netly is a flexible and expandable socket library, written in the C# language (c-sharp) and is constantly evolving and getting new features.</p>
+	</article>
+	<article>
+		<h1>Free and open-source</h1>
+		<p>Netly is free, free, and open source under the MIT license (permissive) and its code is available on github, <a href='https://github.com/alec1o/Netly' target='_blank'>see here</a></p>
+	</article>
+	<article>
+		<h1>Multi protocols</h1>
+		<p>Netly contains an ecosystem that is constantly evolving and it supports multiple protocols that are:</p>
+		<ul>
+			<li>TCP</li>
+			<li>UDP</li>
+			<li>HTTP</li>
+			<li>SSL/TLS</li>
+			<li>WebSocket</li>
+			<li>*Message Framing (TCP, SSL, TLS)</li>
+		</ul>
+	</article>
+</section>
+</br>
+
 <nav id="home_target_contents">
 	<a href="#" target="_self">
 		<img src="images/manual_background.png" alt="Manual image" />

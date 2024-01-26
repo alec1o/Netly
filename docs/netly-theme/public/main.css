@@ -31,16 +31,62 @@ header .navbar-brand {
     height: auto;
     display: flex;
     flex-direction: row;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    margin: 10px auto;
     justify-content: space-around;
+    text-decoration: none !important;
+    padding: 6px;
 }
+
+    #home_target_contents a::after {
+        display: none;
+    }
 
     #home_target_contents a {
         position: relative;
         display: flex;
         flex-direction: column;
         width: 256px;
+        color: inherit !important;
+        text-decoration: none !important;
     }
+
+    #home_target_contents img {
+        width: 100%;
+        height: calc(256px / 1.7);
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    #home_target_contents h2 {
+        width: 100%;
+        padding: 3px;
+        color: inherit;
+        text-decoration: none !important;
+        margin: 10px auto;
+        margin-bottom: 1.5px;
+        text-align: center;
+        width: 100%;
+        font-size: 18px;
+    }
+
+        #home_target_contents h2::after {
+            display: none;
+            visibility: hidden;
+        }
+
+    #home_target_contents p {
+        width: 100%;
+        padding: 3px;
+        color: inherit;
+        text-decoration: none !important;
+        text-align: center;
+        width: 100%;
+        font-size: 13px;
+    }
+
+
 
 
 .text {
@@ -70,4 +116,135 @@ header .navbar-brand {
         color: inherit;
         font-weight: bold;
         text-decoration: underline;
+    }
+
+
+.section-container {
+    position: relative;
+    margin: 10px auto;
+    padding: 5px;
+    width: 100%;
+    max-width: 85%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-content: flex-start;
+    justify-content: flex-start;
+}
+
+    .section-container > h2 {
+        font-size: 24px;
+        color: #2050ce;
+        margin: 3px;
+        padding: 3px;
+        text-align: center;
+        width: 100%;
+    }
+
+    .section-container a {
+        color: inherit;
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .section-container article {
+        display: flex;
+        flex-direction: column;
+        margin: 3px;
+        margin-bottom: 22px;
+        padding: 2px;
+    }
+
+        .section-container article > h1 {
+            font-size: 22px;
+            text-decoration: none;
+            width: 100%;
+            padding: 1px;
+            margin: 1px 2px;
+            margin-bottom: 10px;
+        }
+
+        .section-container article > p {
+            font-size: 14px;
+            text-decoration: none;
+            width: 100%;
+            padding: 1px;
+            margin: 1px 2px;
+            margin-left: 20px;
+        }
+
+        .section-container article ul {
+            margin: 10px auto;
+            padding: 5px;
+            width: 10px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+        }
+
+            .section-container article ul > li {
+                font-size: 13px;
+                margin-top: 5px;
+                padding: 1px;
+            }
+
+
+.available-title {
+    display: flex;
+    font-size: 14px !important;
+    padding: 1px !important;
+    margin: 3px 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    text-align: center;
+    color: rgb(80, 180, 80);
+    align-items: center;
+    justify-content: center;
+}
+
+    .available-title a {
+        display: none;
+        visibility: hidden;
+    }
+
+.available-container {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 15px auto;
+    padding: 5px;
+    position: relative;
+}
+
+    .available-container a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+        box-shadow: 0 0 5px 1px #2050ce;
+        align-self: center;
+        padding: 5px;
+        font-size: 13px;
+        border-radius: 6px;
+        width: fit-content;
+        margin: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        letter-spacing: 1px;
+        color: black;
+        background: white;
+    }
+
+    .available-container img {
+        position: initial;
+        width: 28px !important;
+        height: auto;
+        object-fit: contain;
+        padding: 3px;
+        margin: 0 2px;
     }
