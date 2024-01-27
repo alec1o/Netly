@@ -205,19 +205,23 @@ namespace Netly
                         var response = new Response(context.Response);
                         var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
 
+                        var skipConnection = false;
                         
                         foreach (var action in Middlewares)
                         {
                             bool success = action(request, response);
 
-                            if (success)
+                            if (!success)
                             {
-                                continue;
+                                skipConnection = true;
+                                break;
                             }
-                            else
-                            {
-                                return;
-                            }
+                        }
+
+                        // is middleware return false, connection will skipped
+                        if (skipConnection)
+                        {
+                            continue;
                         }
 
 
