@@ -21,8 +21,8 @@ namespace Netly
 
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
-        private List<Func<Request, Response, bool>> _middlewareList = new List<Func<Request, Response, bool>>();
-        public Func<Request, Response, bool>[] Middlewares => _middlewareList.ToArray();
+        private List<Func<Request, Response, bool>> _globalMiddlewareList = new List<Func<Request, Response, bool>>();
+        public Func<Request, Response, bool>[] GlobalMiddlewares => _globalMiddlewareList.ToArray();
 
         public HttpServer()
         {
@@ -68,11 +68,11 @@ namespace Netly
         }
 
 
-        public void AddMiddleware(Func<Request, Response, bool> middlewareAction)
+        public void AddGlobalMiddleware(Func<Request, Response, bool> middlewareAction)
         {
             if (middlewareAction != null)
             {
-                _middlewareList.Add(middlewareAction);
+                _globalMiddlewareList.Add(middlewareAction);
             }
         }
 
@@ -207,7 +207,7 @@ namespace Netly
 
                         var skipConnection = false;
 
-                        foreach (var action in Middlewares)
+                        foreach (var action in GlobalMiddlewares)
                         {
                             bool success = action(request, response);
 
