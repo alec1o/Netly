@@ -239,6 +239,13 @@ namespace Netly
                             foreach (var path in paths)
                             {
                                 path.callback?.Invoke(request, response);
+                                Console.WriteLine($"Path used: {response.IsUsed}");
+                                if (!response.IsUsed)
+                                {
+                                    response.Send(508, $"Loop Detected {path.path}");
+                                    throw new NotImplementedException(
+                                        $"NULL response detected on [path='{path.path}']");
+                                }
                             }
                         }
                         else // IS WEBSOCKET CONNECTION

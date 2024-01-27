@@ -8,15 +8,24 @@ namespace Netly
 {
     public class Response
     {
+        public bool IsUsed { get; private set; } = false;
         public readonly HttpListenerResponse RawResponse;
 
         public Response(HttpListenerResponse httpListenerResponse)
         {
+            IsUsed = false;
             RawResponse = httpListenerResponse;
         }
 
         public void Send(int statusCode, byte[] buffer)
         {
+            if (IsUsed)
+            {
+                throw new InvalidOperationException($"{nameof(Response)}->{nameof(Send)} method was called before.");
+            }
+            
+            IsUsed = true;
+            
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try
