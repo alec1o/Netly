@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
@@ -21,8 +23,15 @@ namespace Netly
 
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
-        private List<Func<Request, Response, bool>> _globalMiddlewareList = new List<Func<Request, Response, bool>>();
-        public Func<Request, Response, bool>[] GlobalMiddlewares => _globalMiddlewareList.ToArray();
+
+        private List<(Func<Request, Response, bool> callback, string path)> _middlewareList =
+            new List<(Func<Request, Response, bool> callback, string path)>();
+
+        public (Func<Request, Response, bool> callback, string path)[] GlobalMiddlewares =>
+            _middlewareList.FindAll(x => x.path == "*").ToArray();
+
+        public (Func<Request, Response, bool> callback, string path)[] LocalMiddlewares =>
+            _middlewareList.FindAll(x => x.path != "*").ToArray();
 
         public HttpServer()
         {
@@ -68,11 +77,28 @@ namespace Netly
         }
 
 
+        public void AddMiddleware(string path, Func<Request, Response, bool> middlewareAction)
+        {
+            path = path ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(path) || middlewareAction == null)
+            {
+                return;
+            }
+
+            {
+                // TODO: validate path
+                // if (!Regex.Match(path.Trim(), "").Success) return;
+            }
+
+            _middlewareList.Add((middlewareAction, path));
+        }
+
         public void AddGlobalMiddleware(Func<Request, Response, bool> middlewareAction)
         {
             if (middlewareAction != null)
             {
-                _globalMiddlewareList.Add(middlewareAction);
+                _middlewareList.Add((middlewareAction, "*"));
             }
         }
 
@@ -207,21 +233,44 @@ namespace Netly
 
                         var skipConnection = false;
 
-                        foreach (var action in GlobalMiddlewares)
+                        // GLOBAL MIDDLEWARES
                         {
-                            bool success = action(request, response);
-
-                            if (!success)
+                            foreach (var action in GlobalMiddlewares)
                             {
-                                skipConnection = true;
-                                break;
+                                bool success = action.callback(request, response);
+
+                                if (!success)
+                                {
+                                    skipConnection = true;
+                                    break;
+                                }
+                            }
+
+                            // is middleware return false, connection will skipped
+                            if (skipConnection)
+                            {
+                                continue;
                             }
                         }
 
-                        // is middleware return false, connection will skipped
-                        if (skipConnection)
+                        // LOCAL MIDDLEWARES
                         {
-                            continue;
+                            foreach (var action in LocalMiddlewares.ToList().FindAll(x => request.ComparePath(x.path)))
+                            {
+                                bool success = action.callback(request, response);
+
+                                if (!success)
+                                {
+                                    skipConnection = true;
+                                    break;
+                                }
+                            }
+
+                            // is middleware return false, connection will skipped
+                            if (skipConnection)
+                            {
+                                continue;
+                            }
                         }
 
                         if (request.IsWebSocket == false) // IS HTTP CONNECTION
@@ -239,7 +288,7 @@ namespace Netly
                             foreach (var path in paths)
                             {
                                 path.callback?.Invoke(request, response);
-                                
+
                                 if (!response.IsUsed)
                                 {
                                     response.Send(508, $"Loop Detected {path.path}");
@@ -316,10 +365,10 @@ namespace Netly
                 {
                     bfr += $"{i}";
                 }
-                
+
                 return bfr;
             }
-            
+
             outputCallback?.Invoke
             (
                 "Request info" +
