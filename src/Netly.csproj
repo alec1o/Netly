@@ -58,6 +58,7 @@
 		</PackageReleaseNotes>
 		<Description>
 			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
+        <Copyright>Copyright © 2022-2024 Netly, by Alecio Furanze.</Copyright>
 
 			Docs: https://netly.docs.kezero.com
 			Sample: https://netly.docs.kezero.com/overview/quick-start

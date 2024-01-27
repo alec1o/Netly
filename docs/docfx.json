@@ -39,7 +39,7 @@
     "globalMetadata": {
       "_appName": "Netly",
       "_appTitle": "Netly",
-      "_appFooter": "<div id='footer-content'><span>Copyright &copy; 2022-2024 by <a target='_blank' href='http://www.alecio.me'>Alecio Furanze</a></span><span>Hosting provided by <a target='_blank' href='http://www.kezero.com'>KeZero</a></span></div>",
+      "_appFooter": "<div id='footer-content'><span>Copyright &copy; 2022-2024 Netly, by <a target='_blank' href='http://www.alecio.me'>Alecio Furanze</a>.</span><span>Hosting provided by <a target='_blank' href='http://www.kezero.com'>KeZero</a></span></div>",
       "_enableSearch": true,
       "_appLogoPath": "images/netly-logo-3.png",
       "_appFaviconPath": "images/netly-logo-8.png",
