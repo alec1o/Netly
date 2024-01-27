@@ -21,7 +21,7 @@ namespace Netly
 
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
-        private List<Func<Request, Response, bool>> _middlewareList = new List<Func<Request, Response, bool>> ();
+        private List<Func<Request, Response, bool>> _middlewareList = new List<Func<Request, Response, bool>>();
         public Func<Request, Response, bool>[] Middlewares => _middlewareList.ToArray();
 
         public HttpServer()
@@ -206,7 +206,7 @@ namespace Netly
                         var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
 
                         var skipConnection = false;
-                        
+
                         foreach (var action in Middlewares)
                         {
                             bool success = action(request, response);
@@ -223,44 +223,6 @@ namespace Netly
                         {
                             continue;
                         }
-
-
-                        #region Debug
-#if false
-                        // TODO: Only show on debug mode
-                        {
-                            string headerDebug = "\n\tHeaders:";
-                            foreach (var header in request.Headers.AllKeyValue)
-                            {
-                                headerDebug += $"\n\t{header.Key}:{header.Value}";
-                            }
-
-                            string cookiesDebug = "\n\tCookies:";
-                            foreach (var cookie in request.Cookies)
-                            {
-                                cookiesDebug += $"\n\t{cookie.Name}:{cookie.Value} [{cookie.Port}:{cookie.Path}]";
-                            }
-
-                            string queriesDebug = "\n\t:Queries:";
-                            foreach (var query in request.Queries.AllKeyValue)
-                            {
-                                queriesDebug += $"\n\t{query.Key}:{query.Value}";
-                            }
-
-                            Console.WriteLine
-                            (
-                                "Receive connection" +
-                                $"\n\tUrl: {request.RawRequest.Url.AbsoluteUri}" +
-                                $"\n\tPath: {request.RawRequest.Url.AbsolutePath}" +
-                                $"\n\tLocal Path: {request.RawRequest.Url.LocalPath}" +
-                                $"\n\tIs Websocket: {context.Request.IsWebSocketRequest}" +
-                                $"\n\n{headerDebug}" +
-                                $"\n\n{queriesDebug}" +
-                                $"\n\n{cookiesDebug}"
-                            );
-                        }
-#endif
-                        #endregion
 
                         if (request.IsWebSocket == false) // IS HTTP CONNECTION
                         {
@@ -317,6 +279,56 @@ namespace Netly
 
                 Close();
             });
+        }
+
+        public static void DebugRequestInfo(Request request, Action<string> outputCallback)
+        {
+            string headerDebug = "\n\tHeaders:";
+            foreach (var header in request.Headers.AllKeyValue)
+            {
+                headerDebug += $"\n\t\t{header.Key}:{header.Value}";
+            }
+
+            string cookiesDebug = "\n\tCookies:";
+            foreach (var cookie in request.Cookies)
+            {
+                cookiesDebug += $"\n\t\t{cookie.Name}:{cookie.Value} [{cookie.Port}:{cookie.Path}]";
+            }
+
+            string queriesDebug = "\n\t:Queries:";
+            foreach (var query in request.Queries.AllKeyValue)
+            {
+                queriesDebug += $"\n\t\t{query.Key}:{query.Value}";
+            }
+
+            string BytesToString()
+            {
+                string bfr = "";
+
+                foreach (var i in request.Body.Bytes)
+                {
+                    bfr += $"{i}";
+                }
+                
+                return bfr;
+            }
+            
+            outputCallback?.Invoke
+            (
+                "Request info" +
+                $"\n\tUrl: {request.RawRequest.Url.AbsoluteUri}" +
+                $"\n\tPath: {request.RawRequest.Url.AbsolutePath}" +
+                $"\n\tLocal Path: {request.RawRequest.Url.LocalPath}" +
+                $"\n\tIs Websocket: {request.IsWebSocket}" +
+                $"\n\n{headerDebug}" +
+                $"\n\n{queriesDebug}" +
+                $"\n\n{cookiesDebug}" +
+                $"\n\tBody:" +
+                $" \n\t\t Text Size: {request.Body.Text.Length}" +
+                $" \n\t\t Bytes Size: {request.Body.Length}" +
+                $" \n\t\t Text: {request.Body.Text}" +
+                $" \n\t\t Bytes: {BytesToString()}"
+            );
         }
     }
 }
