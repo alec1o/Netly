@@ -10,6 +10,8 @@ namespace Netly
 {
     public class HttpServer : IHttpServer
     {
+        public delegate bool MiddlewareType(ref Request request, ref Response response);
+
         private HttpListener _listener;
         private EventHandler<object> _onOpen, _onClose, _onError;
         private bool _tryOpen, _tryClose;
@@ -21,6 +23,8 @@ namespace Netly
 
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
+        private List<MiddlewareType> _middlewareList = new List<MiddlewareType> ();
+        public MiddlewareType[] Middlewares => _middlewareList.ToArray();
 
         public HttpServer()
         {
@@ -63,6 +67,15 @@ namespace Netly
                     _tryOpen = false;
                 }
             });
+        }
+
+
+        public void AddMiddleware(MiddlewareType middlewareAction)
+        {
+            if (middlewareAction != null)
+            {
+                _middlewareList.Add(middlewareAction);
+            }
         }
 
         public void OnOpen(Action callback)
@@ -193,6 +206,22 @@ namespace Netly
                         var request = new Request(context.Request);
                         var response = new Response(context.Response);
                         var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+
+                        
+                        foreach (var action in Middlewares)
+                        {
+                            bool success = action(ref request, ref response);
+
+                            if (success)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+
 
                         #region Debug
 #if false
