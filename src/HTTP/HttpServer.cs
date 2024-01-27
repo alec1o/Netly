@@ -24,7 +24,7 @@ namespace Netly
         public bool IsOpen => _listener != null && _listener.IsListening;
         public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
-        private List<(Func<Request, Response, bool> callback, string path)> _middlewareList =
+        private readonly List<(Func<Request, Response, bool> callback, string path)> _middlewareList =
             new List<(Func<Request, Response, bool> callback, string path)>();
 
         public (Func<Request, Response, bool> callback, string path)[] GlobalMiddlewares =>
