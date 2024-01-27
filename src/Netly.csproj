@@ -1,70 +1,75 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<ItemGroup>
+    <ItemGroup>
 
-		<!--
-		_____________________________________________________________________________
-		| IGNORE MAIN README BECAUSE NUGET NOT FORMAT HTML TAG'S AND MAIN (GITHUB)	 |
-		| README HAVE CUSTOM STYLE AND HTML TAGS									 |
-		|____________________________________________________________________________|
-			
-		<Content Include="../README.md" Pack="true" PackagePath="." />
-		-->
+        <!--
+        _____________________________________________________________________________
+        | IGNORE MAIN README BECAUSE NUGET NOT FORMAT HTML TAG'S AND MAIN (GITHUB)	 |
+        | README HAVE CUSTOM STYLE AND HTML TAGS									 |
+        |____________________________________________________________________________|
+            
+        <Content Include="../README.md" Pack="true" PackagePath="." />
+        -->
 
-		<Content Pack="true" PackagePath="." Include="../LICENSE.md" />
-		<Content Pack="true" PackagePath="." Include="../static/nuget/README.md" />
-		<Content Pack="true" PackagePath="." Include="../static/logo/netly-logo-3.png" />
+        <Content Pack="true" PackagePath="." Include="../LICENSE.md"/>
+        <Content Pack="true" PackagePath="." Include="../static/nuget/README.md"/>
+        <Content Pack="true" PackagePath="." Include="../static/logo/netly-logo-3.png"/>
 
-	</ItemGroup>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Byter" Version="2.0.0" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Byter" Version="2.0.0"/>
+    </ItemGroup>
 
-	<PropertyGroup>
-		<PackageId>Netly</PackageId>
-		<Version>3.1.0</Version>
-		<Authors>alec1o</Authors>
-		<Company>alec1o</Company>
-		<Copyright>alec1o</Copyright>
-		<RepositoryType>GitHub</RepositoryType>
-		<PackageTags>TCP, UDP, SSL, SOCKET, EASY</PackageTags>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
-		<PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
-		<PackageIcon>netly-logo-3.png</PackageIcon>
-		<PackageIconUrl>netly-logo-3.png</PackageIconUrl>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-		<PackageReleaseNotes>
-			Note
-				[+] Added
-				[-] Removed
-				[!] Fixed
-				[>] Updated
-			3.0.0
-				[+] SSL/TLS protocol
-				[+] Include docs/sample (SSL/TLS)
-				[+] New docs (Gitbook -> Docsify)
-				[>] New MessageFraming protocol
-				[>] Message Framing memory and performance improve
-				[>] Udp set max buffer size
-				[>] Udp connection detection (timeout/ping-pong)
-				[!] MainThread null reference exception
-				[>] Byter 2.0
-				
-			3.1.0
-				[!] Fix auto-disconnect because socket timeout. set -1 (infinite) as default timeout.
-		</PackageReleaseNotes>
-		<Description>
-			Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
+    <PropertyGroup>
+        <PackageId>Netly</PackageId>
+        <Authors>alec1o</Authors>
+        <Company>alec1o</Company>
         <Copyright>Copyright © 2022-2024 Netly, by Alecio Furanze.</Copyright>
+        <RepositoryType>GitHub</RepositoryType>
+        <PackageTags>
+            <!-- protocols tags --> tcp, udp, ssl, tls, http, https, websocket, websockets, socket, sockets, proxy, proxies,
+            <!-- details tags --> client, server, multiplatform, crossplatform, cross-platform, connection, connections, lib, library, framework, frameworks, free,
+            <!-- names tags --> netly, libnetly, lib-netly, netly-socket, opensource, opensources, open-source, open-sources,
+            <!-- company --> alecio, alec1o, alecio-furanze, furanze, kezero, kezerocom,
+        </PackageTags>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RepositoryUrl>https://github.com/alec1o/Netly</RepositoryUrl>
+        <PackageProjectUrl>https://netly.docs.kezero.com</PackageProjectUrl>
+        <PackageIcon>netly-logo-3.png</PackageIcon>
+        <PackageIconUrl>netly-logo-3.png</PackageIconUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <RootNamespace>Netly</RootNamespace>
+        <AssemblyName>Netly</AssemblyName>
+        <PackageReleaseNotes>
+            Note
+            [+] Added
+            [-] Removed
+            [!] Fixed
+            [>] Updated
+            3.0.0
+            [+] SSL/TLS protocol
+            [+] Include docs/sample (SSL/TLS)
+            [+] New docs (Gitbook -> Docsify)
+            [>] New MessageFraming protocol
+            [>] Message Framing memory and performance improve
+            [>] Udp set max buffer size
+            [>] Udp connection detection (timeout/ping-pong)
+            [!] MainThread null reference exception
+            [>] Byter 2.0
 
-			Docs: https://netly.docs.kezero.com
-			Sample: https://netly.docs.kezero.com/overview/quick-start
-			Fork me: https://github.com/alec1o/Netly
-		</Description>
-		<TargetFramework>netstandard2.0</TargetFramework>
-	</PropertyGroup>
+            3.1.0
+            [!] Fix auto-disconnect because socket timeout. set -1 (infinite) as default timeout.
+        </PackageReleaseNotes>
+        <Description>
+            Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
+
+            Docs: https://netly.docs.kezero.com
+            Sample: https://netly.docs.kezero.com/overview/quick-start
+            Fork me: https://github.com/alec1o/Netly
+        </Description>
+        <TargetFramework>netstandard2.0</TargetFramework>
+    </PropertyGroup>
 
 </Project>
