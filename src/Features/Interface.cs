@@ -107,7 +107,6 @@ namespace Netly.Features
         IHttpBody Body { get; }
     }
 
-
     internal interface IResponse
     {
         /// <summary>
@@ -158,7 +157,7 @@ namespace Netly.Features
         /// <summary>
         /// Middleware array
         /// </summary>
-        Func<IRequest, IResponse, bool>[] Middlewares { get; }
+        Dictionary<string, Func<IRequest, IResponse, bool>>[] Middlewares { get; }
 
         /// <summary>
         /// Add global middleware handler
@@ -250,8 +249,34 @@ namespace Netly.Features
         void Options(string path, Action<IRequest, IResponse> callback);
     }
 
+    internal interface IOn
+    {
+        /// <summary>
+        /// Handle Connection Opened
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Open(Action callback);
+        
+        /// <summary>
+        /// Handle error, before connection Opened
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Error(Action<Exception> callback);
+        
+        /// <summary>
+        /// Handle Connection Close
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Close(Action callback);
+    }
+    
     internal interface IHttpServer
     {
+        /// <summary>
+        /// Return true if connection is opened
+        /// </summary>
+        bool IsOpened { get; }
+        
         /// <summary>
         /// Server Uri
         /// </summary>
@@ -268,10 +293,10 @@ namespace Netly.Features
         IMap Map { get; }
         
         /// <summary>
-        /// Handle error, before connection Opened
+        /// Callback Handler
         /// </summary>
-        /// <param name="callback">Callback</param>
-        void OnError(Action<Exception> callback);
+        IOn On { get; }
+        
         
         /// <summary>
         /// Open Server Connection
@@ -279,21 +304,15 @@ namespace Netly.Features
         /// <param name="host">Server Uri</param>
         void Open(Uri host);
         
-        /// <summary>
-        /// Handle Connection Opened
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        void OnOpen(Action callback);
         
         /// <summary>
         /// Close Server Connection
         /// </summary>
         void Close();
+    }
+
+    internal interface IHttpClient
+    {
         
-        /// <summary>
-        /// Handle Connection Close
-        /// </summary>
-        /// <param name="callback">Callback</param>
-        void OnClose(Action callback);
     }
 }
