@@ -184,63 +184,63 @@ namespace Netly.Features
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void WebSocket(string path, Action<IRequest, IWebsocketClient> callback);
-        
+
         /// <summary>
         /// Handle All Http Method from Path
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void All(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Get) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Get(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Put) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Put(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Head) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Head(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Post) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Post(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Patch) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Patch(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Delete) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Delete(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Trace) Http Method
         /// </summary>
         /// <param name="path">Request Path</param>
         /// <param name="callback">Response Callback</param>
         void Trace(string path, Action<IRequest, IResponse> callback);
-        
+
         /// <summary>
         /// Handle (Options) Http Method
         /// </summary>
@@ -249,70 +249,121 @@ namespace Netly.Features
         void Options(string path, Action<IRequest, IResponse> callback);
     }
 
-    internal interface IOn
+    internal interface IOn<out TModifyType>
     {
         /// <summary>
         /// Handle Connection Opened
         /// </summary>
         /// <param name="callback">Callback</param>
         void Open(Action callback);
-        
+
         /// <summary>
         /// Handle error, before connection Opened
         /// </summary>
         /// <param name="callback">Callback</param>
         void Error(Action<Exception> callback);
-        
+
         /// <summary>
         /// Handle Connection Close
         /// </summary>
         /// <param name="callback">Callback</param>
         void Close(Action callback);
+
+        /// <summary>
+        /// Handle 
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Modify(Action<TModifyType> callback);
     }
-    
+
     internal interface IHttpServer
     {
         /// <summary>
         /// Return true if connection is opened
         /// </summary>
         bool IsOpened { get; }
-        
+
         /// <summary>
         /// Server Uri
         /// </summary>
         Uri Host { get; }
-        
+
         /// <summary>
         /// Middleware Object
         /// </summary>
         IMiddleware Middleware { get; }
-        
+
         /// <summary>
         /// Map Object
         /// </summary>
         IMap Map { get; }
-        
+
         /// <summary>
         /// Callback Handler
         /// </summary>
-        IOn On { get; }
-        
-        
+        IOn<HttpListener> On { get; }
+
+
         /// <summary>
         /// Open Server Connection
         /// </summary>
         /// <param name="host">Server Uri</param>
         void Open(Uri host);
-        
-        
+
+
         /// <summary>
         /// Close Server Connection
         /// </summary>
         void Close();
     }
 
+
+    internal interface IOnHttpClient : IOn<System.Net.Http.HttpClient>
+    {
+        /// <summary>
+        /// Handle Http Successful Request
+        /// </summary>
+        /// <param name="request"></param>
+        void Data(Action<Request> request);
+    }
+
     internal interface IHttpClient
     {
+        /// <summary>
+        /// Request Timeout
+        /// </summary>
+        int Timeout { get; set; }
         
+        /// <summary>
+        /// Request Method
+        /// </summary>
+        HttpMethod Method { get; }
+        
+        /// <summary>
+        /// Request Headers
+        /// </summary>
+        Dictionary<string, string> Headers { get; }
+        
+        /// <summary>
+        /// Request Queries
+        /// </summary>
+        Dictionary<string, string> Queries { get; }
+        
+        /// <summary>
+        /// Request Body
+        /// </summary>
+        IHttpBody Body { get; set; }
+        
+        /// <summary>
+        /// Event Handler
+        /// </summary>
+        IOnHttpClient On { get; }
+        
+        /// <summary>
+        /// Send Request Method
+        /// </summary>
+        /// <param name="method">Http Method</param>
+        /// <param name="host">URI (Url Container)</param>
+        void Send(string method, Uri host);
     }
 }
