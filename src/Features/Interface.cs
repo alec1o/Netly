@@ -365,5 +365,90 @@ namespace Netly.Features
         /// <param name="method">Http Method</param>
         /// <param name="host">URI (Url Container)</param>
         void Send(string method, Uri host);
+
+    internal interface IOnWebSocket : IOn<ClientWebSocket>
+    {
+        /// <summary>
+        /// Handle data received
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Data(Action<byte[], bool> callback);
+
+        /// <summary>
+        /// Handle (netly event) received
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Event(Action<string, byte[], bool> callback);
+
+        /// <summary>
+        /// Handle connection closed
+        /// </summary>
+        /// <param name="callback">Callback</param>
+        void Close(Action<WebSocketCloseStatus> callback);
+    }
+
+    interface IToWebSocket
+    {
+        /// <summary>
+        /// Open Client Connection
+        /// </summary>
+        /// <param name="host">Server Uri</param>
+        void Open(Uri host);
+
+        /// <summary>
+        /// Close Client Connection
+        /// </summary>
+        void Close();
+
+        /// <summary>
+        /// Send data for server (bytes)
+        /// </summary>
+        /// <param name="buffer">Data buffer</param>
+        /// <param name="isText">"True" meaning is Text format</param>
+        void Data(byte[] buffer, bool isText);
+
+        /// <summary>
+        /// Send data for server (string)
+        /// </summary>
+        /// <param name="buffer">Data buffer</param>
+        /// <param name="isText">"True" meaning is Text format</param>
+        void Data(string buffer, bool isText);
+
+        /// <summary>
+        /// Send Netly event for server (bytes)
+        /// </summary>
+        /// <param name="name">Event name</param>
+        /// <param name="buffer">Event buffer</param>
+        void Event(string name, byte[] buffer);
+
+        /// <summary>
+        /// Send Netly event for server (string)
+        /// </summary>
+        /// <param name="name">Event name</param>
+        /// <param name="buffer">Event buffer</param>
+        void Event(string name, string buffer);
+    }
+
+    internal interface IWebSocket
+    {
+        /// <summary>
+        /// Return true if connection is opened
+        /// </summary>
+        bool IsOpened { get; }
+
+        /// <summary>
+        /// Client Uri
+        /// </summary>
+        Uri Host { get; }
+
+        /// <summary>
+        /// Event Handler
+        /// </summary>
+        IOnWebSocket On { get; }
+
+        /// <summary>
+        /// Event Creator
+        /// </summary>
+        IToWebSocket To { get; }
     }
 }
