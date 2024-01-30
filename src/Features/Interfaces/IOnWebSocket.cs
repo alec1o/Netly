@@ -15,7 +15,7 @@ namespace Netly.Interfaces
         /// Handle (netly event) received
         /// </summary>
         /// <param name="callback">Callback</param>
-        void Event(Action<string, byte[], bool> callback);
+        void Event(Action<string, byte[]> callback);
 
         /// <summary>
         /// Handle connection closed
