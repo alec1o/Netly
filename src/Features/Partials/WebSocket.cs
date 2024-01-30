@@ -11,15 +11,18 @@ namespace Netly.Features
         {
             public bool IsOpened { get; private set; }
             public Uri Host { get; private set; }
+            internal readonly OnWebSocket _onWebSocket;
+            internal readonly ToWebSocket _toWebSocket;
 
             public WebSocket()
             {
                 WebSocket instance = this;
-
+                _onWebSocket = new OnWebSocket(ref instance);
+                _toWebSocket = new ToWebSocket(ref instance);
                 IsOpened = false;
                 Host = new Uri("https://www.example.com/");
-                On = new OnWebSocket(ref instance);
-                To = new ToWebSocket(ref instance);
+                On = _onWebSocket;
+                To = _toWebSocket;
             }
 
 
@@ -27,7 +30,7 @@ namespace Netly.Features
             public IToWebSocket To { get; }
 
 
-            private class OnWebSocket : IOnWebSocket
+            internal class OnWebSocket : IOnWebSocket
             {
                 public readonly WebSocket m_socket;
                 public EventHandler m_onOpen;
@@ -81,7 +84,7 @@ namespace Netly.Features
                 }
             }
 
-            private class ToWebSocket : IToWebSocket
+            internal class ToWebSocket : IToWebSocket
             {
                 public readonly WebSocket m_socket;
 
@@ -92,6 +95,8 @@ namespace Netly.Features
 
                 public void Open(Uri host)
                 {
+                    
+                    
                     throw new NotImplementedException();
                 }
 
