@@ -33,6 +33,7 @@ namespace Netly.Features
                 public EventHandler m_onOpen;
                 public EventHandler<Exception> m_onError;
                 public EventHandler m_onClose;
+                public EventHandler<ClientWebSocket> m_onModify;
                 public OnWebSocket(ref WebSocket websocket)
                 {
                     m_socket = websocket;
@@ -55,7 +56,7 @@ namespace Netly.Features
 
                 public void Modify(Action<ClientWebSocket> callback)
                 {
-                    throw new NotImplementedException();
+                    m_onModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Data(Action<byte[], bool> callback)
