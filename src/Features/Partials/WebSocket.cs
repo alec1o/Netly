@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Net.WebSockets;
+using Netly.Interfaces;
 
 namespace Netly.Features
 {

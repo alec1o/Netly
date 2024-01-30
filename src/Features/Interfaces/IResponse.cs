@@ -1,6 +1,6 @@
 ﻿using Netly.Core;
 
-namespace Netly.Features
+namespace Netly.Interfaces
 {
     internal interface IResponse
     {

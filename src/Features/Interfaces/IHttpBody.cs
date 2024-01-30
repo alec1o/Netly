@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Netly.Core;
 
-namespace Netly.Features
+namespace Netly.Interfaces
 {
     internal interface IHttpBody
     {
