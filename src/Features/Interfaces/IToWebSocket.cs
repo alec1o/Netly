@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.WebSockets;
 
 namespace Netly.Interfaces
 {
@@ -14,6 +15,12 @@ namespace Netly.Interfaces
         /// Close Client Connection
         /// </summary>
         void Close();
+        
+        /// <summary>
+        /// Close Client Connection (with Close Status)
+        /// </summary>
+        /// <param name="closeStatus">Close Status</param>
+        void Close(WebSocketCloseStatus closeStatus);
 
         /// <summary>
         /// Send data for server (bytes)
