@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly.Features
@@ -14,7 +15,7 @@ namespace Netly.Features
             public WebSocket()
             {
                 WebSocket instance = this;
-                
+
                 IsOpened = false;
                 Host = new Uri("https://www.example.com/");
                 On = new OnWebSocket(ref instance);
@@ -24,20 +25,20 @@ namespace Netly.Features
 
             public IOnWebSocket On { get; }
             public IToWebSocket To { get; }
-            
-            
+
+
             private class OnWebSocket : IOnWebSocket
             {
                 public readonly WebSocket m_socket;
-                
+                public EventHandler m_onOpen;
                 public OnWebSocket(ref WebSocket websocket)
                 {
                     m_socket = websocket;
                 }
-                
+
                 public void Open(Action callback)
                 {
-                    throw new NotImplementedException();
+                    m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Error(Action<Exception> callback)
