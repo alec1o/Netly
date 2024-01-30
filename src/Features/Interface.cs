@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.WebSockets;
 using Netly.Core;
 
 namespace Netly.Features
@@ -276,6 +277,21 @@ namespace Netly.Features
         void Modify(Action<TModifyType> callback);
     }
 
+    interface IToHttpServer
+    {
+        /// <summary>
+        /// Open Server Connection
+        /// </summary>
+        /// <param name="host">Server Uri</param>
+        void Open(Uri host);
+
+
+        /// <summary>
+        /// Close Server Connection
+        /// </summary>
+        void Close();
+    }
+    
     internal interface IHttpServer
     {
         /// <summary>
@@ -299,24 +315,16 @@ namespace Netly.Features
         IMap Map { get; }
 
         /// <summary>
-        /// Callback Handler
+        /// Event Handler
         /// </summary>
         IOn<HttpListener> On { get; }
 
 
         /// <summary>
-        /// Open Server Connection
+        /// Event Creator
         /// </summary>
-        /// <param name="host">Server Uri</param>
-        void Open(Uri host);
-
-
-        /// <summary>
-        /// Close Server Connection
-        /// </summary>
-        void Close();
+        IToHttpServer To { get; }
     }
-
 
     internal interface IOnHttpClient : IOn<System.Net.Http.HttpClient>
     {
@@ -327,44 +335,58 @@ namespace Netly.Features
         void Data(Action<Request> request);
     }
 
+    internal interface IToHttpClient
+    {
+        /// <summary>
+        /// Send Request Method
+        /// </summary>
+        /// <param name="method">Http Method</param>
+        /// <param name="host">URI (Url Container)</param>
+        void Open(string method, Uri host);
+
+        /// <summary>
+        /// Force connection close
+        /// </summary>
+        void Close();
+    }
+
     internal interface IHttpClient
     {
         /// <summary>
         /// Request Timeout
         /// </summary>
         int Timeout { get; set; }
-        
+
         /// <summary>
         /// Request Method
         /// </summary>
         HttpMethod Method { get; }
-        
+
         /// <summary>
         /// Request Headers
         /// </summary>
         Dictionary<string, string> Headers { get; }
-        
+
         /// <summary>
         /// Request Queries
         /// </summary>
         Dictionary<string, string> Queries { get; }
-        
+
         /// <summary>
         /// Request Body
         /// </summary>
         IHttpBody Body { get; set; }
-        
+
         /// <summary>
         /// Event Handler
         /// </summary>
         IOnHttpClient On { get; }
-        
+
         /// <summary>
-        /// Send Request Method
+        /// Event Creator
         /// </summary>
-        /// <param name="method">Http Method</param>
-        /// <param name="host">URI (Url Container)</param>
-        void Send(string method, Uri host);
+        IToHttpClient To { get; }
+    }
 
     internal interface IOnWebSocket : IOn<ClientWebSocket>
     {
