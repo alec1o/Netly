@@ -35,6 +35,7 @@ namespace Netly.Features
                 public EventHandler m_onClose;
                 public EventHandler<ClientWebSocket> m_onModify;
                 public EventHandler<(byte[] buffer, bool isText)> m_onData;
+                public EventHandler<(string name, byte[] buffer)> m_onEvent;
                 public OnWebSocket(ref WebSocket websocket)
                 {
                     m_socket = websocket;
@@ -66,9 +67,10 @@ namespace Netly.Features
                         MainThread.Add(() => callback?.Invoke(@event.buffer, @event.isText));
                 }
 
-                public void Event(Action<string, byte[], bool> callback)
+                public void Event(Action<string, byte[]> callback)
                 {
-                    throw new NotImplementedException();
+                    m_onEvent += (@object, @event) =>
+                        MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer));
                 }
 
                 public void Close(Action<WebSocketCloseStatus> callback)
