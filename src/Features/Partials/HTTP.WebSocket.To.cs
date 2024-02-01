@@ -11,7 +11,7 @@ namespace Netly.Features
     {
         public partial class WebSocket
         {
-            internal class ToWebSocket : IToWebSocket
+            private class _To : Interfaces.HTTP.WebSocket.ITo
             {
                 private readonly WebSocket _socket;
                 public Uri m_uri = new Uri("https://www.example.com");
@@ -23,7 +23,7 @@ namespace Netly.Features
 
                 private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
 
-                public ToWebSocket(WebSocket websocket)
+                public _To(WebSocket websocket)
                 {
                     _socket = websocket;
                     _tryConnecting = false;
@@ -31,7 +31,7 @@ namespace Netly.Features
                     _isServerSide = false;
                 }
 
-                public ToWebSocket(System.Net.WebSockets.WebSocket websocket)
+                public _To(System.Net.WebSockets.WebSocket websocket)
                 {
                     _isServerSide = true;
                     _websocketServerSide = websocket;
@@ -48,7 +48,7 @@ namespace Netly.Features
                         try
                         {
                             var ws = new ClientWebSocket();
-                            _socket._onWebSocket.m_onModify?.Invoke(null, ws);
+                            _socket._on.m_onModify?.Invoke(null, ws);
                             await ws.ConnectAsync(host, CancellationToken.None);
 
                             _websocket = ws;
@@ -57,7 +57,7 @@ namespace Netly.Features
                             // TODO: IMP -> CACHING COOKIES (REQUIRE REFLECTIONS)
                             // TODO: IMP -> CACHING HEADERS (REQUIRE REFLECTIONS)
 
-                            _socket._onWebSocket.m_onOpen?.Invoke(null, null);
+                            _socket._on.m_onOpen?.Invoke(null, null);
 
                             _ReceiveData();
                         }
@@ -77,7 +77,7 @@ namespace Netly.Features
                                 _websocket = null;
                             }
 
-                            _socket._onWebSocket.m_onError?.Invoke(null, e);
+                            _socket._on.m_onError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -161,7 +161,7 @@ namespace Netly.Features
                             }
 
                             _tryClosing = false;
-                            _socket._onWebSocket.m_onClose(null, status);
+                            _socket._on.m_onClose(null, status);
                         }
                     }
                 }
@@ -297,12 +297,12 @@ namespace Netly.Features
                                 if (eventData.data != null && eventData.name != null)
                                 {
                                     // Is Netly Event
-                                    _socket._onWebSocket.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
+                                    _socket._on.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
                                 }
                                 else
                                 {
                                     // Is Regular Data
-                                    _socket._onWebSocket.m_onData?.Invoke(null,
+                                    _socket._on.m_onData?.Invoke(null,
                                         (data, result.MessageType == WebSocketMessageType.Text));
                                 }
                             }

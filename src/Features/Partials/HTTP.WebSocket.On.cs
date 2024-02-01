@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
 using Netly.Core;
-using Netly.Interfaces;
 
 namespace Netly.Features
 {
@@ -9,7 +8,7 @@ namespace Netly.Features
     {
         public partial class WebSocket
         {
-            internal class OnWebSocket : IOnWebSocket
+            private class _On : Interfaces.HTTP.WebSocket.IOn
             {
                 public EventHandler m_onOpen;
                 public EventHandler<Exception> m_onError;
@@ -17,7 +16,6 @@ namespace Netly.Features
                 public EventHandler<ClientWebSocket> m_onModify;
                 public EventHandler<(byte[] buffer, bool isText)> m_onData;
                 public EventHandler<(string name, byte[] buffer)> m_onEvent;
-                
 
                 public void Open(Action callback)
                 {
