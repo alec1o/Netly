@@ -9,7 +9,7 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class OnHttpServer : IOn<HttpListener>
+            internal class _On : Interfaces.HTTP.Server.IOn
             {
                 public EventHandler m_onOpen;
                 public EventHandler m_onClose;

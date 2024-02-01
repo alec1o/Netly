@@ -6,26 +6,26 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public partial class Server : Interfaces.IHttpServer
+        public partial class Server : Interfaces.HTTP.IServer
         {
-            internal readonly OnHttpServer m_on;
-            internal readonly ToHttpServer m_to;
-            internal readonly HttpMap m_map;
-            internal readonly HttpMiddleware m_middleware;
+            private readonly _On _on;
+            private readonly _To _to;
+            private readonly _Map _map;
+            private readonly _Middleware _middleware;
 
-            public bool IsOpened => m_to.m_isOpened;
-            public Uri Host => m_to.m_uri;
-            public IMap Map => m_map;
-            public IMiddleware Middleware => m_middleware;
-            public IOn<HttpListener> On => m_on;
-            public IToHttpServer To => m_to;
+            public bool IsOpened => _to.m_isOpened;
+            public Uri Host => _to.m_uri;
+            public Interfaces.HTTP.Server.IMap Map => _map;
+            public Interfaces.HTTP.Server.IMiddleware Middleware => _middleware;
+            public Interfaces.HTTP.Server.IOn On => _on;
+            public Interfaces.HTTP.Server.ITo To => _to;
 
             public Server()
             {
-                m_on = new OnHttpServer();
-                m_map = new HttpMap(this);
-                m_middleware = new HttpMiddleware(this);
-                m_to = new ToHttpServer(this);
+                _on = new _On();
+                _map = new _Map(this);
+                _middleware = new _Middleware(this);
+                _to = new _To(this);
             }
         }
     }

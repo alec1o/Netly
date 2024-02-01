@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Netly.Interfaces;
 
 namespace Netly.Features
@@ -7,24 +8,22 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class ToHttpServer : IToHttpServer
+            internal class _Middleware : Interfaces.HTTP.Server.IMiddleware
             {
                 public readonly HTTP.Server m_server;
-
-                public bool m_isOpened;
-                public Uri m_uri;
-                
-                public ToHttpServer(HTTP.Server server)
+                public _Middleware(HTTP.Server server)
                 {
                     this.m_server = server;
                 }
                 
-                public void Open(Uri host)
+                public Dictionary<string, Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool>>[] Middlewares { get; }
+
+                public bool Add(Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool> middleware)
                 {
                     throw new NotImplementedException();
                 }
 
-                public void Close()
+                public bool Add(string path, Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool> middleware)
                 {
                     throw new NotImplementedException();
                 }
