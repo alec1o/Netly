@@ -65,7 +65,7 @@ namespace Netly.Features
                         {
                             try
                             {
-                                await _websocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty,
+                                await _websocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty,
                                     CancellationToken.None);
                             }
                             catch
@@ -89,7 +89,7 @@ namespace Netly.Features
 
                 public void Close()
                 {
-                    Close(WebSocketCloseStatus.Empty);
+                    Close(WebSocketCloseStatus.NormalClosure);
                 }
 
                 public void Close(WebSocketCloseStatus status)
@@ -113,15 +113,30 @@ namespace Netly.Features
                     {
                         try
                         {
-                            if (_isServerSide)
+                            var state = _initServerSide ? _websocketServerSide.State : _websocket.State;
+
+                            /*
+                                 System.Net.WebSockets.WebSocketException (997):
+                                 The WebSocket is in an invalid state ('Aborted') for this operation.
+                                 Valid states are: 'Open, CloseReceived, CloseSent'
+                            */
+                            if
+                            (
+                                state == WebSocketState.Open ||
+                                state == WebSocketState.CloseReceived ||
+                                state == WebSocketState.CloseSent
+                            )
                             {
-                                await _websocketServerSide.CloseAsync(status, string.Empty, CancellationToken.None);
-                                _websocketServerSide.Dispose();
-                            }
-                            else
-                            {
-                                await _websocket.CloseAsync(status, String.Empty, CancellationToken.None);
-                                _websocket.Dispose();
+                                if (_isServerSide)
+                                {
+                                    await _websocketServerSide.CloseAsync(status, string.Empty, CancellationToken.None);
+                                    _websocketServerSide.Dispose();
+                                }
+                                else
+                                {
+                                    await _websocket.CloseAsync(status, String.Empty, CancellationToken.None);
+                                    _websocket.Dispose();
+                                }
                             }
                         }
                         catch (Exception e)
@@ -314,7 +329,7 @@ namespace Netly.Features
                         return _websocket != null && _websocket.State == WebSocketState.Open;
                     }
                 }
-                
+
                 public void InitWebSocketServerSide()
                 {
                     if (_initServerSide) return;
