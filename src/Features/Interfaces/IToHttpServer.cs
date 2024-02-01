@@ -2,7 +2,7 @@
 
 namespace Netly.Interfaces
 {
-    interface IToHttpServer
+    public interface IToHttpServer
     {
         /// <summary>
         /// Open Server Connection

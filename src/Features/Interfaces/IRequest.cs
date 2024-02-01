@@ -5,7 +5,7 @@ using Netly.Core;
 
 namespace Netly.Interfaces
 {
-    internal interface IRequest
+    public interface IRequest
     {
         /// <summary>
         /// Request encoding

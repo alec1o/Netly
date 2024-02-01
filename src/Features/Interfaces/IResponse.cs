@@ -2,7 +2,7 @@
 
 namespace Netly.Interfaces
 {
-    internal interface IResponse
+    public interface IResponse
     {
         /// <summary>
         /// Response encoding

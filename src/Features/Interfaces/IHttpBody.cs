@@ -3,7 +3,7 @@ using Netly.Core;
 
 namespace Netly.Interfaces
 {
-    internal interface IHttpBody
+    public interface IHttpBody
     {
         /// <summary>
         /// Enctype type

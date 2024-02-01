@@ -2,7 +2,7 @@
 
 namespace Netly.Interfaces
 {
-    internal interface IMap
+    public interface IMap
     {
         /// <summary>
         /// Handle WebSocket from Path

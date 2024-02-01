@@ -5,7 +5,7 @@ using Netly.Core;
 
 namespace Netly
 {
-    internal interface IWebsocketClient
+    public interface IWebsocketClient
     {
         bool IsOpened { get; }
         Uri Uri { get; }

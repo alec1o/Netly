@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Netly.Interfaces
 {
-    internal interface IMiddleware
+    public interface IMiddleware
     {
         /// <summary>
         /// Middleware array
