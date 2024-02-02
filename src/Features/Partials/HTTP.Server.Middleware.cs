@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Netly.Interfaces;
+using IRequest = Netly.Interfaces.HTTP.IRequest;
+using IResponse = Netly.Interfaces.HTTP.IResponse;
 
 namespace Netly.Features
 {
@@ -11,21 +12,39 @@ namespace Netly.Features
             internal class _Middleware : Interfaces.HTTP.Server.IMiddleware
             {
                 public readonly HTTP.Server m_server;
+
+                private readonly List<Dictionary<string, Func<IRequest, IResponse, bool>>> _middlewareList;
+
                 public _Middleware(HTTP.Server server)
                 {
                     this.m_server = server;
-                }
-                
-                public Dictionary<string, Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool>>[] Middlewares { get; }
-
-                public bool Add(Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool> middleware)
-                {
-                    throw new NotImplementedException();
+                    _middlewareList = new List<Dictionary<string, Func<IRequest, IResponse, bool>>>();
                 }
 
-                public bool Add(string path, Func<Interfaces.HTTP.IRequest, Interfaces.HTTP.IResponse, bool> middleware)
+                public Dictionary<string, Func<IRequest, IResponse, bool>>[] Middlewares => _middlewareList.ToArray();
+
+                public bool Add(Func<IRequest, IResponse, bool> middleware)
                 {
-                    throw new NotImplementedException();
+                    if (middleware == null) return false;
+                    var item = new Dictionary<string, Func<IRequest, IResponse, bool>> { { "*", middleware } };
+                    _middlewareList.Add(item);
+                    return true;
+                }
+
+                public bool Add(string path, Func<IRequest, IResponse, bool> middleware)
+                {
+                    path = (path ?? string.Empty).Trim();
+
+                    if (string.IsNullOrWhiteSpace(path)) return false;
+
+                    if (Path.IsValid(path))
+                    {
+                        var item = new Dictionary<string, Func<IRequest, IResponse, bool>> { { "*", middleware } };
+                        _middlewareList.Add(item);
+                        return true;
+                    }
+
+                    return false;
                 }
             }
         }
