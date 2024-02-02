@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace Netly.Features
 {
@@ -8,8 +9,18 @@ namespace Netly.Features
         {
             public static bool IsValid(string path)
             {
-                throw new NotImplementedException();
-            } 
+                // Validate regular path regex (e.g. /root/path[/]?)
+                const string regular = "^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?";
+                // Validate param path regex (e.g. /root/{name}/{id}[/]?):
+                const string nonRegular = "^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?";
+
+                return
+                (
+                    Regex.IsMatch(path, regular, RegexOptions.ECMAScript)
+                    ||
+                    Regex.IsMatch(path, nonRegular, RegexOptions.ECMAScript)
+                );
+            }
         }
     }
 }
