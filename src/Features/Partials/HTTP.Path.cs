@@ -9,6 +9,7 @@ namespace Netly.Features
         {
             public static bool IsValid(string path)
             {
+                // TODO: Create unique regex for validate both scenarios
                 // Validate regular path regex (e.g. /root/path[/]?)
                 const string regular = "^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?";
                 // Validate param path regex (e.g. /root/{name}/{id}[/]?):
