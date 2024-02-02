@@ -13,7 +13,7 @@ namespace Netly.Features
             private readonly _Map _map;
             private readonly _Middleware _middleware;
 
-            public bool IsOpened => _to.m_isOpened;
+            public bool IsOpened => _to.IsOpened;
             public Uri Host => _to.m_uri;
             public Interfaces.HTTP.Server.IMap Map => _map;
             public Interfaces.HTTP.Server.IMiddleware Middleware => _middleware;
