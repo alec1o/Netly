@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace Netly.Core
 {
@@ -115,6 +114,7 @@ namespace Netly.Core
         {
             switch (encodingEncoding)
             {
+                case Encoding.ASCII: return System.Text.Encoding.ASCII;
                 case Encoding.UTF7: return System.Text.Encoding.UTF7;
                 case Encoding.UTF8: return System.Text.Encoding.UTF8;
                 case Encoding.UTF16: return System.Text.Encoding.Unicode;
@@ -126,12 +126,28 @@ namespace Netly.Core
 
         public static Encoding GetProtocolFromNativeEncoding(System.Text.Encoding encoding)
         {
-            if (Equals(encoding, System.Text.Encoding.UTF7)) return Encoding.UTF7;
-            if (Equals(encoding, System.Text.Encoding.UTF8)) return Encoding.UTF8;
-            if (Equals(encoding, System.Text.Encoding.Unicode)) return Encoding.UTF16;
-            if (Equals(encoding, System.Text.Encoding.UTF32)) return Encoding.UTF32;
-            if (Equals(encoding, System.Text.Encoding.Unicode)) return Encoding.UNICODE;
-            else throw new NotImplementedException(encoding.ToString());
+            switch (encoding.WebName.Trim().ToUpper())
+            {
+                case "ASCII": return Encoding.ASCII;
+                case "USASCII": return Encoding.ASCII;
+                case "US-ASCII": return Encoding.ASCII;
+                
+                case "UNICODE": return Encoding.UNICODE;
+
+                case "UTF7": return Encoding.UTF7;
+                case "UTF-7": return Encoding.UTF7;
+
+                case "UTF8": return Encoding.UTF8;
+                case "UTF-8": return Encoding.UTF8;
+
+                case "UTF16": return Encoding.UTF16;
+                case "UTF-16": return Encoding.UTF16;
+
+                case "UTF32": return Encoding.UTF32;
+                case "UTF-32": return Encoding.UTF32;
+                
+                default: throw new NotImplementedException(encoding.ToString());
+            }
         }
     }
 }
