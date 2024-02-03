@@ -13,7 +13,7 @@ namespace Netly.Features
             public NE.Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
 
-            private HttpListenerResponse _response;
+            private readonly HttpListenerResponse _response;
 
 
             internal Response(HttpListenerResponse response)
@@ -32,7 +32,7 @@ namespace Netly.Features
             {
                 if (!IsOpened) return;
                 IsOpened = false;
-                
+
                 Task.Run(() =>
                 {
                     try
@@ -53,17 +53,27 @@ namespace Netly.Features
 
             public void Redirect(string url)
             {
-                throw new System.NotImplementedException();
+                if (!IsOpened) return;
+                IsOpened = false;
+
+                _response.Redirect(url);
             }
 
             public void Redirect(int redirectCode, string url)
             {
-                throw new System.NotImplementedException();
+                if (!IsOpened) return;
+                IsOpened = false;
+
+                _response.RedirectLocation = url;
+                Send(redirectCode, url);
             }
 
             public void Close()
             {
-                throw new System.NotImplementedException();
+                if (!IsOpened) return;
+                IsOpened = false;
+
+                Task.Run(() => { _response.Close(); });
             }
         }
     }
