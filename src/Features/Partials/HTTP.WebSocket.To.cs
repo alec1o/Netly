@@ -140,7 +140,7 @@ namespace Netly.Features
                         }
                         catch (Exception e)
                         {
-                            // TODO: FIX IT
+                            // HACK: FIX IT
                             Console.WriteLine(e);
                         }
                         finally
