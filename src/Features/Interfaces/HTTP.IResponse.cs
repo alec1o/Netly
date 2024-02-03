@@ -15,6 +15,11 @@ namespace Netly.Interfaces
             /// Return true if response connection is opened
             /// </summary>
             bool IsOpened { get; }
+            
+            /// <summary>
+            /// Return true is response is used (sent content/data)
+            /// </summary>
+            bool IsUsed {get;}
 
             /// <summary>
             /// Send response data (string)

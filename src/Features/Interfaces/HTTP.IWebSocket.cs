@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 
 namespace Netly.Interfaces
 {
@@ -6,6 +8,11 @@ namespace Netly.Interfaces
     {
         internal interface IWebSocket
         {
+            /// <summary>
+            /// Connection request
+            /// </summary>
+            IRequest Request { get; }
+            
             /// <summary>
             /// Return true if connection is opened
             /// </summary>

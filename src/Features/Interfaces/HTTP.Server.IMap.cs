@@ -13,7 +13,7 @@ namespace Netly.Interfaces
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void WebSocket(string path, Action<IRequest, IWebsocketClient> callback);
+                void WebSocket(string path, Action<IRequest, Features.HTTP.WebSocket> callback);
 
                 /// <summary>
                 /// Handle All Http Method from Path

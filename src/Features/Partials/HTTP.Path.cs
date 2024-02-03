@@ -22,6 +22,11 @@ namespace Netly.Features
                     Regex.IsMatch(path, nonRegular, RegexOptions.ECMAScript)
                 );
             }
+
+            public static bool ComparePath(string origin, string input)
+            {
+                return origin.Trim().Equals(input.Trim());
+            }
         }
     }
 }

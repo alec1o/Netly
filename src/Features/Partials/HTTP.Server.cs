@@ -14,7 +14,7 @@ namespace Netly.Features
             private readonly _Middleware _middleware;
 
             public bool IsOpened => _to.IsOpened;
-            public Uri Host => _to.m_uri;
+            public Uri Host => _to.Host;
             public Interfaces.HTTP.Server.IMap Map => _map;
             public Interfaces.HTTP.Server.IMiddleware Middleware => _middleware;
             public Interfaces.HTTP.Server.IOn On => _on;

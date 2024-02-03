@@ -13,6 +13,7 @@ namespace Netly.Features
         {
             private class _To : Interfaces.HTTP.WebSocket.ITo
             {
+                public Interfaces.HTTP.IRequest m_request;
                 private readonly WebSocket _socket;
                 public Uri m_uri = new Uri("https://www.example.com");
                 private readonly bool _isServerSide;
@@ -23,18 +24,21 @@ namespace Netly.Features
 
                 private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
 
-                public _To(WebSocket websocket)
+                public _To(WebSocket socket)
                 {
-                    _socket = websocket;
+                    _socket = socket;
                     _tryConnecting = false;
                     _tryClosing = false;
                     _isServerSide = false;
+                    this.m_request = null;
                 }
 
-                public _To(System.Net.WebSockets.WebSocket websocket)
+                public _To(WebSocket socket, System.Net.WebSockets.WebSocket websocket, Interfaces.HTTP.IRequest request)
                 {
+                    _socket = socket;
                     _isServerSide = true;
                     _websocketServerSide = websocket;
+                    this.m_request = request;
                 }
 
                 public void Open(Uri host)
@@ -49,9 +53,11 @@ namespace Netly.Features
                         {
                             var ws = new ClientWebSocket();
                             _socket._on.m_onModify?.Invoke(null, ws);
+                            m_request = new Request(ws, host);
                             await ws.ConnectAsync(host, CancellationToken.None);
 
                             _websocket = ws;
+                            
                             m_uri = host;
 
                             // TODO: IMP -> CACHING COOKIES (REQUIRE REFLECTIONS)

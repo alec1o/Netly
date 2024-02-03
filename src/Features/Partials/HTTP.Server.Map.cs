@@ -21,7 +21,7 @@ namespace Netly.Features
                     public string Method { get; private set; }
                     public bool IsWebsocket { get; private set; }
                     public Action<IRequest, IResponse> HttpCallback { get; private set; }
-                    public Action<IRequest, IWebsocketClient> WebsocketCallback { get; private set; }
+                    public Action<IRequest, WebSocket> WebsocketCallback { get; private set; }
 
                     public MapContainer
                     (
@@ -29,7 +29,7 @@ namespace Netly.Features
                         string method,
                         bool isWebsocket,
                         Action<IRequest, IResponse> httpCallback,
-                        Action<IRequest, IWebsocketClient> websocketCallback
+                        Action<IRequest, WebSocket> websocketCallback
                     )
                     {
                         this.Path = path;
@@ -56,7 +56,7 @@ namespace Netly.Features
                     string method,
                     bool isWebsocket,
                     Action<IRequest, IResponse> httpCallback,
-                    Action<IRequest, IWebsocketClient> websocketCallback
+                    Action<IRequest, WebSocket> websocketCallback
                 )
                 {
                     path = (path ?? string.Empty).Trim();
@@ -75,7 +75,7 @@ namespace Netly.Features
                     }
                 }
 
-                public void WebSocket(string path, Action<IRequest, IWebsocketClient> callback)
+                public void WebSocket(string path, Action<IRequest, HTTP.WebSocket> callback)
                 {
                     Add
                     (

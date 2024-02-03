@@ -10,6 +10,7 @@ namespace Netly.Features
         {
             private readonly _On _on = new _On();
             private readonly _To _to;
+            public Interfaces.HTTP.IRequest Request => _to.m_request;
             public Uri Host => _to.m_uri;
             public bool IsOpened => _to.IsConnected();
             public Interfaces.HTTP.WebSocket.IOn On => _on;
@@ -27,9 +28,15 @@ namespace Netly.Features
             /// Create Server Side Client Instance
             /// </summary>
             /// <param name="serverSocket"></param>
-            internal WebSocket(ClientWebSocket serverSocket)
+            /// <param name="request"></param>
+            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, Interfaces.HTTP.IRequest request)
             {
-                _to = new _To(serverSocket);
+                _to = new _To(this, serverSocket, request);
+            }
+
+            internal void InitWebSocketServerSide()
+            {
+                _to.InitWebSocketServerSide();
             }
         }
     }
