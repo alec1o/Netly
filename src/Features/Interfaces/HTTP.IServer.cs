@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Net;
 
-namespace Netly.Interfaces
+namespace Netly.Features
 {
-    public partial class HTTP
+    public static partial class HTTP
     {
         internal interface IServer
         {

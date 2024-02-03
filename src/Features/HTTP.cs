@@ -3,7 +3,7 @@
     /// <summary>
     /// HTTP Container
     /// </summary>
-    public partial class HTTP
+    public static partial class HTTP
     {
         /// <summary>
         /// HTTP Client

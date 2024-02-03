@@ -1,8 +1,8 @@
 ﻿using Netly.Core;
 
-namespace Netly.Interfaces
+namespace Netly.Features
 {
-    public partial class HTTP
+    public static partial class HTTP
     {
         public interface IResponse
         {

@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Net.WebSockets;
-using Netly.Interfaces;
 
 namespace Netly.Features
 {
     public partial class HTTP
     {
-        public partial class WebSocket : Interfaces.HTTP.IWebSocket
+        public partial class WebSocket : IWebSocket
         {
             private readonly _On _on = new _On();
             private readonly _To _to;
-            public Interfaces.HTTP.IRequest Request => _to.m_request;
+            public IRequest Request => _to.m_request;
             public Uri Host => _to.m_uri;
             public bool IsOpened => _to.IsConnected();
-            public Interfaces.HTTP.WebSocket.IOn On => _on;
-            public Interfaces.HTTP.WebSocket.ITo To => _to;
+            public IOn On => _on;
+            public ITo To => _to;
 
             /// <summary>
             /// Create Websocket Client Instance
@@ -29,7 +27,7 @@ namespace Netly.Features
             /// </summary>
             /// <param name="serverSocket"></param>
             /// <param name="request"></param>
-            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, Interfaces.HTTP.IRequest request)
+            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, IRequest request)
             {
                 _to = new _To(this, serverSocket, request);
             }

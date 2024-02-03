@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using IRequest = Netly.Interfaces.HTTP.IRequest;
-using IResponse = Netly.Interfaces.HTTP.IResponse;
-using IMiddlewareContainer = Netly.Interfaces.HTTP.Server.IMiddlewareContainer;
 
 namespace Netly.Features
 {
@@ -10,14 +7,14 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class _Middleware : Interfaces.HTTP.Server.IMiddleware
+            internal class _Middleware : IMiddleware
             {
                 public const string GLOBAL_PATH = "*";
-                public readonly HTTP.Server m_server;
+                public readonly Server m_server;
 
                 private readonly List<IMiddlewareContainer> _middlewares;
 
-                public _Middleware(HTTP.Server server)
+                public _Middleware(Server server)
                 {
                     this.m_server = server;
                     _middlewares = new List<IMiddlewareContainer>();

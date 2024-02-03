@@ -8,7 +8,7 @@ namespace Netly.Features
     {
         public partial class WebSocket
         {
-            private class _On : Interfaces.HTTP.WebSocket.IOn
+            private class _On : IOn
             {
                 public EventHandler m_onOpen;
                 public EventHandler<Exception> m_onError;

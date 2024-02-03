@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using Netly.Core;
-using Netly.Interfaces;
 
 namespace Netly.Features
 {
@@ -11,9 +10,9 @@ namespace Netly.Features
     {
         public partial class WebSocket
         {
-            private class _To : Interfaces.HTTP.WebSocket.ITo
+            private class _To : ITo
             {
-                public Interfaces.HTTP.IRequest m_request;
+                public IRequest m_request;
                 private readonly WebSocket _socket;
                 public Uri m_uri = new Uri("https://www.example.com");
                 private readonly bool _isServerSide;
@@ -33,7 +32,7 @@ namespace Netly.Features
                     this.m_request = null;
                 }
 
-                public _To(WebSocket socket, System.Net.WebSockets.WebSocket websocket, Interfaces.HTTP.IRequest request)
+                public _To(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IRequest request)
                 {
                     _socket = socket;
                     _isServerSide = true;

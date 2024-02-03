@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using Netly.Core;
-using Netly.Interfaces;
+using Netly.Features;
 
 namespace Netly.Features
 {
@@ -9,7 +9,7 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class _On : Interfaces.HTTP.Server.IOn
+            internal class _On : IOn
             {
                 public EventHandler m_onOpen;
                 public EventHandler m_onClose;

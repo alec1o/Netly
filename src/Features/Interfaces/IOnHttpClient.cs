@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Netly.Interfaces
+namespace Netly.Features
 {
     internal interface IOnHttpClient : IOn<System.Net.Http.HttpClient>
     {

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using Netly.Interfaces;
-using IRequest = Netly.Interfaces.HTTP.IRequest;
-using IResponse = Netly.Interfaces.HTTP.IResponse;
 
 namespace Netly.Features
 {
@@ -11,7 +8,7 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class _Map : Interfaces.HTTP.Server.IMap
+            internal class _Map : IMap
             {
                 internal const string ALL_MEHOD = "*";
 
@@ -32,19 +29,19 @@ namespace Netly.Features
                         Action<IRequest, WebSocket> websocketCallback
                     )
                     {
-                        this.Path = path;
-                        this.Method = method;
-                        this.IsWebsocket = isWebsocket;
-                        this.HttpCallback = httpCallback;
-                        this.WebsocketCallback = websocketCallback;
+                        Path = path;
+                        Method = method;
+                        IsWebsocket = isWebsocket;
+                        HttpCallback = httpCallback;
+                        WebsocketCallback = websocketCallback;
                     }
                 }
 
-                public readonly HTTP.Server m_server;
+                public readonly Server m_server;
 
                 public readonly List<MapContainer> m_mapList;
 
-                public _Map(HTTP.Server server)
+                public _Map(Server server)
                 {
                     this.m_server = server;
                     m_mapList = new List<MapContainer>();
@@ -66,8 +63,8 @@ namespace Netly.Features
                         var map = new MapContainer
                         (
                             path: path,
-                            method: String.Empty,
-                            isWebsocket: true,
+                            method: method,
+                            isWebsocket: isWebsocket,
                             httpCallback: httpCallback,
                             websocketCallback: websocketCallback
                         );
@@ -75,7 +72,7 @@ namespace Netly.Features
                     }
                 }
 
-                public void WebSocket(string path, Action<IRequest, HTTP.WebSocket> callback)
+                public void WebSocket(string path, Action<IRequest, WebSocket> callback)
                 {
                     Add
                     (

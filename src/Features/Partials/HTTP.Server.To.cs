@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using IMiddlewareContainer = Netly.Interfaces.HTTP.Server.IMiddlewareContainer;
 
 namespace Netly.Features
 {
@@ -11,16 +10,16 @@ namespace Netly.Features
     {
         public partial class Server
         {
-            internal class _To : Interfaces.HTTP.Server.ITo
+            internal class _To : ITo
             {
                 private bool _tryOpen, _tryClose;
                 private HttpListener _listener;
-                
+
                 public readonly Server m_server;
                 public bool IsOpened => _listener != null && _listener.IsListening;
                 public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
-                public _To(HTTP.Server server)
+                public _To(Server server)
                 {
                     this.m_server = server;
                 }
@@ -127,8 +126,8 @@ namespace Netly.Features
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
-                    var request = new HTTP.Request(context.Request);
-                    var response = new HTTP.Response(context.Response);
+                    var request = new Request(context.Request);
+                    var response = new Response(context.Response);
                     var notFoundMessage = $"{request.Method.Method.ToUpper()} {request.Path}";
 
                     var skipConnectionByMiddleware = false;
@@ -168,7 +167,7 @@ namespace Netly.Features
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
                         var paths = m_server._map.m_mapList.FindAll(x =>
-                                Path.ComparePath(request.Path, x.Path) &&
+                                Path.ComparePath(request.Path, x.Path) && !x.IsWebsocket &&
                                 (request.Method.Method.ToUpper() == x.Method.ToUpper() ||
                                  x.Method.ToUpper() == _Map.ALL_MEHOD.ToUpper()))
                             .ToArray();
@@ -194,7 +193,7 @@ namespace Netly.Features
                     else // IS WEBSOCKET CONNECTION
                     {
                         var paths = m_server._map.m_mapList.FindAll(x =>
-                            x.Path == request.Path && x.IsWebsocket == true);
+                            Path.ComparePath(x.Path, request.Path) && x.IsWebsocket);
 
                         if (paths.Count <= 0)
                         {
@@ -205,7 +204,7 @@ namespace Netly.Features
 
                         var ws = await context.AcceptWebSocketAsync(subProtocol: null);
 
-                        var websocket = new HTTP.WebSocket(ws.WebSocket, request);
+                        var websocket = new WebSocket(ws.WebSocket, request);
 
                         foreach (var path in paths)
                         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Netly.Core;
 
@@ -8,7 +7,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public class Response : Interfaces.HTTP.IResponse
+        public class Response : IResponse
         {
             public NE.Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
@@ -46,7 +45,7 @@ namespace Netly.Features
                     catch (Exception e)
                     {
                         // TODO: Handle it
-                        Console.WriteLine($"{nameof(HTTP.Request)} -> {nameof(Send)}: {e}");
+                        Console.WriteLine($"{nameof(Request)} -> {nameof(Send)}: {e}");
                     }
                 });
             }

@@ -9,7 +9,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public class Request : Interfaces.HTTP.IRequest
+        public class Request : IRequest
         {
             public NE.Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
@@ -24,7 +24,7 @@ namespace Netly.Features
             public bool IsWebSocket { get; }
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
-            public Interfaces.HTTP.IBody Body { get; }
+            public IBody Body { get; }
 
             internal Request(HttpListenerRequest request)
             {
@@ -83,7 +83,7 @@ namespace Netly.Features
 
                     byte[] buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
-                    Body = new HTTP.Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, enctype, Encoding);
                 }
             }
 
