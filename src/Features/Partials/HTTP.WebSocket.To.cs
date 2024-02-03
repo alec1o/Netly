@@ -53,18 +53,11 @@ namespace Netly.Features
                         {
                             var ws = new ClientWebSocket();
                             _socket._on.m_onModify?.Invoke(null, ws);
-                            m_request = new Request(ws, host);
                             await ws.ConnectAsync(host, CancellationToken.None);
-
+                            m_request = new Request(ws, host);
                             _websocket = ws;
-                            
                             m_uri = host;
-
-                            // TODO: IMP -> CACHING COOKIES (REQUIRE REFLECTIONS)
-                            // TODO: IMP -> CACHING HEADERS (REQUIRE REFLECTIONS)
-
                             _socket._on.m_onOpen?.Invoke(null, null);
-
                             _ReceiveData();
                         }
                         catch (Exception e)
