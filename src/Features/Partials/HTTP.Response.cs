@@ -7,7 +7,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public class Response : IResponse
+        internal class Response : IResponse
         {
             public NE.Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }

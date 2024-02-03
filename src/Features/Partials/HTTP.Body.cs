@@ -6,7 +6,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public class Body : IBody
+        internal class Body : IBody
         {
             public Enctype Enctype { get; }
             public string Text { get; }

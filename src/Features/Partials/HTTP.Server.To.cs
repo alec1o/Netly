@@ -89,6 +89,7 @@ namespace Netly.Features
                         }
                         finally
                         {
+                            _tryClose = false;
                             _listener = null;
                             m_server._on.m_onClose?.Invoke(null, null);
                         }
@@ -102,20 +103,37 @@ namespace Netly.Features
                         while (IsOpened)
                         {
                             HttpListenerContext context = null;
+                            Console.WriteLine("Request entry.");
 
                             try
                             {
                                 context = _listener.GetContext();
                             }
-                            catch
+                            catch (Exception e)
                             {
                                 context = null;
+                                Console.WriteLine($"Request fail: {e}");
                             }
                             finally
                             {
                                 if (context != null)
                                 {
-                                    Task.Run(async () => await HandleConnection(context));
+                                    Task.Run(() =>
+                                    {
+                                        Console.WriteLine("Task Init");
+
+                                        try
+                                        {
+                                            var task = HandleConnection(context);
+                                            Task.WaitAll(task);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine($"Task error: {e}");
+                                        }
+
+                                        Console.WriteLine("Task End");
+                                    });
                                 }
                             }
                         }
@@ -126,9 +144,13 @@ namespace Netly.Features
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
+                    Console.WriteLine("Request processing.");
+
                     var request = new Request(context.Request);
                     var response = new Response(context.Response);
                     var notFoundMessage = $"{request.Method.Method.ToUpper()} {request.Path}";
+
+                    Console.WriteLine("Request starting.");
 
                     var skipConnectionByMiddleware = false;
 
@@ -152,18 +174,23 @@ namespace Netly.Features
                     // GLOBAL MIDDLEWARES
                     var globalMiddlewares = m_server.Middleware.Middlewares.ToList()
                         .FindAll(x => x.Path == _Middleware.GLOBAL_PATH);
+                    Console.WriteLine($"Run global middleware (skip: {skipConnectionByMiddleware})");
                     RunMiddlewares(globalMiddlewares.ToArray());
 
                     // LOCAL MIDDLEWARES
                     var localMiddlewares = m_server.Middleware.Middlewares.ToList()
                         .FindAll(x => x.Path != _Middleware.GLOBAL_PATH && Path.ComparePath(request.Path, x.Path));
+                    Console.WriteLine($"Run local middleware (skip: {skipConnectionByMiddleware})");
                     RunMiddlewares(localMiddlewares.ToArray());
+
+                    Console.WriteLine($"Done run middleware (skip: {skipConnectionByMiddleware})");
 
                     if (skipConnectionByMiddleware)
                     {
                         return;
                     }
 
+                    Console.WriteLine($"Is WebSocket: {request.IsWebSocket}");
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
                         var paths = m_server._map.m_mapList.FindAll(x =>

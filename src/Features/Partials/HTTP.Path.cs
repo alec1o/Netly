@@ -4,7 +4,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public static class Path
+        internal static class Path
         {
             public static bool IsValid(string path)
             {

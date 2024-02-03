@@ -9,7 +9,7 @@ namespace Netly.Features
 {
     public partial class HTTP
     {
-        public class Request : IRequest
+        internal class Request : IRequest
         {
             public NE.Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
@@ -75,7 +75,7 @@ namespace Netly.Features
                     IsLocalRequest = request.IsLocal;
 
                     IsEncrypted = request.IsSecureConnection;
-                    
+
                     Encoding = NE.GetProtocolFromNativeEncoding(request.ContentEncoding);
 
                     // TODO: detect enctype from Header
