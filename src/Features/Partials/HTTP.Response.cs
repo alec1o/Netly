@@ -7,14 +7,17 @@ namespace Netly.Features
     {
         public class Response : Interfaces.HTTP.IResponse
         {
-            public NE.Mode Encoding { get; }
+            public NE.Mode Encoding { get; set; }
             public bool IsOpened { get; }
-            public bool IsUsed { get; }
+
+            private HttpListenerResponse _response;
 
 
             internal Response(HttpListenerResponse response)
             {
-                
+                IsOpened = true;
+                Encoding = NE.Mode.UTF8;
+                _response = response;
             }
             
             public void Send(int statusCode, string textBuffer)

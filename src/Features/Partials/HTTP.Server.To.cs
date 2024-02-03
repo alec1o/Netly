@@ -183,7 +183,7 @@ namespace Netly.Features
                         {
                             path.HttpCallback?.Invoke(request, response);
 
-                            if (!response.IsUsed)
+                            if (response.IsOpened)
                             {
                                 response.Send(508, $"Loop Detected {path.Path}");
                                 throw new NotImplementedException(

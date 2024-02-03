@@ -9,18 +9,13 @@ namespace Netly.Interfaces
             /// <summary>
             /// Response encoding
             /// </summary>
-            NE.Mode Encoding { get; }
+            NE.Mode Encoding { get; set; }
 
             /// <summary>
             /// Return true if response connection is opened
             /// </summary>
             bool IsOpened { get; }
             
-            /// <summary>
-            /// Return true is response is used (sent content/data)
-            /// </summary>
-            bool IsUsed {get;}
-
             /// <summary>
             /// Send response data (string)
             /// </summary>
