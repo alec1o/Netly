@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Netly.Interfaces;
+using IMiddlewareContainer = Netly.Interfaces.HTTP.Server.IMiddlewareContainer;
 
 namespace Netly.Features
 {
@@ -40,7 +40,7 @@ namespace Netly.Features
                             string httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
 
                             server.Prefixes.Add(httpUrl);
-                            
+
                             m_server._on.m_onModify?.Invoke(null, server);
 
                             server.Start();
@@ -103,121 +103,123 @@ namespace Netly.Features
                     {
                         while (IsOpened)
                         {
+                            HttpListenerContext context = null;
+
                             try
                             {
-                                var context = _listener.GetContext();
-                                var request = new Request(context.Request);
-                                var response = new Response(context.Response);
-                                var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
-
-                                var skipConnection = false;
-
-                                // GLOBAL MIDDLEWARES
-                                {
-                                    foreach (var action in GlobalMiddlewares)
-                                    {
-                                        bool success = action.callback(request, response);
-
-                                        if (!success)
-                                        {
-                                            skipConnection = true;
-                                            break;
-                                        }
-                                    }
-
-                                    // is middleware return false, connection will skipped
-                                    if (skipConnection)
-                                    {
-                                        continue;
-                                    }
-                                }
-
-                                // LOCAL MIDDLEWARES
-                                {
-                                    foreach (var action in m_server.Middleware.Middlewares.ToList()
-                                                 .FindAll(x => request.ComparePath(x.Path)))
-                                    {
-                                        bool success = action.callback(request, response);
-
-                                        if (!success)
-                                        {
-                                            skipConnection = true;
-                                            break;
-                                        }
-                                    }
-
-                                    // is middleware return false, connection will skipped
-                                    if (skipConnection)
-                                    {
-                                        continue;
-                                    }
-                                }
-
-                                if (request.IsWebSocket == false) // IS HTTP CONNECTION
-                                {
-                                    var paths = m_server._map.m_mapList.FindAll(x =>
-                                            request.ComparePath(x.Path) &&
-                                            (request.Method.Method.ToUpper() == x.Method.ToUpper() ||
-                                             x.Method.ToUpper() == _Map.ALL_MEHOD.ToUpper()))
-                                        .ToArray();
-
-                                    if (paths.Length <= 0)
-                                    {
-                                        response.Send(404, notFoundMessage);
-                                        continue;
-                                    }
-
-                                    foreach (var path in paths)
-                                    {
-                                        path.HttpCallback?.Invoke(request, response);
-
-                                        if (!response.IsUsed)
-                                        {
-                                            response.Send(508, $"Loop Detected {path.Path}");
-                                            throw new NotImplementedException(
-                                                $"NULL response detected on [path='{path.Path}']");
-                                        }
-                                    }
-                                }
-                                else // IS WEBSOCKET CONNECTION
-                                {
-                                    var paths = m_server._map.m_mapList.FindAll(x =>
-                                        x.Path == request.Path && x.IsWebsocket == true);
-
-                                    if (paths.Count <= 0)
-                                    {
-                                        response.Send(404, notFoundMessage);
-                                        continue;
-                                    }
-
-                                    Task.Run(async () =>
-                                    {
-                                        var ws = await context.AcceptWebSocketAsync(subProtocol: null);
-
-                                        var websocket = new WebSocketClient(ws.WebSocket)
-                                        {
-                                            Headers = request.Headers,
-                                            Cookies = request.Cookies,
-                                            Uri = request.RawRequest.Url,
-                                        };
-
-                                        foreach (var path in paths)
-                                        {
-                                            path.WebsocketCallback?.Invoke(request, websocket);
-                                        }
-
-                                        websocket.InitWebSocketServerSide();
-                                    });
-                                }
+                                context = _listener.GetContext();
                             }
                             catch
                             {
-                                // Ignored
+                                context = null;
+                            }
+                            finally
+                            {
+                                if (context != null)
+                                {
+                                    Task.Run(async () => await HandleConnection(context));
+                                }
                             }
                         }
 
                         Close();
                     });
+                }
+
+                private async Task HandleConnection(HttpListenerContext context)
+                {
+                    var request = new Request(context.Request);
+                    var response = new Response(context.Response);
+                    var notFoundMessage = $"{request.RawRequest.HttpMethod.ToUpper()} {request.Path}";
+
+                    var skipConnectionByMiddleware = false;
+
+                    void RunMiddlewares(IMiddlewareContainer[] middlewares)
+                    {
+                        foreach (var middleware in middlewares)
+                        {
+                            if (skipConnectionByMiddleware) break;
+
+                            bool @continue = middleware.Callback(request, response);
+
+                            if (!@continue)
+                            {
+                                skipConnectionByMiddleware = true;
+                                response.Send(500, "Internal Server Error");
+                                break;
+                            }
+                        }
+                    }
+
+                    // GLOBAL MIDDLEWARES
+                    var globalMiddlewares = m_server.Middleware.Middlewares.ToList()
+                        .FindAll(x => x.Path == _Middleware.GLOBAL_PATH);
+                    RunMiddlewares(globalMiddlewares.ToArray());
+
+                    // LOCAL MIDDLEWARES
+                    var localMiddlewares = m_server.Middleware.Middlewares.ToList()
+                        .FindAll(x => x.Path != _Middleware.GLOBAL_PATH && request.ComparePath(x.Path));
+                    RunMiddlewares(localMiddlewares.ToArray());
+
+                    if (skipConnectionByMiddleware)
+                    {
+                        return;
+                    }
+
+                    if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                    {
+                        var paths = m_server._map.m_mapList.FindAll(x =>
+                                request.ComparePath(x.Path) &&
+                                (request.Method.Method.ToUpper() == x.Method.ToUpper() ||
+                                 x.Method.ToUpper() == _Map.ALL_MEHOD.ToUpper()))
+                            .ToArray();
+
+                        if (paths.Length <= 0)
+                        {
+                            response.Send(404, notFoundMessage);
+                            return;
+                        }
+
+                        foreach (var path in paths)
+                        {
+                            path.HttpCallback?.Invoke(request, response);
+
+                            if (!response.IsUsed)
+                            {
+                                response.Send(508, $"Loop Detected {path.Path}");
+                                throw new NotImplementedException(
+                                    $"NULL response detected on [path='{path.Path}']");
+                            }
+                        }
+                    }
+                    else // IS WEBSOCKET CONNECTION
+                    {
+                        var paths = m_server._map.m_mapList.FindAll(x =>
+                            x.Path == request.Path && x.IsWebsocket == true);
+
+                        if (paths.Count <= 0)
+                        {
+                            response.Send(404, notFoundMessage);
+                            return;
+                        }
+
+
+                        var ws = await context.AcceptWebSocketAsync(subProtocol: null);
+
+                        var websocket = new WebSocketClient(ws.WebSocket)
+                        {
+                            Headers = request.Headers,
+                            Cookies = request.Cookies,
+                            Uri = request.RawRequest.Url,
+                        };
+
+                        foreach (var path in paths)
+                        {
+                            path.WebsocketCallback?.Invoke(request, websocket);
+                        }
+
+                        websocket.InitWebSocketServerSide();
+                    }
                 }
             }
         }
