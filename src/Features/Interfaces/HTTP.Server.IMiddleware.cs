@@ -12,7 +12,7 @@ namespace Netly.Interfaces
                 /// <summary>
                 /// Middleware array
                 /// </summary>
-                Dictionary<string, Func<IRequest, IResponse, bool>>[] Middlewares { get; }
+                IMiddlewareContainer[]  Middlewares { get; }
 
                 /// <summary>
                 /// Add global middleware handler

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using IRequest = Netly.Interfaces.HTTP.IRequest;
 using IResponse = Netly.Interfaces.HTTP.IResponse;
+using IMiddlewareContainer = Netly.Interfaces.HTTP.Server.IMiddlewareContainer;
 
 namespace Netly.Features
 {
@@ -11,36 +12,35 @@ namespace Netly.Features
         {
             internal class _Middleware : Interfaces.HTTP.Server.IMiddleware
             {
+                public const string GLOBAL_PATH = "*";
                 public readonly HTTP.Server m_server;
 
-                private readonly List<Dictionary<string, Func<IRequest, IResponse, bool>>> _middlewareList;
+                private readonly List<IMiddlewareContainer> _middlewares;
 
                 public _Middleware(HTTP.Server server)
                 {
                     this.m_server = server;
-                    _middlewareList = new List<Dictionary<string, Func<IRequest, IResponse, bool>>>();
+                    _middlewares = new List<IMiddlewareContainer>();
                 }
 
-                public Dictionary<string, Func<IRequest, IResponse, bool>>[] Middlewares => _middlewareList.ToArray();
+                public IMiddlewareContainer[] Middlewares => _middlewares.ToArray();
 
                 public bool Add(Func<IRequest, IResponse, bool> middleware)
                 {
-                    if (middleware == null) return false;
-                    var item = new Dictionary<string, Func<IRequest, IResponse, bool>> { { "*", middleware } };
-                    _middlewareList.Add(item);
-                    return true;
+                    return Add(GLOBAL_PATH, middleware);
                 }
 
                 public bool Add(string path, Func<IRequest, IResponse, bool> middleware)
                 {
+                    if (middleware == null) return false;
+                    
                     path = (path ?? string.Empty).Trim();
 
                     if (string.IsNullOrWhiteSpace(path)) return false;
 
-                    if (Path.IsValid(path))
+                    if (GLOBAL_PATH.Equals(path) || Path.IsValid(path))
                     {
-                        var item = new Dictionary<string, Func<IRequest, IResponse, bool>> { { "*", middleware } };
-                        _middlewareList.Add(item);
+                        _middlewares.Add(new MiddlewareContainer(path, middleware));
                         return true;
                     }
 
