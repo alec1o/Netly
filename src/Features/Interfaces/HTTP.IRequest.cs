@@ -12,7 +12,7 @@ namespace Netly.Interfaces
             /// <summary>
             /// Request encoding
             /// </summary>
-            NE.Mode Encoding { get; }
+            NE.Encoding Encoding { get; }
 
             /// <summary>
             /// Request Headers

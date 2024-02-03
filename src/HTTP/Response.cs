@@ -46,7 +46,7 @@ namespace Netly
 
         public void Send(int statusCode, string buffer)
         {
-            Send(statusCode, NE.GetBytes(buffer, NE.Mode.UTF8));
+            Send(statusCode, NE.GetBytes(buffer, NE.Encoding.UTF8));
         }
     }
 }

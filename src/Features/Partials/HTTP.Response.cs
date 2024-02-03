@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly.Features
@@ -7,8 +10,8 @@ namespace Netly.Features
     {
         public class Response : Interfaces.HTTP.IResponse
         {
-            public NE.Mode Encoding { get; set; }
-            public bool IsOpened { get; }
+            public NE.Encoding Encoding { get; set; }
+            public bool IsOpened { get; private set; }
 
             private HttpListenerResponse _response;
 
@@ -16,18 +19,36 @@ namespace Netly.Features
             internal Response(HttpListenerResponse response)
             {
                 IsOpened = true;
-                Encoding = NE.Mode.UTF8;
+                Encoding = NE.Encoding.UTF8;
                 _response = response;
             }
-            
+
             public void Send(int statusCode, string textBuffer)
             {
-                throw new System.NotImplementedException();
+                Send(statusCode, NE.GetBytes(textBuffer, Encoding));
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
             {
-                throw new System.NotImplementedException();
+                if (!IsOpened) return;
+                IsOpened = false;
+                
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        _response.StatusCode = statusCode;
+                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(Encoding);
+                        _response.ContentLength64 = byteBuffer.Length;
+                        _response.OutputStream.Write(byteBuffer, 0, byteBuffer.Length);
+                        _response.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO: Handle it
+                        Console.WriteLine($"{nameof(HTTP.Request)} -> {nameof(Send)}: {e}");
+                    }
+                });
             }
 
             public void Redirect(string url)

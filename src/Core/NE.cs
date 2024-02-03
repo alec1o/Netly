@@ -11,7 +11,7 @@ namespace Netly.Core
         /// <summary>
         /// Are the supported encoders method
         /// </summary>
-        public enum Mode
+        public enum Encoding
         {
             /// <summary>
             /// ASCII
@@ -48,7 +48,7 @@ namespace Netly.Core
         /// Is the default (generic) encoder used when encoding is not specified<br/>
         /// Default value is: UTF8
         /// </summary>
-        public static Mode Default { get; set; } = Mode.UTF8;
+        public static Encoding Default { get; set; } = Encoding.UTF8;
 
 
         /// <summary>
@@ -75,18 +75,18 @@ namespace Netly.Core
         /// Convert bytes to string
         /// </summary>
         /// <param name="value">Value</param>
-        /// <param name="encode">Encoding protocol</param>
+        /// <param name="encoding">Encoding protocol</param>
         /// <returns></returns>
-        public static string GetString(byte[] value, Mode encode)
+        public static string GetString(byte[] value, Encoding encoding)
         {
-            switch (encode)
+            switch (encoding)
             {
-                case Mode.ASCII: return Encoding.ASCII.GetString(value);
-                case Mode.UTF7: return Encoding.UTF7.GetString(value);
-                case Mode.UTF8: return Encoding.UTF8.GetString(value);
-                case Mode.UTF16: return Encoding.Unicode.GetString(value);
-                case Mode.UTF32: return Encoding.UTF32.GetString(value);
-                case Mode.UNICODE: return Encoding.Unicode.GetString(value);
+                case Encoding.ASCII: return System.Text.Encoding.ASCII.GetString(value);
+                case Encoding.UTF7: return System.Text.Encoding.UTF7.GetString(value);
+                case Encoding.UTF8: return System.Text.Encoding.UTF8.GetString(value);
+                case Encoding.UTF16: return System.Text.Encoding.Unicode.GetString(value);
+                case Encoding.UTF32: return System.Text.Encoding.UTF32.GetString(value);
+                case Encoding.UNICODE: return System.Text.Encoding.Unicode.GetString(value);
                 default: return string.Empty;
             }
         }
@@ -95,20 +95,43 @@ namespace Netly.Core
         /// Convert value to bytes
         /// </summary>
         /// <param name="value">Value</param>
-        /// <param name="encode">Encoding protocol</param>
+        /// <param name="encoding">Encoding protocol</param>
         /// <returns></returns>
-        public static byte[] GetBytes(string value, Mode encode)
+        public static byte[] GetBytes(string value, Encoding encoding)
         {
-            switch (encode)
+            switch (encoding)
             {
-                case Mode.ASCII: return Encoding.ASCII.GetBytes(value);
-                case Mode.UTF7: return Encoding.UTF7.GetBytes(value);
-                case Mode.UTF8: return Encoding.UTF8.GetBytes(value);
-                case Mode.UTF16: return Encoding.Unicode.GetBytes(value);
-                case Mode.UTF32: return Encoding.UTF32.GetBytes(value);
-                case Mode.UNICODE: return Encoding.Unicode.GetBytes(value);
+                case Encoding.ASCII: return System.Text.Encoding.ASCII.GetBytes(value);
+                case Encoding.UTF7: return System.Text.Encoding.UTF7.GetBytes(value);
+                case Encoding.UTF8: return System.Text.Encoding.UTF8.GetBytes(value);
+                case Encoding.UTF16: return System.Text.Encoding.Unicode.GetBytes(value);
+                case Encoding.UTF32: return System.Text.Encoding.UTF32.GetBytes(value);
+                case Encoding.UNICODE: return System.Text.Encoding.Unicode.GetBytes(value);
                 default: return Array.Empty<byte>();
             }
+        }
+
+        public static System.Text.Encoding GetNativeEncodingFromProtocol(Encoding encodingEncoding)
+        {
+            switch (encodingEncoding)
+            {
+                case Encoding.UTF7: return System.Text.Encoding.UTF7;
+                case Encoding.UTF8: return System.Text.Encoding.UTF8;
+                case Encoding.UTF16: return System.Text.Encoding.Unicode;
+                case Encoding.UTF32: return System.Text.Encoding.UTF32;
+                case Encoding.UNICODE: return System.Text.Encoding.Unicode;
+                default: throw new NotImplementedException(encodingEncoding.ToString());
+            }
+        }
+
+        public static Encoding GetProtocolFromNativeEncoding(System.Text.Encoding encoding)
+        {
+            if (Equals(encoding, System.Text.Encoding.UTF7)) return Encoding.UTF7;
+            if (Equals(encoding, System.Text.Encoding.UTF8)) return Encoding.UTF8;
+            if (Equals(encoding, System.Text.Encoding.Unicode)) return Encoding.UTF16;
+            if (Equals(encoding, System.Text.Encoding.UTF32)) return Encoding.UTF32;
+            if (Equals(encoding, System.Text.Encoding.Unicode)) return Encoding.UNICODE;
+            else throw new NotImplementedException(encoding.ToString());
         }
     }
 }

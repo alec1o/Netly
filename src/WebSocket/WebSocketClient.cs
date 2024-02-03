@@ -334,7 +334,7 @@ namespace Netly
 
         public void ToEvent(string name, string buffer)
         {
-            ToEvent(name, NE.GetBytes(buffer, NE.Mode.UTF8));
+            ToEvent(name, NE.GetBytes(buffer, NE.Encoding.UTF8));
         }
 
         public void OnOpen(Action callback)

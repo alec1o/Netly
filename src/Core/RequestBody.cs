@@ -12,23 +12,23 @@ namespace Netly.Core
         public readonly string Text;
         public readonly byte[] Bytes;
         public readonly Enctype Enctype;
-        public readonly NE.Mode Encoding;
+        public readonly NE.Encoding m_encoding;
         public KeyValueContainer<string> TextForm;
         public KeyValueContainer<byte[]> BytesForm;
         public int Length => Bytes.Length;
         public HttpContent HttpContent => GetHttpContent();
 
 
-        public RequestBody() : this(Array.Empty<byte>(), Enctype.PlainText, NE.Mode.UTF8)
+        public RequestBody() : this(Array.Empty<byte>(), Enctype.PlainText, NE.Encoding.UTF8)
         {
         }
 
-        public RequestBody(byte[] buffer, Enctype enctype, NE.Mode encoding)
+        public RequestBody(byte[] buffer, Enctype enctype, NE.Encoding encoding)
         {
             this.Bytes = buffer ?? Array.Empty<byte>();
             this.Enctype = enctype;
-            this.Encoding = encoding;
-            this.Text = Bytes.Length > 0 ? NE.GetString(this.Bytes, this.Encoding) : string.Empty;
+            this.m_encoding = encoding;
+            this.Text = Bytes.Length > 0 ? NE.GetString(this.Bytes, this.m_encoding) : string.Empty;
             this.TextForm = new KeyValueContainer<string>();
             this.BytesForm = new KeyValueContainer<byte[]>();
 
@@ -45,7 +45,7 @@ namespace Netly.Core
                 if (this.BytesForm.Length > 0)
                 {
                     var textFormAsList = BytesForm.AllKeyValue
-                        .Select((x) => new KeyValue<string, string>(x.Key, NE.GetString(x.Value, this.Encoding)))
+                        .Select((x) => new KeyValue<string, string>(x.Key, NE.GetString(x.Value, this.m_encoding)))
                         .ToArray();
 
                     this.TextForm.AddRange(textFormAsList);

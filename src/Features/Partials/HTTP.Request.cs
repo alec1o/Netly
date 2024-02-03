@@ -11,7 +11,7 @@ namespace Netly.Features
     {
         public class Request : Interfaces.HTTP.IRequest
         {
-            public NE.Mode Encoding { get; }
+            public NE.Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }
             public Dictionary<string, string> Params { get; }
@@ -75,10 +75,8 @@ namespace Netly.Features
                     IsLocalRequest = request.IsLocal;
 
                     IsEncrypted = request.IsSecureConnection;
-
-                    // TODO: get it from request object
-                    // request.ContentEncoding.EncodingName
-                    Encoding = NE.Mode.UTF8;
+                    
+                    Encoding = NE.GetProtocolFromNativeEncoding(request.ContentEncoding);
 
                     // TODO: detect enctype from Header
                     Enctype enctype = Enctype.PlainText;

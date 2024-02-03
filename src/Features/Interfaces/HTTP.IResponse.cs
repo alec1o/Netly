@@ -9,7 +9,7 @@ namespace Netly.Interfaces
             /// <summary>
             /// Response encoding
             /// </summary>
-            NE.Mode Encoding { get; set; }
+            NE.Encoding Encoding { get; set; }
 
             /// <summary>
             /// Return true if response connection is opened

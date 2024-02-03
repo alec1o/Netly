@@ -44,7 +44,7 @@ namespace Netly
 
             // TODO: Get enctype from Header
             // TODO: Get encoding from Header
-            Body = new RequestBody(buffer, Enctype.PlainText, NE.Mode.UTF8);
+            Body = new RequestBody(buffer, Enctype.PlainText, NE.Encoding.UTF8);
 
             foreach (var header in httpResponseMessage.Headers)
             {
@@ -149,7 +149,7 @@ namespace Netly
 
             // TODO: Get Enctype from Header
             // TODO: Get Encoding from Header
-            Body = new RequestBody(bodyBytes, Enctype.PlainText, NE.Mode.UTF8);
+            Body = new RequestBody(bodyBytes, Enctype.PlainText, NE.Encoding.UTF8);
 
             #endregion
         }

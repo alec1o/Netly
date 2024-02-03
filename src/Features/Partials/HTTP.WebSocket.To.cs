@@ -195,7 +195,7 @@ namespace Netly.Features
 
                 public void Event(string name, string buffer)
                 {
-                    Event(name, NE.GetBytes(buffer, NE.Mode.UTF8));
+                    Event(name, NE.GetBytes(buffer, NE.Encoding.UTF8));
                 }
 
                 private void _ReceiveData()

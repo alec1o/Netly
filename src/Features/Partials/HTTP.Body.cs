@@ -14,11 +14,11 @@ namespace Netly.Features
             public Dictionary<string, string> TextQueries { get; }
             public Dictionary<string, byte[]> BinaryQueries { get; }
 
-            public Body(byte[] buffer, Enctype enctype, NE.Mode mode)
+            public Body(byte[] buffer, Enctype enctype, NE.Encoding encoding)
             {
                 Binary = buffer;
                 Enctype = enctype;
-                Text = NE.GetString(buffer, mode);
+                Text = NE.GetString(buffer, encoding);
                 TextQueries = new Dictionary<string, string>();
                 BinaryQueries = new Dictionary<string, byte[]>();
 
