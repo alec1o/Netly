@@ -24,7 +24,27 @@ namespace Netly.Features
 
             public static bool ComparePath(string origin, string input)
             {
-                return origin.Trim().Equals(input.Trim());
+                var a = origin.Trim() ?? string.Empty;
+                var b = input.Trim() ?? string.Empty;
+
+                if (a.Equals(b)) return true;
+
+                if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+
+                AddEndOfPath(ref a);
+                AddEndOfPath(ref b);
+
+                return a.Equals(b);
+            }
+
+            private static void AddEndOfPath(ref string path)
+            {
+                const char endOfPathKey = '/';
+                
+                if (path[path.Length - 1] != endOfPathKey)
+                {
+                    path += endOfPathKey;
+                }
             }
         }
     }
