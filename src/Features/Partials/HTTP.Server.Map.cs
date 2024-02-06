@@ -58,6 +58,8 @@ namespace Netly.Features
                 {
                     path = (path ?? string.Empty).Trim();
 
+                    Console.WriteLine($"Add Path: {path}. IsValid: {Path.IsValid(path)}");
+                    
                     if (Path.IsValid(path))
                     {
                         var map = new MapContainer
@@ -82,7 +84,6 @@ namespace Netly.Features
                         httpCallback: null,
                         websocketCallback: callback
                     );
-                    
                 }
 
                 public void All(string path, Action<IRequest, IResponse> callback)
@@ -91,7 +92,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: ALL_MEHOD,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -103,7 +104,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Get.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -115,7 +116,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Put.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -127,7 +128,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Head.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -139,7 +140,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Post.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -152,7 +153,7 @@ namespace Netly.Features
                         path: path,
                         // HttpMethod.Patch doesn't exist.
                         method: new HttpMethod("Patch").Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -164,7 +165,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Delete.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -176,7 +177,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Trace.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
@@ -188,7 +189,7 @@ namespace Netly.Features
                     (
                         path: path,
                         method: HttpMethod.Options.Method,
-                        isWebsocket: true,
+                        isWebsocket: false,
                         httpCallback: callback,
                         websocketCallback: null
                     );
