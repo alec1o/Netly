@@ -11,6 +11,7 @@ namespace Netly.Features
         internal class Response : IResponse
         {
             public Dictionary<string, string> Headers { get; }
+            public Cookie[] Cookies { get; set; }
             public NE.Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
 
@@ -27,6 +28,7 @@ namespace Netly.Features
                     { "Content-Type", "text/html; charset=utf-8" },
                     { "X-XSS-Protection", "1; mode=block" }
                 };
+                Cookies = Array.Empty<Cookie>();
                 _response = response;
             }
 
@@ -51,6 +53,14 @@ namespace Netly.Features
                 }
             }
 
+            private void WriteCookies()
+            {
+                foreach (var cookie in Cookies)
+                {
+                    _response.Cookies.Add(cookie);
+                }
+            }
+
             private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
             {
                 Task.Run(() =>
@@ -58,6 +68,7 @@ namespace Netly.Features
                     try
                     {
                         WriteHeaders();
+                        WriteCookies();
 
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
@@ -93,7 +104,13 @@ namespace Netly.Features
                 if (!IsOpened) return;
                 IsOpened = false;
 
-                Task.Run(() => { _response.Close(); });
+                Task.Run(() =>
+                {
+                    WriteHeaders();
+                    WriteCookies();
+                    
+                    _response.Close();
+                });
             }
         }
     }

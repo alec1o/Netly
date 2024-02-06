@@ -12,6 +12,12 @@ namespace Netly.Features
             /// Response Headers
             /// </summary>
             Dictionary<string, string> Headers { get; }
+            
+            /// <summary>
+            /// Response Cookies
+            /// </summary>
+            Cookie[] Cookies { get; }
+            
             /// <summary>
             /// Response encoding
             /// </summary>
