@@ -159,7 +159,7 @@ namespace Netly.Features
                             }
 
                             _tryClosing = false;
-                            _socket._on.m_onClose(null, status);
+                            _socket._on.m_onClose?.Invoke(null, status);
                         }
                     }
                 }
