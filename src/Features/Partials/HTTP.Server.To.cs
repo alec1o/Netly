@@ -194,11 +194,25 @@ namespace Netly.Features
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
                         var paths = m_server._map.m_mapList.FindAll(x =>
-                                Path.ComparePath(request.Path, x.Path) && !x.IsWebsocket &&
-                                (request.Method.Method.ToUpper() == x.Method.ToUpper() ||
-                                 x.Method.ToUpper() == _Map.ALL_MEHOD.ToUpper()))
-                            .ToArray();
+                        {
+                            var comparePath = Path.ComparePath(request.Path, x.Path);
+                            Console.WriteLine($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
+                            if (!comparePath) return false;
 
+
+                            var compareMethod = request.Method.Method.ToUpper() == x.Method.ToUpper();
+                            Console.WriteLine(
+                                $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
+                            if (!compareMethod) return false;
+
+                            var isWebsocket = x.IsWebsocket;
+                            Console.WriteLine($"IsWebSocket: {isWebsocket}");
+                            if (isWebsocket) return false;
+
+                            return true;
+                        }).ToArray();
+
+                        Console.WriteLine($"HTTP Path len: {paths.Length}");
                         if (paths.Length <= 0)
                         {
                             response.Send(404, notFoundMessage);
