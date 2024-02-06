@@ -200,7 +200,13 @@ namespace Netly.Features
                             if (!comparePath) return false;
 
 
-                            var compareMethod = request.Method.Method.ToUpper() == x.Method.ToUpper();
+                            var compareMethod =
+                            (
+                                string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                                ||
+                                string.Equals(request.Method.Method, x.Method, StringComparison.CurrentCultureIgnoreCase)
+                            );
+
                             Console.WriteLine(
                                 $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
                             if (!compareMethod) return false;
