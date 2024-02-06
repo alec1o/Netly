@@ -1,4 +1,6 @@
-﻿using Netly.Core;
+﻿using System.Collections.Generic;
+using System.Net;
+using Netly.Core;
 
 namespace Netly.Features
 {
@@ -6,6 +8,10 @@ namespace Netly.Features
     {
         public interface IResponse
         {
+            /// <summary>
+            /// Response Headers
+            /// </summary>
+            Dictionary<string, string> Headers { get; }
             /// <summary>
             /// Response encoding
             /// </summary>

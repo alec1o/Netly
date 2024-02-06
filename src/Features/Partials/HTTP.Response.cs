@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Netly.Core;
@@ -9,6 +10,7 @@ namespace Netly.Features
     {
         internal class Response : IResponse
         {
+            public Dictionary<string, string> Headers { get; }
             public NE.Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
 
@@ -19,6 +21,12 @@ namespace Netly.Features
             {
                 IsOpened = true;
                 Encoding = NE.Encoding.UTF8;
+                Headers = new Dictionary<string, string>
+                {
+                    { "Server", "NETLY HTTP/S" },
+                    { "Content-Type", "text/html; charset=utf-8" },
+                    { "X-XSS-Protection", "1; mode=block" }
+                };
                 _response = response;
             }
 
@@ -35,12 +43,22 @@ namespace Netly.Features
                 Write(statusCode, byteBuffer, Encoding);
             }
 
+            private void WriteHeaders()
+            {
+                foreach (var header in Headers)
+                {
+                    _response.AddHeader(header.Key, header.Value);
+                }
+            }
+
             private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
             {
                 Task.Run(() =>
                 {
                     try
                     {
+                        WriteHeaders();
+
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
                         _response.ContentLength64 = buffer.Length;
@@ -66,9 +84,7 @@ namespace Netly.Features
                 if (!IsOpened) return;
                 IsOpened = false;
 
-                _response.AddHeader("Location", url);
-                _response.StatusCode = redirectCode;
-
+                Headers.Add("Location", url);
                 Write(redirectCode, Array.Empty<byte>(), NE.Encoding.UTF8);
             }
 
