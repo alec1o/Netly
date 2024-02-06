@@ -32,14 +32,19 @@ namespace Netly.Features
                 if (!IsOpened) return;
                 IsOpened = false;
 
+                Write(statusCode, byteBuffer, Encoding);
+            }
+
+            private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
+            {
                 Task.Run(() =>
                 {
                     try
                     {
                         _response.StatusCode = statusCode;
-                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(Encoding);
-                        _response.ContentLength64 = byteBuffer.Length;
-                        _response.OutputStream.Write(byteBuffer, 0, byteBuffer.Length);
+                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
+                        _response.ContentLength64 = buffer.Length;
+                        _response.OutputStream.Write(buffer, 0, buffer.Length);
                         _response.Close();
                     }
                     catch (Exception e)
@@ -52,10 +57,8 @@ namespace Netly.Features
 
             public void Redirect(string url)
             {
-                if (!IsOpened) return;
-                IsOpened = false;
-
-                _response.Redirect(url);
+                const int redirectCode = 307; // Temporary Redirect
+                Redirect(redirectCode, url);
             }
 
             public void Redirect(int redirectCode, string url)
@@ -63,8 +66,10 @@ namespace Netly.Features
                 if (!IsOpened) return;
                 IsOpened = false;
 
-                _response.RedirectLocation = url;
-                Send(redirectCode, url);
+                _response.AddHeader("Location", url);
+                _response.StatusCode = redirectCode;
+
+                Write(redirectCode, Array.Empty<byte>(), NE.Encoding.UTF8);
             }
 
             public void Close()
