@@ -108,7 +108,7 @@ namespace Netly.Core
             {
                 _buffer.AddRange(buffer);
 
-            INIT:
+                INIT:
                 if (_size == 0 && _buffer.Count >= (sizeof(int) + PREFIX.Length))
                 {
                     byte[] b = _buffer.GetRange(0, PREFIX.Length).ToArray();

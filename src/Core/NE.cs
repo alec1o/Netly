@@ -131,7 +131,7 @@ namespace Netly.Core
                 case "ASCII": return Encoding.ASCII;
                 case "USASCII": return Encoding.ASCII;
                 case "US-ASCII": return Encoding.ASCII;
-                
+
                 case "UNICODE": return Encoding.UNICODE;
 
                 case "UTF7": return Encoding.UTF7;
@@ -145,7 +145,7 @@ namespace Netly.Core
 
                 case "UTF32": return Encoding.UTF32;
                 case "UTF-32": return Encoding.UTF32;
-                
+
                 default: throw new NotImplementedException(encoding.ToString());
             }
         }

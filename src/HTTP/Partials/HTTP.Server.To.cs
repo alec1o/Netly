@@ -12,17 +12,17 @@ namespace Netly
         {
             internal class _To : ITo
             {
-                private bool _tryOpen, _tryClose;
-                private HttpListener _listener;
-
                 public readonly Server m_server;
-                public bool IsOpened => _listener != null && _listener.IsListening;
-                public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
+                private HttpListener _listener;
+                private bool _tryOpen, _tryClose;
 
                 public _To(Server server)
                 {
-                    this.m_server = server;
+                    m_server = server;
                 }
+
+                public bool IsOpened => _listener != null && _listener.IsListening;
+                public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
                 public void Open(Uri host)
                 {
@@ -33,9 +33,9 @@ namespace Netly
                     {
                         try
                         {
-                            HttpListener server = new HttpListener();
+                            var server = new HttpListener();
 
-                            string httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
+                            var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
 
                             server.Prefixes.Add(httpUrl);
 
@@ -117,7 +117,6 @@ namespace Netly
                             finally
                             {
                                 if (context != null)
-                                {
                                     Task.Run(() =>
                                     {
                                         Console.WriteLine("Task Init");
@@ -134,7 +133,6 @@ namespace Netly
 
                                         Console.WriteLine("Task End");
                                     });
-                                }
                             }
                         }
 
@@ -160,7 +158,7 @@ namespace Netly
                         {
                             if (skipConnectionByMiddleware) break;
 
-                            bool @continue = middleware.Callback(request, response);
+                            var @continue = middleware.Callback(request, response);
 
                             if (!@continue)
                             {
@@ -185,10 +183,7 @@ namespace Netly
 
                     Console.WriteLine($"Done run middleware (skip: {skipConnectionByMiddleware})");
 
-                    if (skipConnectionByMiddleware)
-                    {
-                        return;
-                    }
+                    if (skipConnectionByMiddleware) return;
 
                     Console.WriteLine($"Is WebSocket: {request.IsWebSocket}");
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
@@ -201,11 +196,10 @@ namespace Netly
 
 
                             var compareMethod =
-                            (
                                 string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
                                 ||
-                                string.Equals(request.Method.Method, x.Method, StringComparison.CurrentCultureIgnoreCase)
-                            );
+                                string.Equals(request.Method.Method, x.Method,
+                                    StringComparison.CurrentCultureIgnoreCase);
 
                             Console.WriteLine(
                                 $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
@@ -249,14 +243,11 @@ namespace Netly
                         }
 
 
-                        var ws = await context.AcceptWebSocketAsync(subProtocol: null);
+                        var ws = await context.AcceptWebSocketAsync(null);
 
                         var websocket = new WebSocket(ws.WebSocket, request);
 
-                        foreach (var path in paths)
-                        {
-                            path.WebsocketCallback?.Invoke(request, websocket);
-                        }
+                        foreach (var path in paths) path.WebsocketCallback?.Invoke(request, websocket);
 
                         websocket.InitWebSocketServerSide();
                     }

@@ -9,7 +9,7 @@
         /// Binary Type
         /// </summary>
         Binary = 0,
-        
+
         /// <summary>
         /// Text Type
         /// </summary>

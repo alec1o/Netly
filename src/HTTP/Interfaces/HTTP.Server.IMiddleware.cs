@@ -9,19 +9,19 @@ namespace Netly
             public interface IMiddleware
             {
                 /// <summary>
-                /// Middleware array
+                ///     Middleware array
                 /// </summary>
-                IMiddlewareContainer[]  Middlewares { get; }
+                IMiddlewareContainer[] Middlewares { get; }
 
                 /// <summary>
-                /// Add global middleware handler
+                ///     Add global middleware handler
                 /// </summary>
                 /// <param name="middleware">Middleware handler</param>
                 /// <returns>true if callback added successful</returns>
                 bool Add(Func<IRequest, IResponse, bool> middleware);
 
                 /// <summary>
-                /// Add local middleware handler
+                ///     Add local middleware handler
                 /// </summary>
                 /// <param name="path">Route path</param>
                 /// <param name="middleware">Middleware handler</param>

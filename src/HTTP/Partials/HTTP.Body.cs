@@ -8,12 +8,6 @@ namespace Netly
     {
         internal class Body : IBody
         {
-            public Enctype Enctype { get; }
-            public string Text { get; }
-            public byte[] Binary { get; }
-            public Dictionary<string, string> TextQueries { get; }
-            public Dictionary<string, byte[]> BinaryQueries { get; }
-
             public Body(byte[] buffer, Enctype enctype, NE.Encoding encoding)
             {
                 Binary = buffer;
@@ -37,6 +31,12 @@ namespace Netly
                         throw new NotImplementedException(enctype.ToString());
                 }
             }
+
+            public Enctype Enctype { get; }
+            public string Text { get; }
+            public byte[] Binary { get; }
+            public Dictionary<string, string> TextQueries { get; }
+            public Dictionary<string, byte[]> BinaryQueries { get; }
         }
     }
 }

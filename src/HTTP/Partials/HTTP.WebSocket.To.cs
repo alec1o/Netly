@@ -12,16 +12,15 @@ namespace Netly
         {
             private class _To : ITo
             {
-                public IRequest m_request;
-                private readonly WebSocket _socket;
-                public Uri m_uri = new Uri("https://www.example.com");
+                private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
+                private readonly object _bufferLock = new object();
                 private readonly bool _isServerSide;
+                private readonly WebSocket _socket;
                 private bool _tryConnecting, _tryClosing, _initServerSide;
                 private ClientWebSocket _websocket;
                 private System.Net.WebSockets.WebSocket _websocketServerSide;
-                private readonly object _bufferLock = new object();
-
-                private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
+                public IRequest m_request;
+                public Uri m_uri = new Uri("https://www.example.com");
 
                 public _To(WebSocket socket)
                 {
@@ -29,7 +28,7 @@ namespace Netly
                     _tryConnecting = false;
                     _tryClosing = false;
                     _isServerSide = false;
-                    this.m_request = null;
+                    m_request = null;
                 }
 
                 public _To(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IRequest request)
@@ -37,7 +36,7 @@ namespace Netly
                     _socket = socket;
                     _isServerSide = true;
                     _websocketServerSide = websocket;
-                    this.m_request = request;
+                    m_request = request;
                 }
 
                 public void Open(Uri host)
@@ -46,7 +45,7 @@ namespace Netly
 
                     _tryConnecting = true;
 
-                    ThreadPool.QueueUserWorkItem(async (@object) =>
+                    ThreadPool.QueueUserWorkItem(async @object =>
                     {
                         try
                         {
@@ -132,7 +131,7 @@ namespace Netly
                                 }
                                 else
                                 {
-                                    await _websocket.CloseAsync(status, String.Empty, CancellationToken.None);
+                                    await _websocket.CloseAsync(status, string.Empty, CancellationToken.None);
                                     _websocket.Dispose();
                                 }
                             }
@@ -150,13 +149,9 @@ namespace Netly
                             }
 
                             if (_isServerSide)
-                            {
                                 _websocketServerSide = null;
-                            }
                             else
-                            {
                                 _websocket = null;
-                            }
 
                             _tryClosing = false;
                             _socket._on.m_onClose?.Invoke(null, status);
@@ -167,12 +162,10 @@ namespace Netly
                 public void Data(byte[] buffer, bool isText)
                 {
                     if (IsConnected())
-                    {
                         lock (_bufferLock)
                         {
                             _bufferList.Add((buffer, isText));
                         }
-                    }
                 }
 
                 public void Data(string buffer, bool isText)
@@ -197,7 +190,6 @@ namespace Netly
                     async void InternalSendTask(object _)
                     {
                         while (IsConnected())
-                        {
                             try
                             {
                                 // ReSharper disable once InconsistentlySynchronizedField
@@ -205,8 +197,8 @@ namespace Netly
                                 // And just lock object when detected that might have any buffer to send
                                 if (_bufferList.Count > 0)
                                 {
-                                    bool success = false;
-                                    WebSocketMessageType messageType = WebSocketMessageType.Close;
+                                    var success = false;
+                                    var messageType = WebSocketMessageType.Close;
 
                                     // Is Always true because our send all buffer on same moment is internal
                                     // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
@@ -233,7 +225,6 @@ namespace Netly
                                         var bufferToSend = new ArraySegment<byte>(buffer);
 
                                         if (_isServerSide)
-                                        {
                                             await _websocketServerSide.SendAsync
                                             (
                                                 bufferToSend,
@@ -241,9 +232,7 @@ namespace Netly
                                                 endOfMessage,
                                                 CancellationToken.None
                                             );
-                                        }
                                         else
-                                        {
                                             await _websocket.SendAsync
                                             (
                                                 bufferToSend,
@@ -251,7 +240,6 @@ namespace Netly
                                                 endOfMessage,
                                                 CancellationToken.None
                                             );
-                                        }
                                     }
                                 }
                             }
@@ -259,24 +247,23 @@ namespace Netly
                             {
                                 // ignored
                             }
-                        }
                     }
 
 
                     async void InternalReceiveTask(object _)
                     {
-                        WebSocketCloseStatus closeStatus = WebSocketCloseStatus.Empty;
+                        var closeStatus = WebSocketCloseStatus.Empty;
 
                         try
                         {
                             ThreadPool.QueueUserWorkItem(InternalSendTask);
 
                             const int size = 1024 * 8;
-                            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[size], 0, size);
+                            var buffer = new ArraySegment<byte>(new byte[size], 0, size);
 
                             while (_socket.IsOpened)
                             {
-                                WebSocketReceiveResult result = _isServerSide
+                                var result = _isServerSide
                                     ? await _websocketServerSide.ReceiveAsync(buffer, CancellationToken.None)
                                     : await _websocket.ReceiveAsync(buffer, CancellationToken.None);
 
@@ -293,16 +280,12 @@ namespace Netly
                                 var eventData = EventManager.Verify(data);
 
                                 if (eventData.data != null && eventData.name != null)
-                                {
                                     // Is Netly Event
                                     _socket._on.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
-                                }
                                 else
-                                {
                                     // Is Regular Data
                                     _socket._on.m_onData?.Invoke(null,
                                         (data, result.MessageType == WebSocketMessageType.Text));
-                                }
                             }
                         }
                         catch
@@ -319,13 +302,8 @@ namespace Netly
                 public bool IsConnected()
                 {
                     if (_isServerSide)
-                    {
                         return _websocketServerSide != null && _websocketServerSide.State == WebSocketState.Open;
-                    }
-                    else
-                    {
-                        return _websocket != null && _websocket.State == WebSocketState.Open;
-                    }
+                    return _websocket != null && _websocket.State == WebSocketState.Open;
                 }
 
                 public void InitWebSocketServerSide()

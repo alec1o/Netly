@@ -10,19 +10,19 @@ namespace Netly
             public interface IOn : IOn<ClientWebSocket>
             {
                 /// <summary>
-                /// Handle data received
+                ///     Handle data received
                 /// </summary>
                 /// <param name="callback">Callback</param>
                 void Data(Action<byte[], bool> callback);
 
                 /// <summary>
-                /// Handle (netly event) received
+                ///     Handle (netly event) received
                 /// </summary>
                 /// <param name="callback">Callback</param>
                 void Event(Action<string, byte[]> callback);
 
                 /// <summary>
-                /// Handle connection closed
+                ///     Handle connection closed
                 /// </summary>
                 /// <param name="callback">Callback</param>
                 void Close(Action<WebSocketCloseStatus> callback);

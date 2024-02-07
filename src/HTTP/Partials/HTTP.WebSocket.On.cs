@@ -10,12 +10,12 @@ namespace Netly
         {
             private class _On : IOn
             {
-                public EventHandler m_onOpen;
-                public EventHandler<Exception> m_onError;
                 public EventHandler<WebSocketCloseStatus> m_onClose;
-                public EventHandler<ClientWebSocket> m_onModify;
                 public EventHandler<(byte[] buffer, bool isText)> m_onData;
+                public EventHandler<Exception> m_onError;
                 public EventHandler<(string name, byte[] buffer)> m_onEvent;
+                public EventHandler<ClientWebSocket> m_onModify;
+                public EventHandler m_onOpen;
 
                 public void Open(Action callback)
                 {

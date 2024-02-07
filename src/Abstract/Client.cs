@@ -62,10 +62,7 @@ namespace Netly.Abstract
         {
             if (!IsOpened || m_connecting || m_closing) return;
             m_closing = true;
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                Destroy();
-            });
+            ThreadPool.QueueUserWorkItem(_ => { Destroy(); });
         }
 
         public virtual void ToData(byte[] data)
@@ -116,50 +113,32 @@ namespace Netly.Abstract
 
         public virtual void OnError(Action<Exception> callback)
         {
-            onErrorHandler += (_, exception) =>
-            {
-                MainThread.Add(() => callback?.Invoke(exception));
-            };
+            onErrorHandler += (_, exception) => { MainThread.Add(() => callback?.Invoke(exception)); };
         }
 
         public virtual void OnOpen(Action callback)
         {
-            onOpenHandler += (_, @null) =>
-            {
-                MainThread.Add(() => callback?.Invoke());
-            };
+            onOpenHandler += (_, @null) => { MainThread.Add(() => callback?.Invoke()); };
         }
 
         public virtual void OnClose(Action callback)
         {
-            onCloseHandler += (_, @null) =>
-            {
-                MainThread.Add(() => callback?.Invoke());
-            };
+            onCloseHandler += (_, @null) => { MainThread.Add(() => callback?.Invoke()); };
         }
 
         public virtual void OnData(Action<byte[]> callback)
         {
-            onDataHandler += (_, buffer) =>
-            {
-                MainThread.Add(() => callback?.Invoke(buffer));
-            };
+            onDataHandler += (_, buffer) => { MainThread.Add(() => callback?.Invoke(buffer)); };
         }
 
         public virtual void OnEvent(Action<string, byte[]> callback)
         {
-            onEventHandler += (_, data) =>
-            {
-                MainThread.Add(() => callback?.Invoke(data.name, data.buffer));
-            };
+            onEventHandler += (_, data) => { MainThread.Add(() => callback?.Invoke(data.name, data.buffer)); };
         }
 
         public virtual void OnModify(Action<Socket> callback)
         {
-            onModifyHandler += (_, socket) =>
-            {
-                MainThread.Add(() => callback?.Invoke(socket));
-            };
+            onModifyHandler += (_, socket) => { MainThread.Add(() => callback?.Invoke(socket)); };
         }
 
         #endregion

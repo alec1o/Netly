@@ -23,9 +23,9 @@ namespace Netly
             {
                 throw new InvalidOperationException($"{nameof(Response)}->{nameof(Send)} method was called before.");
             }
-            
+
             IsUsed = true;
-            
+
             ThreadPool.QueueUserWorkItem(_ =>
             {
                 try

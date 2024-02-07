@@ -61,13 +61,15 @@ namespace Netly
             }
         }
 
-        public void UseEncryption(bool enableEncryption, Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> onValidation = null)
+        public void UseEncryption(bool enableEncryption,
+            Func<object, X509Certificate, X509Chain, SslPolicyErrors, bool> onValidation = null)
         {
             _onValidation = onValidation;
 
             if (IsOpened)
             {
-                throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
+                throw new InvalidOperationException(
+                    $"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
             }
 
             if (!m_serverMode)
@@ -133,7 +135,8 @@ namespace Netly
             }
         }
 
-        private bool OnEncryptionValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        private bool OnEncryptionValidation(object sender, X509Certificate certificate, X509Chain chain,
+            SslPolicyErrors sslPolicyErrors)
         {
             if (_onValidation == null)
             {
@@ -169,7 +172,8 @@ namespace Netly
                         innerStream: m_stream,
                         leaveInnerStreamOpen: false,
                         userCertificateSelectionCallback: null,
-                        userCertificateValidationCallback: new RemoteCertificateValidationCallback(OnEncryptionValidation)
+                        userCertificateValidationCallback: new RemoteCertificateValidationCallback(
+                            OnEncryptionValidation)
                     );
 
                     m_sslStream.AuthenticateAsClient(string.Empty);
@@ -226,7 +230,7 @@ namespace Netly
                     onErrorHandler?.Invoke(null, e);
                     Destroy();
                 });
-            }            
+            }
 
             ThreadPool.QueueUserWorkItem(_ =>
             {

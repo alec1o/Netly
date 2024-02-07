@@ -11,45 +11,23 @@ namespace Netly
     {
         internal class Request : IRequest
         {
-            public NE.Encoding Encoding { get; }
-            public Dictionary<string, string> Headers { get; }
-            public Dictionary<string, string> Queries { get; }
-            public Dictionary<string, string> Params { get; }
-            public Cookie[] Cookies { get; }
-            public HttpMethod Method { get; }
-            public string Url { get; }
-            public string Path { get; }
-            public Host LocalEndPoint { get; }
-            public Host RemoteEndPoint { get; }
-            public bool IsWebSocket { get; }
-            public bool IsLocalRequest { get; }
-            public bool IsEncrypted { get; }
-            public IBody Body { get; }
-
             internal Request(HttpListenerRequest request)
             {
                 {
                     Headers = new Dictionary<string, string>();
                     foreach (var headerKey in request.Headers.AllKeys)
-                    {
                         Headers.Add(headerKey, request.Headers[headerKey] ?? string.Empty);
-                    }
                 }
 
                 {
                     Queries = new Dictionary<string, string>();
                     foreach (var queryKey in request.QueryString.AllKeys)
-                    {
                         Queries.Add(queryKey, request.QueryString[queryKey] ?? string.Empty);
-                    }
                 }
 
                 {
                     var cookiesList = new List<Cookie>();
-                    foreach (var cookie in request.Cookies)
-                    {
-                        cookiesList.Add((Cookie)cookie);
-                    }
+                    foreach (var cookie in request.Cookies) cookiesList.Add((Cookie)cookie);
 
                     Cookies = cookiesList.ToArray();
                 }
@@ -79,9 +57,9 @@ namespace Netly
                     Encoding = NE.GetProtocolFromNativeEncoding(request.ContentEncoding);
 
                     // TODO: detect enctype from Header
-                    Enctype enctype = Enctype.PlainText;
+                    var enctype = Enctype.PlainText;
 
-                    byte[] buffer = new byte[request.ContentLength64];
+                    var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
                     Body = new Body(buffer, enctype, Encoding);
                 }
@@ -92,6 +70,21 @@ namespace Netly
                 Url = uri.AbsoluteUri;
                 // TODO: fix it
             }
+
+            public NE.Encoding Encoding { get; }
+            public Dictionary<string, string> Headers { get; }
+            public Dictionary<string, string> Queries { get; }
+            public Dictionary<string, string> Params { get; }
+            public Cookie[] Cookies { get; }
+            public HttpMethod Method { get; }
+            public string Url { get; }
+            public string Path { get; }
+            public Host LocalEndPoint { get; }
+            public Host RemoteEndPoint { get; }
+            public bool IsWebSocket { get; }
+            public bool IsLocalRequest { get; }
+            public bool IsEncrypted { get; }
+            public IBody Body { get; }
         }
     }
 }

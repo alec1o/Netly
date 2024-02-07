@@ -9,6 +9,7 @@ namespace Netly.Abstract
     public abstract class Server<T>
     {
         #region Props
+
         public bool Framing { get; protected set; }
         public Host Host { get; protected set; } = Host.Default;
         public List<T> Clients { get; protected set; } = new List<T>();
@@ -142,7 +143,7 @@ namespace Netly.Abstract
             if (m_closing || m_closed) return;
 
             foreach (T client in Clients)
-            {                
+            {
                 IClient m_client = (IClient)client;
                 m_client?.ToEvent(name, data);
             }
@@ -157,50 +158,32 @@ namespace Netly.Abstract
 
         public virtual void OnError(Action<Exception> callback)
         {
-            onErrorHandler += (_, exception) =>
-            {
-                MainThread.Add(() => callback?.Invoke(exception));
-            };
+            onErrorHandler += (_, exception) => { MainThread.Add(() => callback?.Invoke(exception)); };
         }
 
         public virtual void OnOpen(Action callback)
         {
-            onOpenHandler += (_, @null) =>
-            {
-                MainThread.Add(() => callback?.Invoke());
-            };
+            onOpenHandler += (_, @null) => { MainThread.Add(() => callback?.Invoke()); };
         }
 
         public virtual void OnClose(Action callback)
         {
-            onCloseHandler += (_, @null) =>
-            {
-                MainThread.Add(() => callback?.Invoke());
-            };
+            onCloseHandler += (_, @null) => { MainThread.Add(() => callback?.Invoke()); };
         }
 
         public virtual void OnEnter(Action<T> callback)
         {
-            onEnterHandler += (_, client) =>
-            {
-                MainThread.Add(() => callback?.Invoke(client));
-            };
+            onEnterHandler += (_, client) => { MainThread.Add(() => callback?.Invoke(client)); };
         }
 
         public virtual void OnExit(Action<T> callback)
         {
-            onExitHandler += (_, client) =>
-            {
-                MainThread.Add(() => callback?.Invoke(client));
-            };
+            onExitHandler += (_, client) => { MainThread.Add(() => callback?.Invoke(client)); };
         }
 
         public virtual void OnData(Action<T, byte[]> callback)
         {
-            onDataHandler += (_, data) =>
-            {
-                MainThread.Add(() => callback?.Invoke(data.client, data.buffer));
-            };
+            onDataHandler += (_, data) => { MainThread.Add(() => callback?.Invoke(data.client, data.buffer)); };
         }
 
         public virtual void OnEvent(Action<T, string, byte[]> callback)
@@ -213,13 +196,9 @@ namespace Netly.Abstract
 
         public virtual void OnModify(Action<Socket> callback)
         {
-            onModifyHandler += (_, socket) =>
-            {
-                MainThread.Add(() => callback?.Invoke(socket));
-            };
+            onModifyHandler += (_, socket) => { MainThread.Add(() => callback?.Invoke(socket)); };
         }
 
         #endregion
-
     }
 }

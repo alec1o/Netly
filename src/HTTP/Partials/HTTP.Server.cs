@@ -6,17 +6,10 @@ namespace Netly
     {
         public partial class Server : IServer
         {
-            private readonly _On _on;
-            private readonly _To _to;
             private readonly _Map _map;
             private readonly _Middleware _middleware;
-
-            public bool IsOpened => _to.IsOpened;
-            public Uri Host => _to.Host;
-            public IMap Map => _map;
-            public IMiddleware Middleware => _middleware;
-            public IOn On => _on;
-            public ITo To => _to;
+            private readonly _On _on;
+            private readonly _To _to;
 
             public Server()
             {
@@ -25,6 +18,13 @@ namespace Netly
                 _middleware = new _Middleware(this);
                 _to = new _To(this);
             }
+
+            public bool IsOpened => _to.IsOpened;
+            public Uri Host => _to.Host;
+            public IMap Map => _map;
+            public IMiddleware Middleware => _middleware;
+            public IOn On => _on;
+            public ITo To => _to;
         }
     }
 }

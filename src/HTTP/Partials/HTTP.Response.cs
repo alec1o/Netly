@@ -10,11 +10,6 @@ namespace Netly
     {
         internal class Response : IResponse
         {
-            public Dictionary<string, string> Headers { get; }
-            public Cookie[] Cookies { get; set; }
-            public NE.Encoding Encoding { get; set; }
-            public bool IsOpened { get; private set; }
-
             private readonly HttpListenerResponse _response;
 
 
@@ -32,6 +27,11 @@ namespace Netly
                 _response = response;
             }
 
+            public Dictionary<string, string> Headers { get; }
+            public Cookie[] Cookies { get; set; }
+            public NE.Encoding Encoding { get; set; }
+            public bool IsOpened { get; private set; }
+
             public void Send(int statusCode, string textBuffer)
             {
                 Send(statusCode, NE.GetBytes(textBuffer, Encoding));
@@ -43,45 +43,6 @@ namespace Netly
                 IsOpened = false;
 
                 Write(statusCode, byteBuffer, Encoding);
-            }
-
-            private void WriteHeaders()
-            {
-                foreach (var header in Headers)
-                {
-                    _response.AddHeader(header.Key, header.Value);
-                }
-            }
-
-            private void WriteCookies()
-            {
-                foreach (var cookie in Cookies)
-                {
-                    _response.Cookies.Add(cookie);
-                }
-            }
-
-            private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        WriteHeaders();
-                        WriteCookies();
-
-                        _response.StatusCode = statusCode;
-                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
-                        _response.ContentLength64 = buffer.Length;
-                        _response.OutputStream.Write(buffer, 0, buffer.Length);
-                        _response.Close();
-                    }
-                    catch (Exception e)
-                    {
-                        // TODO: Handle it
-                        Console.WriteLine($"{nameof(Request)} -> {nameof(Send)}: {e}");
-                    }
-                });
             }
 
             public void Redirect(string url)
@@ -108,8 +69,41 @@ namespace Netly
                 {
                     WriteHeaders();
                     WriteCookies();
-                    
+
                     _response.Close();
+                });
+            }
+
+            private void WriteHeaders()
+            {
+                foreach (var header in Headers) _response.AddHeader(header.Key, header.Value);
+            }
+
+            private void WriteCookies()
+            {
+                foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
+            }
+
+            private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        WriteHeaders();
+                        WriteCookies();
+
+                        _response.StatusCode = statusCode;
+                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
+                        _response.ContentLength64 = buffer.Length;
+                        _response.OutputStream.Write(buffer, 0, buffer.Length);
+                        _response.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO: Handle it
+                        Console.WriteLine($"{nameof(Request)} -> {nameof(Send)}: {e}");
+                    }
                 });
             }
         }

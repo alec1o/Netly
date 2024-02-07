@@ -178,15 +178,9 @@ namespace Netly
                     _onExit?.Invoke(null, myClient);
                 });
 
-                myClient.OnData((data) =>
-                {
-                    _onData?.Invoke(null, (myClient, data));
-                });
+                myClient.OnData((data) => { _onData?.Invoke(null, (myClient, data)); });
 
-                myClient.OnEvent((name, data) =>
-                {
-                    _onEvent?.Invoke(null, (myClient, name, data));
-                });
+                myClient.OnEvent((name, data) => { _onEvent?.Invoke(null, (myClient, name, data)); });
 
 
                 AddClient(myClient); // Add client on list of clients
@@ -223,7 +217,7 @@ namespace Netly
                         _onModify?.Invoke(null, _socket);
 
                         _socket.Bind(host.IPEndPoint);
-                        
+
                         // Host must be local because server bind in local endpoint
                         Host = new Host(_socket.LocalEndPoint);
 
@@ -349,13 +343,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnOpen(Action callback)
         {
-            _onOpen += (_, __) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke();
-                });
-            };
+            _onOpen += (_, __) => { MainThread.Add(() => { callback?.Invoke(); }); };
         }
 
         /// <summary>
@@ -364,13 +352,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnError(Action<Exception> callback)
         {
-            _onError += (_, exception) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(exception);
-                });
-            };
+            _onError += (_, exception) => { MainThread.Add(() => { callback?.Invoke(exception); }); };
         }
 
         /// <summary>
@@ -379,13 +361,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnClose(Action callback)
         {
-            _onClose += (_, __) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke();
-                });
-            };
+            _onClose += (_, __) => { MainThread.Add(() => { callback?.Invoke(); }); };
         }
 
         /// <summary>
@@ -394,13 +370,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnData(Action<UdpClient, byte[]> callback)
         {
-            _onData += (_, data) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(data.client, data.buffer);
-                });
-            };
+            _onData += (_, data) => { MainThread.Add(() => { callback?.Invoke(data.client, data.buffer); }); };
         }
 
         /// <summary>
@@ -411,10 +381,7 @@ namespace Netly
         {
             _onEvent += (_, data) =>
             {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(data.client, data.name, data.buffer);
-                });
+                MainThread.Add(() => { callback?.Invoke(data.client, data.name, data.buffer); });
             };
         }
 
@@ -425,13 +392,7 @@ namespace Netly
         /// <param name="callback"></param>
         public void OnModify(Action<Socket> callback)
         {
-            _onModify += (_, socket) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(socket);
-                });
-            };
+            _onModify += (_, socket) => { MainThread.Add(() => { callback?.Invoke(socket); }); };
         }
 
         /// <summary>
@@ -440,13 +401,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnEnter(Action<UdpClient> callback)
         {
-            _onEnter += (_, client) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(client);
-                });
-            };
+            _onEnter += (_, client) => { MainThread.Add(() => { callback?.Invoke(client); }); };
         }
 
         /// <summary>
@@ -455,13 +410,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnExit(Action<UdpClient> callback)
         {
-            _onExit += (_, client) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(client);
-                });
-            };
+            _onExit += (_, client) => { MainThread.Add(() => { callback?.Invoke(client); }); };
         }
 
         #endregion

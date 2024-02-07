@@ -89,12 +89,14 @@ namespace Netly
         {
             if (IsOpened)
             {
-                throw new InvalidOperationException($"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
+                throw new InvalidOperationException(
+                    $"You cannot assign the value ({nameof(IsEncrypted)}) while the connection is open.");
             }
 
             if (pfxCertificate == null || pfxCertificate.Length <= 0)
             {
-                throw new ArgumentNullException($"[Encrypetion Error]: {nameof(IsEncrypted)} is true and ({nameof(pfxCertificate)}) is null/empty");
+                throw new ArgumentNullException(
+                    $"[Encrypetion Error]: {nameof(IsEncrypted)} is true and ({nameof(pfxCertificate)}) is null/empty");
             }
 
             IsEncrypted = true;
@@ -117,7 +119,9 @@ namespace Netly
 
                         EndAccept(clientSocket);
                     }
-                    catch { }
+                    catch
+                    {
+                    }
                 }
             });
 
@@ -132,30 +136,17 @@ namespace Netly
                 {
                     AddOrRemoveClient(client, false);
 
-                    client.OnOpen(() =>
-                    {
-                        onEnterHandler?.Invoke(null, client);
-                    });
+                    client.OnOpen(() => { onEnterHandler?.Invoke(null, client); });
 
-                    client.OnClose(() =>
-                    {
-                        onExitHandler?.Invoke(null, AddOrRemoveClient(client, true));
-                    });
+                    client.OnClose(() => { onExitHandler?.Invoke(null, AddOrRemoveClient(client, true)); });
 
-                    client.OnData((data) =>
-                    {
-                        onDataHandler?.Invoke(null, (client, data));
-                    });
+                    client.OnData((data) => { onDataHandler?.Invoke(null, (client, data)); });
 
-                    client.OnEvent((name, data) =>
-                    {
-                        onEventHandler?.Invoke(null, (client, name, data));
-                    });
+                    client.OnEvent((name, data) => { onEventHandler?.Invoke(null, (client, name, data)); });
 
                     client.InitServer();
                 }
             }
         }
-
     }
 }

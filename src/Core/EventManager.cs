@@ -32,6 +32,5 @@ namespace Netly.Core
                 return w.GetBytes();
             }
         }
-
     }
 }

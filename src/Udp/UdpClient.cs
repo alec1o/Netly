@@ -148,10 +148,7 @@ namespace Netly
             if (_serverside)
             {
                 // receive data on server-side
-                AddBuffer = (data) =>
-                {
-                    Publish(ref data);
-                };
+                AddBuffer = (data) => { Publish(ref data); };
             }
             else
             {
@@ -377,13 +374,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnOpen(Action callback)
         {
-            _onOpen += (_, __) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke();
-                });
-            };
+            _onOpen += (_, __) => { MainThread.Add(() => { callback?.Invoke(); }); };
         }
 
         /// <summary>
@@ -392,13 +383,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnError(Action<Exception> callback)
         {
-            _onError += (_, exception) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(exception);
-                });
-            };
+            _onError += (_, exception) => { MainThread.Add(() => { callback?.Invoke(exception); }); };
         }
 
         /// <summary>
@@ -407,13 +392,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnClose(Action callback)
         {
-            _onClose += (_, __) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke();
-                });
-            };
+            _onClose += (_, __) => { MainThread.Add(() => { callback?.Invoke(); }); };
         }
 
         /// <summary>
@@ -422,13 +401,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnData(Action<byte[]> callback)
         {
-            _onData += (_, buffer) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(buffer);
-                });
-            };
+            _onData += (_, buffer) => { MainThread.Add(() => { callback?.Invoke(buffer); }); };
         }
 
         /// <summary>
@@ -446,13 +419,7 @@ namespace Netly
         /// <param name="callback">callback</param>
         public void OnEvent(Action<string, byte[]> callback)
         {
-            _onEvent += (_, data) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(data.name, data.buffer);
-                });
-            };
+            _onEvent += (_, data) => { MainThread.Add(() => { callback?.Invoke(data.name, data.buffer); }); };
         }
 
         /// <summary>
@@ -462,13 +429,7 @@ namespace Netly
         /// <param name="callback"></param>
         public void OnModify(Action<Socket> callback)
         {
-            _onModify += (_, socket) =>
-            {
-                MainThread.Add(() =>
-                {
-                    callback?.Invoke(socket);
-                });
-            };
+            _onModify += (_, socket) => { MainThread.Add(() => { callback?.Invoke(socket); }); };
         }
 
         #endregion

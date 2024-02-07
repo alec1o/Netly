@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using Netly.Core;
-using Netly;
 
 namespace Netly
 {
@@ -11,11 +10,11 @@ namespace Netly
         {
             internal class _On : IOn
             {
-                public EventHandler m_onOpen;
                 public EventHandler m_onClose;
                 public EventHandler<Exception> m_onError;
                 public EventHandler<HttpListener> m_onModify;
-                
+                public EventHandler m_onOpen;
+
                 public void Open(Action callback)
                 {
                     m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());

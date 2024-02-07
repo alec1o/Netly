@@ -9,14 +9,14 @@ namespace Netly
             public interface ITo
             {
                 /// <summary>
-                /// Open Server Connection
+                ///     Open Server Connection
                 /// </summary>
                 /// <param name="host">Server Uri</param>
                 void Open(Uri host);
 
 
                 /// <summary>
-                /// Close Server Connection
+                ///     Close Server Connection
                 /// </summary>
                 void Close();
             }

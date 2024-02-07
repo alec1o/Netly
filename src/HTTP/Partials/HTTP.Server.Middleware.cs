@@ -10,13 +10,13 @@ namespace Netly
             internal class _Middleware : IMiddleware
             {
                 public const string GLOBAL_PATH = "*";
-                public readonly Server m_server;
 
                 private readonly List<IMiddlewareContainer> _middlewares;
+                public readonly Server m_server;
 
                 public _Middleware(Server server)
                 {
-                    this.m_server = server;
+                    m_server = server;
                     _middlewares = new List<IMiddlewareContainer>();
                 }
 
@@ -30,7 +30,7 @@ namespace Netly
                 public bool Add(string path, Func<IRequest, IResponse, bool> middleware)
                 {
                     if (middleware == null) return false;
-                    
+
                     path = (path ?? string.Empty).Trim();
 
                     if (string.IsNullOrWhiteSpace(path)) return false;

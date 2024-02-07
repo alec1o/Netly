@@ -1,26 +1,26 @@
 ﻿namespace Netly
 {
     /// <summary>
-    /// HTTP Container
+    ///     HTTP Container
     /// </summary>
     public static partial class HTTP
     {
         /// <summary>
-        /// HTTP Client
+        ///     HTTP Client
         /// </summary>
-        public partial class Client
+        public class Client
         {
         }
 
         /// <summary>
-        /// HTTP Server
+        ///     HTTP Server
         /// </summary>
         public partial class Server
         {
         }
 
         /// <summary>
-        /// WebSocket Client
+        ///     WebSocket Client
         /// </summary>
         public partial class WebSocket
         {

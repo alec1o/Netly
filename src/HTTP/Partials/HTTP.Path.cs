@@ -15,11 +15,9 @@ namespace Netly
                 const string nonRegular = "^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?";
 
                 return
-                (
                     Regex.IsMatch(path, regular, RegexOptions.ECMAScript)
                     ||
-                    Regex.IsMatch(path, nonRegular, RegexOptions.ECMAScript)
-                );
+                    Regex.IsMatch(path, nonRegular, RegexOptions.ECMAScript);
             }
 
             public static bool ComparePath(string origin, string input)
@@ -40,11 +38,8 @@ namespace Netly
             private static void AddEndOfPath(ref string path)
             {
                 const char endOfPathKey = '/';
-                
-                if (path[path.Length - 1] != endOfPathKey)
-                {
-                    path += endOfPathKey;
-                }
+
+                if (path[path.Length - 1] != endOfPathKey) path += endOfPathKey;
             }
         }
     }

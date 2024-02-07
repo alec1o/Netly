@@ -14,7 +14,7 @@ namespace Netly.Core
         /// </summary>
         /// <returns>Return default host instance: (0.0.0.0:0)</returns>
         public static readonly Host Default = new Host(IPAddress.Any, 0);
-        
+
         /// <summary>
         /// Return IPAddress
         /// </summary>

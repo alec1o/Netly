@@ -8,27 +8,27 @@ namespace Netly
         public interface IBody
         {
             /// <summary>
-            /// Enctype type
+            ///     Enctype type
             /// </summary>
             Enctype Enctype { get; }
 
             /// <summary>
-            /// Text buffer
+            ///     Text buffer
             /// </summary>
             string Text { get; }
 
             /// <summary>
-            /// Binary buffer
+            ///     Binary buffer
             /// </summary>
             byte[] Binary { get; }
 
             /// <summary>
-            /// Get value from Enctype content (return string)
+            ///     Get value from Enctype content (return string)
             /// </summary>
             Dictionary<string, string> TextQueries { get; }
 
             /// <summary>
-            /// Get value from Enctype content (return bytes)
+            ///     Get value from Enctype content (return bytes)
             /// </summary>
             Dictionary<string, byte[]> BinaryQueries { get; }
         }

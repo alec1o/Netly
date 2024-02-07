@@ -9,74 +9,74 @@ namespace Netly
             public interface IMap
             {
                 /// <summary>
-                /// Handle WebSocket from Path
+                ///     Handle WebSocket from Path
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void WebSocket(string path, Action<HTTP.IRequest, HTTP.WebSocket> callback);
+                void WebSocket(string path, Action<IRequest, WebSocket> callback);
 
                 /// <summary>
-                /// Handle All Http Method from Path
+                ///     Handle All Http Method from Path
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void All(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void All(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Get) Http Method
+                ///     Handle (Get) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Get(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Get(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Put) Http Method
+                ///     Handle (Put) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Put(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Put(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Head) Http Method
+                ///     Handle (Head) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Head(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Head(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Post) Http Method
+                ///     Handle (Post) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Post(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Post(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Patch) Http Method
+                ///     Handle (Patch) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Patch(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Patch(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Delete) Http Method
+                ///     Handle (Delete) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Delete(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Delete(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Trace) Http Method
+                ///     Handle (Trace) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Trace(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Trace(string path, Action<IRequest, IResponse> callback);
 
                 /// <summary>
-                /// Handle (Options) Http Method
+                ///     Handle (Options) Http Method
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void Options(string path, Action<HTTP.IRequest, HTTP.IResponse> callback);
+                void Options(string path, Action<IRequest, IResponse> callback);
             }
         }
     }

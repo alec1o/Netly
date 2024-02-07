@@ -88,7 +88,7 @@ namespace Netly
                         uriBuilder.Query = queryBuilder.ToString();
                         uri = new Uri(uriBuilder.ToString());
                     }
-                    
+
                     Method = new HttpMethod(methodStr);
 
                     NativeHttpClient client = new NativeHttpClient();
