@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {

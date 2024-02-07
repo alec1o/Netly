@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {

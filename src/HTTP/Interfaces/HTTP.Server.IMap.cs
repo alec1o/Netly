@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Netly.Features
+namespace Netly
 {
     public static partial class HTTP
     {
@@ -13,7 +13,7 @@ namespace Netly.Features
                 /// </summary>
                 /// <param name="path">Request Path</param>
                 /// <param name="callback">Response Callback</param>
-                void WebSocket(string path, Action<HTTP.IRequest, Features.HTTP.WebSocket> callback);
+                void WebSocket(string path, Action<HTTP.IRequest, HTTP.WebSocket> callback);
 
                 /// <summary>
                 /// Handle All Http Method from Path

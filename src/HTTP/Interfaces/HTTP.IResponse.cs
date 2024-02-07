@@ -2,7 +2,7 @@
 using System.Net;
 using Netly.Core;
 
-namespace Netly.Features
+namespace Netly
 {
     public static partial class HTTP
     {

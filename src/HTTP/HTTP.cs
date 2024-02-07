@@ -1,4 +1,4 @@
-﻿namespace Netly.Features
+﻿namespace Netly
 {
     /// <summary>
     /// HTTP Container

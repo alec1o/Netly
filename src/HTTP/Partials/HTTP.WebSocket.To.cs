@@ -4,7 +4,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using Netly.Core;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {

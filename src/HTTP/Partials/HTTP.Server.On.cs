@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
 using Netly.Core;
-using Netly.Features;
+using Netly;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.WebSockets;
 
-namespace Netly.Features
+namespace Netly
 {
     public static partial class HTTP
     {

@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Netly.Core;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Netly.Features
+namespace Netly
 {
     public static partial class HTTP
     {

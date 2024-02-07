@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace Netly.Features
+namespace Netly
 {
     public partial class HTTP
     {
