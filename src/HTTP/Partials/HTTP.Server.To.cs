@@ -12,13 +12,13 @@ namespace Netly
         {
             internal class _To : ITo
             {
-                public readonly Server m_server;
+                private readonly Server _server;
                 private HttpListener _listener;
                 private bool _tryOpen, _tryClose;
 
                 public _To(Server server)
                 {
-                    m_server = server;
+                    _server = server;
                 }
 
                 public bool IsOpened => _listener != null && _listener.IsListening;
@@ -39,7 +39,7 @@ namespace Netly
 
                             server.Prefixes.Add(httpUrl);
 
-                            m_server._on.m_onModify?.Invoke(null, server);
+                            _server._on.m_onModify?.Invoke(null, server);
 
                             server.Start();
 
@@ -47,13 +47,13 @@ namespace Netly
 
                             _listener = server;
 
-                            m_server._on.m_onOpen?.Invoke(null, null);
+                            _server._on.m_onOpen?.Invoke(null, null);
 
                             ReceiveRequests();
                         }
                         catch (Exception e)
                         {
-                            m_server._on.m_onError?.Invoke(null, e);
+                            _server._on.m_onError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -91,7 +91,7 @@ namespace Netly
                         {
                             _tryClose = false;
                             _listener = null;
-                            m_server._on.m_onClose?.Invoke(null, null);
+                            _server._on.m_onClose?.Invoke(null, null);
                         }
                     });
                 }
@@ -103,7 +103,7 @@ namespace Netly
                         while (IsOpened)
                         {
                             HttpListenerContext context = null;
-                            Console.WriteLine("Request entry.");
+                            Netly.Logger.PushLog("Request entry.");
 
                             try
                             {
@@ -112,14 +112,14 @@ namespace Netly
                             catch (Exception e)
                             {
                                 context = null;
-                                Console.WriteLine($"Request fail: {e}");
+                                Netly.Logger.PushLog($"Request fail: {e}");
                             }
                             finally
                             {
                                 if (context != null)
                                     Task.Run(() =>
                                     {
-                                        Console.WriteLine("Task Init");
+                                        Netly.Logger.PushLog("Task Init");
 
                                         try
                                         {
@@ -128,10 +128,10 @@ namespace Netly
                                         }
                                         catch (Exception e)
                                         {
-                                            Console.WriteLine($"Task error: {e}");
+                                            Netly.Logger.PushLog($"Task error: {e}");
                                         }
 
-                                        Console.WriteLine("Task End");
+                                        Netly.Logger.PushLog("Task End");
                                     });
                             }
                         }
@@ -142,13 +142,13 @@ namespace Netly
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
-                    Console.WriteLine("Request processing.");
+                    Netly.Logger.PushLog("Request processing.");
 
                     var request = new Request(context.Request);
                     var response = new Response(context.Response);
                     var notFoundMessage = $"{request.Method.Method.ToUpper()} {request.Path}";
 
-                    Console.WriteLine("Request starting.");
+                    Netly.Logger.PushLog("Request starting.");
 
                     var skipConnectionByMiddleware = false;
 
@@ -170,28 +170,28 @@ namespace Netly
                     }
 
                     // GLOBAL MIDDLEWARES
-                    var globalMiddlewares = m_server.Middleware.Middlewares.ToList()
+                    var globalMiddlewares = _server.Middleware.Middlewares.ToList()
                         .FindAll(x => x.Path == _Middleware.GLOBAL_PATH);
-                    Console.WriteLine($"Run global middleware (skip: {skipConnectionByMiddleware})");
+                    Netly.Logger.PushLog($"Run global middleware (skip: {skipConnectionByMiddleware})");
                     RunMiddlewares(globalMiddlewares.ToArray());
 
                     // LOCAL MIDDLEWARES
-                    var localMiddlewares = m_server.Middleware.Middlewares.ToList()
+                    var localMiddlewares = _server.Middleware.Middlewares.ToList()
                         .FindAll(x => x.Path != _Middleware.GLOBAL_PATH && Path.ComparePath(request.Path, x.Path));
-                    Console.WriteLine($"Run local middleware (skip: {skipConnectionByMiddleware})");
+                    Netly.Logger.PushLog($"Run local middleware (skip: {skipConnectionByMiddleware})");
                     RunMiddlewares(localMiddlewares.ToArray());
 
-                    Console.WriteLine($"Done run middleware (skip: {skipConnectionByMiddleware})");
+                    Netly.Logger.PushLog($"Done run middleware (skip: {skipConnectionByMiddleware})");
 
                     if (skipConnectionByMiddleware) return;
 
-                    Console.WriteLine($"Is WebSocket: {request.IsWebSocket}");
+                    Netly.Logger.PushLog($"Is WebSocket: {request.IsWebSocket}");
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
-                        var paths = m_server._map.m_mapList.FindAll(x =>
+                        var paths = _server._map.m_mapList.FindAll(x =>
                         {
                             var comparePath = Path.ComparePath(request.Path, x.Path);
-                            Console.WriteLine($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
+                            Netly.Logger.PushLog($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
                             if (!comparePath) return false;
 
 
@@ -201,18 +201,18 @@ namespace Netly
                                 string.Equals(request.Method.Method, x.Method,
                                     StringComparison.CurrentCultureIgnoreCase);
 
-                            Console.WriteLine(
+                            Netly.Logger.PushLog(
                                 $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
                             if (!compareMethod) return false;
 
                             var isWebsocket = x.IsWebsocket;
-                            Console.WriteLine($"IsWebSocket: {isWebsocket}");
+                            Netly.Logger.PushLog($"IsWebSocket: {isWebsocket}");
                             if (isWebsocket) return false;
 
                             return true;
                         }).ToArray();
 
-                        Console.WriteLine($"HTTP Path len: {paths.Length}");
+                        Netly.Logger.PushLog($"HTTP Path len: {paths.Length}");
                         if (paths.Length <= 0)
                         {
                             response.Send(404, notFoundMessage);
@@ -233,7 +233,7 @@ namespace Netly
                     }
                     else // IS WEBSOCKET CONNECTION
                     {
-                        var paths = m_server._map.m_mapList.FindAll(x =>
+                        var paths = _server._map.m_mapList.FindAll(x =>
                             Path.ComparePath(x.Path, request.Path) && x.IsWebsocket);
 
                         if (paths.Count <= 0)
