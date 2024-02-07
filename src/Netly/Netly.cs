@@ -29,4 +29,13 @@
         /// Netly logger hub
         /// </summary>
         public static readonly ILogger Logger;
+
+        /// <summary>
+        /// Init Netly
+        /// </summary>
+        static Netly()
+        {
+            Logger = new _Logger();
+        }
+    }
 }
