@@ -58,7 +58,10 @@ namespace Netly
                     onModifyHandler?.Invoke(null, m_socket);
 
                     m_socket.Bind(host.EndPoint);
-                    m_socket.Listen(backlog);
+
+                    const int maxBacklog = (int)SocketOptionName.MaxConnections;
+                    int backlogClamped = (backlog <= 0 || backlog >= maxBacklog) ? maxBacklog : backlog;
+                    m_socket.Listen(backlogClamped);
 
                     Host = new Host(m_socket.LocalEndPoint);
 
