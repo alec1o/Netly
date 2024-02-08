@@ -32,21 +32,21 @@ namespace Netly
             /// </summary>
             /// <param name="logCallback">Callback</param>
             /// <param name="enableMainThread">Run callback on (Main Thread)?</param>
-            void HandleLog(Action<string> logCallback, bool enableMainThread);
+            void HandleLog(Action<string> logCallback, bool enableMainThread = false);
 
             /// <summary>
             /// Handle (warning log) callback 
             /// </summary>
             /// <param name="warningCallback">Callback</param>
             /// <param name="enableMainThread">Run callback on (Main Thread)?</param>
-            void HandleWarning(Action<string> warningCallback, bool enableMainThread);
+            void HandleWarning(Action<string> warningCallback, bool enableMainThread = false);
 
             /// <summary>
             /// Handle (exception log) callback
             /// </summary>
             /// <param name="errorCallback">Callback</param>
             /// <param name="enableMainThread">Run callback on (Main Thread)?</param>
-            void HandleError(Action<Exception> errorCallback, bool enableMainThread);
+            void HandleError(Action<Exception> errorCallback, bool enableMainThread = false);
         }
     }
 }
