@@ -1,4 +1,11 @@
-<a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEEDS ``VOTES`` AND ``IDEAS`` FOR THE ``RELEASE`` OF VERSION ``4.X.X``</a>
+<table>
+  <tr>
+    <td>
+      <p>WARNING: <a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEEDS VOTES AND IDEAS FOR THE RELEASE OF VERSION <code>4.X.X</code></a></p>
+    </td>
+  </tr>
+</table>
+</br>
 
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
