@@ -1,7 +1,7 @@
 <table>
   <tr>
     <td>
-      <p>WARNING: <a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEEDS VOTES AND IDEAS FOR THE RELEASE OF VERSION <code>4.X.X</code></a></p>
+      <p>WARNING: <a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEXT RELEASE <code>4.X.X</code> ALERT!</a></p>
     </td>
   </tr>
 </table>
