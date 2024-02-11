@@ -1,3 +1,5 @@
+<a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEEDS ``VOTES`` AND ``IDEAS`` FOR THE ``RELEASE`` OF VERSION ``4.X.X``</a>
+
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
 <h6 align="center"><sub>
