@@ -76,7 +76,7 @@ namespace Netly
                 return a.Equals(b);
             }
 
-            private static void AddEndOfPath(ref string path)
+            public static void AddEndOfPath(ref string path)
             {
                 const char endOfPathKey = '/';
 
