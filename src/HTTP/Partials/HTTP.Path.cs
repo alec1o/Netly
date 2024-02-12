@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
 namespace Netly
@@ -22,17 +23,42 @@ namespace Netly
             /// </summary>
             public static readonly Regex ValidateParamFieldRegex;
 
+            /// <summary>
+            /// Regex Timout. It prevent attacks
+            /// </summary>
+            public const int RegexTimeout = 500;
+
             static Path()
             {
                 RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
-                ValidateRegularPathRegex = new Regex("^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?", options);
-                ValidateParamPathRegex = new Regex("^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?", options);
-                ValidateParamFieldRegex = new Regex("^({)[(a-zA-Z)]+[\\d]*(})", options);
+                TimeSpan timeout = TimeSpan.FromMilliseconds(RegexTimeout);
+
+                ValidateRegularPathRegex =
+                    new Regex("^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?", options, timeout);
+                ValidateParamPathRegex = new Regex("^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?",
+                    options, timeout);
+                ValidateParamFieldRegex = new Regex("^({)[(a-zA-Z)]+[\\d]*(})", options, timeout);
             }
 
             public static bool IsValid(string path)
             {
-                return ValidateRegularPathRegex.IsMatch(path) || ValidateParamPathRegex.IsMatch(path);
+                string value = (path ?? string.Empty).Trim();
+
+                // Prevent Regex -> ArgumentNullException 
+                if (string.IsNullOrWhiteSpace(value)) return false;
+
+                // Set last '/' if not exist
+                AddEndOfPath(ref value);
+
+                try
+                {
+                    return ValidateRegularPathRegex.IsMatch(value) || ValidateParamPathRegex.IsMatch(value);
+                }
+                catch (RegexMatchTimeoutException e)
+                {
+                    // Prevent Regex -> RegexMatchTimeoutException (Regex Attack)
+                    return false;
+                }
             }
 
             public static bool ComparePath(string origin, string input)
