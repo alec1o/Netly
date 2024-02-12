@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
@@ -27,6 +28,21 @@ namespace Netly
             /// Regex Timout. It prevent attacks
             /// </summary>
             public const int RegexTimeout = 5000;
+
+            /// <summary>
+            /// Param Parsing Result
+            /// </summary>
+            public struct ParseResult
+            {
+                public bool Valid { get; private set; }
+                public KeyValuePair<string, string>[] Params { get; private set; }
+
+                public ParseResult(bool valid = false, KeyValuePair<string, string>[] @params = null)
+                {
+                    Valid = valid;
+                    Params = @params ?? Array.Empty<KeyValuePair<string, string>>();
+                }
+            }
 
             static Path()
             {
