@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace Netly
 {
@@ -6,18 +7,32 @@ namespace Netly
     {
         internal static class Path
         {
+            /// <summary>
+            /// Validate regular path regex e.g.: /root/path/
+            /// </summary>
+            public static readonly Regex ValidateRegularPathRegex;
+
+            /// <summary>
+            /// Validate param path regex e.g.: /root/home/{user}/code/{file}/
+            /// </summary>
+            public static readonly Regex ValidateParamPathRegex;
+
+            /// <summary>
+            /// Validate param field e.g.: {user}, {file}
+            /// </summary>
+            public static readonly Regex ValidateParamFieldRegex;
+
+            static Path()
+            {
+                RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
+                ValidateRegularPathRegex = new Regex("^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?", options);
+                ValidateParamPathRegex = new Regex("^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?", options);
+                ValidateParamFieldRegex = new Regex("^({)[(a-zA-Z)]+[\\d]*(})", options);
+            }
+
             public static bool IsValid(string path)
             {
-                // TODO: Create unique regex for validate both scenarios
-                // Validate regular path regex (e.g. /root/path[/]?)
-                const string regular = "^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?";
-                // Validate param path regex (e.g. /root/{name}/{id}[/]?):
-                const string nonRegular = "^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?";
-
-                return
-                    Regex.IsMatch(path, regular, RegexOptions.ECMAScript)
-                    ||
-                    Regex.IsMatch(path, nonRegular, RegexOptions.ECMAScript);
+                return ValidateRegularPathRegex.IsMatch(path) || ValidateParamPathRegex.IsMatch(path);
             }
 
             public static bool ComparePath(string origin, string input)
