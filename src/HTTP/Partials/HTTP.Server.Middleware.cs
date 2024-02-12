@@ -32,12 +32,14 @@ namespace Netly
                     if (middleware == null) return false;
 
                     path = (path ?? string.Empty).Trim();
+                    
+                    Path.AddEndOfPath(ref path);
 
                     if (string.IsNullOrWhiteSpace(path)) return false;
 
                     if (GLOBAL_PATH.Equals(path) || Path.IsValid(path))
                     {
-                        _middlewares.Add(new MiddlewareContainer(path, middleware));
+                        _middlewares.Add(new MiddlewareContainer(path, Path.IsParamPath(path) ,middleware));
                         return true;
                     }
 

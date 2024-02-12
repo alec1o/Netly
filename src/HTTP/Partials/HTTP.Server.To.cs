@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -150,19 +151,19 @@ namespace Netly
 
                     Netly.Logger.PushLog("Request starting.");
 
-                    var skipConnectionByMiddleware = false;
+                    var skipNextMiddleware = false;
 
                     void RunMiddlewares(IMiddlewareContainer[] middlewares)
                     {
                         foreach (var middleware in middlewares)
                         {
-                            if (skipConnectionByMiddleware) break;
+                            if (skipNextMiddleware) break;
 
                             var @continue = middleware.Callback(request, response);
 
                             if (!@continue)
                             {
-                                skipConnectionByMiddleware = true;
+                                skipNextMiddleware = true;
                                 response.Send(500, "Internal Server Error");
                                 break;
                             }
@@ -170,84 +171,202 @@ namespace Netly
                     }
 
                     // GLOBAL MIDDLEWARES
-                    var globalMiddlewares = _server.Middleware.Middlewares.ToList()
-                        .FindAll(x => x.Path == _Middleware.GLOBAL_PATH);
-                    Netly.Logger.PushLog($"Run global middleware (skip: {skipConnectionByMiddleware})");
-                    RunMiddlewares(globalMiddlewares.ToArray());
+
+                    #region GLOBAL MIDDLEWARE
+
+                    Netly.Logger.PushLog($"Global middleware. Search middlewares...");
+
+                    var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
+                    {
+                        if (x.Path == _Middleware.GLOBAL_PATH)
+                        {
+                            // is only global path
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    if (!skipNextMiddleware)
+                    {
+                        RunMiddlewares(globalMiddlewares.ToArray());
+                        Netly.Logger.PushLog($"[END] running global middleware (next: {!skipNextMiddleware})");
+                    }
+
+                    if (skipNextMiddleware) return;
+
+                    #endregion
 
                     // LOCAL MIDDLEWARES
-                    var localMiddlewares = _server.Middleware.Middlewares.ToList()
-                        .FindAll(x => x.Path != _Middleware.GLOBAL_PATH && Path.ComparePath(request.Path, x.Path));
-                    Netly.Logger.PushLog($"Run local middleware (skip: {skipConnectionByMiddleware})");
-                    RunMiddlewares(localMiddlewares.ToArray());
 
-                    Netly.Logger.PushLog($"Done run middleware (skip: {skipConnectionByMiddleware})");
+                    #region LOCAL MIDDLEWARE
 
-                    if (skipConnectionByMiddleware) return;
+                    Netly.Logger.PushLog($"Local middleware. Search middlewares...");
 
-                    Netly.Logger.PushLog($"Is WebSocket: {request.IsWebSocket}");
-                    if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                    var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
-                        var paths = _server._map.m_mapList.FindAll(x =>
+                        // only local middleware is allows
+                        if (x.Path == _Middleware.GLOBAL_PATH) return false;
+
+                        if (!x.UseParams)
                         {
-                            var comparePath = Path.ComparePath(request.Path, x.Path);
-                            Netly.Logger.PushLog($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
-                            if (!comparePath) return false;
+                            // simple path compare
+                            return Path.ComparePath(request.Path, x.Path);
+                        }
+
+                        // compare custom path
+                        var result = Path.ParseParam(originalPath: x.Path, inputPath: request.Path);
+
+                        // custom path is valid.
+                        if (result.Valid)
+                        {
+                            // set values in request object
+                            foreach (var myParam in result.Params)
+                            {
+                                // only add value if not exist for prevent exception "Key in use!"
+                                // optimization: if key exist it mean that it was added before with other callback
+                                if (request.Params.ContainsKey(myParam.Key)) break;
+                                // save params on object
+                                request.Params.Add(myParam.Key, myParam.Value);
+                            }
+
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    if (!skipNextMiddleware)
+                    {
+                        RunMiddlewares(localMiddlewares.ToArray());
+                        Netly.Logger.PushLog($"[END] running local middleware (next: {!skipNextMiddleware})");
+                    }
+
+                    if (skipNextMiddleware) return;
+
+                    #endregion
 
 
-                            var compareMethod =
+                    // CALLBACK FOUNDER
+
+                    #region CALLBACK FOUNDER
+
+                    var myPaths = _server._map.m_mapList.FindAll(x =>
+                    {
+                        // websocket connection
+                        if (request.IsWebSocket)
+                        {
+                            if (!x.IsWebsocket) return false;
+                        }
+                        // http connection
+                        else
+                        {
+                            // handle all method
+                            var handleMethod =
+                            (
                                 string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
                                 ||
                                 string.Equals(request.Method.Method, x.Method,
-                                    StringComparison.CurrentCultureIgnoreCase);
+                                    StringComparison.CurrentCultureIgnoreCase)
+                            );
 
-                            Netly.Logger.PushLog(
-                                $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
-                            if (!compareMethod) return false;
+                            if (!handleMethod) return false;
+                        }
 
-                            var isWebsocket = x.IsWebsocket;
-                            Netly.Logger.PushLog($"IsWebSocket: {isWebsocket}");
-                            if (isWebsocket) return false;
+                        // compare regular path
+                        if (!x.UseParams)
+                        {
+                            // simple path compare
+                            return Path.ComparePath(request.Path, x.Path);
+                        }
+
+                        // compare custom path
+                        var result = Path.ParseParam(originalPath: x.Path, inputPath: request.Path);
+
+                        // custom path is valid.
+                        if (result.Valid)
+                        {
+                            // set values in request object
+                            foreach (var myParam in result.Params)
+                            {
+                                // only add value if not exist for prevent exception "Key in use!"
+                                // optimization: if key exist it mean that it was added before with other callback
+                                if (request.Params.ContainsKey(myParam.Key)) break;
+                                // save params on object
+                                request.Params.Add(myParam.Key, myParam.Value);
+                            }
 
                             return true;
-                        }).ToArray();
+                        }
 
-                        Netly.Logger.PushLog($"HTTP Path len: {paths.Length}");
-                        if (paths.Length <= 0)
+                        return false;
+                    });
+
+                    #endregion
+                    
+                    if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                    {
+                        /*
+                            var paths = _server._map.m_mapList.FindAll(x =>
+                            {
+                                var comparePath = Path.ComparePath(request.Path, x.Path);
+                                Netly.Logger.PushLog($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
+                                if (!comparePath) return false;
+
+
+                                var compareMethod =
+                                    string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                                    ||
+                                    string.Equals(request.Method.Method, x.Method,
+                                        StringComparison.CurrentCultureIgnoreCase);
+
+                                Netly.Logger.PushLog(
+                                    $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
+                                if (!compareMethod) return false;
+
+                                var isWebsocket = x.IsWebsocket;
+                                Netly.Logger.PushLog($"IsWebSocket: {isWebsocket}");
+                                if (isWebsocket) return false;
+
+                                return true;
+                            }).ToArray();
+                        */
+
+                        if (myPaths.Count <= 0)
                         {
                             response.Send(404, notFoundMessage);
                             return;
                         }
 
-                        foreach (var path in paths)
+                        myPaths.ForEach(x =>
                         {
-                            path.HttpCallback?.Invoke(request, response);
+                            x.HttpCallback?.Invoke(request, response);
 
                             if (response.IsOpened)
                             {
-                                response.Send(508, $"Loop Detected {path.Path}");
-                                throw new NotImplementedException(
-                                    $"NULL response detected on [path='{path.Path}']");
+                                response.Send(508, $"Loop Detected {x.Path}");
+                                throw new NotImplementedException($"NULL response detected on [path='{x.Path}']");
                             }
-                        }
+                        });
                     }
                     else // IS WEBSOCKET CONNECTION
                     {
-                        var paths = _server._map.m_mapList.FindAll(x =>
+                        /*
+                            var paths = _server._map.m_mapList.FindAll(x =>
                             Path.ComparePath(x.Path, request.Path) && x.IsWebsocket);
-
-                        if (paths.Count <= 0)
+                        */
+                        
+                        if (myPaths.Count <= 0)
                         {
                             response.Send(404, notFoundMessage);
                             return;
                         }
-
 
                         var ws = await context.AcceptWebSocketAsync(null);
 
                         var websocket = new WebSocket(ws.WebSocket, request);
 
-                        foreach (var path in paths) path.WebsocketCallback?.Invoke(request, websocket);
+                        myPaths.ForEach(x => x.WebsocketCallback?.Invoke(request, websocket));
 
                         websocket.InitWebSocketServerSide();
                     }

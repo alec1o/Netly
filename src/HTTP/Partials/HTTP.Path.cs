@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Netly
@@ -50,10 +50,13 @@ namespace Netly
                 TimeSpan timeout = TimeSpan.FromMilliseconds(RegexTimeout);
 
                 ValidateRegularPathRegex =
-                    new Regex("^([/][a-zA-Z0-9-_@]+)([/][a-zA-Z0-9-_@]+)*([/]?)?", options, timeout);
-                ValidateParamPathRegex = new Regex("^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?",
-                    options, timeout);
-                ValidateParamFieldRegex = new Regex("^({)[(a-zA-Z)]+[\\d]*(})", options, timeout);
+                    new Regex("^([/][a-zA-Z0-9-._@]+)([/][a-zA-Z0-9-._@]+)*([/]?)?$", options, timeout);
+
+                ValidateParamPathRegex =
+                    new Regex("^(([/]([{][[a-zA-Z0-9-._@]*[}])+)|([/][a-zA-Z0-9-._@]+))*[/]?$", options, timeout);
+
+                ValidateParamFieldRegex =
+                    new Regex("^{[(a-zA-Z0-9)]+}$", options, timeout);
             }
 
             public static bool IsValid(string path)
@@ -68,13 +71,38 @@ namespace Netly
 
                 try
                 {
-                    return ValidateRegularPathRegex.IsMatch(value) || ValidateParamPathRegex.IsMatch(value);
+                    return IsRegularPath(path) || IsParamPath(path);
                 }
                 catch (RegexMatchTimeoutException e)
                 {
                     // Prevent Regex -> RegexMatchTimeoutException (Regex Attack)
+                    Netly.Logger.PushError(e);
                     return false;
                 }
+            }
+
+            public static bool IsRegularPath(string path)
+            {
+                path = (path ?? string.Empty).Trim();
+
+                if (string.Equals(path, "/")) return true;
+
+                if (string.IsNullOrWhiteSpace(path)) return false;
+
+                AddEndOfPath(ref path);
+
+                return ValidateRegularPathRegex.IsMatch(path);
+            }
+
+            public static bool IsParamPath(string path)
+            {
+                path = (path ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(path)) return false;
+
+                AddEndOfPath(ref path);
+
+                return ValidateParamPathRegex.IsMatch(path) && !IsRegularPath(path);
             }
 
             public static bool ComparePath(string origin, string input)
@@ -97,6 +125,75 @@ namespace Netly
                 const char endOfPathKey = '/';
 
                 if (path[path.Length - 1] != endOfPathKey) path += endOfPathKey;
+            }
+
+            /// <summary>
+            /// Parse custom path to get params
+            /// </summary>
+            /// <param name="originalPath">Path custom: e.g.? /root/{folder}/</param>
+            /// <param name="inputPath">Absolute path: e.g.: /root/home/</param>
+            /// <returns></returns>
+            public static ParseResult ParseParam(string originalPath, string inputPath)
+            {
+                // VALIDATE INPUTS
+                string path = (originalPath ?? String.Empty).Trim();
+                // is path but this path don't contain especial keys ("{" and "}")
+                string input = (inputPath ?? String.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(input)) return new ParseResult();
+
+                AddEndOfPath(ref path);
+                AddEndOfPath(ref input);
+
+                // the path and input-path must not be same e.g.: /root/{folder}/ and /root/home
+                if (path == input) return new ParseResult();
+
+                // +++ CHECK path SYNTAX
+                // invalid path syntax. it must contain one or more especial e.g.: /root/{user}/files/{filename}/
+                if (!IsParamPath(path)) return new ParseResult();
+                // invalid input-path syntax. it must be regular path e.g.: /root/home/files.however/
+                if (!IsRegularPath(input)) return new ParseResult();
+
+                string[] pathPoints = path.Split('/');
+                string[] inputPoints = input.Split('/');
+
+                // incompatible paths
+                if (pathPoints.Length != inputPoints.Length) return new ParseResult();
+
+                // is temp!
+                List<KeyValuePair<string, string>> paramsList = new List<KeyValuePair<string, string>>();
+
+                // processing
+                for (int i = 0; i < pathPoints.Length; i++)
+                {
+                    string pathValue = pathPoints[i];
+                    string inputValue = inputPoints[i];
+
+                    // skin isn't custom path 
+                    if (pathValue == inputValue) continue;
+
+                    // check if is custom path
+                    if (!ValidateParamFieldRegex.IsMatch(pathValue))
+                    {
+                        // isn't custom path and it mean that the paths is incompatible
+                        return new ParseResult();
+                    }
+
+                    // remove especial characters
+                    var regularParamName = pathValue.ToList();
+                    regularParamName.RemoveAt(0); // remove "{"
+                    regularParamName.RemoveAt(regularParamName.Count - 1); // remove "}"
+
+                    // the custom path is find on this path
+                    // left is key, right is value
+                    paramsList.Add(new KeyValuePair<string, string>(new string(regularParamName.ToArray()),
+                        inputValue));
+                }
+
+                // empty params
+                if (paramsList.Count <= 0) return new ParseResult();
+
+                return new ParseResult(valid: true, @params: paramsList.ToArray());
             }
         }
     }

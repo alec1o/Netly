@@ -154,17 +154,21 @@ namespace Netly
                 {
                     path = (path ?? string.Empty).Trim();
 
-                    Console.WriteLine($"Add Path: {path}. IsValid: {Path.IsValid(path)}");
+                    Netly.Logger.PushLog
+                    (
+                        $"Add Path: {path} | IsValid: {Path.IsValid(path)} | UseParams: {Path.IsParamPath(path)}"
+                    );
 
                     if (Path.IsValid(path))
                     {
                         var map = new MapContainer
                         (
-                            path,
-                            method,
-                            isWebsocket,
-                            httpCallback,
-                            websocketCallback
+                            path: path,
+                            useParams: Path.IsParamPath(path),
+                            method: method,
+                            isWebsocket: isWebsocket,
+                            httpCallback: httpCallback,
+                            websocketCallback: websocketCallback
                         );
                         m_mapList.Add(map);
                     }
@@ -172,6 +176,7 @@ namespace Netly
 
                 internal struct MapContainer
                 {
+                    public bool UseParams { get; }
                     public string Path { get; }
                     public string Method { get; }
                     public bool IsWebsocket { get; }
@@ -181,6 +186,7 @@ namespace Netly
                     public MapContainer
                     (
                         string path,
+                        bool useParams,
                         string method,
                         bool isWebsocket,
                         Action<IRequest, IResponse> httpCallback,
@@ -188,6 +194,7 @@ namespace Netly
                     )
                     {
                         Path = path;
+                        UseParams = useParams;
                         Method = method;
                         IsWebsocket = isWebsocket;
                         HttpCallback = httpCallback;
