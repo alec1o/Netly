@@ -26,7 +26,7 @@ namespace Netly
             /// <summary>
             /// Regex Timout. It prevent attacks
             /// </summary>
-            public const int RegexTimeout = 500;
+            public const int RegexTimeout = 5000;
 
             static Path()
             {
