@@ -27,6 +27,101 @@ namespace Netly
 
                 public void Fetch(string method, string url, byte[] body = null)
                 {
+                    if (IsOpened)
+                    {
+                        // NOTE: it now allow fetch multi request
+                        Exception e = new Exception
+                        (
+                            $"[{nameof(Client)}] execute a fetch when exist a operation with same this instance. " +
+                            "You must wait for release this operation, " +
+                            "for handle it you can use those callbacks: Close, Fetch and, Error"
+                        );
+
+                        Netly.Logger.PushError(e);
+
+                        throw e;
+                    }
+
+                    // start and block operation
+                    IsOpened = true;
+                    On.m_onOpen(null, null);
+
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var http = new System.Net.Http.HttpClient();
+
+                            var host = new Uri(url);
+
+                            var timeout = _timeout <= 0
+                                ? System.Threading.Timeout.InfiniteTimeSpan
+                                : TimeSpan.FromMilliseconds(_timeout);
+
+                            var httpMethod = new HttpMethod(method.Trim().ToUpper());
+
+                            #region Set Queries On Request
+
+                            var queries = _client.Queries;
+                            if (queries != null && queries.Count > 0)
+                            {
+                                var uriBuilder = new UriBuilder(host);
+                                var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                                foreach (var key in queries.Keys)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(key))
+                                    {
+                                        queryBuilder.Add(key, queries[key] ?? string.Empty);
+                                    }
+                                }
+
+                                uriBuilder.Query = queryBuilder.ToString();
+                                host = new Uri(uriBuilder.ToString());
+                            }
+
+                            #endregion
+
+                            var message = new HttpRequestMessage(httpMethod, host);
+
+                            var buffer = body ?? Array.Empty<byte>();
+                            message.Content = new BodyContent(ref buffer);
+
+                            #region Set Headers On Request
+
+                            message.Headers.Clear();
+
+                            foreach (var header in _client.Headers)
+                            {
+                                message.Headers.Add(header.Key, header.Value);
+                            }
+
+                            #endregion
+
+                            http.BaseAddress = host;
+                            http.Timeout = timeout;
+
+                            On.m_onModify?.Invoke(null, http);
+
+                            var response = await http.SendAsync(message, CancellationToken.None);
+
+                            var request = new Request(response);
+
+                            On.m_onFetch?.Invoke(null, request);
+                        }
+                        catch (Exception ex)
+                        {
+                            Netly.Logger.PushError(ex);
+                            On.m_onError?.Invoke(null, ex);
+                        }
+                        finally
+                        {
+                            // release operation
+                            IsOpened = false;
+                            On.m_onClose?.Invoke(null, null);
+                        }
+                    });
+                }
 
                 public void Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8)
                 {
