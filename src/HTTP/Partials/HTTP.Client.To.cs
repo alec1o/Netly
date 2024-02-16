@@ -30,6 +30,7 @@ namespace Netly
 
                 public void Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8)
                 {
+                    Fetch(method, url, NE.GetBytes(body ?? string.Empty, encode));
                 }
 
                 public int GetTimeout() => _timeout;
