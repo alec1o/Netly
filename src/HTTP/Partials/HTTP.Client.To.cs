@@ -58,6 +58,26 @@ namespace Netly
                     // success, timeout changed!
                     _timeout = timeout;
                 }
+
+                private class BodyContent : HttpContent
+                {
+                    private readonly byte[] _buffer;
+
+                    public BodyContent(ref byte[] buffer)
+                    {
+                        _buffer = buffer;
+                    }
+
+                    protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
+                    {
+                        return stream.WriteAsync(_buffer, 0, _buffer.Length);
+                    }
+
+                    protected override bool TryComputeLength(out long length)
+                    {
+                        length = _buffer.Length;
+                        return true;
+                    }
                 }
             }
         }
