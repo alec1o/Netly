@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -33,11 +34,13 @@ namespace Netly
                 }
 
                 {
-                    // TODO: add value from parsed url
+                    // NOTE: it will modified with method that receive request
                     Params = new Dictionary<string, string>();
                 }
 
                 {
+                    Status = -1;
+                    
                     Method = new HttpMethod(request.HttpMethod);
 
                     Url = request.Url.AbsoluteUri;
@@ -85,6 +88,8 @@ namespace Netly
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
             public IBody Body { get; }
+            
+            public int Status { get; }
         }
     }
 }
