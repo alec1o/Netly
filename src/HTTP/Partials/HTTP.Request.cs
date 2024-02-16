@@ -74,6 +74,80 @@ namespace Netly
                 // TODO: fix it
             }
 
+            internal Request(HttpResponseMessage message)
+            {
+                {
+                    Headers = new Dictionary<string, string>();
+                    foreach (var header in message.Headers)
+                    {
+                        string value = string.Empty;
+
+                        if (header.Value.Any())
+                        {
+                            bool isFirst = true;
+                            foreach (var key in header.Value)
+                            {
+                                // prepare for parsing e.g: "<..>; <..>; <..>; <...>"
+                                
+                                if (!isFirst) value += "; ";
+                                value += key;
+                                isFirst = false;
+                            }
+                        }
+                        
+                        Headers.Add(header.Key, value);
+                    }
+                }
+
+                {
+                    // NOTE: Not applicable
+                    Queries = new Dictionary<string, string>();
+                }
+
+                {
+                    // NOTE: Not applicable
+                    Cookies = Array.Empty<Cookie>();
+                }
+
+                {
+                    // NOTE: Not applicable
+                    Params = new Dictionary<string, string>();
+                }
+
+                {
+                    Uri uri = message.RequestMessage.RequestUri;
+                    
+                    Status = (int)message.StatusCode;
+                    
+                    Method = message.RequestMessage.Method;
+
+                    Url = uri.AbsoluteUri;
+
+                    Path = uri.LocalPath;
+
+                    // NOTE: Not applicable
+                    LocalEndPoint = new Host(IPAddress.Any, 0);
+
+                    // NOTE: Not applicable
+                    RemoteEndPoint = new Host(IPAddress.Any, 0);
+
+                    IsWebSocket = false;
+
+                    IsLocalRequest = uri.IsAbsoluteUri && uri.IsLoopback;
+
+                    IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "HTTPS";
+
+                    // TODO: detect encoding from Header
+                    Encoding = NE.Encoding.UTF8;
+
+                    // TODO: detect enctype from Header
+                    var enctype = Enctype.PlainText;
+
+                    byte[] buffer = message.Content.ReadAsByteArrayAsync().Result;
+                    Body = new Body(buffer, enctype, Encoding);
+                }
+            }
+
             public NE.Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }
