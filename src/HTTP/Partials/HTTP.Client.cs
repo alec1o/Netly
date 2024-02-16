@@ -49,6 +49,17 @@ namespace Netly
             /// </summary>
             public Client()
             {
+                Headers = new Dictionary<string, string>();
+                Queries = new Dictionary<string, string>();
+                
+                _on = new _IOn();
+                _to = new _ITo(this);
+
+                On = _on;
+                To = _to;
+                
+                // set default timeout value. it must be used after (_to) be created
+                Timeout = 15000;
             }
         }
     }
