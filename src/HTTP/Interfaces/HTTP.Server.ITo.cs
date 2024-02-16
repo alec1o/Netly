@@ -6,6 +6,9 @@ namespace Netly
     {
         public partial class Server
         {
+            /// <summary>
+            ///     HTTP.Server action creator container
+            /// </summary>
             public interface ITo
             {
                 /// <summary>
