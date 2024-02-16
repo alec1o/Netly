@@ -8,7 +8,7 @@
         /// <summary>
         ///     HTTP Client
         /// </summary>
-        public class Client
+        public partial class Client
         {
         }
 
