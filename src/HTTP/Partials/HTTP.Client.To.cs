@@ -36,6 +36,24 @@ namespace Netly
 
                 public void SetTimeout(int timeout)
                 {
+                    // connection is opened error.
+                    if (IsOpened)
+                    {
+                        throw new InvalidOperationException
+                        (
+                            "You can modify timeout when request is on progress."
+                        );
+                    }
+
+                    // invalid timeout value (is negative)
+                    if (_timeout < -1)
+                    {
+                        throw new ArgumentOutOfRangeException
+                        (
+                            $"({timeout}) is invalid timeout value. it must be posetive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
+                        );
+                    }
+
                     // success, timeout changed!
                     _timeout = timeout;
                 }
