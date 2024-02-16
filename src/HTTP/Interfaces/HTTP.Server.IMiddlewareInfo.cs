@@ -9,7 +9,7 @@ namespace Netly
             /// <summary>
             /// Middleware info container
             /// </summary>
-            public interface IMiddlewareContainer
+            public interface IMiddlewareInfo
             {
                 /// <summary>
                 /// Is true when this path is custom that support params e.g.: /root/{folder}

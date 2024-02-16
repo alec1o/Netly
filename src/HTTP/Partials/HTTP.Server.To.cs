@@ -153,7 +153,7 @@ namespace Netly
 
                     var skipNextMiddleware = false;
 
-                    void RunMiddlewares(IMiddlewareContainer[] middlewares)
+                    void RunMiddlewares(IMiddlewareInfo[] middlewares)
                     {
                         foreach (var middleware in middlewares)
                         {

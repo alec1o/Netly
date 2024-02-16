@@ -11,7 +11,7 @@ namespace Netly
                 /// <summary>
                 ///     Middleware array
                 /// </summary>
-                IMiddlewareContainer[] Middlewares { get; }
+                IMiddlewareInfo[] Middlewares { get; }
 
                 /// <summary>
                 ///     Add global middleware handler

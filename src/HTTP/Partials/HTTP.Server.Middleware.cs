@@ -11,16 +11,16 @@ namespace Netly
             {
                 public const string GLOBAL_PATH = "*";
 
-                private readonly List<IMiddlewareContainer> _middlewares;
+                private readonly List<IMiddlewareInfo> _middlewares;
                 public readonly Server m_server;
 
                 public _Middleware(Server server)
                 {
                     m_server = server;
-                    _middlewares = new List<IMiddlewareContainer>();
+                    _middlewares = new List<IMiddlewareInfo>();
                 }
 
-                public IMiddlewareContainer[] Middlewares => _middlewares.ToArray();
+                public IMiddlewareInfo[] Middlewares => _middlewares.ToArray();
 
                 public bool Add(Func<IRequest, IResponse, bool> middleware)
                 {
@@ -39,7 +39,7 @@ namespace Netly
 
                     if (GLOBAL_PATH.Equals(path) || Path.IsValid(path))
                     {
-                        _middlewares.Add(new MiddlewareContainer(path, Path.IsParamPath(path) ,middleware));
+                        _middlewares.Add(new MiddlewareInfo(path, Path.IsParamPath(path) ,middleware));
                         return true;
                     }
 
