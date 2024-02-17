@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Web;
 using Netly.Core;
 
 namespace Netly
@@ -76,8 +77,11 @@ namespace Netly
 
             internal Request(HttpResponseMessage message)
             {
+                Uri uri = message.RequestMessage.RequestUri;
+                
                 {
                     Headers = new Dictionary<string, string>();
+                    
                     foreach (var header in message.Headers)
                     {
                         string value = string.Empty;
@@ -100,8 +104,15 @@ namespace Netly
                 }
 
                 {
-                    // NOTE: Not applicable
                     Queries = new Dictionary<string, string>();
+                    
+                    var uriBuilder = new UriBuilder(uri);
+                    var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+                    
+                    foreach (var queryName in queryBuilder.AllKeys)
+                    {
+                        Queries.Add(queryName, queryBuilder[queryName]);
+                    }
                 }
 
                 {
@@ -115,8 +126,6 @@ namespace Netly
                 }
 
                 {
-                    Uri uri = message.RequestMessage.RequestUri;
-                    
                     Status = (int)message.StatusCode;
                     
                     Method = message.RequestMessage.Method;
