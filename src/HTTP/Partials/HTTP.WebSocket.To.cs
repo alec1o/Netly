@@ -12,6 +12,7 @@ namespace Netly
         {
             private class _To : ITo
             {
+                public Dictionary<string, string> m_headers = new Dictionary<string, string>();
                 private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
                 private readonly object _bufferLock = new object();
                 private readonly bool _isServerSide;

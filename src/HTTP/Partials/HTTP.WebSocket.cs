@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Netly
 {
@@ -28,6 +29,7 @@ namespace Netly
             }
 
             public IRequest Request => _to.m_request;
+            public Dictionary<string, string> Headers => _to.m_headers;
             public Uri Host => _to.m_uri;
             public bool IsOpened => _to.IsConnected();
             public IOn On => _on;
