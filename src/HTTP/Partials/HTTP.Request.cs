@@ -105,14 +105,7 @@ namespace Netly
 
                 {
                     Queries = new Dictionary<string, string>();
-                    
-                    var uriBuilder = new UriBuilder(uri);
-                    var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
-                    
-                    foreach (var queryName in queryBuilder.AllKeys)
-                    {
-                        Queries.Add(queryName, queryBuilder[queryName]);
-                    }
+                    SetQueriesFromUri(uri);
                 }
 
                 {
@@ -127,7 +120,7 @@ namespace Netly
 
                 {
                     Status = (int)message.StatusCode;
-                    
+
                     Method = message.RequestMessage.Method;
 
                     Url = uri.AbsoluteUri;
@@ -171,8 +164,22 @@ namespace Netly
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
             public IBody Body { get; }
-            
             public int Status { get; }
+
+            /// <summary>
+            /// Set queries from a exist uri
+            /// </summary>
+            /// <param name="uri">Uri instance</param>
+            private void SetQueriesFromUri(Uri uri)
+            {
+                var uriBuilder = new UriBuilder(uri);
+                var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                foreach (var queryName in queryBuilder.AllKeys)
+                {
+                    Queries.Add(queryName, queryBuilder[queryName]);
+                }
+            }
         }
     }
 }
