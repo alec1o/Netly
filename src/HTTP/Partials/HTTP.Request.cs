@@ -71,17 +71,76 @@ namespace Netly
 
             internal Request(ClientWebSocket ws, Uri uri, Dictionary<string, string> headers)
             {
-                Url = uri.AbsoluteUri;
-                // TODO: fix it
+                // websocket client side
+
+                {
+                    Headers = headers ?? new Dictionary<string, string>();
+                }
+
+                {
+                    Queries = new Dictionary<string, string>();
+                    SetQueriesFromUri(uri);
+                }
+
+                {
+                    var cookiesList = new List<Cookie>();
+
+                    if (ws.Options.Cookies != null)
+                    {
+                        foreach (var cookie in ws.Options.Cookies.GetCookies(uri)) cookiesList.Add((Cookie)cookie);
+                    }
+
+                    Cookies = cookiesList.ToArray();
+                }
+
+                {
+                    // NOTE: it will modified with method that receive request
+                    Params = new Dictionary<string, string>();
+                }
+
+                {
+                    // Not applicable
+                    Status = -1;
+
+                    // Not applicable
+                    Method = HttpMethod.Head;
+
+                    Url = uri.AbsoluteUri;
+
+                    Path = uri.LocalPath;
+
+                    // Not applicable
+                    LocalEndPoint = new Host(IPAddress.Any, 0);
+
+                    // Not applicable
+                    RemoteEndPoint = new Host(IPAddress.Any, 0);
+
+                    IsWebSocket = true;
+
+                    IsLocalRequest = uri.IsLoopback;
+
+                    IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "WSS";
+
+                    // Not applicable
+                    Encoding = NE.Encoding.UTF8;
+
+                    // Not applicable
+                    var enctype = Enctype.PlainText;
+
+                    // Not applicable
+                    var buffer = Array.Empty<byte>();
+                    
+                    Body = new Body(buffer, enctype, Encoding);
+                }
             }
 
             internal Request(HttpResponseMessage message)
             {
                 Uri uri = message.RequestMessage.RequestUri;
-                
+
                 {
                     Headers = new Dictionary<string, string>();
-                    
+
                     foreach (var header in message.Headers)
                     {
                         string value = string.Empty;
@@ -92,13 +151,13 @@ namespace Netly
                             foreach (var key in header.Value)
                             {
                                 // prepare for parsing e.g: "<..>; <..>; <..>; <...>"
-                                
+
                                 if (!isFirst) value += "; ";
                                 value += key;
                                 isFirst = false;
                             }
                         }
-                        
+
                         Headers.Add(header.Key, value);
                     }
                 }
