@@ -41,7 +41,7 @@ namespace Netly
 
                 {
                     Status = -1;
-                    
+
                     Method = new HttpMethod(request.HttpMethod);
 
                     Url = request.Url.AbsoluteUri;
@@ -69,7 +69,7 @@ namespace Netly
                 }
             }
 
-            internal Request(ClientWebSocket ws, Uri uri)
+            internal Request(ClientWebSocket ws, Uri uri, Dictionary<string, string> headers)
             {
                 Url = uri.AbsoluteUri;
                 // TODO: fix it
