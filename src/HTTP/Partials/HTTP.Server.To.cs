@@ -141,13 +141,24 @@ namespace Netly
                     });
                 }
 
+
+                private static string DefaultHtmlBody(string content)
+                {
+                    var html =
+                        $@"<body style='background-color: #0a0f19'>
+                            <p style='font-size: 12px; color: #fff; letter-spacing: 2.5px; font-family: monospace, cursive'>{content}</p>
+                        </body>";
+
+                    return html;
+                }
+
                 private async Task HandleConnection(HttpListenerContext context)
                 {
                     Netly.Logger.PushLog("Request processing.");
 
                     var request = new Request(context.Request);
                     var response = new Response(context.Response);
-                    var notFoundMessage = $"{request.Method.Method.ToUpper()} {request.Path}";
+                    var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
                     Netly.Logger.PushLog("Request starting.");
 
@@ -303,7 +314,7 @@ namespace Netly
                     });
 
                     #endregion
-                    
+
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
                         /*
@@ -355,7 +366,7 @@ namespace Netly
                             var paths = _server._map.m_mapList.FindAll(x =>
                             Path.ComparePath(x.Path, request.Path) && x.IsWebsocket);
                         */
-                        
+
                         if (myPaths.Count <= 0)
                         {
                             response.Send(404, notFoundMessage);
