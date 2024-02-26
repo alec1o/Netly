@@ -5,7 +5,8 @@
     </td>
   </tr>
 </table>
-</br>
+
+<br>
 
 <h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
 
@@ -40,11 +41,18 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <br>
 
 ##### Supporter
+
 > ###### Why Contribute to Netly?
-  > <sub><code>Solve Real-World Challenges</code> Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</br></sub>  
-  > <sub><code>Learn and Grow</code> Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</br></br></sub>
-  > <sub><code>Be Part of Something Bigger</code> Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
-  > <sub><code>Code, Ideas, and Feedback</code> Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
+> <sub><code>Solve Real-World Challenges</code> Netly simplifies socket programming, making it accessible for
+> developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems
+> communicate.</br></sub>  
+> <sub><code>Learn and Grow</code> Dive into the world of networking, encryption, and protocols. Gain practical
+> experience by working on a versatile library used across platforms.</br></br></sub>
+> <sub><code>Be Part of Something Bigger</code> Netly is open source, and your contributions will benefit the entire
+> community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
+> <sub><code>Code, Ideas, and Feedback</code> Whether you’re a seasoned developer or just starting out, your code,
+> ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s
+> growth.</sub>
 
 </br>
 
@@ -62,14 +70,16 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 > <sub>Notable changes</sub>
 
-| <sub>v1 (old)</sub>                  | <sub>v2 (old)</sub>                                                 | <sub>v3 (stable)</sub>                                          | <sub>v4 (In development)</sub>             |
-|--------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------------|--------------------------------------------|
-| <sub>TCP ``client`` ``server``</sub> | <sub>TCP/IP [Message Framing](https://bit.ly/message-framing)</sub> | <sub>TLS/SSL ``client`` ``server``</sub>                        | <sub>WebSocket ``client`` ``server``</sub> |
-| <sub>UDP ``client`` ``server``</sub> | <sub>TCP/UDP ``performance increase``</sub>                         | <sub>UDP ``connection from (ping/timeout)``</sub>               | <sub>HTTP ``client`` ``server``</sub>      | 
-|                                      |                                                                     | <sub>Message Framing ``performance increase``</sub>             | <sub>TCP ``internal improvement``<sub/>    | 
-|                                      |                                                                     | <sub>Message Framing ``new protocol``</sub>                     | <sub>Documentation ``improvement``</sub>   |
-|                                      |                                                                     | <sub>Byter ``2.0``</sub>                                        | <sub>XML description ``improvement``<sub>  | 
-|                                      |                                                                     | <sub>Collaborative documentation ``docsify``</sub>              | <sub>Syntax ``Improvement``</sub>          |
+<sub>
+
+| Version | Status      |                                                                    |                                        |                                                                                         |                                                         |                                                                            |
+|---------|-------------|--------------------------------------------------------------------|----------------------------------------|-----------------------------------------------------------------------------------------|---------------------------------------------------------|----------------------------------------------------------------------------|
+| 4.x.x   | Development | HTTP client and server support                                     | WebSocket client and server            | Syntax and internal improvement                                                         | Code XML comments improvement                           | Documentation improvement by [DocFx](https://github.com/dotnet/docfx)      |
+| 3.x.x   | Stable      | TCP with TLS/SSL support                                           | UDP with connection (timeout response) | New [Message Framing](https://bit.ly/message-framing) protocol and performance increase | Update for [Byter 2.0](https://github.com/alec1o/Byter) | [Docsify](https://github.com/docsifyjs/docsify) as documentation framework |
+| 2.x.x   | Legacy      | TCP with [Message Framing](https://bit.ly/message-framing) support | TCP and UDP performance increase       |                                                                                         |                                                         |                                                                            |
+| 1.x.x   | Legacy      | TCP support                                                        | UDP Support                            |                                                                                         |                                                         |                                                                            |
+
+</sub>
 
 <br>
 
