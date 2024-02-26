@@ -18,19 +18,32 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
 </div>
 
-##### About
+##### Project
+
+> <sub>Know more about this project called [Netly](https://github.com/alec1o/Netly)</sub>
+
+<table>
+    <tr>
+      <th align="left" valign="top"><sub><strong>Overview</strong></sub></th>
+<td>
 
 > <sub> Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
-<br>
+</td>
+    </tr>
+    <tr>
+      <th align="left" valign="top"><sub><strong>Link's</strong></sub></th>
+<td>
 
-##### Documentation
+> <sub>Repository: [_github.com/alec1o/netly_](https://github.com/alec1o/Netly)</sub>
 
-> <sub>Netly docs ([netly.docs.kezero.com](https://netly.docs.kezero.com))</sub>
+> <sub>Documentation: [_netly.docs.kezero.com_](https://netly.docs.kezero.com)</sub>
 
-<br>
-
-##### Install
+</td>
+    </tr>
+    <tr>
+      <th align="left" valign="top"><sub><strong>Install</strong></sub></th>
+<td>
 
 > <sub>Official publisher</sub>
 
@@ -38,31 +51,41 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 |---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
+</td>
+    </tr>
+    <tr>
+      <th align="left" valign="top"><sup><strong>Supporter</strong></sup></th>
+<td>
 <br>
 
-##### Supporter
-
-> ###### Why Contribute to Netly?
-> <sub><code>Solve Real-World Challenges</code> Netly simplifies socket programming, making it accessible for
+> ###### <sub>Why Contribute to Netly?</sub>
+> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for
 > developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems
 > communicate.</br></sub>  
-> <sub><code>Learn and Grow</code> Dive into the world of networking, encryption, and protocols. Gain practical
+> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical
 > experience by working on a versatile library used across platforms.</br></br></sub>
-> <sub><code>Be Part of Something Bigger</code> Netly is open source, and your contributions will benefit the entire
+> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire
 > community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
-> <sub><code>Code, Ideas, and Feedback</code> Whether you’re a seasoned developer or just starting out, your code,
+> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code,
 > ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s
 > growth.</sub>
 
-</br>
-
-##### Sponsor
+<br>
+</td>
+    </tr>
+    <tr>
+        <th align="left" valign="top"><sub><strong>Sponsor</strong></sub></th>
+<td>
+<br>
 
 <div>
-  <a href="https://www.jetbrains.com/community/opensource/">
-    <img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" />
-  </a>
+    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" /></a>
 </div>
+
+<br>
+</td>
+    </tr>
+</table>
 
 <br>
 
