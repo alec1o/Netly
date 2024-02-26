@@ -28,7 +28,8 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <br>
 
-<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
+<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP
+and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
 <br>
 </td>
@@ -81,13 +82,17 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <h6>Why Contribute to Netly</h6>
 
-> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
+> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By
+> contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
 
-> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</sub>
+> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by
+> working on a versatile library used across platforms.</sub>
 
-> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
+> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join
+> a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
 
-> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
+> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and
+> feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 
 <br>
 </td>
@@ -125,12 +130,12 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 - <sub>[Mono](https://mono-project.com) (SDK)</sub>
 - <sub>[Unity](https://unity.com) (Engine)</sub>
 - <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
-  - <sub>Linux</sub>
-  - <sub>Windows</sub>
-  - <sub>Android</sub>
-  - <sub>iOS and macOS</sub><br><br>
-  - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
-    should be considered a bug and reported.<i><sub>
+    - <sub>Linux</sub>
+    - <sub>Windows</sub>
+    - <sub>Android</sub>
+    - <sub>iOS and macOS</sub><br><br>
+    - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
+      should be considered a bug and reported.<i><sub>
 
 <br>
 </td>
@@ -186,511 +191,140 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
     </tr>
 </table>
 
-
-
-
-
 <br>
 
-##### Demo
+###### Code Highlight
 
-> ###### HTTP
-
-<ul>
-
-<details>
-    <summary><sub><strong>HTTP Client</strong></sub></summary>
-
-```csharp
-using System;
-using Netly;
-
-var client = new HttpClient();
-
-// error callback
-client.OnError((exception) =>
-{
-    // request exception error. when connection doesn't open, null uri,...
-});
-
-// success callback
-client.OnSuccess((request) =>
-{
-    // get status code
-    int statusCode = request.StatusCode;
-    // get server response as plain-text
-    string bodyAsPlainText =  request.Body.PlainText;   
-});  
-
-// EXAMPLE:
-    // set header
-    client.Headers.Add("content-type", "multipart/form-data");
-    // set url query
-    client.Queries.Add("timeout", "1h");
-      
-    // create form data
-    var body = new RequestBody(Enctype.Multipart);
-    // set filename.
-    body.Add("name", "Video.mp4");
-    // set filebuffer.
-    body.Add("file", new byte[]{ 1, 3, 4, 5, 6, 7, 8, 9, 0 });
-    
-    // set request body.
-    client.Body = body;
-
-// Don't block main thread, run on threadpolls.
-// Send POST request.
-client.Send("POST", new Uri("http://drive.kezero.com/upload?timeout=1h"));
-```
-
-</details>
-
-<details>
-    <summary><sub><strong>HTTP Server</strong></sub></summary>
-
-```csharp
-using System;
-using Netly;
-
-var server = new HttpServer();
-
-server.OnOpen(() =>
-{
-    //  server started.
-});
-
-server.OnClose(() =>
-{
-    // server closed.
-});
-
-server.OnError((exception) =>
-{
-    // error on open server connection.
-});
-
-server.MapAll("/foo", (request, response) =>
-{
-    // receives request from all http methods.
-    
-    // EXAMPLE:
-        // Send response for client.
-        response.Send(200, $"Hello World. this http method is [{request.Method}]");
-});
-
-server.MapGet("/", (request, response) =>
-{
-    // received GET request at "/" path.
-});
-
-server.MapPost("/login", (request, response) =>
-{
-    // received POST request at "/login" path.
-
-    // EXAMPLE:
-        // request body on plain text.
-        string text = request.Body.PlainText;  
-        // get email from http form.
-        string email = request.Body.Form.GetString("email");
-        // get password from http from.
-        string password = request.Body.Form.GetString("password");
-        // get uploaded file from http form. (<form method="post" enctype="multipart/form-data">).
-        byte[] picture = request.Body.Form.GetBytes("upload");  
-});
-
-server.Open(new Uri("http://localhost:8080"));
-```
-
-</details>
-
-</ul>
-<br>
-
-> ###### TCP
-
-<ul>
-
-<details>
-    <summary><sub><strong>Tcp Client</strong></sub></summary>
-
-```csharp
-  using Netly;
-  using Netly.Core;
-  
-  var client = new TcpClient(framing: true);
-  
-  // Enable SSL/TLS (onValidate delegate is optional)
-  client.UseEncryption(enableEncryption: true, onValidate: null);
-  
-  client.OnOpen(() => 
-  {
-      // client connected
-  });
-  
-  client.OnClose(() =>
-  {
-      // client disconnected
-  });
-  
-  client.OnError((Exception exception) =>
-  {
-      // connection close because: 1.Error on connecting, 2.Invalid framing data
-  });
-  
-  client.OnData((byte[] data) =>
-  {
-      // raw data received
-  });
-  
-  client.OnEvent((string name, byte[] data) =>
-  {
-      // event received (event use netly protocol) 
-  });
-  
-  client.OnModify((Socket socket) =>
-  {
-      // you can modify socket, called before open connection
-  });
-  
-  client.Open(new Host("127.0.0.1", 8080));
-```
-
-</details>
-
-<details>
-    <summary><sub><strong>Tcp Server</strong></sub></summary>
+<table>
+    <tr>
+      <th><sub><strong>Protocol</strong></sub></th>
+      <th><sub><strong>Client</strong></sub></th>
+      <th><sub><strong>Server</strong></sub></th>
+    </tr>
+    <tr>
+      <th valign="top"><sub><strong>TCP</strong></sub></th>
+<td valign="top">
 
 ```csharp
 using Netly;
-using Netly.Core;
 
-var server = new TcpServer(framing: true);
 
-// Enable SSL/TLS
-byte[] pfxCert = <DO_SOMETHING>;
-string pfxPass = <DO_SOMETHING>;
+TCP.Client client = new TCP.Client(framing: true);
 
-server.UseEncryption(pfxCert, pfxPass, SslProtocols.Tls13); // TLS v1.3
 
-server.OnOpen(() => 
-{
-    // server start listen
+client.On.Open(() =>
+{   
+
 });
 
-server.OnClose(() =>
+client.On.Close(() =>
 {
-    // server stop listen
+
 });
 
-server.OnError((Exception exception) =>
+client.On.Error((exception) =>
 {
-    // error on start listen (connecting)
+
 });
 
-server.OnData((TcpClient client, byte[] data) =>
+client.On.Data((data) =>
 {
-    // a client receive raw data
+
 });
 
-server.OnEvent((TcpClient client, string name, byte[] data) =>
+client.On.Event((name, data) =>
 {
-    // a client receive event (event use netly protocol)
+
 });
 
-server.OnEnter((TcpClient client) =>
+client.On.Modify((socket) =>
 {
-    // a client connected on server
-    
-    client.OnClose(() =>
-    {
-        // alternative of: TcpServer.OnClose
-    });
-    
-    client.OnData(() =>
-    {
-        // alternative of: TcpServer.OnData
-    });
-    
-    client.OnEvent(() =>
-    {
-        // alternative of: TcpServer.OnEvent
-    });
+
 });
 
-server.OnExit((TcpClient client) =>
+client.On.Encryption((certificate, chain, errors) =>
 {
-    // a client disconnected from server
+
 });
 
-server.OnModify((Socket socket) =>
-{
-    // you can modify socket, called before listen and bind a port 
-});
-
-server.Open(new Host("127.0.0.1", 8080));
+client.To.Open(new Host("1.1.1.1", 1111)); 
+client.To.Close();
+client.To.Data("data");
+client.To.Event("name", "data");
+client.To.Encryption(true); 
 ```
 
-</details>
-
-</ul>
-<br>
-
-> ###### UDP
-
-<ul>
-
-<details>
-    <summary><sub><strong>Udp Client</strong></sub></summary>
-
-```csharp
-  using Netly;
-  using Netly.Core;
-  
-  var client = new UdpClient(useConnection: true, timeout: 10000 /* 10s */);
-        
-  client.OnOpen(() => 
-  {
-      // client connected
-  });
-  
-  client.OnClose(() =>
-  {
-      // client disconnected
-  });
-  
-  client.OnError((Exception exception) =>
-  {
-      // connection close because: 1.Error on connecting, 2.Invalid framing data
-  });
-  
-  client.OnData((byte[] data) =>
-  {
-      // raw data received
-  });
-  
-  client.OnEvent((string name, byte[] data) =>
-  {
-      // event received (event use netly protocol) 
-  });
-  
-  client.OnModify((Socket socket) =>
-  {
-      // you can modify socket, called before open connection
-  });
-  
-  client.Open(new Host("127.0.0.1", 8080));
-```
-
-</details>
-
-<details>
-    <summary><sub><strong>Udp Server</strong></sub></summary>
+</td>
+<td valign="top">
 
 ```csharp
 using Netly;
-using Netly.Core;
 
-var server = new UdpServer(useConnection: true, timeout: 15000 /* 15s */);
 
-server.OnOpen(() => 
-{
-    // server start listen
+TCP.Server server = new TCP.Server(framing: true);
+
+
+server.On.Open(() =>
+{   
+
 });
 
-server.OnClose(() =>
+server.On.Close(() =>
 {
-    // server stop listen
+
 });
 
-server.OnError((Exception exception) =>
+server.On.Error((exception) =>
 {
-    // error on start listen (connecting)
+
 });
 
-server.OnData((UdpClient client, byte[] data) =>
+server.On.Enter((client) =>
 {
-    // a client receive raw data
-});
-
-server.OnEvent((UdpClient client, string name, byte[] data) =>
-{
-    // a client receive event (event use netly protocol)
-});
-
-server.OnEnter((UdpClient client) =>
-{
-    // a client connected on server
-    
-    client.OnClose(() =>
+    client.On.Data(() =>
     {
-        // alternative of: TcpServer.OnClose
+        // core of: server.On.Data
     });
     
-    client.OnData(() =>
+    client.On.Event(() =>
     {
-        // alternative of: TcpServer.OnData
+        // core of: server.On.Event
     });
     
-    client.OnEvent(() =>
+    client.On.Close(() =>
     {
-        // alternative of: TcpServer.OnEvent
+        // core of: server.On.Exit
     });
 });
 
-server.OnExit((UdpClient client) =>
+
+server.On.Data((client, data) =>
 {
-    // a client disconnected from server
+    // impl of: **.Enter((client) => client.On.Data
 });
 
-server.OnModify((Socket socket) =>
+server.On.Event((client, name, data) =>
 {
-    // you can modify socket, called before listen and bind a port 
+    // impl of: **.Enter((client) => client.On.Event
 });
 
-server.Open(new Host("127.0.0.1", 8080));
+server.On.Exit((client) =>
+{
+    // impl of: **.Enter((client) => client.On.Close
+});
+
+server.On.Modify((socket) =>
+{
+
+});
+
+server.To.Open(new Host("1.1.1.1", 1111)); 
+server.To.Close();
+server.To.Data("data");
+server.To.Event("name", "data");
+server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12); 
 ```
 
-</details>
-
-</ul>
-<br>
-
-> ###### WebSocket
-
-<ul>
-
-<details>
-    <summary><sub><strong>Websocket Client</strong></sub></summary>
-
-```csharp
-using System;
-using Netly;
-using Netly.Core;
-
-var client = new WebsocketClient();
-
-client.OnOpen(() =>
-{
-    // websocket client connected.
-});
-
-client.OnClose(() =>
-{
-    // websocket client disconnected.
-});
-
-client.OnError((exception) =>
-{
-    // error on connect to server.
-});
-
-client.OnData((bytes, bufferType) =>
-{
-    // websocket client received some data.
-    // EXAMPLE:
-        // send text data to server.
-        client.ToData("hello world!");
-        // send bynary data to server.
-        client.ToData(new byte[]{ 1, 2, 3 });
-});
-
-client.OnEvent((name, bytes, bufferType) =>
-{
-    // websocket receives Netly event (Only Netly)
-        // EXAMPLE:
-        if (name == "client quit")
-        {
-            // send event to server
-            client.ToEvent("goodbye", "Some data here");
-            // close connection.
-            client.Close();
-        }
-});
-
-client.OnModify((ws) =>
-{
-    // modify socket
-});
-
-// open connection.
-client.Open(new Uri("ws://localhost:3000/"));
-```
-
-</details>
-
-<details>
-    <summary><sub><strong>Websocket Server</strong></sub></summary>
-
-```csharp
-using System;
-using Netly;
-
-var server = new HttpServer();
-
-server.OnOpen(() =>
-{
-    //  server started.
-});
-
-server.OnClose(() =>
-{
-    // server closed.
-});
-
-server.OnError((exception) =>
-{
-    // error on open server connection.
-});
-
-// create websocket echo server.
-server.MapWebsocket("/echo", (request, client) =>
-{
-    client.OnData((bytes, bufferType) =>
-    { 
-        // echo data.
-        client.ToData(bytes, bufferType);
-    });
-
-    client.OnEvent((name, bytes, bufferType) =>
-    { 
-        // echo event.
-        client.ToEvent(name, bytes, bufferType);
-    });
-});
-
-// websocket server run on "/chat" route.
-server.MapWebsocket("/chat", (request, client) =>
-{    
-    // websocket client connected.
-    
-    // EXAMPLE:
-        // send data to client.
-        client.ToData("some data");
-        // send event to client.
-        client.ToEvent("hello_client", "some data");
-
-    // receive data
-    client.OnData((bytes, bufferType) =>
-    {
-        // websocket connected receive some data.
-    });
-
-    client.OnClose(() =>
-    {
-        // websocket client disconnected.
-    });
-
-    // receive event.
-    client.OnEvent((name, bytes, bufferType) =>
-    {
-        // websocket connected receive some event.
-    });
-});
-
-server.Open(new Uri("http://localhost:8080"));
-```
-
-</details>
-
-</ul>
-<br>
+</td>
+    </tr>
+</table>
