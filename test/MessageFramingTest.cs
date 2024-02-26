@@ -7,6 +7,7 @@ namespace test;
 public class MessageFramingTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
+
     public MessageFramingTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
@@ -27,7 +28,8 @@ public class MessageFramingTest
 
         bool isLast = false;
 
-        byte[] buffer = new List<byte[]> { MessageFraming.PREFIX, size1, value1, MessageFraming.PREFIX, size2 }.SelectMany(x => x).ToArray();
+        byte[] buffer = new List<byte[]> { MessageFraming.PREFIX, size1, value1, MessageFraming.PREFIX, size2 }
+            .SelectMany(x => x).ToArray();
 
         MessageFraming package = new MessageFraming();
 
@@ -46,11 +48,8 @@ public class MessageFramingTest
 
             isLast = !isLast;
         });
-        
-        package.OnError((error) =>
-        {
-            _testOutputHelper.WriteLine($"OnError: {error}");
-        });
+
+        package.OnError((error) => { _testOutputHelper.WriteLine($"OnError: {error}"); });
 
         package.Add(buffer);
         package.Add(value2);
@@ -59,4 +58,3 @@ public class MessageFramingTest
         Assert.Equal(value2, result2);
     }
 }
-

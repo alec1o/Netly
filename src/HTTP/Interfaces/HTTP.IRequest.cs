@@ -78,8 +78,8 @@ namespace Netly
             ///     Request Body
             /// </summary>
             IBody Body { get; }
-            
-            
+
+
             /// <summary>
             ///     Http Status Code. <br/>
             ///     if value is -1 mean: (not applicable on context).

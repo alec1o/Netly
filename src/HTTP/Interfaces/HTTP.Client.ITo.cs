@@ -29,7 +29,7 @@ namespace Netly
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
                 /// <param name="encode">Body encoding algorithm</param>
-                void Fetch(string method, string url, string body = null,NE.Encoding encode = NE.Encoding.UTF8);
+                void Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8);
             }
         }
     }

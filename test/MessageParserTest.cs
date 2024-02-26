@@ -1,4 +1,5 @@
 ﻿namespace test;
+
 using Netly.Core;
 
 public class MessageParserTest

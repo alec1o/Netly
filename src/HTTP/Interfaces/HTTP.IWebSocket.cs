@@ -16,7 +16,7 @@ namespace Netly
             ///     Connection Headers
             /// </summary>
             Dictionary<string, string> Headers { get; }
-            
+
             /// <summary>
             ///     Return true if connection is opened
             /// </summary>

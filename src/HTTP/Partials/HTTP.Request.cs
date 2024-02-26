@@ -129,7 +129,7 @@ namespace Netly
 
                     // Not applicable
                     var buffer = Array.Empty<byte>();
-                    
+
                     Body = new Body(buffer, enctype, Encoding);
                 }
             }

@@ -53,19 +53,19 @@ namespace Netly
                             var ws = new ClientWebSocket();
 
                             foreach (var header in m_headers) ws.Options.SetRequestHeader(header.Key, header.Value);
-                            
+
                             _socket._on.m_onModify?.Invoke(null, ws);
-                            
+
                             await ws.ConnectAsync(host, CancellationToken.None);
-                            
+
                             m_request = new Request(ws, host, m_headers);
-                            
+
                             m_uri = host;
-                            
+
                             _websocket = ws;
-                            
+
                             _socket._on.m_onOpen?.Invoke(null, null);
-                            
+
                             _ReceiveData();
                         }
                         catch (Exception e)

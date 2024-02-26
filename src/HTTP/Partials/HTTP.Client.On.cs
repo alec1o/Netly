@@ -14,7 +14,7 @@ namespace Netly
                 public EventHandler<System.Net.Http.HttpClient> m_onModify;
                 public EventHandler m_onOpen;
                 public EventHandler<IRequest> m_onFetch;
-                
+
                 public void Open(Action callback)
                 {
                     m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());

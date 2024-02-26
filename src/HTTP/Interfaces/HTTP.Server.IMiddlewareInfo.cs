@@ -15,12 +15,12 @@ namespace Netly
                 /// Is true when this path is custom that support params e.g.: /root/{folder}
                 /// </summary>
                 bool UseParams { get; }
-                
+
                 /// <summary>
                 /// Path e.g.: /root/home
                 /// </summary>
                 string Path { get; }
-                
+
                 /// <summary>
                 /// Handler callback
                 /// </summary>
