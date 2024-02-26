@@ -49,7 +49,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 </td>
     </tr>
     <tr>
-      <th align="left" valign="top"><sub><strong>Install</strong></sub></th>
+      <th align="center" valign="center"><sub><strong>Install</strong></sub></th>
 <td>
 <br>
 
@@ -63,7 +63,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 </td>
     </tr>
     <tr>
-        <th align="left" valign="top"><sub><strong>Sponsor</strong></sub></th>
+        <th align="center" valign="center"><sub><strong>Sponsor</strong></sub></th>
 <td>
 <br>
 
