@@ -24,7 +24,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 <table>
     <tr>
-      <th align="left" valign="top"><sub><strong>Overview</strong></sub></th>
+      <th align="center" valign="center"><sub><strong>Overview</strong></sub></th>
 <td>
 <br>
 
@@ -34,7 +34,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </td>
     </tr>
     <tr>
-      <th align="left" valign="top"><sub><strong>Link's</strong></sub></th>
+      <th align="center" valign="center"><sub><strong>Link's</strong></sub></th>
 <td>
 <br>
 
@@ -45,7 +45,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 </sub>
 
 <br>
-
+<br>
 </td>
     </tr>
     <tr>
@@ -61,27 +61,20 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 </td>
     </tr>
     <tr>
-      <th align="left" valign="top"><sup><strong>Supporter</strong></sup></th>
+        <th align="center" valign="center"><sup><strong>Supporter</strong></sup></th>
 <td>
-<br>
 
-> ###### Why Contribute to Netly?
+<h6>Why Contribute to Netly</h6>
 
-> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for
-> developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems
-> communicate.</br></sub>
+> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
 
-> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical
-> experience by working on a versatile library used across platforms.</br></br></sub>
+> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</sub>
 
-> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire
-> community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
+> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
 
-> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code,
-> ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s
-> growth.</sub>
+> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 
-<br>
+
 </td>
     </tr>
     <tr>
