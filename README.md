@@ -101,99 +101,9 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <br>
 
-##### Versions
+##### Example
 
-> <sub>Notable changes</sub>
-
-| <sub>Version</sub> | <sub>Status</sub>      |                                                                               |                                                   |                                                                                                    |                                                                    |                                                                                       |
-|--------------------|------------------------|-------------------------------------------------------------------------------|---------------------------------------------------|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| <sub>4.x.x</sub>   | <sub>Development</sub> | <sub>HTTP client and server support</sub>                                     | <sub>WebSocket client and server</sub>            | <sub>Syntax and internal improvement</sub>                                                         | <sub>Code XML comments improvement</sub>                           | <sub>Documentation improvement by [DocFx](https://github.com/dotnet/docfx)</sub>      |
-| <sub>3.x.x</sub>   | <sub>Stable</sub>      | <sub>TCP with TLS/SSL support</sub>                                           | <sub>UDP with connection (timeout response)</sub> | <sub>New [Message Framing](https://bit.ly/message-framing) protocol and performance increase</sub> | <sub>Update for [Byter 2.0](https://github.com/alec1o/Byter)</sub> | <sub>[Docsify](https://github.com/docsifyjs/docsify) as documentation framework</sub> |
-| <sub>2.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP with [Message Framing](https://bit.ly/message-framing) support</sub> | <sub>TCP and UDP performance increase</sub>       |                                                                                                    |                                                                    |                                                                                       |
-| <sub>1.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP support</sub>                                                        | <sub>UDP Support</sub>                            |                                                                                                    |                                                                    |                                                                                       |
-
-<br>
-
-<!-- information site -->
-
-##### Integrations
-
-> <sub>Technical descriptions about integrations</sub>
-
-<table>
-    <tr valign="top" align="left">
-        <th><sub>List of tested platforms</sub></th>
-<td valign="top" align="left">
-<br>
-
-- <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
-- <sub>[Mono](https://mono-project.com) (SDK)</sub>
-- <sub>[Unity](https://unity.com) (Engine)</sub>
-- <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
-    - <sub>Linux</sub>
-    - <sub>Windows</sub>
-    - <sub>Android</sub>
-    - <sub>iOS and macOS</sub><br><br>
-    - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
-      should be considered a bug and reported.<i><sub>
-
-<br>
-</td>
-    </tr>
-    <tr valign="top" align="left">
-        <th><sub>Dependencies</sub></th>
-<td valign="top" align="left">
-<br>
-
-- <sub>[Byter](https://github.com/alec1o/Byter)</sub>
-
-<br>
-</td>
-    </tr>
-    <tr valign="top" align="left">
-        <th><sub>Build</sub></th>
-<td valign="top" align="left">
-<br>
-
-> ###### Build dependencies
-
-- <sub>[Git](http://git-scm.com/)</sub>
-- <sub>[.NET](http://dot.net)</sub>
-
-> ###### Build step-by-step
-
-```rb
-# 1. clone project
-$ git clone "https://github.com/alec1o/Netly" netly 
-
-# 2. build project
-$ dotnet build "netly/" -c Release -o "netly/bin/"
-
-# NOTE:
-# Netly.dll require Byter.dll because is Netly dependency
-# Netly.dll and Byter.dll have on build folder <netly-path>/bin/
-```
-
-<br>
-</td>
-    </tr>
-    <tr valign="top" align="left">
-        <th><sub>Features</sub></th>
-<td valign="top" align="left">
-<br>
-
-> <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
-
-- <sub>``N/A``</sub>
-
-<br>
-</td>
-    </tr>
-</table>
-
-<br>
-
-###### Code Highlight
+> <sub>Syntax code. Get details on docs</sub>
 
 <table>
     <tr>
@@ -331,6 +241,98 @@ server.To.Event("name", "data");
 server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12); 
 ```
 </details>
+</td>
+    </tr>
+</table>
+
+<br>
+
+##### Versions
+
+> <sub>Notable changes</sub>
+
+| <sub>Version</sub> | <sub>Status</sub>      |                                                                               |                                                   |                                                                                                    |                                                                    |                                                                                       |
+|--------------------|------------------------|-------------------------------------------------------------------------------|---------------------------------------------------|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| <sub>4.x.x</sub>   | <sub>Development</sub> | <sub>HTTP client and server support</sub>                                     | <sub>WebSocket client and server</sub>            | <sub>Syntax and internal improvement</sub>                                                         | <sub>Code XML comments improvement</sub>                           | <sub>Documentation improvement by [DocFx](https://github.com/dotnet/docfx)</sub>      |
+| <sub>3.x.x</sub>   | <sub>Stable</sub>      | <sub>TCP with TLS/SSL support</sub>                                           | <sub>UDP with connection (timeout response)</sub> | <sub>New [Message Framing](https://bit.ly/message-framing) protocol and performance increase</sub> | <sub>Update for [Byter 2.0](https://github.com/alec1o/Byter)</sub> | <sub>[Docsify](https://github.com/docsifyjs/docsify) as documentation framework</sub> |
+| <sub>2.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP with [Message Framing](https://bit.ly/message-framing) support</sub> | <sub>TCP and UDP performance increase</sub>       |                                                                                                    |                                                                    |                                                                                       |
+| <sub>1.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP support</sub>                                                        | <sub>UDP Support</sub>                            |                                                                                                    |                                                                    |                                                                                       |
+
+<br>
+
+<!-- information site -->
+
+##### Integrations
+
+> <sub>Technical descriptions about integrations</sub>
+
+<table>
+    <tr valign="top" align="left">
+        <th><sub>List of tested platforms</sub></th>
+<td valign="top" align="left">
+<br>
+
+- <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
+- <sub>[Mono](https://mono-project.com) (SDK)</sub>
+- <sub>[Unity](https://unity.com) (Engine)</sub>
+- <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
+    - <sub>Linux</sub>
+    - <sub>Windows</sub>
+    - <sub>Android</sub>
+    - <sub>iOS and macOS</sub><br><br>
+    - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
+      should be considered a bug and reported.<i><sub>
+
+<br>
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Dependencies</sub></th>
+<td valign="top" align="left">
+<br>
+
+- <sub>[Byter](https://github.com/alec1o/Byter)</sub>
+
+<br>
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Build</sub></th>
+<td valign="top" align="left">
+<br>
+
+> ###### Build dependencies
+
+- <sub>[Git](http://git-scm.com/)</sub>
+- <sub>[.NET](http://dot.net)</sub>
+
+> ###### Build step-by-step
+
+```rb
+# 1. clone project
+$ git clone "https://github.com/alec1o/Netly" netly 
+
+# 2. build project
+$ dotnet build "netly/" -c Release -o "netly/bin/"
+
+# NOTE:
+# Netly.dll require Byter.dll because is Netly dependency
+# Netly.dll and Byter.dll have on build folder <netly-path>/bin/
+```
+
+<br>
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Features</sub></th>
+<td valign="top" align="left">
+<br>
+
+> <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
+
+- <sub>``N/A``</sub>
+
+<br>
 </td>
     </tr>
 </table>
