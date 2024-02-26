@@ -79,29 +79,51 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 <br>
 
-##### List of tested platforms
+<!-- information site -->
+
+##### Information's
+
+> <sub>Technical descriptions</sub>
+
+<table>
+    <tr valign="top" align="left">
+        <th><sub>List of tested platforms</sub></th>
+<td valign="top" align="left">
 
 - <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
 - <sub>[Mono](https://mono-project.com) (SDK)</sub>
 - <sub>[Unity](https://unity.com) (Engine)</sub>
+- <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
+  - <sub>Linux</sub>
+  - <sub>Windows</sub>
+  - <sub>Android</sub>
+  - <sub>iOS and macOS</sub><br><br>
+  - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
+    should be considered a bug and reported.<i><sub>
 
-<br>
-
-##### Feature
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Features</sub></th>
+<td valign="top" align="left">
 
 > <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
 
 - <sub>``N/A``</sub>
 
-<br>
-
-##### Dependency
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Dependencies</sub></th>
+<td valign="top" align="left">
 
 - <sub>[Byter](https://github.com/alec1o/Byter)</sub>
 
-<br>
-
-##### Build
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Build</sub></th>
+<td valign="top" align="left">
 
 > ###### Build dependencies
 
@@ -121,6 +143,14 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 # Netly.dll require Byter.dll because is Netly dependency
 # Netly.dll and Byter.dll have on build folder <netly-path>/bin/
 ```
+
+</td>
+    </tr>
+</table>
+
+
+
+
 
 <br>
 
