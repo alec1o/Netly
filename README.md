@@ -51,6 +51,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
     <tr>
       <th align="left" valign="top"><sub><strong>Install</strong></sub></th>
 <td>
+<br>
 
 > <sub>Official publisher</sub>
 
@@ -58,23 +59,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 |---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
-</td>
-    </tr>
-    <tr>
-        <th align="center" valign="center"><sup><strong>Supporter</strong></sup></th>
-<td>
-
-<h6>Why Contribute to Netly</h6>
-
-> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
-
-> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</sub>
-
-> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
-
-> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
-
-
+<br>
 </td>
     </tr>
     <tr>
@@ -85,6 +70,24 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <div>
     <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" /></a>
 </div>
+
+<br>
+</td>
+    </tr>
+    <tr>
+        <th align="center" valign="center"><sup><strong>Supporter</strong></sup></th>
+<td>
+<br>
+
+<h6>Why Contribute to Netly</h6>
+
+> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
+
+> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by working on a versatile library used across platforms.</sub>
+
+> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
+
+> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 
 <br>
 </td>
