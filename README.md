@@ -20,7 +20,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 ##### Project
 
-> <sub>Know more about this project called [Netly](https://github.com/alec1o/Netly)</sub>
+> <sub>Get basic information about this project called [Netly](https://github.com/alec1o/Netly)</sub>
 
 <table>
     <tr>
@@ -111,9 +111,9 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <!-- information site -->
 
-##### Information's
+##### Integrations
 
-> <sub>Technical descriptions</sub>
+> <sub>Technical descriptions about integrations</sub>
 
 <table>
     <tr valign="top" align="left">
