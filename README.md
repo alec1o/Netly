@@ -89,6 +89,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
     <tr valign="top" align="left">
         <th><sub>List of tested platforms</sub></th>
 <td valign="top" align="left">
+<br>
 
 - <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
 - <sub>[Mono](https://mono-project.com) (SDK)</sub>
@@ -101,29 +102,35 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
     should be considered a bug and reported.<i><sub>
 
+<br>
 </td>
     </tr>
     <tr valign="top" align="left">
         <th><sub>Features</sub></th>
 <td valign="top" align="left">
+<br>
 
 > <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
 
 - <sub>``N/A``</sub>
 
+<br>
 </td>
     </tr>
     <tr valign="top" align="left">
         <th><sub>Dependencies</sub></th>
 <td valign="top" align="left">
+<br>
 
 - <sub>[Byter](https://github.com/alec1o/Byter)</sub>
 
+<br>
 </td>
     </tr>
     <tr valign="top" align="left">
         <th><sub>Build</sub></th>
 <td valign="top" align="left">
+<br>
 
 > ###### Build dependencies
 
@@ -144,6 +151,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 # Netly.dll and Byter.dll have on build folder <netly-path>/bin/
 ```
 
+<br>
 </td>
     </tr>
 </table>
