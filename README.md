@@ -205,11 +205,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
       <th valign="top"><sub><strong>TCP</strong></sub></th>
 <td valign="top">
 <details>
-<summary>
-<a align="center" valign="center" onclick="alert('github with bug!!!')">
-<img src="/static/click.png" width="64px" alt="click me 🛎️"/> 
-</a>
-</summary>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -264,7 +260,8 @@ client.To.Encryption(true);
 </td>
 <td valign="top">
 <details>
-<summary><img src="/static/click.png" width="64px" alt="click me 🛎️"/></summary>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
 
 ```csharp
 using Netly;
