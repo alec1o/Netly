@@ -26,18 +26,25 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
     <tr>
       <th align="left" valign="top"><sub><strong>Overview</strong></sub></th>
 <td>
+<br>
 
-> <sub> Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
+<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
+<br>
 </td>
     </tr>
     <tr>
       <th align="left" valign="top"><sub><strong>Link's</strong></sub></th>
 <td>
+<br>
 
-> <sub>Repository: [_github.com/alec1o/netly_](https://github.com/alec1o/Netly)</sub>
+<sub>
+Repository: <a href="https://github.com/alec1o/Netly"><i>github.com/alec1o/netly</i></a>
+<br>
+Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com</i></a>
+</sub>
 
-> <sub>Documentation: [_netly.docs.kezero.com_](https://netly.docs.kezero.com)</sub>
+<br>
 
 </td>
     </tr>
@@ -58,14 +65,18 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <br>
 
-> ###### <sub>Why Contribute to Netly?</sub>
+> ###### Why Contribute to Netly?
+
 > <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for
 > developers. By contributing, you’ll directly impact how games, chat applications, and real-time systems
-> communicate.</br></sub>  
+> communicate.</br></sub>
+
 > <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical
 > experience by working on a versatile library used across platforms.</br></br></sub>
+
 > <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire
 > community. Join a passionate group of developers who believe in collaboration and knowledge sharing.</br></br></sub>
+
 > <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code,
 > ideas, and feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s
 > growth.</sub>
