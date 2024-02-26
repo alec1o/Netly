@@ -106,18 +106,6 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </td>
     </tr>
     <tr valign="top" align="left">
-        <th><sub>Features</sub></th>
-<td valign="top" align="left">
-<br>
-
-> <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
-
-- <sub>``N/A``</sub>
-
-<br>
-</td>
-    </tr>
-    <tr valign="top" align="left">
         <th><sub>Dependencies</sub></th>
 <td valign="top" align="left">
 <br>
@@ -150,6 +138,18 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 # Netly.dll require Byter.dll because is Netly dependency
 # Netly.dll and Byter.dll have on build folder <netly-path>/bin/
 ```
+
+<br>
+</td>
+    </tr>
+    <tr valign="top" align="left">
+        <th><sub>Features</sub></th>
+<td valign="top" align="left">
+<br>
+
+> <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
+
+- <sub>``N/A``</sub>
 
 <br>
 </td>
