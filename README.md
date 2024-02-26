@@ -204,6 +204,8 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
     <tr>
       <th valign="top"><sub><strong>TCP</strong></sub></th>
 <td valign="top">
+<details>
+<summary><img src="/static/click.png" width="64px" alt="click me 🛎️"/> </summary>
 
 ```csharp
 using Netly;
@@ -254,8 +256,11 @@ client.To.Event("name", "data");
 client.To.Encryption(true); 
 ```
 
+</details>
 </td>
 <td valign="top">
+<details>
+<summary><img src="/static/click.png" width="64px" alt="click me 🛎️"/></summary>
 
 ```csharp
 using Netly;
@@ -324,7 +329,7 @@ server.To.Data("data");
 server.To.Event("name", "data");
 server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12); 
 ```
-
+</details>
 </td>
     </tr>
 </table>
