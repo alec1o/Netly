@@ -97,13 +97,10 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <br>
 </td>
     </tr>
-</table>
-
+    <tr>
+        <th align="center" valign="center"><sub><strong>Example</strong></sub></th>
+<td>
 <br>
-
-##### Example
-
-> <sub>Syntax code. Get details on docs</sub>
 
 <table>
     <tr>
@@ -246,6 +243,11 @@ server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12);
 </table>
 
 <br>
+</td>
+    </tr>
+</table>
+
+<br>
 
 ##### Versions
 
@@ -259,8 +261,6 @@ server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12);
 | <sub>1.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP support</sub>                                                        | <sub>UDP Support</sub>                            |                                                                                                    |                                                                    |                                                                                       |
 
 <br>
-
-<!-- information site -->
 
 ##### Integrations
 
