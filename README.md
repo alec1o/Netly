@@ -205,7 +205,11 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
       <th valign="top"><sub><strong>TCP</strong></sub></th>
 <td valign="top">
 <details>
-<summary><img src="/static/click.png" width="64px" alt="click me 🛎️"/> </summary>
+<summary>
+<a align="center" valign="center" onclick="alert('github with bug!!!')">
+<img src="/static/click.png" width="64px" alt="click me 🛎️"/> 
+</a>
+</summary>
 
 ```csharp
 using Netly;
