@@ -109,7 +109,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
       <th><sub><strong>Server</strong></sub></th>
     </tr>
     <tr>
-      <th valign="top"><sub><strong>TCP</strong></sub></th>
+      <th valign="center"><sub><strong>TCP</strong></sub></th>
 <td valign="top">
 <details>
 <summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
@@ -237,6 +237,87 @@ server.To.Data("data");
 server.To.Event("name", "data");
 server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12); 
 ```
+</details>
+</td>
+    </tr>
+    <tr>
+        <th><sub><strong>UDP</strong></sub></th>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+    </tr>
+    <tr>
+        <th><sub><strong>HTTP</strong></sub></th>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+    </tr>
+    <tr>
+        <th><sub><strong>WebSocket</strong></sub></th>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+<td valign="top">
+
+
+<details>
+<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+
+```csharp
+
+```
+
 </details>
 </td>
     </tr>
