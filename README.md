@@ -166,17 +166,19 @@ client.On.Encryption((certificate, chain, errors) =>
 
 #if FUNCTIONS
 
-// open connection
-client.To.Open(new Host("1.1.1.1", 1111)); 
+// open connection if closed
+client.To.Open(new Host("127.0.0.1", 8080));
 
-// close connection
+// close connection if opened
 client.To.Close();
 
-// send raw data
-client.To.Data("data");
+// send raw data if connected
+client.To.Data(new byte[2] { 128, 255 });
+client.To.Data("hello world", NE.Encoding.UTF8);
 
-// send event
-client.To.Event("name", "data");
+// send event if connected
+client.To.Event("name", new byte[2] { 128, 255 });
+client.To.Event("name", "hello world", NE.Encoding.UTF8); 
 
 // enable encryption (must call before client.To.Open)
 client.To.Encryption(true); 
