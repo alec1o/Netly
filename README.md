@@ -97,10 +97,13 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <br>
 </td>
     </tr>
-    <tr>
-        <th align="center" valign="center"><sub><strong>Example</strong></sub></th>
-<td>
+</table>
+
 <br>
+
+##### Examples
+
+> <sub>Code highlights</sub>
 
 <table>
     <tr>
@@ -112,62 +115,80 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
       <th valign="center"><sub><strong>TCP</strong></sub></th>
 <td valign="top">
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 using Netly;
 
-
 TCP.Client client = new TCP.Client(framing: true);
 
+#if CALLBACKS
 
 client.On.Open(() =>
 {   
-
+    printf("connection opened");
 });
 
 client.On.Close(() =>
 {
-
+    printf("connetion closed");
 });
 
 client.On.Error((exception) =>
 {
-
+    printf("connection erro on open");
 });
 
-client.On.Data((data) =>
+client.On.Data((bytes) =>
 {
-
+    printf("connection receive a raw data");
 });
 
 client.On.Event((name, data) =>
 {
-
+    printf("connection receive a event");
 });
 
 client.On.Modify((socket) =>
 {
-
+    printf("called before try open connection.");
 });
 
 client.On.Encryption((certificate, chain, errors) =>
 {
-
+    // Only if client.IsEncrypted is enabled
+    printf("validate ssl/tls certificate");
+    // return true if certificate is valid
+    return true;
 });
 
+#endif
+
+#if FUNCTIONS
+
+// open connection
 client.To.Open(new Host("1.1.1.1", 1111)); 
+
+// close connection
 client.To.Close();
+
+// send raw data
 client.To.Data("data");
+
+// send event
 client.To.Event("name", "data");
+
+// enable encryption (must call before client.To.Open)
 client.To.Encryption(true); 
+
+#endif
 ```
 
 </details>
 </td>
 <td valign="top">
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 
 ```csharp
@@ -246,7 +267,7 @@ server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -312,7 +333,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -390,7 +411,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 
@@ -402,7 +423,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 
@@ -417,7 +438,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 
@@ -429,18 +450,13 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 
 <details>
-<summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
+<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
 
 ```
 
 </details>
-</td>
-    </tr>
-</table>
-
-<br>
 </td>
     </tr>
 </table>
