@@ -194,69 +194,67 @@ client.To.Encryption(true);
 ```csharp
 using Netly;
 
-
 TCP.Server server = new TCP.Server(framing: true);
 
+#if CALLBACKS
 
 server.On.Open(() =>
 {   
-
+    printf("connection opened");
 });
 
 server.On.Close(() =>
 {
-
+    printf("connection closed");
 });
 
 server.On.Error((exception) =>
 {
-
+    printf("connection error on open");
 });
 
-server.On.Enter((client) =>
+server.On.Accept((client) =>
 {
-    client.On.Data(() =>
+    client.On.Open(() =>
     {
-        // core of: server.On.Data
+        printf("client connected");
     });
     
-    client.On.Event(() =>
+    client.On.Data((bytes) =>
     {
-        // core of: server.On.Event
+        printf("client receive a raw data");
+    });
+    
+    client.On.Event((name, bytes) =>
+    {
+        printf("client receive a event");
     });
     
     client.On.Close(() =>
     {
-        // core of: server.On.Exit
+        printf("client disconnected");
     });
-});
-
-
-server.On.Data((client, data) =>
-{
-    // impl of: **.Enter((client) => client.On.Data
-});
-
-server.On.Event((client, name, data) =>
-{
-    // impl of: **.Enter((client) => client.On.Event
-});
-
-server.On.Exit((client) =>
-{
-    // impl of: **.Enter((client) => client.On.Close
 });
 
 server.On.Modify((socket) =>
 {
-
+    printf("called before try open connection.");
 });
 
+#endif
+
+#if FUNCTIONS
+
+// open connection
 server.To.Open(new Host("1.1.1.1", 1111)); 
+
+// close connection
 server.To.Close();
-server.To.Data("data");
-server.To.Event("name", "data");
-server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12); 
+
+// enable encryption support (must called before server.To.Open)
+server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
+
+#endif
 ```
 </details>
 </td>
@@ -288,7 +286,7 @@ client.On.Close(() =>
 
 client.On.Error((exception) =>
 {
-    printf(connection error on open");
+    printf("connection error on open");
 });
 
 client.On.Data((bytes) =>
