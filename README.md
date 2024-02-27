@@ -249,7 +249,61 @@ server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12);
 <summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+UDP.Client client = new UDP.Client(useConnection: true, timeout: 15000);
+
+#if CALLBACKS
+
+client.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+client.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+client.On.Error((exception) =>
+{
+    printf(connection error on open");
+});
+
+client.On.Data((bytes) =>
+{
+    printf("connection received a raw data");
+});
+
+client.On.Event((name, eventBytes) =>
+{
+    printf("connection received a event");
+});
+
+client.On.Modify((socket) =>
+{
+   printf("called before try open connection.");
+});
+
+#endif
+
+#if FUNCTIONS
+    
+// open connection if closed
+client.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection if opened
+client.To.Close();
+
+// send raw data if connected
+client.To.Data(new byte[2] { 128, 255 });
+client.To.Data("hello world", NE.Encoding.UTF8);
+
+// send event if connected
+client.To.Event("name", new byte[2] { 128, 255 });
+client.To.Event("name", "hello world", NE.Encoding.UTF8); 
+
+#endif
 ```
 
 </details>
@@ -261,7 +315,70 @@ server.To.Encryption(@mypfx, @mypfxpassword, SslProtocols.Tls12);
 <summary>🛎 <strong><sup><sub>Code </sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+UDP.Server server = new UDP.Server(useConnection: true, timeout: 15000);
+
+#if CALLBACKS
+
+server.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+server.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+server.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+server.On.Accept((client) =>
+{
+    client.On.Open(() =>
+    {
+        printf("client connected");
+    });
+    
+    client.On.Close(() =>
+    {
+        // Only if use connection is enabled.
+        printf("client disconnected");
+    });
+    
+    client.On.Data((bytes) =>
+    {
+        printf("client received a raw data");
+    });
+    
+    client.On.Event((name, bytes) =>
+    {
+        printf("client received a event");
+    });
+});
+
+#endif
+
+#if FUNCTIONS
+    
+// open connection
+server.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection
+server.To.Close();
+
+// send raw data
+server.To.Data(new byte[2] { 128, 255 });
+server.To.Data("hello world", NE.Encoding.UTF8);
+
+// send event
+server.To.Event("name", new byte[2] { 128, 255 });
+server.To.Event("name", "hello world", NE.Encoding.UTF8); 
+
+#endif
 ```
 
 </details>
