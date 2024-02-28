@@ -710,69 +710,55 @@ state in sync</i>, for example <i>only</i> sending data when confirming that the
 <br>
 
 ```csharp
-public class Game
-{
-    private HTTP.WebSocket ws;
-    
-    private void Init()
-    {
-        // [OK]
-        ws.On.Open(() =>
-        {
-            ...
-        });
-        
-        // [OK]
-        ws.On.Event((name,  bytes) =>
-        {
-            ...
-        });
-        
-        // [[OK]
-        ws.On.Event((name,  bytes) =>
-        {
-            if (name == "foo")
-            {
-                ...              
-            }
-        });
-        
-        // [OK]
-        ws.On.Event((name,  bytes) =>
-        {
-            if (name == "bar")
-            {
-                ...                
-            }
-        });
-    }
-    
-    public void Loop()
-    {
-        // [NEVER DO THIS IN LOOP]
-        client.On.Event((name, bytes) =>
-        {
-            ...
-        });
-        
-        // [NEVER DO THIS IN LOOP]
-        client.On.***;
-        
-        // [OK]
-        client.To.Open(...);
-        
-        // [OK]
-        client.To.Close(...);
-        
-        // [OK]
-        client.To.Data(...);
-        
-        // [OK]
-        client.To.Event(...);       
-        
-    }
-}
+using System;
+using Netly;
 
+
+private HTTP.WebSocket ws;
+```
+```csharp
+// OK
+private void Init()
+{    
+    ws.On.Open(() => { ... });
+    
+    ws.On.Event((name, bytes) => { ... });
+
+    ws.On.Event((name, bytes) =>
+    {
+        if (name == "foo") { ... }
+    });
+
+    ws.On.Event((name,  bytes) =>
+    {
+        if (name == "bar") { ... }
+    });
+}
+```
+```csharp
+// BAD
+public void Loop()
+{    
+    
+    client.To.Open(...);    // [OK]
+    
+    client.To.Data(...);    // [OK]
+    
+    client.To.Event(...);   // [OK]
+    
+    client.To.Close(...);   // [OK]   
+    
+    
+    ws.On.Open(() => { ... });       // [NEVER IN LOOP]
+    
+    ws.On.Close(() => { ... });      // [NEVER IN LOOP]
+    
+    ws.On.Data((bytes) => { ... });  // [NEVER IN LOOP]    
+    
+    ws.On.Error((exception) => { ... });    // [NEVER IN LOOP]
+    
+    ws.On.Event((name, bytes) => { ... });  // [NEVER IN LOOP]    
+}
 ```
 </td>
 </tr>
