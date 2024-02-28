@@ -495,3 +495,190 @@ server.To.Close();
 </td>
 </tr>
 </table>
+
+<br>
+
+##### Usage
+
+> <sub>Integration and interaction example codes</sub>
+
+
+<table>
+
+<tr>
+<th align="center" valign="top"><sub><strong>Standard</strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Console</sub></sup></strong></summary>
+
+```csharp
+using System;
+using Netly;
+
+public class Program
+{
+    private static void Main(string[] args)
+    {
+        UDP.Client client = new UDP.Client();
+        
+        client.On.Open(() =>
+        {
+            Console.WriteLine(<some-text-here>);
+        };
+            
+        client.On.Close(() =>
+        {
+            Console.WriteLine(<some-text-here>);
+        };
+            
+        client.On.Error((exception) =>
+        {
+            Console.WriteLine(<some-text-here>);
+        };
+        
+        while(true)
+        {
+            if(!client.IsOpened)
+            {
+                client.To.Open(new Host("1.1.1.1", 1111));
+            }
+            else
+            {
+                Console.WriteLine("Message: ");
+                string message = Console.ReadLine();
+                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
+            }
+        }
+    }
+}
+```
+
+</details>
+</td>
+</tr>
+
+<tr>
+<th align="center" valign="top"><sub><strong>Flax Engine</strong></sub></th>
+<td>
+<details open><summary>📄 <strong><sup><sub>Script</sub></sup></strong></summary>
+
+```csharp
+using System;
+using FlaxEngine;
+using Netly;
+
+public class Example : Script
+{
+    public string message;
+    
+    internal UDP.Client client;
+    
+    public override void Awake()
+    {
+        client = new UDP.Client();        
+        
+        client.On.Open(() =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+            
+        client.On.Close(() =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+            
+        client.On.Error((exception) =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+    }
+    
+    public override void Start()
+    {
+        client.To.Open(new Host("1.1.1.1", 1111));
+    }
+    
+    public override void Update()
+    {
+        if(!client.IsOpened)
+        {
+             client.To.Open(new Host("1.1.1.1", 1111));
+        }
+        else
+        {            
+            if (Input.GetKeyDown(KeyCode.Space)
+            {
+                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
+            }
+        }
+    }
+}
+```
+
+</details>
+</td>
+</tr>
+
+<tr>
+<th align="center" valign="top"><sub><strong>Unity Engine</strong></sub></th>
+<td>
+
+<details><summary>📄 <strong><sup><sub>MonoBehaviour</sub></sup></strong></summary>
+
+```csharp
+using System;
+using FlaxEngine;
+using Netly;
+
+public class Example : MonoBehaviour
+{
+    public string message;
+    
+    internal UDP.Client client;
+    
+    private void Awake()
+    {
+        client = new UDP.Client();        
+        
+        client.On.Open(() =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+            
+        client.On.Close(() =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+            
+        client.On.Error((exception) =>
+        {
+            Debug.Log(<some-text-here>);
+        };
+    }
+    
+    private void Start()
+    {
+        client.To.Open(new Host("1.1.1.1", 1111));
+    }
+    
+    private void Update()
+    {
+        if(!client.IsOpened)
+        {
+             client.To.Open(new Host("1.1.1.1", 1111));
+        }
+        else
+        {            
+            if (Input.GetKeyDown(KeyCode.Space)
+            {
+                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
+            }
+        }
+    }
+}
+```
+
+</details>
+</td>
+</tr>
+
+</table>
