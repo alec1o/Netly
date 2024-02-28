@@ -445,14 +445,6 @@ server.To.Open(new Host("127.0.0.1", 8080));
 
 // close connection
 server.To.Close();
-
-// send raw data
-server.To.Data(new byte[2] { 128, 255 });
-server.To.Data("hello world", NE.Encoding.UTF8);
-
-// send event
-server.To.Event("name", new byte[2] { 128, 255 });
-server.To.Event("name", "hello world", NE.Encoding.UTF8); 
 ```
 
 </details>
