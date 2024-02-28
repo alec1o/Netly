@@ -709,6 +709,8 @@ state in sync</i>, for example <i>only</i> sending data when confirming that the
 <br>
 <br>
 
+<details open><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
+
 ```csharp
 using System;
 using Netly;
@@ -760,6 +762,8 @@ public void Loop()
     ws.On.Event((name, bytes) => { ... });  // [NEVER IN LOOP]    
 }
 ```
+
+</details>
 </td>
 </tr>
 </table>
