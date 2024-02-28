@@ -681,4 +681,78 @@ public class Example : MonoBehaviour
 </td>
 </tr>
 
+<tr>
+<th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
+<td>
+<sub>
+You should never initialize events in an uncontrolled loop, <code>**.On</code> stores functions that will be called when something happens and these functions only need to be initialized once. Understand, I'm not saying that every event will only have one callback attached to it, but I am saying when not to keep calling <code>**.On</code> frequently. See examples below of good and bad use.
+</sub>
+
+```csharp
+public class Game
+{
+    private HTTP.WebSocket ws;
+    
+    private void Init()
+    {
+        // [OK]
+        ws.On.Open(() =>
+        {
+            ...
+        });
+        
+        // [OK]
+        ws.On.Event((name,  bytes) =>
+        {
+            ...
+        });
+        
+        // [[OK]
+        ws.On.Event((name,  bytes) =>
+        {
+            if (name == "foo")
+            {
+                ...              
+            }
+        });
+        
+        // [OK]
+        ws.On.Event((name,  bytes) =>
+        {
+            if (name == "bar")
+            {
+                ...                
+            }
+        });
+    }
+    
+    public void Loop()
+    {
+        // [NEVER DO THIS]
+        client.On.Event((name, bytes) =>
+        {
+            ...
+        });
+        
+        // [NEVER DO THIS]
+        client.On.***;
+        
+        // [OK]
+        client.To.Open(...);
+        
+        // [OK]
+        client.To.Close(...);
+        
+        // [OK]
+        client.To.Data(...);
+        
+        // [OK]
+        client.To.Event(...);       
+        
+    }
+}
+
+```
+</td>
+</tr>
 </table>
