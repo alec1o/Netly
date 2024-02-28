@@ -690,23 +690,22 @@ public class Example : MonoBehaviour
 <tr>
 <th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
 <td>
-<i>
+
 <sub>
-You should never initialize events in an uncontrolled loop, (**.On) stores functions that will be
-called when something happens and these functions only need to be initialized once. Understand,
-I'm not saying that every event will only have one callback attached to it,
-but it means not to keep calling (**.On) frequently like in Loops.
+<strong>You should never initialize events in an uncontrolled loop</strong>, (**.On) stores functions that will be
+called when something happens and these functions only need to be initialized once. <i>Understand,
+It doesn't means that every event will only have one callback attached to it,
+but it means not to keep calling (**.On) frequently like in Loops</i>.
 See examples below of good and bad use.
 </sub>
 <br>
 <br>
 <sub>
 For methods (**.To) there is an internal barrier that limits things like
-(trying to open or close connections several times, sending data with a disconnected socket, ...) 
-although these methods do not cause problems when called in a loop, it is always good have the action
-state in sync, for example only sending data when confirming that the connection is open.
+(<i>trying to open or close connections several times, sending data with a disconnected socket, ...</i>) 
+<strong>although these methods do not cause problems when called in a loop</strong>, <i>it is always good have the action and
+state in sync</i>, for example <i>only</i> sending data when confirming that the <i>connection is open</i>.
 </sub>
-</i>
 <br>
 <br>
 
