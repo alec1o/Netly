@@ -685,6 +685,8 @@ public class Example : MonoBehaviour
 </td>
 </tr>
 
+<tr><th></th></tr>
+
 <tr>
 <th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
 <td>
