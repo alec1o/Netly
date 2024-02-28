@@ -556,10 +556,12 @@ public class Program
 </td>
 </tr>
 
+<tr><th></th></tr>
+
 <tr>
 <th align="center" valign="top"><sub><strong>Flax Engine</strong></sub></th>
 <td>
-<details open><summary>📄 <strong><sup><sub>Script</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Script</sub></sup></strong></summary>
 
 ```csharp
 using System;
@@ -617,6 +619,8 @@ public class Example : Script
 </details>
 </td>
 </tr>
+
+<tr><th></th></tr>
 
 <tr>
 <th align="center" valign="top"><sub><strong>Unity Engine</strong></sub></th>
