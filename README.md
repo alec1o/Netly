@@ -693,6 +693,7 @@ public class Example : MonoBehaviour
 <sub>
 You should never initialize events in an uncontrolled loop, <code>**.On</code> stores functions that will be called when something happens and these functions only need to be initialized once. Understand, I'm not saying that every event will only have one callback attached to it, but I am saying when not to keep calling <code>**.On</code> frequently. See examples below of good and bad use.
 </sub>
+<br>
 
 ```csharp
 public class Game
