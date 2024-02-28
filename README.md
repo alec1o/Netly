@@ -196,10 +196,11 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 
 > <sub>Code highlights</sub>
 
-###### TCP
-
-<details>
-<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+<table>
+<tr>
+<th align="left" valign="top"><sub>TCP<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -265,9 +266,7 @@ client.To.Encryption(true);
 ```
 
 </details>
-
-<details open>
-<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 
 ```csharp
@@ -330,11 +329,13 @@ server.To.Close();
 server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
 ```
 </details>
+</td>
+</tr>
 
-###### UDP
-
-<details>
-<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+<tr>
+<th align="left" valign="top"><sub>UDP<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -389,9 +390,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
-
-<details>
-<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -455,43 +454,46 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
+</td>
+</tr>
 
-###### HTTP
-
-<details>
-<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
-
-```csharp
-
-```
-
-</details>
-
-<details>
-<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<tr>
+<th align="left" valign="top"><sub>HTTP<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 
 ```
 
 </details>
-
-###### WebSocket
-
-<details>
-<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 
 ```
 
 </details>
+</td>
+</tr>
 
-<details>
-<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<tr>
+<th align="left" valign="top"><sub>WebSocket<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 
 ```
 
 </details>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+</tr>
+</table>
