@@ -198,7 +198,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 
 <table>
 <tr>
-<th align="center" valign="center"><sub>TCP<strong></strong></sub></th>
+<th align="center" valign="top"><sub>TCP<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
@@ -335,7 +335,7 @@ server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
 <tr><th></th></tr>
 
 <tr>
-<th align="center" valign="center"><sub>UDP<strong></strong></sub></th>
+<th align="center" valign="top"><sub>UDP<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
@@ -392,7 +392,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
-<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details open><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -462,7 +462,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 <tr><th></th></tr>
 
 <tr>
-<th align="center" valign="center"><sub>HTTP<strong></strong></sub></th>
+<th align="center" valign="top"><sub>HTTP<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
@@ -484,7 +484,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 <tr><th></th></tr>
 
 <tr>
-<th align="center" valign="center"><sub>WebSocket<strong></strong></sub></th>
+<th align="center" valign="top"><sub>WebSocket<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
