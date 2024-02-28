@@ -101,367 +101,6 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <br>
 
-##### Examples
-
-> <sub>Code highlights</sub>
-
-<table>
-    <tr>
-      <th><sub><strong>Protocol</strong></sub></th>
-      <th><sub><strong>Client</strong></sub></th>
-      <th><sub><strong>Server</strong></sub></th>
-    </tr>
-    <tr>
-      <th valign="center"><sub><strong>TCP</strong></sub></th>
-<td valign="top">
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-using Netly;
-
-TCP.Client client = new TCP.Client(framing: true);
-
-#if CALLBACKS
-
-client.On.Open(() =>
-{   
-    printf("connection opened");
-});
-
-client.On.Close(() =>
-{
-    printf("connetion closed");
-});
-
-client.On.Error((exception) =>
-{
-    printf("connection erro on open");
-});
-
-client.On.Data((bytes) =>
-{
-    printf("connection receive a raw data");
-});
-
-client.On.Event((name, data) =>
-{
-    printf("connection receive a event");
-});
-
-client.On.Modify((socket) =>
-{
-    printf("called before try open connection.");
-});
-
-client.On.Encryption((certificate, chain, errors) =>
-{
-    // Only if client.IsEncrypted is enabled
-    printf("validate ssl/tls certificate");
-    // return true if certificate is valid
-    return true;
-});
-
-#endif
-
-#if FUNCTIONS
-
-// open connection if closed
-client.To.Open(new Host("127.0.0.1", 8080));
-
-// close connection if opened
-client.To.Close();
-
-// send raw data if connected
-client.To.Data(new byte[2] { 128, 255 });
-client.To.Data("hello world", NE.Encoding.UTF8);
-
-// send event if connected
-client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8); 
-
-// enable encryption (must call before client.To.Open)
-client.To.Encryption(true); 
-
-#endif
-```
-
-</details>
-</td>
-<td valign="top">
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-
-```csharp
-using Netly;
-
-TCP.Server server = new TCP.Server(framing: true);
-
-#if CALLBACKS
-
-server.On.Open(() =>
-{   
-    printf("connection opened");
-});
-
-server.On.Close(() =>
-{
-    printf("connection closed");
-});
-
-server.On.Error((exception) =>
-{
-    printf("connection error on open");
-});
-
-server.On.Accept((client) =>
-{
-    client.On.Open(() =>
-    {
-        printf("client connected");
-    });
-    
-    client.On.Data((bytes) =>
-    {
-        printf("client receive a raw data");
-    });
-    
-    client.On.Event((name, bytes) =>
-    {
-        printf("client receive a event");
-    });
-    
-    client.On.Close(() =>
-    {
-        printf("client disconnected");
-    });
-});
-
-server.On.Modify((socket) =>
-{
-    printf("called before try open connection.");
-});
-
-#endif
-
-#if FUNCTIONS
-
-// open connection
-server.To.Open(new Host("1.1.1.1", 1111)); 
-
-// close connection
-server.To.Close();
-
-// enable encryption support (must called before server.To.Open)
-server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
-
-#endif
-```
-</details>
-</td>
-    </tr>
-    <tr>
-        <th><sub><strong>UDP</strong></sub></th>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-using Netly;
-
-UDP.Client client = new UDP.Client(useConnection: true, timeout: 15000);
-
-#if CALLBACKS
-
-client.On.Open(() =>
-{
-    printf("connection opened");
-});
-
-client.On.Close(() =>
-{
-    printf("connection closed");
-});
-
-client.On.Error((exception) =>
-{
-    printf("connection error on open");
-});
-
-client.On.Data((bytes) =>
-{
-    printf("connection received a raw data");
-});
-
-client.On.Event((name, eventBytes) =>
-{
-    printf("connection received a event");
-});
-
-client.On.Modify((socket) =>
-{
-   printf("called before try open connection.");
-});
-
-#endif
-
-#if FUNCTIONS
-    
-// open connection if closed
-client.To.Open(new Host("127.0.0.1", 8080));
-
-// close connection if opened
-client.To.Close();
-
-// send raw data if connected
-client.To.Data(new byte[2] { 128, 255 });
-client.To.Data("hello world", NE.Encoding.UTF8);
-
-// send event if connected
-client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8); 
-
-#endif
-```
-
-</details>
-</td>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-using Netly;
-
-UDP.Server server = new UDP.Server(useConnection: true, timeout: 15000);
-
-#if CALLBACKS
-
-server.On.Open(() =>
-{
-    printf("connection opened");
-});
-
-server.On.Close(() =>
-{
-    printf("connection closed");
-});
-
-server.On.Error((exception) =>
-{
-    printf("connection error on open");
-});
-
-server.On.Accept((client) =>
-{
-    client.On.Open(() =>
-    {
-        printf("client connected");
-    });
-    
-    client.On.Close(() =>
-    {
-        // Only if use connection is enabled.
-        printf("client disconnected");
-    });
-    
-    client.On.Data((bytes) =>
-    {
-        printf("client received a raw data");
-    });
-    
-    client.On.Event((name, bytes) =>
-    {
-        printf("client received a event");
-    });
-});
-
-#endif
-
-#if FUNCTIONS
-    
-// open connection
-server.To.Open(new Host("127.0.0.1", 8080));
-
-// close connection
-server.To.Close();
-
-// send raw data
-server.To.Data(new byte[2] { 128, 255 });
-server.To.Data("hello world", NE.Encoding.UTF8);
-
-// send event
-server.To.Event("name", new byte[2] { 128, 255 });
-server.To.Event("name", "hello world", NE.Encoding.UTF8); 
-
-#endif
-```
-
-</details>
-</td>
-    </tr>
-    <tr>
-        <th><sub><strong>HTTP</strong></sub></th>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-
-```
-
-</details>
-</td>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-
-```
-
-</details>
-</td>
-    </tr>
-    <tr>
-        <th><sub><strong>WebSocket</strong></sub></th>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-
-```
-
-</details>
-</td>
-<td valign="top">
-
-
-<details>
-<summary>📄 <strong><sup><sub>Code </sub></sup></strong></summary>
-
-```csharp
-
-```
-
-</details>
-</td>
-    </tr>
-</table>
-
-<br>
 
 ##### Versions
 
@@ -550,3 +189,309 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 </td>
     </tr>
 </table>
+
+<br>
+
+##### Examples
+
+> <sub>Code highlights</sub>
+
+###### TCP
+
+<details>
+<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+using Netly;
+
+TCP.Client client = new TCP.Client(framing: true);
+```
+```csharp
+client.On.Open(() =>
+{   
+    printf("connection opened");
+});
+
+client.On.Close(() =>
+{
+    printf("connetion closed");
+});
+
+client.On.Error((exception) =>
+{
+    printf("connection erro on open");
+});
+
+client.On.Data((bytes) =>
+{
+    printf("connection receive a raw data");
+});
+
+client.On.Event((name, data) =>
+{
+    printf("connection receive a event");
+});
+
+client.On.Modify((socket) =>
+{
+    printf("called before try open connection.");
+});
+
+client.On.Encryption((certificate, chain, errors) =>
+{
+    // Only if client.IsEncrypted is enabled
+    printf("validate ssl/tls certificate");
+    // return true if certificate is valid
+    return true;
+});
+```
+```csharp
+// open connection if closed
+client.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection if opened
+client.To.Close();
+
+// send raw data if connected
+client.To.Data(new byte[2] { 128, 255 });
+client.To.Data("hello world", NE.Encoding.UTF8);
+
+// send event if connected
+client.To.Event("name", new byte[2] { 128, 255 });
+client.To.Event("name", "hello world", NE.Encoding.UTF8); 
+
+// enable encryption (must call before client.To.Open)
+client.To.Encryption(true); 
+```
+
+</details>
+
+<details open>
+<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+
+```csharp
+using Netly;
+
+TCP.Server server = new TCP.Server(framing: true);
+```
+```csharp
+server.On.Open(() =>
+{   
+    printf("connection opened");
+});
+
+server.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+server.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+server.On.Accept((client) =>
+{
+    client.On.Open(() =>
+    {
+        printf("client connected");
+    });
+    
+    client.On.Data((bytes) =>
+    {
+        printf("client receive a raw data");
+    });
+    
+    client.On.Event((name, bytes) =>
+    {
+        printf("client receive a event");
+    });
+    
+    client.On.Close(() =>
+    {
+        printf("client disconnected");
+    });
+});
+
+server.On.Modify((socket) =>
+{
+    printf("called before try open connection.");
+});
+```
+```csharp
+// open connection
+server.To.Open(new Host("1.1.1.1", 1111)); 
+
+// close connection
+server.To.Close();
+
+// enable encryption support (must called before server.To.Open)
+server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
+```
+</details>
+
+###### UDP
+
+<details>
+<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+using Netly;
+
+UDP.Client client = new UDP.Client(useConnection: true, timeout: 15000);
+```
+```csharp
+client.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+client.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+client.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+client.On.Data((bytes) =>
+{
+    printf("connection received a raw data");
+});
+
+client.On.Event((name, eventBytes) =>
+{
+    printf("connection received a event");
+});
+
+client.On.Modify((socket) =>
+{
+   printf("called before try open connection.");
+});
+```
+```csharp 
+// open connection if closed
+client.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection if opened
+client.To.Close();
+
+// send raw data if connected
+client.To.Data(new byte[2] { 128, 255 });
+client.To.Data("hello world", NE.Encoding.UTF8);
+
+// send event if connected
+client.To.Event("name", new byte[2] { 128, 255 });
+client.To.Event("name", "hello world", NE.Encoding.UTF8); 
+```
+
+</details>
+
+<details>
+<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+using Netly;
+
+UDP.Server server = new UDP.Server(useConnection: true, timeout: 15000);
+```
+```csharp
+server.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+server.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+server.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+server.On.Accept((client) =>
+{
+    client.On.Open(() =>
+    {
+        printf("client connected");
+    });
+    
+    client.On.Close(() =>
+    {
+        // Only if use connection is enabled.
+        printf("client disconnected");
+    });
+    
+    client.On.Data((bytes) =>
+    {
+        printf("client received a raw data");
+    });
+    
+    client.On.Event((name, bytes) =>
+    {
+        printf("client received a event");
+    });
+});
+```
+```csharp
+// open connection
+server.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection
+server.To.Close();
+
+// send raw data
+server.To.Data(new byte[2] { 128, 255 });
+server.To.Data("hello world", NE.Encoding.UTF8);
+
+// send event
+server.To.Event("name", new byte[2] { 128, 255 });
+server.To.Event("name", "hello world", NE.Encoding.UTF8); 
+```
+
+</details>
+
+###### HTTP
+
+<details>
+<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+
+<details>
+<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+
+###### WebSocket
+
+<details>
+<summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+
+<details>
+<summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
