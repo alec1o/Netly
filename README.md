@@ -729,7 +729,7 @@ private void Init()
         if (name == "foo") { ... }
     });
 
-    ws.On.Event((name,  bytes) =>
+    ws.On.Event((name, bytes) =>
     {
         if (name == "bar") { ... }
     });
