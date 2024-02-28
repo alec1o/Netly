@@ -690,9 +690,23 @@ public class Example : MonoBehaviour
 <tr>
 <th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
 <td>
+<i>
 <sub>
-You should never initialize events in an uncontrolled loop, <code>**.On</code> stores functions that will be called when something happens and these functions only need to be initialized once. Understand, I'm not saying that every event will only have one callback attached to it, but I am saying when not to keep calling <code>**.On</code> frequently. See examples below of good and bad use.
+You should never initialize events in an uncontrolled loop, (**.On) stores functions that will be
+called when something happens and these functions only need to be initialized once. Understand,
+I'm not saying that every event will only have one callback attached to it,
+but it means not to keep calling (**.On) frequently like in Loops.
+See examples below of good and bad use.
 </sub>
+<br>
+<br>
+<sub>
+For methods (**.To) there is an internal barrier that limits things like
+(trying to open or close connections several times, sending data with a disconnected socket, ...) 
+although these methods do not cause problems when called in a loop, it is always good have the action
+state in sync, for example only sending data when confirming that the connection is open.
+</sub>
+</i>
 <br>
 <br>
 
@@ -736,13 +750,13 @@ public class Game
     
     public void Loop()
     {
-        // [NEVER DO THIS ON LOOP]
+        // [NEVER DO THIS IN LOOP]
         client.On.Event((name, bytes) =>
         {
             ...
         });
         
-        // [NEVER DO THIS ON LOOP]
+        // [NEVER DO THIS IN LOOP]
         client.On.***;
         
         // [OK]
