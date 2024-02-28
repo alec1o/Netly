@@ -332,7 +332,7 @@ server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
 </td>
 </tr>
 
-<tr></tr>
+<tr><th></th></tr>
 
 <tr>
 <th align="left" valign="top"><sub>UDP<strong></strong></sub></th>
@@ -459,7 +459,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 </td>
 </tr>
 
-<tr></tr>
+<tr><th></th></tr>
 
 <tr>
 <th align="left" valign="top"><sub>HTTP<strong></strong></sub></th>
@@ -481,7 +481,7 @@ server.To.Event("name", "hello world", NE.Encoding.UTF8);
 </td>
 </tr>
 
-<tr></tr>
+<tr><th></th></tr>
 
 <tr>
 <th align="left" valign="top"><sub>WebSocket<strong></strong></sub></th>
