@@ -736,13 +736,13 @@ public class Game
     
     public void Loop()
     {
-        // [NEVER DO THIS]
+        // [NEVER DO THIS ON LOOP]
         client.On.Event((name, bytes) =>
         {
             ...
         });
         
-        // [NEVER DO THIS]
+        // [NEVER DO THIS ON LOOP]
         client.On.***;
         
         // [OK]
