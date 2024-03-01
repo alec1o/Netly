@@ -34,12 +34,14 @@ namespace Netly
                 _isFraming = isFraming;
             }
 
-            internal Client(Socket socket, Server server, out bool success) : this()
+            internal Client(Socket socket, IServer server, out bool success) : this()
             {
                 // TODO: impl use message framing by server config
                 // _useFraming = server.UseFraming; 
                 _to = new _To(this, socket, server, out success);
             }
+
+            internal void InitServerSide() => _to.InitServerSide();
         }
     }
 }

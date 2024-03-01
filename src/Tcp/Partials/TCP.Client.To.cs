@@ -1,5 +1,8 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -14,73 +17,202 @@ namespace Netly
                 public bool IsEncrypted { get; private set; }
                 public bool IsOpened => IsConnected();
 
-                public bool IsFraming => _client._isFraming;
+                private bool IsFraming => _client._isFraming;
 
-                public string Id => _client._id;
+                private bool CanSend => _isClosed || _isClosing || _isOpening;
+
+                private string Id => _client._id;
+
+                private _On On => _client._on;
 
                 private Socket _socket;
                 private NetworkStream _netStream;
                 private SslStream _sslStream;
-                private Client _client;
-                private Server _server;
 
+                private bool
+                    _isOpening,
+                    _isClosing,
+                    _isClosed;
+
+                private readonly Client _client;
+                private readonly IServer _server;
+                private readonly bool _isServer;
+                private readonly List<byte[]> _dataList;
+
+                /* ---- CONSTRUCTOR --- */
 
                 private _To()
                 {
+                    _dataList = new List<byte[]>();
                     _socket = null;
                     _netStream = null;
                     _sslStream = null;
+                    _isOpening = false;
+                    _isClosing = false;
+                    _isServer = false;
+                    _isClosed = true;
                     Host = Host.Default;
                     IsEncrypted = false;
                 }
 
-                public _To(Client client, Socket socket, Server server, out bool success) : this()
+                public _To(Client client)
+                {
+                    _client = client;
+                }
+
+                public _To(Client client, Socket socket, IServer server, out bool success) : this()
                 {
                     _client = client;
                     _server = server;
                     _socket = socket;
-                    success = false;
-                }
-
-                public _To(Client client)
-                {
+                    _isServer = true;
+                    IsEncrypted = _server.IsEncrypted;
+                    
+                    if (IsEncrypted)
+                    {
+                        try
+                        {
+                            InitEncryption();
+                            success = true;
+                        }
+                        catch (Exception e)
+                        {
+                           Netly.Logger.PushError(e);
+                           success = false;
+                        }
+                    }
+                    else
+                    {
+                        success = true;
+                    }
                 }
 
                 /* ---- INTERFACE --- */
 
                 public void Open(Host host)
                 {
-                    throw new System.NotImplementedException();
+                    if (_isOpening || _isClosing || IsOpened || _isServer) return;
+
+                    _isOpening = true;
+
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                            On.m_onModify?.Invoke(null, _socket);
+
+                            _socket.Connect(host.Address, host.Port);
+
+                            Host = new Host(_socket.RemoteEndPoint);
+
+                            _netStream = new NetworkStream(_socket);
+
+                            if (IsEncrypted) InitEncryption();
+
+                            _isClosed = false;
+
+                            InitReceiver();
+                        }
+                        catch (Exception e)
+                        {
+                            On.m_onError?.Invoke(null, e);
+                        }
+                        finally
+                        {
+                            _isOpening = false;
+                        }
+                    });
                 }
 
                 public void Close()
                 {
-                    throw new System.NotImplementedException();
+                    if (_isOpening || _isClosing) return;
+
+                    _isClosing = true;
+
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            _sslStream?.Close();
+                            _netStream?.Close();
+                            _socket?.Close();
+
+                            _sslStream?.Dispose();
+                            _netStream?.Dispose();
+                            _socket?.Dispose();
+                        }
+                        catch (Exception e)
+                        {
+                            Netly.Logger.PushError(e);
+                        }
+                        finally
+                        {
+                            _dataList.Clear();
+                            _sslStream = null;
+                            _netStream = null;
+                            _socket = null;
+
+                            if (_isClosed is false)
+                            {
+                                _isClosed = true;
+                                On.m_onClose?.Invoke(null, null);
+                            }
+
+                            _isClosing = false;
+                        }
+                    });
                 }
 
                 public void Data(byte[] data)
                 {
-                    throw new System.NotImplementedException();
+                    if (CanSend == false || data == null) return;
+
+                    _dataList.Add(data);
                 }
 
                 public void Encryption(bool enable)
                 {
-                    throw new System.NotImplementedException();
+                    if (_isServer)
+                    {
+                        throw new InvalidOperationException
+                        (
+                            $"Must not modify ({nameof(Encryption)}) of server-side client."
+                        );
+                    }
+
+                    if (IsOpened)
+                    {
+                        throw new InvalidOperationException
+                        (
+                            $"Must not modify ({nameof(Encryption)}) while socket is Connected."
+                        );
+                    }
+
+                    IsEncrypted = enable;
                 }
 
                 public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
-                    throw new System.NotImplementedException();
+                    if (CanSend == false || data == null) return;
+
+                    _dataList.Add(NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
-                    throw new System.NotImplementedException();
+                    if (CanSend == false || data == null || name == null) return;
+
+                    _dataList.Add(EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
-                    throw new System.NotImplementedException();
+                    if (CanSend == false || data == null || name == null) return;
+
+                    _dataList.Add(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 /* ---- INTERNAL --- */
@@ -96,6 +228,183 @@ namespace Netly
                     catch
                     {
                         return false;
+                    }
+                }
+
+                public void InitServerSide()
+                {
+                    if (_isServer is false) return;
+
+                    On.m_onOpen?.Invoke(null, null);
+
+                    InitReceiver();
+                }
+
+                private void InitEncryption()
+                {
+                    if (_socket is null) throw new NullReferenceException(nameof(_socket));
+
+                    if (IsEncrypted is false) return;
+
+                    if (_isServer)
+                    {
+                        _sslStream = new SslStream(_netStream, false);
+
+                        _sslStream.AuthenticateAsServer
+                        (
+                            clientCertificateRequired: false,
+                            checkCertificateRevocation: true,
+                            serverCertificate: _server.Certificate,
+                            enabledSslProtocols: _server.EncryptionProtocol
+                        );
+                    }
+                    else
+                    {
+                        _sslStream = new SslStream
+                        (
+                            innerStream: _netStream,
+                            leaveInnerStreamOpen: false,
+                            userCertificateSelectionCallback: null,
+                            userCertificateValidationCallback: (sender, certificate, chain, errors) =>
+                            {
+                                var encryptionCallbackList = On.m_onEncryption;
+
+                                // callbacks not found.
+                                if (encryptionCallbackList.Count <= 0)
+                                {
+                                    Netly.Logger.PushWarning(
+                                        $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
+                                    return true;
+                                }
+
+                                bool isValid = true;
+
+                                foreach (var callback in encryptionCallbackList)
+                                {
+                                    isValid = callback.Invoke(certificate, chain, errors);
+
+                                    // error on validate certificate
+                                    if (isValid is false)
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                // all callbacks is true.
+                                return isValid;
+                            }
+                        );
+
+                        _sslStream.AuthenticateAsClient(string.Empty);
+                    }
+                }
+
+
+                private void PushResult(ref byte[] bytes)
+                {
+                    (string name, byte[] buffer) content = EventManager.Verify(bytes);
+
+                    if (content.buffer == null)
+                    {
+                        On.m_onData?.Invoke(null, bytes);
+                    }
+                    else
+                    {
+                        On.m_onEvent?.Invoke(null, (content.name, content.buffer));
+                    }
+                }
+
+                private void InitReceiver()
+                {
+                    Task.Run(async () =>
+                    {
+                        byte[] buffer = new byte[1024 * 1024]; // 1MB
+
+                        MessageFraming framing = new MessageFraming();
+
+                        if (IsFraming)
+                        {
+                            framing.OnData(data => PushResult(ref data));
+
+                            // Framing not match:
+                            // Endpoint part isn't using framing or is using different framing protocol
+                            framing.OnError(exception =>
+                            {
+                                Netly.Logger.PushError(exception);
+                                Close();
+                            });
+                        }
+
+                        while (_socket != null)
+                        {
+                            try
+                            {
+                                int size = IsEncrypted
+                                    ? await _sslStream.ReadAsync(buffer, 0, buffer.Length)
+                                    : await _netStream.ReadAsync(buffer, 0, buffer.Length);
+
+                                if (size <= 0)
+                                {
+                                    if (IsOpened) continue;
+                                    break;
+                                }
+
+                                byte[] data = new byte[size];
+
+                                Array.Copy(buffer, 0, data, 0, data.Length);
+
+                                if (IsFraming)
+                                {
+                                    framing.Add(data);
+                                }
+                                else
+                                {
+                                    PushResult(ref data);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Netly.Logger.PushError(e);
+                                if (!IsOpened) break;
+                            }
+                        }
+
+                        Close();
+                    });
+
+                    // send data task
+                    Task.Run(() =>
+                    {
+                        while (_socket != null)
+                        {
+                            while (_dataList.Count > 0)
+                            {
+                                byte[] data = _dataList[0];
+                                _dataList.RemoveAt(0);
+                                Send(ref data);
+                            }
+                        }
+                    });
+                }
+
+                private void Send(ref byte[] bytes)
+                {
+                    if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
+
+                    try
+                    {
+                        if (IsEncrypted)
+                        {
+                            _sslStream.Write(bytes, 0, bytes.Length);
+                        }
+                        else
+                        {
+                            _netStream.Write(bytes, 0, bytes.Length);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Netly.Logger.PushError(e);
                     }
                 }
             }
