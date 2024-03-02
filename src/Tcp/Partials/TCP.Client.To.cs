@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
 
@@ -67,7 +69,7 @@ namespace Netly
                     _socket = socket;
                     _isServer = true;
                     IsEncrypted = _server.IsEncrypted;
-                    
+
                     if (IsEncrypted)
                     {
                         try
@@ -77,8 +79,8 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                           Netly.Logger.PushError(e);
-                           success = false;
+                            Netly.Logger.PushError(e);
+                            success = false;
                         }
                     }
                     else
@@ -314,77 +316,86 @@ namespace Netly
                     }
                 }
 
+                private async void ReceiveJob()
+                {
+                    byte[] buffer = new byte[1024 * 1024]; // 1MB
+
+                    MessageFraming framing = new MessageFraming();
+
+                    if (IsFraming)
+                    {
+                        framing.OnData(data => PushResult(ref data));
+
+                        // Framing not match:
+                        // Endpoint part isn't using framing or is using different framing protocol
+                        framing.OnError(exception =>
+                        {
+                            Netly.Logger.PushError(exception);
+                            Close();
+                        });
+                    }
+
+                    while (_socket != null)
+                    {
+                        try
+                        {
+                            int size = IsEncrypted
+                                ? await _sslStream.ReadAsync(buffer, 0, buffer.Length)
+                                : await _netStream.ReadAsync(buffer, 0, buffer.Length);
+
+                            if (size <= 0)
+                            {
+                                if (IsOpened) continue;
+                                break;
+                            }
+
+                            byte[] data = new byte[size];
+
+                            Array.Copy(buffer, 0, data, 0, data.Length);
+
+                            if (IsFraming)
+                            {
+                                framing.Add(data);
+                            }
+                            else
+                            {
+                                PushResult(ref data);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Netly.Logger.PushError(e);
+                            if (!IsOpened) break;
+                        }
+                    }
+
+                    Close();
+                }
+
+                private async void SendJob()
+                {
+                    while (_socket != null)
+                    {
+                        while (_dataList.Count > 0)
+                        {
+                            byte[] data = _dataList[0];
+                            _dataList.RemoveAt(0);
+                            Send(ref data);
+                        }
+                    }
+                }
+
                 private void InitReceiver()
                 {
-                    Task.Run(async () =>
-                    {
-                        byte[] buffer = new byte[1024 * 1024]; // 1MB
+                    // true: thread is destroyed normally when program end (non-force required)
+                    // false: this thread will be persistent and will block the destruction of main process (force quit required)
+                    const bool isBackground = true;
 
-                        MessageFraming framing = new MessageFraming();
-
-                        if (IsFraming)
-                        {
-                            framing.OnData(data => PushResult(ref data));
-
-                            // Framing not match:
-                            // Endpoint part isn't using framing or is using different framing protocol
-                            framing.OnError(exception =>
-                            {
-                                Netly.Logger.PushError(exception);
-                                Close();
-                            });
-                        }
-
-                        while (_socket != null)
-                        {
-                            try
-                            {
-                                int size = IsEncrypted
-                                    ? await _sslStream.ReadAsync(buffer, 0, buffer.Length)
-                                    : await _netStream.ReadAsync(buffer, 0, buffer.Length);
-
-                                if (size <= 0)
-                                {
-                                    if (IsOpened) continue;
-                                    break;
-                                }
-
-                                byte[] data = new byte[size];
-
-                                Array.Copy(buffer, 0, data, 0, data.Length);
-
-                                if (IsFraming)
-                                {
-                                    framing.Add(data);
-                                }
-                                else
-                                {
-                                    PushResult(ref data);
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Netly.Logger.PushError(e);
-                                if (!IsOpened) break;
-                            }
-                        }
-
-                        Close();
-                    });
-
-                    // send data task
-                    Task.Run(() =>
-                    {
-                        while (_socket != null)
-                        {
-                            while (_dataList.Count > 0)
-                            {
-                                byte[] data = _dataList[0];
-                                _dataList.RemoveAt(0);
-                                Send(ref data);
-                            }
-                        }
-                    });
+                    var sendJob = new Task(SendJob);
+                    sendJob.Start();
+                    
+                    var receiveJob = new Thread(ReceiveJob) { IsBackground = isBackground };
+                    receiveJob.Start();
                 }
 
                 private void Send(ref byte[] bytes)
