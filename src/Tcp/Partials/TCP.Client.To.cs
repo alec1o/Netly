@@ -321,7 +321,8 @@ namespace Netly
 
                 private void ReceiveJob()
                 {
-                    byte[] buffer = new byte[1024 * 1024]; // 1MB
+                    // Is max TCP packet size.
+                    byte[] buffer = new byte[1024 * 64]; // 65536 (64kb).
 
                     MessageFraming framing = new MessageFraming();
 
@@ -377,13 +378,32 @@ namespace Netly
 
                 private void SendJob()
                 {
-                    while (_socket != null)
+                    while (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null))
                     {
-                        while (_dataList.Count > 0)
+                        if (_dataList.Count <= 0) continue;
+
+                        try
                         {
-                            byte[] data = _dataList[0];
+                            byte[] bytes = _dataList[0];
                             _dataList.RemoveAt(0);
-                            Send(ref data);
+
+                            if (IsFraming)
+                            {
+                                bytes = MessageFraming.CreateMessage(bytes);
+                            }
+
+                            if (IsEncrypted)
+                            {
+                                _sslStream?.Write(bytes, 0, bytes.Length);
+                            }
+                            else
+                            {
+                                _netStream?.Write(bytes, 0, bytes.Length);
+                            }
+                        }
+                        catch
+                        {
+                            // Ignored
                         }
                     }
                 }
@@ -394,37 +414,11 @@ namespace Netly
                     // false: this thread will be persistent and will block the destruction of main process (force quit required)
                     const bool isBackground = true;
 
-                    var sendJob = new Task(SendJob);
-                    sendJob.Start();
-
+                    var sendJob = new Thread(SendJob) { IsBackground = isBackground };
                     var receiveJob = new Thread(ReceiveJob) { IsBackground = isBackground };
+
+                    sendJob.Start();
                     receiveJob.Start();
-                }
-
-                private void Send(ref byte[] bytes)
-                {
-                    if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
-
-                    try
-                    {
-                        if (IsFraming)
-                        {
-                            bytes = MessageFraming.CreateMessage(bytes);
-                        }
-
-                        if (IsEncrypted)
-                        {
-                            _sslStream.Write(bytes, 0, bytes.Length);
-                        }
-                        else
-                        {
-                            _netStream.Write(bytes, 0, bytes.Length);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Netly.Logger.PushError(e);
-                    }
                 }
             }
         }
