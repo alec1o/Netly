@@ -319,7 +319,7 @@ namespace Netly
                     }
                 }
 
-                private async void ReceiveJob()
+                private void ReceiveJob()
                 {
                     byte[] buffer = new byte[1024 * 1024]; // 1MB
 
@@ -343,8 +343,8 @@ namespace Netly
                         try
                         {
                             int size = IsEncrypted
-                                ? await _sslStream.ReadAsync(buffer, 0, buffer.Length)
-                                : await _netStream.ReadAsync(buffer, 0, buffer.Length);
+                                ? _sslStream.Read(buffer, 0, buffer.Length)
+                                : _netStream.Read(buffer, 0, buffer.Length);
 
                             if (size <= 0)
                             {
