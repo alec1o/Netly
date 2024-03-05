@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
@@ -371,7 +372,7 @@ namespace Netly
                     Close();
                 }
 
-                private async void SendJob()
+                private void SendJob()
                 {
                     while (_socket != null)
                     {
