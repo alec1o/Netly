@@ -183,6 +183,7 @@ namespace Netly
                             if (success)
                             {
                                 Clients.Add(client);
+                                On.m_onAccept?.Invoke(null, client);
                                 client.InitServerSide();
                             }
                             else

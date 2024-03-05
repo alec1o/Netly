@@ -237,6 +237,8 @@ namespace Netly
                 {
                     if (_isServer is false) return;
 
+                    On.m_onModify?.Invoke(null, _socket);
+
                     On.m_onOpen?.Invoke(null, null);
 
                     InitReceiver();
@@ -393,7 +395,7 @@ namespace Netly
 
                     var sendJob = new Task(SendJob);
                     sendJob.Start();
-                    
+
                     var receiveJob = new Thread(ReceiveJob) { IsBackground = isBackground };
                     receiveJob.Start();
                 }
