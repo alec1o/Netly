@@ -17,6 +17,7 @@ namespace Netly
             bool IsEncrypted { get; }
             Server.ITo To { get; }
             Server.IOn On { get; }
+            IClient[] Clients { get; }
         }
     }
 }
