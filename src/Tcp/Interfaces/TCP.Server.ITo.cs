@@ -1,4 +1,8 @@
-﻿namespace Netly
+﻿using System.Security.Authentication;
+using System.Threading.Tasks;
+using Netly.Core;
+
+namespace Netly
 {
     public static partial class TCP
     {
@@ -6,7 +10,9 @@
         {
             public interface ITo
             {
-                
+                void Open(Host host);
+                void Close();
+                void Encryption(bool enable, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols);
             }
         }
     }
