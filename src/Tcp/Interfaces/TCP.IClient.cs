@@ -4,7 +4,7 @@ namespace Netly
 {
     public static partial class TCP
     {
-        internal interface IClient
+        public interface IClient
         {
             string Id { get; }
             Host Host { get; }
