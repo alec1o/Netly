@@ -407,6 +407,11 @@ namespace Netly
 
                     try
                     {
+                        if (IsFraming)
+                        {
+                            bytes = MessageFraming.CreateMessage(bytes);
+                        }
+
                         if (IsEncrypted)
                         {
                             _sslStream.Write(bytes, 0, bytes.Length);
