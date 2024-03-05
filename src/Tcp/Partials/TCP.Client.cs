@@ -36,8 +36,7 @@ namespace Netly
 
             internal Client(Socket socket, IServer server, out bool success) : this()
             {
-                // TODO: impl use message framing by server config
-                // _useFraming = server.UseFraming; 
+                _isFraming = server.IsFraming;
                 _to = new _To(this, socket, server, out success);
             }
 
