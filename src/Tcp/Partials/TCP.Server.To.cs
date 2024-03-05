@@ -170,13 +170,13 @@ namespace Netly
                     return Task.CompletedTask;
                 }
 
-                private async void AcceptJob()
+                private void AcceptJob()
                 {
                     while (IsOpened)
                     {
                         try
                         {
-                            Socket socket = await _socket.AcceptAsync();
+                            Socket socket = _socket.Accept();
 
                             Client client = new Client(socket, _server, out bool success);
 
