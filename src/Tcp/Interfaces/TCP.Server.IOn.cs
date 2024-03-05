@@ -1,12 +1,15 @@
-﻿namespace Netly
+﻿using System;
+using System.Net.Sockets;
+
+namespace Netly
 {
     public static partial class TCP
     {
         public partial class Server
         {
-            public interface IOn
+            public interface IOn : IOn<Socket>
             {
-                
+                void Accept(Action<IClient> callback);
             }
         }
     }
