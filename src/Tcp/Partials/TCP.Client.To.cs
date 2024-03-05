@@ -378,7 +378,7 @@ namespace Netly
 
                 private void SendJob()
                 {
-                    while (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null))
+                    while (_socket != null && _netStream != null || (IsEncrypted && _sslStream != null))
                     {
                         if (_dataList.Count <= 0) continue;
 
