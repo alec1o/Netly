@@ -67,6 +67,7 @@ namespace Netly
                     _client = client;
                     _server = server;
                     _socket = socket;
+                    _netStream = new NetworkStream(_socket);
                     _isServer = true;
                     IsEncrypted = _server.IsEncrypted;
 
