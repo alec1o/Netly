@@ -116,6 +116,8 @@ namespace Netly
 
                             _isClosed = false;
 
+                            On.m_onOpen?.Invoke(null, null);
+                            
                             InitReceiver();
                         }
                         catch (Exception e)
