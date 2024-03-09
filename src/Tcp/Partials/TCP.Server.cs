@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Netly.Core;
@@ -23,7 +24,7 @@ namespace Netly
             public bool IsEncrypted => _to.IsEncrypted;
             public ITo To => _to;
             public IOn On => _on;
-            public IClient[] Clients => _to.Clients.ToArray();
+            public IClient[] Clients => _to.Clients.Values.ToArray();
 
             private Server()
             {

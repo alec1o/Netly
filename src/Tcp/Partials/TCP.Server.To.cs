@@ -22,9 +22,10 @@ namespace Netly
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate2 Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
-                public List<IClient> Clients { get; private set; }
+                public Dictionary<string, IClient> Clients { get; private set; }
 
                 private Socket _socket;
+                private readonly object _lockRemove;
 
                 private bool
                     _isOpening,
@@ -33,13 +34,14 @@ namespace Netly
 
                 private _To()
                 {
-                    Clients = new List<IClient>();
+                    Clients = new Dictionary<string, IClient>();
                     _socket = null;
                     _isOpening = false;
                     _isClosing = false;
                     _isClosed = true;
                     Host = Host.Default;
                     IsEncrypted = false;
+                    _lockRemove = new object();
                 }
 
                 public _To(Server server) : this()
@@ -102,7 +104,7 @@ namespace Netly
                         {
                             _socket.Close();
 
-                            foreach (var client in Clients)
+                            foreach (var client in Clients.Values)
                             {
                                 client.To.Close();
                             }
@@ -170,6 +172,14 @@ namespace Netly
                     return Task.CompletedTask;
                 }
 
+                private void RemoveClient(string id)
+                {
+                    lock (_lockRemove)
+                    {
+                        Clients.Remove(id);
+                    }
+                }
+                
                 private void AcceptJob()
                 {
                     while (IsOpened)
@@ -177,13 +187,19 @@ namespace Netly
                         try
                         {
                             Socket socket = _socket.Accept();
-
                             Client client = new Client(socket, _server, out bool success);
 
                             if (success)
                             {
-                                Clients.Add(client);
+                                client.On.Close(() =>
+                                {
+                                    RemoveClient(client.Id);
+                                });
+
+                                Clients.Add(client.Id, client);
+
                                 On.m_onAccept?.Invoke(null, client);
+
                                 client.InitServerSide();
                             }
                             else
