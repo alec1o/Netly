@@ -60,6 +60,7 @@ namespace Netly
                 public _To(Client client)
                 {
                     _client = client;
+                    _isClosed = true;
                 }
 
                 public _To(Client client, Socket socket, IServer server, out bool success) : this()
@@ -69,6 +70,7 @@ namespace Netly
                     _socket = socket;
                     _netStream = new NetworkStream(_socket);
                     _isServer = true;
+                    _isClosed = false;
                     IsEncrypted = _server.IsEncrypted;
 
                     if (IsEncrypted)
