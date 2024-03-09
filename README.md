@@ -107,10 +107,6 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <table>
 <tr>
-<th><sub>Version</sub></th>
-<th><sub>Status</sub></th>
-</tr>
-<tr>
 <td><sub>4.x.x</sub></td>
 <td><sub>Development</sub></td>
 <td><sub>HTTP client and server support</sub></td>
@@ -133,12 +129,18 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td><sub>Legacy</sub></td>
 <td><sub>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</sub></td>
 <td><sub>TCP and UDP performance increase</sub></td>
+<td></td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td><sub>1.x.x</sub></td>
 <td><sub>Legacy</sub></td>
 <td><sub>TCP support</sub></td>
 <td><sub>UDP Support</sub></td>
+<td></td>
+<td></td>
+<td></td>
 </tr>
 </table>
 
