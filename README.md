@@ -105,44 +105,42 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 > <sub>Notable changes</sub>
 
-<sub>
 <table>
 <tr>
-<th>Version</th>
-<th>Status</th>
+<th><sub>Version</sub></th>
+<th><sub>Status</sub></th>
 </tr>
 <tr>
-<td>4.x.x</td>
-<td>Development</td>
-<td>HTTP client and server support</td>
-<td>WebSocket client and server</td>
-<td>Syntax and internal improvement</td>
-<td>Code XML comments improvement</td>
-<td>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></td>
+<td><sub>4.x.x</sub></td>
+<td><sub>Development</sub></td>
+<td><sub>HTTP client and server support</sub></td>
+<td><sub>WebSocket client and server</sub></td>
+<td><sub>Syntax and internal improvement</sub></td>
+<td><sub>Code XML comments improvement</sub></td>
+<td><sub>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></sub></td>
 </tr>
 <tr>
-<td>3.x.x</td>
-<td>Stable</td>
-<td>TCP with TLS/SSL support</td>
-<td>UDP with connection (timeout response)</td>
-<td>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</td>
-<td>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></td>
-<td><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</td>
+<td><sub>3.x.x</sub></td>
+<td><sub>Stable</sub></td>
+<td><sub>TCP with TLS/SSL support</sub></td>
+<td><sub>UDP with connection (timeout response)</sub></td>
+<td><sub>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</sub></td>
+<td><sub>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
+<td><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
 </tr>
 <tr>
-<td>2.x.x</td>
-<td>Legacy</td>
-<td>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</td>
-<td>TCP and UDP performance increase</td>
+<td><sub>2.x.x</sub></td>
+<td><sub>Legacy</sub></td>
+<td><sub>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</sub></td>
+<td><sub>TCP and UDP performance increase</sub></td>
 </tr>
 <tr>
-<td>1.x.x</td>
-<td>Legacy</td>
-<td>TCP support</td>
-<td>UDP Support</td>
+<td><sub>1.x.x</sub></td>
+<td><sub>Legacy</sub></td>
+<td><sub>TCP support</sub></td>
+<td><sub>UDP Support</sub></td>
 </tr>
 </table>
-</sub>
 
 <br>
 
