@@ -387,11 +387,11 @@ namespace Netly
 
                         if (IsEncrypted)
                         {
-                            _sslStream?.Write(bytes, 0, bytes.Length);
+                            _sslStream?.BeginWrite(bytes, 0, bytes.Length, null, null);
                         }
                         else
                         {
-                            _netStream?.Write(bytes, 0, bytes.Length);
+                            _netStream?.BeginWrite(bytes, 0, bytes.Length, null, null);
                         }
                     }
                     catch

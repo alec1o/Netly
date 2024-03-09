@@ -161,10 +161,9 @@ namespace Netly
                     // true: thread is destroyed normally when program end (non-force required)
                     // false: this thread will be persistent and will block the destruction of main process (force quit required)
                     const bool isBackground = true;
-
-                    Thread acceptThread = new Thread(AcceptJob) { IsBackground = isBackground };
-                    
-                    acceptThread.Start();
+                    // *-*-*-*-*-*-*-*-*-*-*-*-*-*-
+                    new Thread(AcceptJob) { IsBackground = isBackground }.Start();
+                    new Thread(InitClientJob) { IsBackground = isBackground }.Start();
                 }
 
                 private void RemoveClient(string id)
@@ -177,8 +176,6 @@ namespace Netly
 
                 private void AcceptJob()
                 {
-                    ThreadPool.QueueUserWorkItem(_ => InitClientJob());
-
                     while (IsOpened)
                     {
                         try
@@ -207,9 +204,9 @@ namespace Netly
                         // ReSharper disable once InconsistentlySynchronizedField
                         // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
                         if (_socketList.Count <= 0) continue;
-                        
+
                         Socket socket;
-                        
+
                         lock (_lockAccept)
                         {
                             // FIFO: (First In First Out) strategy
