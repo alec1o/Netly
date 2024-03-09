@@ -101,17 +101,48 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <br>
 
-
 ##### Versions
 
 > <sub>Notable changes</sub>
 
-| <sub>Version</sub> | <sub>Status</sub>      |                                                                               |                                                   |                                                                                                    |                                                                    |                                                                                       |
-|--------------------|------------------------|-------------------------------------------------------------------------------|---------------------------------------------------|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|---------------------------------------------------------------------------------------|
-| <sub>4.x.x</sub>   | <sub>Development</sub> | <sub>HTTP client and server support</sub>                                     | <sub>WebSocket client and server</sub>            | <sub>Syntax and internal improvement</sub>                                                         | <sub>Code XML comments improvement</sub>                           | <sub>Documentation improvement by [DocFx](https://github.com/dotnet/docfx)</sub>      |
-| <sub>3.x.x</sub>   | <sub>Stable</sub>      | <sub>TCP with TLS/SSL support</sub>                                           | <sub>UDP with connection (timeout response)</sub> | <sub>New [Message Framing](https://bit.ly/message-framing) protocol and performance increase</sub> | <sub>Update for [Byter 2.0](https://github.com/alec1o/Byter)</sub> | <sub>[Docsify](https://github.com/docsifyjs/docsify) as documentation framework</sub> |
-| <sub>2.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP with [Message Framing](https://bit.ly/message-framing) support</sub> | <sub>TCP and UDP performance increase</sub>       |                                                                                                    |                                                                    |                                                                                       |
-| <sub>1.x.x</sub>   | <sub>Legacy</sub>      | <sub>TCP support</sub>                                                        | <sub>UDP Support</sub>                            |                                                                                                    |                                                                    |                                                                                       |
+<sub>
+<table>
+<tr>
+<th>Version</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>4.x.x</td>
+<td>Development</td>
+<td>HTTP client and server support</td>
+<td>WebSocket client and server</td>
+<td>Syntax and internal improvement</td>
+<td>Code XML comments improvement</td>
+<td>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></td>
+</tr>
+<tr>
+<td>3.x.x</td>
+<td>Stable</td>
+<td>TCP with TLS/SSL support</td>
+<td>UDP with connection (timeout response)</td>
+<td>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</td>
+<td>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></td>
+<td><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</td>
+</tr>
+<tr>
+<td>2.x.x</td>
+<td>Legacy</td>
+<td>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</td>
+<td>TCP and UDP performance increase</td>
+</tr>
+<tr>
+<td>1.x.x</td>
+<td>Legacy</td>
+<td>TCP support</td>
+<td>UDP Support</td>
+</tr>
+</table>
+</sub>
 
 <br>
 
@@ -207,6 +238,7 @@ using Netly;
 
 TCP.Client client = new TCP.Client(framing: true);
 ```
+
 ```csharp
 client.On.Open(() =>
 {   
@@ -246,6 +278,7 @@ client.On.Encryption((certificate, chain, errors) =>
     return true;
 });
 ```
+
 ```csharp
 // open connection if closed
 client.To.Open(new Host("127.0.0.1", 8080));
@@ -268,12 +301,12 @@ client.To.Encryption(true);
 </details>
 <details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
-
 ```csharp
 using Netly;
 
 TCP.Server server = new TCP.Server(framing: true);
 ```
+
 ```csharp
 server.On.Open(() =>
 {   
@@ -318,6 +351,7 @@ server.On.Modify((socket) =>
     printf("called before try open connection.");
 });
 ```
+
 ```csharp
 // open connection
 server.To.Open(new Host("1.1.1.1", 1111)); 
@@ -328,6 +362,7 @@ server.To.Close();
 // enable encryption support (must called before server.To.Open)
 server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
 ```
+
 </details>
 </td>
 </tr>
@@ -344,6 +379,7 @@ using Netly;
 
 UDP.Client client = new UDP.Client(useConnection: true, timeout: 15000);
 ```
+
 ```csharp
 client.On.Open(() =>
 {
@@ -375,6 +411,7 @@ client.On.Modify((socket) =>
    printf("called before try open connection.");
 });
 ```
+
 ```csharp 
 // open connection if closed
 client.To.Open(new Host("127.0.0.1", 8080));
@@ -399,6 +436,7 @@ using Netly;
 
 UDP.Server server = new UDP.Server(useConnection: true, timeout: 15000);
 ```
+
 ```csharp
 server.On.Open(() =>
 {
@@ -439,6 +477,7 @@ server.On.Accept((client) =>
     });
 });
 ```
+
 ```csharp
 // open connection
 server.To.Open(new Host("127.0.0.1", 8080));
@@ -718,6 +757,7 @@ using Netly;
 
 private HTTP.WebSocket ws;
 ```
+
 ```csharp
 // OK
 private void Init()
@@ -737,6 +777,7 @@ private void Init()
     });
 }
 ```
+
 ```csharp
 // BAD
 public void Loop()
