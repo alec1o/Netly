@@ -107,7 +107,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 
 <table>
 <tr>
-<td><sub>4.x.x</sub></td>
+<th><sub>4.x.x</sub></th>
 <td><sub>Development</sub></td>
 <td><sub>HTTP client and server support</sub></td>
 <td><sub>WebSocket client and server</sub></td>
@@ -116,7 +116,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td><sub>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></sub></td>
 </tr>
 <tr>
-<td><sub>3.x.x</sub></td>
+<th><sub>3.x.x</sub></th>
 <td><sub>Stable</sub></td>
 <td><sub>TCP with TLS/SSL support</sub></td>
 <td><sub>UDP with connection (timeout response)</sub></td>
@@ -125,7 +125,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
 </tr>
 <tr>
-<td><sub>2.x.x</sub></td>
+<th><sub>2.x.x</sub></th>
 <td><sub>Legacy</sub></td>
 <td><sub>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</sub></td>
 <td><sub>TCP and UDP performance increase</sub></td>
@@ -134,7 +134,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td></td>
 </tr>
 <tr>
-<td><sub>1.x.x</sub></td>
+<th><sub>1.x.x</sub></th>
 <td><sub>Legacy</sub></td>
 <td><sub>TCP support</sub></td>
 <td><sub>UDP Support</sub></td>
