@@ -4,7 +4,6 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
-using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -24,8 +23,10 @@ namespace Netly
                 public SslProtocols EncryptionProtocol { get; private set; }
                 public Dictionary<string, IClient> Clients { get; private set; }
 
+
                 private Socket _socket;
-                private readonly object _lockRemove;
+                private readonly object _lockAccept, _lockClient;
+                private readonly List<Socket> _socketList;
 
                 private bool
                     _isOpening,
@@ -35,13 +36,15 @@ namespace Netly
                 private _To()
                 {
                     Clients = new Dictionary<string, IClient>();
+                    _socketList = new List<Socket>();
                     _socket = null;
                     _isOpening = false;
                     _isClosing = false;
                     _isClosed = true;
                     Host = Host.Default;
                     IsEncrypted = false;
-                    _lockRemove = new object();
+                    _lockAccept = new object();
+                    _lockClient = new object();
                 }
 
                 public _To(Server server) : this()
@@ -49,18 +52,15 @@ namespace Netly
                     _server = server;
                 }
 
-                public Task Open(Host host)
-                {
-                    return Open(host, -1);
-                }
+                public void Open(Host host) => Open(host, -1);
 
-                public Task Open(Host host, int backlog)
+                public void Open(Host host, int backlog)
                 {
-                    if (_isOpening || _isClosing || IsOpened) return Task.CompletedTask;
+                    if (_isOpening || _isClosing || IsOpened) return;
 
                     _isOpening = true;
 
-                    return Task.Run(async () =>
+                    ThreadPool.QueueUserWorkItem(_ =>
                     {
                         try
                         {
@@ -80,7 +80,7 @@ namespace Netly
 
                             On.m_onOpen?.Invoke(null, null);
 
-                            await InitAccept();
+                            InitAccept();
                         }
                         catch (Exception e)
                         {
@@ -88,17 +88,16 @@ namespace Netly
                         }
 
                         _isOpening = false;
-                        return Task.CompletedTask;
                     });
                 }
 
-                public Task Close()
+                public void Close()
                 {
-                    if (!IsOpened || _isClosed || _isClosing) return Task.CompletedTask;
+                    if (!IsOpened || _isClosed || _isClosing) return;
 
                     _isClosing = true;
 
-                    return Task.Run(() =>
+                    ThreadPool.QueueUserWorkItem(_ =>
                     {
                         try
                         {
@@ -126,7 +125,7 @@ namespace Netly
                     });
                 }
 
-                public Task Encryption(bool enable, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols)
+                public void Encryption(bool enable, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols)
                 {
                     if (IsOpened || _isClosing || _isOpening)
                     {
@@ -145,8 +144,6 @@ namespace Netly
                     {
                         IsEncrypted = false;
                     }
-
-                    return Task.CompletedTask;
                 }
 
                 // ---
@@ -159,48 +156,83 @@ namespace Netly
                         : backlog;
                 }
 
-                private Task InitAccept()
+                private void InitAccept()
                 {
                     // true: thread is destroyed normally when program end (non-force required)
                     // false: this thread will be persistent and will block the destruction of main process (force quit required)
                     const bool isBackground = true;
 
                     Thread acceptThread = new Thread(AcceptJob) { IsBackground = isBackground };
-
+                    
                     acceptThread.Start();
-
-                    return Task.CompletedTask;
                 }
 
                 private void RemoveClient(string id)
                 {
-                    lock (_lockRemove)
+                    lock (_lockClient)
                     {
                         Clients.Remove(id);
                     }
                 }
-                
+
                 private void AcceptJob()
                 {
+                    ThreadPool.QueueUserWorkItem(_ => InitClientJob());
+
                     while (IsOpened)
                     {
                         try
                         {
                             Socket socket = _socket.Accept();
+
+                            lock (_lockAccept)
+                            {
+                                _socketList.Add(socket);
+                            }
+                        }
+                        catch
+                        {
+                            // Ignored
+                        }
+                    }
+                }
+
+                private void InitClientJob()
+                {
+                    while (IsOpened)
+                    {
+                        // it is just check.
+                        // it mustn't use lock for not use lock resources and decrees accept performance
+                        // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+                        // ReSharper disable once InconsistentlySynchronizedField
+                        // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+                        if (_socketList.Count <= 0) continue;
+                        
+                        Socket socket;
+                        
+                        lock (_lockAccept)
+                        {
+                            // FIFO: (First In First Out) strategy
+                            socket = _socketList[0];
+                            _socketList.RemoveAt(0);
+                        }
+
+                        try
+                        {
                             Client client = new Client(socket, _server, out bool success);
 
                             if (success)
                             {
-                                client.On.Close(() =>
+                                lock (_lockClient)
                                 {
-                                    RemoveClient(client.Id);
-                                });
+                                    client.On.Close(() => { RemoveClient(client.Id); });
 
-                                Clients.Add(client.Id, client);
+                                    Clients.Add(client.Id, client);
 
-                                On.m_onAccept?.Invoke(null, client);
+                                    On.m_onAccept?.Invoke(null, client);
 
-                                client.InitServerSide();
+                                    client.InitServerSide();
+                                }
                             }
                             else
                             {

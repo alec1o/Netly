@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
@@ -21,7 +19,7 @@ namespace Netly
 
                 private bool IsFraming => _client._isFraming;
 
-                private bool CanSend => _isClosed || _isClosing || _isOpening;
+                private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
 
                 private string Id => _client._id;
 
@@ -39,13 +37,11 @@ namespace Netly
                 private readonly Client _client;
                 private readonly IServer _server;
                 private readonly bool _isServer;
-                private readonly List<byte[]> _dataList;
 
                 /* ---- CONSTRUCTOR --- */
 
                 private _To()
                 {
-                    _dataList = new List<byte[]>();
                     _socket = null;
                     _netStream = null;
                     _sslStream = null;
@@ -119,7 +115,7 @@ namespace Netly
                             _isClosed = false;
 
                             On.m_onOpen?.Invoke(null, null);
-                            
+
                             InitReceiver();
                         }
                         catch (Exception e)
@@ -157,7 +153,6 @@ namespace Netly
                         }
                         finally
                         {
-                            _dataList.Clear();
                             _sslStream = null;
                             _netStream = null;
                             _socket = null;
@@ -177,7 +172,7 @@ namespace Netly
                 {
                     if (CanSend == false || data == null) return;
 
-                    _dataList.Add(data);
+                    SendDispatch(data);
                 }
 
                 public void Encryption(bool enable)
@@ -205,21 +200,21 @@ namespace Netly
                 {
                     if (CanSend == false || data == null) return;
 
-                    _dataList.Add(NE.GetBytes(data, encoding));
+                    SendDispatch(NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    _dataList.Add(EventManager.Create(name, data));
+                    SendDispatch(EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    _dataList.Add(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                    SendDispatch(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 /* ---- INTERNAL --- */
@@ -308,7 +303,6 @@ namespace Netly
                     }
                 }
 
-
                 private void PushResult(ref byte[] bytes)
                 {
                     (string name, byte[] buffer) content = EventManager.Verify(bytes);
@@ -380,49 +374,35 @@ namespace Netly
                     Close();
                 }
 
-                private void SendJob()
+                private void SendDispatch(byte[] bytes)
                 {
-                    while (_socket != null && _netStream != null || (IsEncrypted && _sslStream != null))
+                    if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
+
+                    try
                     {
-                        if (_dataList.Count <= 0) continue;
-
-                        try
+                        if (IsFraming)
                         {
-                            byte[] bytes = _dataList[0];
-                            _dataList.RemoveAt(0);
-
-                            if (IsFraming)
-                            {
-                                bytes = MessageFraming.CreateMessage(bytes);
-                            }
-
-                            if (IsEncrypted)
-                            {
-                                _sslStream?.Write(bytes, 0, bytes.Length);
-                            }
-                            else
-                            {
-                                _netStream?.Write(bytes, 0, bytes.Length);
-                            }
+                            bytes = MessageFraming.CreateMessage(bytes);
                         }
-                        catch
+
+                        if (IsEncrypted)
                         {
-                            // Ignored
+                            _sslStream?.Write(bytes, 0, bytes.Length);
                         }
+                        else
+                        {
+                            _netStream?.Write(bytes, 0, bytes.Length);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignored
                     }
                 }
 
                 private void InitReceiver()
                 {
-                    // true: thread is destroyed normally when program end (non-force required)
-                    // false: this thread will be persistent and will block the destruction of main process (force quit required)
-                    const bool isBackground = true;
-
-                    var sendJob = new Thread(SendJob) { IsBackground = isBackground };
-                    var receiveJob = new Thread(ReceiveJob) { IsBackground = isBackground };
-
-                    sendJob.Start();
-                    receiveJob.Start();
+                    new Thread(ReceiveJob) { IsBackground = true }.Start();
                 }
             }
         }
