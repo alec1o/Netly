@@ -57,7 +57,7 @@ namespace Netly
                     IsEncrypted = false;
                 }
 
-                public _To(Client client)
+                public _To(Client client) : this()
                 {
                     _client = client;
                     _isClosed = true;
