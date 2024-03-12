@@ -78,7 +78,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            Netly.Logger.PushError(e);
+                            NETLY.Logger.PushError(e);
                             success = false;
                         }
                     }
@@ -149,7 +149,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            Netly.Logger.PushError(e);
+                            NETLY.Logger.PushError(e);
                         }
                         finally
                         {
@@ -276,7 +276,7 @@ namespace Netly
                                 // callbacks not found.
                                 if (encryptionCallbackList.Count <= 0)
                                 {
-                                    Netly.Logger.PushWarning(
+                                    NETLY.Logger.PushWarning(
                                         $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
                                     return true;
                                 }
@@ -332,7 +332,7 @@ namespace Netly
                         // Endpoint part isn't using framing or is using different framing protocol
                         framing.OnError(exception =>
                         {
-                            Netly.Logger.PushError(exception);
+                            NETLY.Logger.PushError(exception);
                             Close();
                         });
                     }
@@ -366,7 +366,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            Netly.Logger.PushError(e);
+                            NETLY.Logger.PushError(e);
                             if (!IsOpened) break;
                         }
                     }

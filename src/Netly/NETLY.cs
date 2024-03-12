@@ -1,9 +1,9 @@
 ﻿namespace Netly
 {
     /// <summary>
-    /// Netly
+    /// Netly Library Info
     /// </summary>
-    public static partial class Netly
+    public static partial class NETLY
     {
         /// <summary>
         /// Netly Name
@@ -33,7 +33,7 @@
         /// <summary>
         /// Init Netly
         /// </summary>
-        static Netly()
+        static NETLY()
         {
             Logger = new _Logger();
         }

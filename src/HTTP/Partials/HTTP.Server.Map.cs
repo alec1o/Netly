@@ -154,7 +154,7 @@ namespace Netly
                 {
                     path = (path ?? string.Empty).Trim();
 
-                    Netly.Logger.PushLog
+                    NETLY.Logger.PushLog
                     (
                         $"Add Path: {path} | IsValid: {Path.IsValid(path)} | UseParams: {Path.IsParamPath(path)}"
                     );

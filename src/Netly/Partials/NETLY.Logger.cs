@@ -3,7 +3,7 @@ using Netly.Core;
 
 namespace Netly
 {
-    public partial class Netly
+    public partial class NETLY
     {
         private class _Logger : ILogger
         {

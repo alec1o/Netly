@@ -2,7 +2,7 @@
 
 namespace Netly
 {
-    public static partial class Netly
+    public static partial class NETLY
     {
         /// <summary>
         /// Netly. Internal actions logger.
