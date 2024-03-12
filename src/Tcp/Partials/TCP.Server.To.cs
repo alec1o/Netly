@@ -127,7 +127,7 @@ namespace Netly
                     });
                 }
 
-                public void Encryption(bool enable, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols)
+                public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols)
                 {
                     if (IsOpened || _isClosing || _isOpening)
                     {
@@ -136,16 +136,15 @@ namespace Netly
                             $"You must not update {nameof(Encryption)} while {nameof(IsOpened)} is {IsOpened}"
                         );
                     }
-
-                    if (enable)
+                    
+                    
+                    if (enableEncryption)
                     {
                         Certificate = new X509Certificate(pfxCertificate, pfxPassword);
                         EncryptionProtocol = protocols;
                     }
-                    else
-                    {
-                        IsEncrypted = false;
-                    }
+                    
+                    IsEncrypted = enableEncryption;
                 }
 
                 // ---
