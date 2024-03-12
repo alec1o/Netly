@@ -19,7 +19,7 @@ namespace Netly
                 public Host Host { get; private set; }
                 private _On On => _server._on;
                 public bool IsEncrypted { get; private set; }
-                public X509Certificate2 Certificate { get; private set; }
+                public X509Certificate Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
                 public Dictionary<string, IClient> Clients { get; private set; }
 
@@ -137,7 +137,7 @@ namespace Netly
 
                     if (enable)
                     {
-                        Certificate = new X509Certificate2(pfxCertificate, pfxPassword);
+                        Certificate = new X509Certificate(pfxCertificate, pfxPassword);
                         EncryptionProtocol = protocols;
                     }
                     else

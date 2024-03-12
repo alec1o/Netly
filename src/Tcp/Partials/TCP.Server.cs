@@ -19,7 +19,7 @@ namespace Netly
             public Host Host => _to.Host;
             public bool IsOpened => _to.IsOpened;
             public bool IsFraming => _isFraming;
-            public X509Certificate2 Certificate => _to.Certificate;
+            public X509Certificate Certificate => _to.Certificate;
             public SslProtocols EncryptionProtocol => _to.EncryptionProtocol;
             public bool IsEncrypted => _to.IsEncrypted;
             public ITo To => _to;

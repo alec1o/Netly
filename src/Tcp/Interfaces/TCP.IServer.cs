@@ -12,7 +12,7 @@ namespace Netly
             Host Host { get; }
             bool IsOpened { get; }
             bool IsFraming { get; }
-            X509Certificate2 Certificate { get; }
+            X509Certificate Certificate { get; }
             SslProtocols EncryptionProtocol { get; }
             bool IsEncrypted { get; }
             Server.ITo To { get; }
