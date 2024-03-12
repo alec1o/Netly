@@ -15,7 +15,7 @@ namespace Netly
                 public EventHandler<Socket> m_onModify;
                 public EventHandler m_onOpen;
                 public EventHandler<IClient> m_onAccept;
-                
+
                 public void Open(Action callback)
                 {
                     m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());

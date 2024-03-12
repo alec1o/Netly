@@ -13,7 +13,9 @@ namespace Netly
                 void Open(Host host);
                 void Open(Host host, int backlog);
                 void Close();
-                void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols);
+
+                void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
+                    SslProtocols protocols);
             }
         }
     }
