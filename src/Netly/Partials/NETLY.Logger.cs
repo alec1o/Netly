@@ -7,6 +7,22 @@ namespace Netly
     {
         private class _Logger : ILogger
         {
+            private struct Handler<T>
+            {
+                public Handler(ref EventHandler<T> refHandler, ref Action<T> refCallback, bool useMainThread)
+                {
+                    Action<T> callback = refCallback;
+
+                    refHandler += (_, param) =>
+                    {
+                        if (useMainThread)
+                            MainThread.Add(() => callback?.Invoke(param));
+                        else
+                            callback?.Invoke(param);
+                    };
+                }
+            }
+
             private EventHandler<string> _regularLogEvent;
             private EventHandler<string> _warningLogEvent;
             private EventHandler<Exception> _errorLogEvent;
@@ -25,35 +41,17 @@ namespace Netly
 
             public void HandleLog(Action<string> logCallback, bool useMainThread)
             {
-                _regularLogEvent += (@object, @event) =>
-                {
-                    if (useMainThread)
-                        MainThread.Add(() => logCallback?.Invoke(@event));
-                    else
-                        logCallback?.Invoke(@event);
-                };
+                _ = new Handler<string>(ref _regularLogEvent, ref logCallback, useMainThread);
             }
 
-            public void HandleWarning(Action<string> warningCallback, bool enableMainThread)
+            public void HandleWarning(Action<string> warningCallback, bool useMainThread)
             {
-                _warningLogEvent += (@object, @event) =>
-                {
-                    if (enableMainThread)
-                        MainThread.Add(() => warningCallback?.Invoke(@event));
-                    else
-                        warningCallback?.Invoke(@event);
-                };
+                _ = new Handler<string>(ref _warningLogEvent, ref warningCallback, useMainThread);
             }
 
             public void HandleError(Action<Exception> errorCallback, bool useMainThread)
             {
-                _errorLogEvent += (@object, @event) =>
-                {
-                    if (useMainThread)
-                        MainThread.Add(() => errorCallback?.Invoke(@event));
-                    else
-                        errorCallback?.Invoke(@event);
-                };
+                _ = new Handler<Exception>(ref _errorLogEvent, ref errorCallback, useMainThread);
             }
 
             #endregion
