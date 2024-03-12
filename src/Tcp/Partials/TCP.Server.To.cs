@@ -27,6 +27,7 @@ namespace Netly
                 private Socket _socket;
                 private readonly object _lockAccept, _lockClient;
                 private readonly List<Socket> _socketList;
+                private readonly int _defaultBacklog;
 
                 private bool
                     _isOpening,
@@ -45,6 +46,7 @@ namespace Netly
                     IsEncrypted = false;
                     _lockAccept = new object();
                     _lockClient = new object();
+                    _defaultBacklog = (int)SocketOptionName.MaxConnections;
                 }
 
                 public _To(Server server) : this()
@@ -52,7 +54,7 @@ namespace Netly
                     _server = server;
                 }
 
-                public void Open(Host host) => Open(host, -1);
+                public void Open(Host host) => Open(host, _defaultBacklog);
 
                 public void Open(Host host, int backlog)
                 {
@@ -150,10 +152,7 @@ namespace Netly
 
                 private int ClampBacklog(int backlog)
                 {
-                    const int maxBacklog = (int)SocketOptionName.MaxConnections;
-                    return (backlog <= 0 || backlog >= maxBacklog)
-                        ? maxBacklog
-                        : backlog;
+                    return (backlog <= 0) || (backlog >= _defaultBacklog) ? _defaultBacklog : backlog;
                 }
 
                 private void InitAccept()
