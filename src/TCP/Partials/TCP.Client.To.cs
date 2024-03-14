@@ -38,6 +38,8 @@ namespace Netly
                 private readonly IServer _server;
                 private readonly bool _isServer;
 
+                private const int _64kb = 1024 * 64; //65536 (64kb)
+
                 /* ---- CONSTRUCTOR --- */
 
                 private _To()
@@ -64,6 +66,7 @@ namespace Netly
                     _client = client;
                     _server = server;
                     _socket = socket;
+                    SetDefaultSocketOption(ref _socket);
                     _netStream = new NetworkStream(_socket);
                     _isServer = true;
                     _isClosed = false;
@@ -90,6 +93,15 @@ namespace Netly
 
                 /* ---- INTERFACE --- */
 
+                private static void SetDefaultSocketOption(ref Socket socket)
+                {
+                    SocketOptionLevel socketLevel = SocketOptionLevel.Socket;
+
+                    socket.SetSocketOption(socketLevel, SocketOptionName.SendBuffer, _64kb);
+
+                    socket.SetSocketOption(socketLevel, SocketOptionName.ReceiveBuffer, _64kb);
+                }
+
                 public void Open(Host host)
                 {
                     if (_isOpening || _isClosing || IsOpened || _isServer) return;
@@ -101,6 +113,9 @@ namespace Netly
                         try
                         {
                             _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+
+                            SetDefaultSocketOption(ref _socket);
 
                             On.m_onModify?.Invoke(null, _socket);
 
@@ -319,8 +334,11 @@ namespace Netly
 
                 private void ReceiveJob()
                 {
-                    // Is max TCP packet size.
-                    byte[] buffer = new byte[1024 * 64]; // 65536 (64kb).
+                    byte[] buffer = new byte
+                    [
+                        // Maximum/Default receive buffer length.
+                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
+                    ];
 
                     MessageFraming framing = new MessageFraming();
 
