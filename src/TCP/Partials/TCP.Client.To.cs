@@ -259,6 +259,15 @@ namespace Netly
                     InitReceiver();
                 }
 
+                private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
+                {
+                    // 5 seconds (6000ms) for try connect with encryption
+                    int ms = reset ? -1 : 6000;
+
+                    stream.ReadTimeout = ms;
+                    stream.WriteTimeout = ms;
+                }
+
                 private void InitEncryption()
                 {
                     if (_socket is null) throw new NullReferenceException(nameof(_socket));
@@ -268,6 +277,8 @@ namespace Netly
                     if (_isServer)
                     {
                         _sslStream = new SslStream(_netStream, false);
+
+                        SetEncryptionTimeout(ref _sslStream, reset: false);
 
                         _sslStream.AuthenticateAsServer
                         (
@@ -314,8 +325,12 @@ namespace Netly
                             }
                         );
 
+                        SetEncryptionTimeout(ref _sslStream, reset: false);
+
                         _sslStream.AuthenticateAsClient(string.Empty);
                     }
+
+                    SetEncryptionTimeout(ref _sslStream, reset: true);
                 }
 
                 private void PushResult(ref byte[] bytes)
