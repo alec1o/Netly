@@ -213,32 +213,25 @@ namespace Netly
                             _socketList.RemoveAt(0);
                         }
 
-                        try
+                        Client client = new Client(socket, _server, out bool success);
+
+                        if (success)
                         {
-                            Client client = new Client(socket, _server, out bool success);
-
-                            if (success)
+                            lock (_lockClient)
                             {
-                                lock (_lockClient)
-                                {
-                                    client.On.Close(() => { RemoveClient(client.Id); });
+                                client.On.Close(() => RemoveClient(client.Id));
 
-                                    Clients.Add(client.Id, client);
+                                Clients.Add(client.Id, client);
 
-                                    On.m_onAccept?.Invoke(null, client);
+                                On.m_onAccept?.Invoke(null, client);
 
-                                    client.InitServerSide();
-                                }
-                            }
-                            else
-                            {
-                                socket.Close();
-                                socket.Dispose();
+                                client.InitServerSide();
                             }
                         }
-                        catch
+                        else
                         {
-                            // Ignored
+                            socket.Close();
+                            socket.Dispose();
                         }
                     }
                 }
