@@ -37,8 +37,8 @@ namespace Netly
                 private readonly Client _client;
                 private readonly IServer _server;
                 private readonly bool _isServer;
-
-                private const int _64kb = 1024 * 64; //65536 (64kb)
+                private const int _64kb = 1024 * 64; // 65,536 (64kb)
+                private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
 
                 /* ---- CONSTRUCTOR --- */
 
@@ -61,7 +61,7 @@ namespace Netly
                     _isClosed = true;
                 }
 
-                public _To(Client client, Socket socket, IServer server, out bool success) : this()
+                public _To(Client client, Socket socket, IServer server, Action<Client, bool> callback) : this()
                 {
                     _client = client;
                     _server = server;
@@ -74,20 +74,25 @@ namespace Netly
 
                     if (IsEncrypted)
                     {
-                        try
+                        void Callback()
                         {
-                            InitEncryption();
-                            success = true;
+                            try
+                            {
+                                InitEncryption();
+                                callback?.Invoke(_client, true);
+                            }
+                            catch
+                            {
+                                callback?.Invoke(_client, false);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            NETLY.Logger.PushError(e);
-                            success = false;
-                        }
+
+                        // It block main thread and have a timeout.
+                        new Thread(Callback) { IsBackground = true }.Start();
                     }
                     else
                     {
-                        success = true;
+                        callback?.Invoke(_client, true);
                     }
                 }
 
@@ -261,11 +266,10 @@ namespace Netly
 
                 private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
                 {
-                    // 5 seconds (6000ms) for try connect with encryption
-                    int ms = reset ? -1 : 6000;
-
-                    stream.ReadTimeout = ms;
-                    stream.WriteTimeout = ms;
+                    int timeout = reset ? Timeout.Infinite : EncryptionTimeout;
+                    
+                    stream.ReadTimeout = timeout;
+                    stream.WriteTimeout = timeout;
                 }
 
                 private void InitEncryption()
@@ -327,7 +331,7 @@ namespace Netly
 
                         SetEncryptionTimeout(ref _sslStream, reset: false);
 
-                        _sslStream.AuthenticateAsClient(string.Empty);
+                        _sslStream.AuthenticateAsClient(targetHost: string.Empty);
                     }
 
                     SetEncryptionTimeout(ref _sslStream, reset: true);

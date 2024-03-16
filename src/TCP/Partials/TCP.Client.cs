@@ -34,10 +34,10 @@ namespace Netly
                 _isFraming = isFraming;
             }
 
-            internal Client(Socket socket, IServer server, out bool success) : this()
+            internal Client(Socket socket, IServer server, Action<Client,  bool> callback) : this()
             {
                 _isFraming = server.IsFraming;
-                _to = new _To(this, socket, server, out success);
+                _to = new _To(this, socket, server, callback);
             }
 
             internal void InitServerSide() => _to.InitServerSide();
