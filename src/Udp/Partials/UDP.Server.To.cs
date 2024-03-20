@@ -10,6 +10,7 @@ namespace Netly
         {
             public class _To : ITo
             {
+                private bool UseConnection => _server.UseConnection;
                 private readonly Server _server;
                 public bool IsOpened { get; set; }
                 public Host Host { get; set; }
