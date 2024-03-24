@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -25,12 +24,12 @@ namespace Netly
                 public bool IsOpened => _listener != null && _listener.IsListening;
                 public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
-                public void Open(Uri host)
+                public Task Open(Uri host)
                 {
-                    if (IsOpened || _tryClose || _tryOpen) return;
+                    if (IsOpened || _tryClose || _tryOpen) return Task.CompletedTask;
                     _tryOpen = true;
 
-                    ThreadPool.QueueUserWorkItem(_ =>
+                    return Task.Run(() =>
                     {
                         try
                         {
@@ -63,13 +62,13 @@ namespace Netly
                     });
                 }
 
-                public void Close()
+                public Task Close()
                 {
-                    if (_tryOpen || _tryClose || _listener == null) return;
+                    if (_tryOpen || _tryClose || _listener == null) return Task.CompletedTask;
 
                     _tryClose = true;
 
-                    Task.Run(() =>
+                    return Task.Run(() =>
                     {
                         try
                         {
@@ -99,7 +98,7 @@ namespace Netly
 
                 private void ReceiveRequests()
                 {
-                    Task.Run(() =>
+                    var thread = new Thread(() =>
                     {
                         while (IsOpened)
                         {
@@ -138,7 +137,9 @@ namespace Netly
                         }
 
                         Close();
-                    });
+                    }) { IsBackground = true };
+
+                    thread.Start();
                 }
 
 
@@ -326,7 +327,7 @@ namespace Netly
 
 
                                 var compareMethod =
-                                    string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                                    string.Equals(x.Method, _Map.ALL_METHOD, StringComparison.CurrentCultureIgnoreCase)
                                     ||
                                     string.Equals(request.Method.Method, x.Method,
                                         StringComparison.CurrentCultureIgnoreCase);

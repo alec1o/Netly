@@ -25,7 +25,7 @@ namespace Netly
                     _client = client;
                 }
 
-                public void Fetch(string method, string url, byte[] body = null)
+                public Task Fetch(string method, string url, byte[] body = null)
                 {
                     if (IsOpened)
                     {
@@ -46,7 +46,7 @@ namespace Netly
                     IsOpened = true;
                     On.m_onOpen(null, null);
 
-                    Task.Run(async () =>
+                    return Task.Run(async () =>
                     {
                         try
                         {
@@ -123,9 +123,9 @@ namespace Netly
                     });
                 }
 
-                public void Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8)
+                public Task Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8)
                 {
-                    Fetch(method, url, NE.GetBytes(body ?? string.Empty, encode));
+                    return Fetch(method, url, NE.GetBytes(body ?? string.Empty, encode));
                 }
 
                 public int GetTimeout() => _timeout;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -24,12 +25,12 @@ namespace Netly
                     Clients = new List<Client>();
                 }
 
-                public void Open(Host host)
+                public Task Open(Host host)
                 {
                     throw new System.NotImplementedException();
                 }
 
-                public void Close()
+                public Task Close()
                 {
                     throw new System.NotImplementedException();
                 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -10,8 +11,8 @@ namespace Netly
         {
             public interface ITo
             {
-                void Open(Host host);
-                void Close();
+                Task Open(Host host);
+                Task Close();
                 void Data(byte[] data);
                 void Encryption(bool enable);
                 void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8);

@@ -10,9 +10,9 @@ namespace Netly
         {
             public interface ITo
             {
-                void Open(Host host);
-                void Open(Host host, int backlog);
-                void Close();
+                Task Open(Host host);
+                Task Open(Host host, int backlog);
+                Task Close();
 
                 void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
                     SslProtocols protocols);

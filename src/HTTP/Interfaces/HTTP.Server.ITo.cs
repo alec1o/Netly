@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Netly
 {
@@ -15,13 +16,13 @@ namespace Netly
                 ///     Open Server Connection
                 /// </summary>
                 /// <param name="host">Server Uri</param>
-                void Open(Uri host);
+                Task Open(Uri host);
 
 
                 /// <summary>
                 ///     Close Server Connection
                 /// </summary>
-                void Close();
+                Task Close();
             }
         }
     }

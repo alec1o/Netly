@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Threading.Tasks;
 
 namespace Netly
 {
@@ -13,18 +14,18 @@ namespace Netly
                 ///     Open Client Connection
                 /// </summary>
                 /// <param name="host">Server Uri</param>
-                void Open(Uri host);
+                Task Open(Uri host);
 
                 /// <summary>
                 ///     Close Client Connection
                 /// </summary>
-                void Close();
+                Task Close();
 
                 /// <summary>
                 ///     Close Client Connection (with Close Status)
                 /// </summary>
                 /// <param name="closeStatus">Close Status</param>
-                void Close(WebSocketCloseStatus closeStatus);
+                Task Close(WebSocketCloseStatus closeStatus);
 
                 /// <summary>
                 ///     Send data for server (bytes)

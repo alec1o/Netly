@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,13 +68,13 @@ namespace Netly
                     socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                 }
 
-                public void Open(Host host)
+                public Task Open(Host host)
                 {
-                    if (_isOpening || _isClosing || IsOpened || _isServer) return;
+                    if (_isOpening || _isClosing || IsOpened || _isServer) return Task.CompletedTask;
 
                     _isOpening = true;
 
-                    Task.Run(() =>
+                    return Task.Run(() =>
                     {
                         try
                         {
@@ -104,13 +103,13 @@ namespace Netly
                     });
                 }
 
-                public void Close()
+                public Task Close()
                 {
-                    if (_isOpening || _isClosing) return;
+                    if (_isOpening || _isClosing) return Task.CompletedTask;
 
                     _isClosing = true;
 
-                    Task.Run(() =>
+                    return Task.Run(() =>
                     {
                         try
                         {

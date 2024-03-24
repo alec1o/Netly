@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -12,7 +13,7 @@ namespace Netly
         {
             private class _To : ITo
             {
-                public Dictionary<string, string> m_headers = new Dictionary<string, string>();
+                public readonly Dictionary<string, string> m_headers = new Dictionary<string, string>();
                 private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
                 private readonly object _bufferLock = new object();
                 private readonly bool _isServerSide;
@@ -40,13 +41,13 @@ namespace Netly
                     m_request = request;
                 }
 
-                public void Open(Uri host)
+                public Task Open(Uri host)
                 {
-                    if (_socket.IsOpened || _tryConnecting || _tryClosing || _isServerSide) return;
+                    if (_socket.IsOpened || _tryConnecting || _tryClosing || _isServerSide) return Task.CompletedTask;
 
                     _tryConnecting = true;
 
-                    ThreadPool.QueueUserWorkItem(async @object =>
+                    return Task.Run(async () =>
                     {
                         try
                         {
@@ -94,29 +95,27 @@ namespace Netly
                     });
                 }
 
-                public void Close()
+                public Task Close()
                 {
-                    Close(WebSocketCloseStatus.NormalClosure);
+                    return Close(WebSocketCloseStatus.NormalClosure);
                 }
 
-                public void Close(WebSocketCloseStatus status)
+                public Task Close(WebSocketCloseStatus status)
                 {
-                    if (_tryClosing || _tryConnecting) return;
+                    if (_tryClosing || _tryConnecting) return Task.CompletedTask;
 
                     if (_isServerSide)
                     {
-                        if (_websocketServerSide == null) return;
+                        if (_websocketServerSide == null) return Task.CompletedTask;
                     }
                     else
                     {
-                        if (_websocket == null) return;
+                        if (_websocket == null) return Task.CompletedTask;
                     }
 
                     _tryClosing = true;
 
-                    ThreadPool.QueueUserWorkItem(InternalTask);
-
-                    async void InternalTask(object _)
+                    return Task.Run(async () =>
                     {
                         try
                         {
@@ -166,7 +165,7 @@ namespace Netly
                             _tryClosing = false;
                             _socket._on.m_onClose?.Invoke(null, status);
                         }
-                    }
+                    });
                 }
 
                 public void Data(byte[] buffer, bool isText)
@@ -304,7 +303,7 @@ namespace Netly
                         }
                         finally
                         {
-                            Close(closeStatus);
+                            await Close(closeStatus);
                         }
                     }
                 }

@@ -1,4 +1,5 @@
-﻿using Netly.Core;
+﻿using System.Threading.Tasks;
+using Netly.Core;
 
 namespace Netly
 {
@@ -8,8 +9,8 @@ namespace Netly
         {
             public interface ITo
             {
-                void Open(Host host);
-                void Close();
+                Task Open(Host host);
+                Task Close();
             }
         }
     }

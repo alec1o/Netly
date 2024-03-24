@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly
@@ -54,15 +55,15 @@ namespace Netly
                     _server = server;
                 }
 
-                public void Open(Host host) => Open(host, _defaultBacklog);
+                public Task Open(Host host) => Open(host, _defaultBacklog);
 
-                public void Open(Host host, int backlog)
+                public Task Open(Host host, int backlog)
                 {
-                    if (_isOpening || _isClosing || IsOpened) return;
+                    if (_isOpening || _isClosing || IsOpened) return Task.CompletedTask;
 
                     _isOpening = true;
 
-                    ThreadPool.QueueUserWorkItem(_ =>
+                    return Task.Run(() =>
                     {
                         try
                         {
@@ -93,13 +94,13 @@ namespace Netly
                     });
                 }
 
-                public void Close()
+                public Task Close()
                 {
-                    if (!IsOpened || _isClosed || _isClosing) return;
+                    if (!IsOpened || _isClosed || _isClosing) return Task.CompletedTask;
 
                     _isClosing = true;
 
-                    ThreadPool.QueueUserWorkItem(_ =>
+                    return Task.Run(() =>
                     {
                         try
                         {
