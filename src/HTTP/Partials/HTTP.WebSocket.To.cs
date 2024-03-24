@@ -14,8 +14,6 @@ namespace Netly
             private class _To : ITo
             {
                 public readonly Dictionary<string, string> m_headers = new Dictionary<string, string>();
-                private readonly List<(byte[] buffer, bool isText)> _bufferList = new List<(byte[], bool )>();
-                private readonly object _bufferLock = new object();
                 private readonly bool _isServerSide;
                 private readonly WebSocket _socket;
                 private bool _tryConnecting, _tryClosing, _initServerSide;
@@ -152,11 +150,6 @@ namespace Netly
                         }
                         finally
                         {
-                            lock (_bufferLock)
-                            {
-                                _bufferList.Clear();
-                            }
-
                             if (_isServerSide)
                                 _websocketServerSide = null;
                             else
@@ -170,141 +163,109 @@ namespace Netly
 
                 public void Data(byte[] buffer, bool isText)
                 {
-                    if (IsConnected())
-                        lock (_bufferLock)
-                        {
-                            _bufferList.Add((buffer, isText));
-                        }
+                    Send(buffer, isText);
                 }
 
                 public void Data(string buffer, bool isText)
                 {
-                    Data(NE.GetBytes(buffer, NE.Default), isText);
+                    Send(NE.GetBytes(buffer, NE.Default), isText);
                 }
 
                 public void Event(string name, byte[] buffer)
                 {
-                    Data(EventManager.Create(name, buffer), false);
+                    Send(EventManager.Create(name, buffer), false);
                 }
 
                 public void Event(string name, string buffer)
                 {
-                    Event(name, NE.GetBytes(buffer, NE.Encoding.UTF8));
+                    Send(EventManager.Create(name, NE.GetBytes(buffer, NE.Encoding.UTF8)), false);
+                }
+
+                private void Send(byte[] buffer, bool isText)
+                {
+                    if (IsConnected() is false || buffer == null || buffer.Length <= 0) return;
+
+                    var messageContent = new ArraySegment<byte>(buffer);
+                    var messageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
+                    // Is Always true because our send all buffer on same moment is internal
+                    // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
+                    var endOfMessage = true;
+
+                    if (_isServerSide)
+                        _websocketServerSide.SendAsync
+                        (
+                            messageContent,
+                            messageType,
+                            endOfMessage,
+                            CancellationToken.None
+                        );
+                    else
+                        _websocket.SendAsync
+                        (
+                            messageContent,
+                            messageType,
+                            endOfMessage,
+                            CancellationToken.None
+                        );
                 }
 
                 private void _ReceiveData()
                 {
-                    ThreadPool.QueueUserWorkItem(InternalReceiveTask);
-
-                    async void InternalSendTask(object _)
+                    if (_isServerSide)
                     {
-                        while (IsConnected())
-                            try
-                            {
-                                // ReSharper disable once InconsistentlySynchronizedField
-                                // ^^^ Because if check before will prevent lock target object to just check if is empty
-                                // And just lock object when detected that might have any buffer to send
-                                if (_bufferList.Count > 0)
-                                {
-                                    var success = false;
-                                    var messageType = WebSocketMessageType.Close;
-
-                                    // Is Always true because our send all buffer on same moment is internal
-                                    // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
-                                    const bool endOfMessage = true;
-
-                                    byte[] buffer = null;
-
-                                    lock (_bufferLock)
-                                    {
-                                        if (_bufferList.Count > 0)
-                                        {
-                                            messageType = _bufferList[0].isText
-                                                ? WebSocketMessageType.Text
-                                                : WebSocketMessageType.Binary;
-                                            buffer = _bufferList[0].buffer;
-                                            success = true;
-
-                                            _bufferList.RemoveAt(0);
-                                        }
-                                    }
-
-                                    if (success)
-                                    {
-                                        var bufferToSend = new ArraySegment<byte>(buffer);
-
-                                        if (_isServerSide)
-                                            await _websocketServerSide.SendAsync
-                                            (
-                                                bufferToSend,
-                                                messageType,
-                                                endOfMessage,
-                                                CancellationToken.None
-                                            );
-                                        else
-                                            await _websocket.SendAsync
-                                            (
-                                                bufferToSend,
-                                                messageType,
-                                                endOfMessage,
-                                                CancellationToken.None
-                                            );
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // ignored
-                            }
+                        // optimize server resources.
+                        ThreadPool.QueueUserWorkItem(ReceiveJob);
                     }
-
-
-                    async void InternalReceiveTask(object _)
+                    else
                     {
-                        var closeStatus = WebSocketCloseStatus.Empty;
+                        // dedicate thread
+                        new Thread(ReceiveJob) { IsBackground = true }.Start();
+                    }
+                }
 
-                        try
+                private async void ReceiveJob(object _)
+                {
+                    var closeStatus = WebSocketCloseStatus.Empty;
+
+                    try
+                    {
+                        const int size = 1024 * 8;
+                        var buffer = new ArraySegment<byte>(new byte[size], 0, size);
+
+                        while (_socket.IsOpened)
                         {
-                            ThreadPool.QueueUserWorkItem(InternalSendTask);
+                            var result = _isServerSide
+                                ? await _websocketServerSide.ReceiveAsync(buffer, CancellationToken.None)
+                                : await _websocket.ReceiveAsync(buffer, CancellationToken.None);
 
-                            const int size = 1024 * 8;
-                            var buffer = new ArraySegment<byte>(new byte[size], 0, size);
-
-                            while (_socket.IsOpened)
+                            if (result.MessageType == WebSocketMessageType.Close || buffer.Array == null)
                             {
-                                var result = _isServerSide
-                                    ? await _websocketServerSide.ReceiveAsync(buffer, CancellationToken.None)
-                                    : await _websocket.ReceiveAsync(buffer, CancellationToken.None);
-
-                                if (result.MessageType == WebSocketMessageType.Close || buffer.Array == null)
-                                {
-                                    closeStatus = result.CloseStatus ?? closeStatus;
-                                    break;
-                                }
-
-                                var data = new byte[result.Count];
-
-                                Array.Copy(buffer.Array, 0, data, 0, data.Length);
-
-                                var eventData = EventManager.Verify(data);
-
-                                if (eventData.data != null && eventData.name != null)
-                                    // Is Netly Event
-                                    _socket._on.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
-                                else
-                                    // Is Regular Data
-                                    _socket._on.m_onData?.Invoke(null,
-                                        (data, result.MessageType == WebSocketMessageType.Text));
+                                closeStatus = result.CloseStatus ?? closeStatus;
+                                break;
                             }
+
+                            var data = new byte[result.Count];
+
+                            Array.Copy(buffer.Array, 0, data, 0, data.Length);
+
+                            var eventData = EventManager.Verify(data);
+
+                            if (eventData.data != null && eventData.name != null)
+                                // Is Netly Event
+                                _socket._on.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
+                            else
+                                // Is Default buffer
+                                _socket._on.m_onData?.Invoke(null,
+                                    (data, result.MessageType == WebSocketMessageType.Text));
                         }
-                        catch
-                        {
-                            closeStatus = WebSocketCloseStatus.EndpointUnavailable;
-                        }
-                        finally
-                        {
-                            await Close(closeStatus);
-                        }
+                    }
+                    catch
+                    {
+                        closeStatus = WebSocketCloseStatus.EndpointUnavailable;
+                    }
+                    finally
+                    {
+                        await Close(closeStatus);
                     }
                 }
 
