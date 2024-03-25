@@ -9,11 +9,11 @@ public class TestTCP
 {
     private static readonly Host Host = new Host("127.0.0.1", 9876);
 
-    private readonly ITestOutputHelper output;
+    private readonly ITestOutputHelper _output;
 
     public TestTCP(ITestOutputHelper output)
     {
-        this.output = output;
+        _output = output;
     }
 
     [Fact]
@@ -101,18 +101,18 @@ public class TestTCP
             clients++;
             int id = clients;
 
-            output.WriteLine("* [server] client accept");
+            _output.WriteLine("* [server] client accept");
 
             c.On.Open(() =>
             {
                 isConnected = true;
-                output.WriteLine("* [server] client open");
+                _output.WriteLine("* [server] client open");
             });
 
             c.On.Close(() =>
             {
                 isDisconnected = true;
-                output.WriteLine("* [server] client close");
+                _output.WriteLine("* [server] client close");
             });
 
             c.On.Data(data =>
@@ -133,7 +133,7 @@ public class TestTCP
 
             c.On.Event((name, data) =>
             {
-                output.WriteLine($"client {id}, event ({name}) {NE.GetString(data)}");
+                _output.WriteLine($"client {id}, event ({name}) {NE.GetString(data)}");
                 switch (id)
                 {
                     case 1:
