@@ -34,12 +34,13 @@ namespace Netly
                 _isFraming = isFraming;
             }
 
-            internal Client(Socket socket, IServer server, Action<Client,  bool> callback) : this()
+            internal Client(Socket socket, IServer server, Action<Client,  bool> serverValidatorCallback) : this()
             {
                 _isFraming = server.IsFraming;
-                _to = new _To(this, socket, server, callback);
+                _to = new _To(this, socket, server, serverValidatorCallback);
             }
 
+            internal void InitServerValidator() => _to.InitServerValidator();
             internal void InitServerSide() => _to.InitServerSide();
         }
     }

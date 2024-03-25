@@ -214,7 +214,7 @@ namespace Netly
                             _socketList.RemoveAt(0);
                         }
 
-                        _ = new Client(socket, _server, (client, success) =>
+                        new Client(socket, _server, serverValidatorCallback: (client, success) =>
                         {
                             if (success)
                             {
@@ -234,7 +234,7 @@ namespace Netly
                                 socket.Close();
                                 socket.Dispose();
                             }
-                        });
+                        }).InitServerValidator();
                     }
                 }
             }

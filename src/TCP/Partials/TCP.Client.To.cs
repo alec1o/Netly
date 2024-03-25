@@ -39,6 +39,8 @@ namespace Netly
                 private readonly bool _isServer;
                 private const int _64kb = 1024 * 64; // 65,536 (64kb)
                 private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
+                private bool _initServerValidator;
+                private readonly Action<Client, bool> _serverValidatorCallback;
 
                 /* ---- CONSTRUCTOR --- */
 
@@ -51,6 +53,8 @@ namespace Netly
                     _isClosing = false;
                     _isServer = false;
                     _isClosed = true;
+                    _initServerValidator = false;
+                    _serverValidatorCallback = null;
                     Host = Host.Default;
                     IsEncrypted = false;
                 }
@@ -61,7 +65,7 @@ namespace Netly
                     _isClosed = true;
                 }
 
-                public _To(Client client, Socket socket, IServer server, Action<Client, bool> callback) : this()
+                public _To(Client client, Socket socket, IServer server, Action<Client, bool> validatorAction) : this()
                 {
                     _client = client;
                     _server = server;
@@ -71,6 +75,15 @@ namespace Netly
                     _isServer = true;
                     _isClosed = false;
                     IsEncrypted = _server.IsEncrypted;
+                    _serverValidatorCallback = validatorAction;
+                }
+
+                /* ---- INTERFACE --- */
+
+                public void InitServerValidator()
+                {
+                    if (_initServerValidator) return;
+                    _initServerValidator = true;
 
                     if (IsEncrypted)
                     {
@@ -79,11 +92,11 @@ namespace Netly
                             try
                             {
                                 InitEncryption();
-                                callback?.Invoke(_client, true);
+                                _serverValidatorCallback?.Invoke(_client, true);
                             }
                             catch
                             {
-                                callback?.Invoke(_client, false);
+                                _serverValidatorCallback?.Invoke(_client, false);
                             }
                         }
 
@@ -92,11 +105,9 @@ namespace Netly
                     }
                     else
                     {
-                        callback?.Invoke(_client, true);
+                        _serverValidatorCallback?.Invoke(_client, true);
                     }
                 }
-
-                /* ---- INTERFACE --- */
 
                 private static void SetDefaultSocketOption(ref Socket socket)
                 {
@@ -267,7 +278,7 @@ namespace Netly
                 private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
                 {
                     int timeout = reset ? Timeout.Infinite : EncryptionTimeout;
-                    
+
                     stream.ReadTimeout = timeout;
                     stream.WriteTimeout = timeout;
                 }
