@@ -29,8 +29,13 @@ namespace Netly
                 _id = Guid.NewGuid().ToString();
             }
 
-            public Client(bool useConnection = true, int connectionTimeout = 5000) : this()
+            public Client(bool useConnection = StdUseConnection, int connectionTimeout = StdConnectionTimeout) : this()
             {
+                if (connectionTimeout < StdMinTimeout)
+                {
+                    throw new Exception($"The {nameof(connectionTimeout)} mustn't be less of {StdMinTimeout}");
+                }
+
                 _useConnection = useConnection;
                 _connectionTimeout = connectionTimeout;
             }
