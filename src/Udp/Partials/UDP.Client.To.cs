@@ -17,6 +17,8 @@ namespace Netly
                 public bool IsOpened => IsConnected();
 
                 private bool UseConnection => _client._useConnection;
+                private int ConnectionTimeout => _client._connectionTimeout;
+                private DateTime _connectionTimer;
 
                 private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
 
@@ -33,6 +35,8 @@ namespace Netly
 
                 private readonly Client _client;
                 private readonly bool _isServer;
+                private const byte PingByte = 0;
+                private static readonly byte[] PingBuffer = { PingByte };
 
                 /* ---- CONSTRUCTOR --- */
 
@@ -43,6 +47,7 @@ namespace Netly
                     _isClosing = false;
                     _isServer = false;
                     _isClosed = true;
+                    _connectionTimer = DateTime.Now;
                     Host = Host.Default;
                 }
 
@@ -206,6 +211,43 @@ namespace Netly
                     }
                 }
 
+                private void UpdateTimeout()
+                {
+                    _connectionTimer = DateTime.Now.AddMilliseconds(ConnectionTimeout);
+                }
+
+                private bool IsTimeout()
+                {
+                    return DateTime.Now > _connectionTimer;
+                }
+
+                private void InitPing()
+                {
+                    if (!UseConnection) return;
+
+                    UpdateTimeout();
+
+                    ThreadPool.QueueUserWorkItem(_ =>
+                    {
+                        // 3 ping message per second
+                        const int pingPerSecond = 3;
+                        const int sleepDelay = 1000 / pingPerSecond;
+
+                        while (IsOpened)
+                        {
+                            Data(PingBuffer);
+                            
+                            if (IsTimeout())
+                            {
+                                Close();
+                                break;
+                            }
+
+                            Thread.Sleep(sleepDelay);
+                        }
+                    });
+                }
+
                 private void ReceiveJob()
                 {
                     // Info: Is max UDP packet size.
@@ -213,6 +255,7 @@ namespace Netly
                     // Size: 65,536 (64kb).
                     byte[] buffer = new byte[1024 * 64];
                     EndPoint endpoint = Host.EndPoint;
+                    _connectionTimer = DateTime.Now;
 
                     while (IsOpened)
                     {
@@ -226,9 +269,20 @@ namespace Netly
                                 break;
                             }
 
+                            if (UseConnection)
+                            {
+                                UpdateTimeout();
+                            }
+
                             byte[] data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
+
+                            if (size == 1 && data[0] == PingByte)
+                            {
+                                // ignore ping message
+                                continue;
+                            }
 
                             PushResult(ref data);
                         }

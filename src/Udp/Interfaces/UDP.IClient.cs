@@ -10,6 +10,7 @@ namespace Netly
             Host Host { get; }
             bool IsOpened { get; }
             bool UseConnection { get; }
+            int ConnectionTimeout { get; }
             Client.ITo To { get; }
             Client.IOn On { get; }
         }
