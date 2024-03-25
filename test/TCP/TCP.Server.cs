@@ -1,17 +1,17 @@
 ﻿using Netly.Core;
 using Xunit.Abstractions;
 
-namespace test.TCP;
+namespace test.TestTCP;
 
 using Netly;
 
-public class TestTCP
+public class TcpServerTest
 {
     private static readonly Host Host = new Host("127.0.0.1", 9876);
 
     private readonly ITestOutputHelper _output;
 
-    public TestTCP(ITestOutputHelper output)
+    public TcpServerTest(ITestOutputHelper output)
     {
         _output = output;
     }
