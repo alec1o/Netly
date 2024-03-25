@@ -35,8 +35,6 @@ namespace Netly
 
                 private readonly Client _client;
                 private readonly bool _isServer;
-                private const byte PingByte = 0;
-                private static readonly byte[] PingBuffer = { PingByte };
 
                 /* ---- CONSTRUCTOR --- */
 
@@ -235,7 +233,7 @@ namespace Netly
 
                         while (IsOpened)
                         {
-                            Data(PingBuffer);
+                            Data(StdPingBuffer);
                             
                             if (IsTimeout())
                             {
@@ -278,7 +276,7 @@ namespace Netly
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
 
-                            if (size == 1 && data[0] == PingByte)
+                            if (size == 1 && data[0] == StdPingByte)
                             {
                                 // ignore ping message
                                 continue;
