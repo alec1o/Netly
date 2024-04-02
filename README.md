@@ -1,21 +1,20 @@
-<table>
-  <tr>
-    <td>
-      <p>WARNING: <a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEXT RELEASE <code>4.X.X</code> ALERT!</a></p>
-    </td>
-  </tr>
-</table>
+<div align='center' size='10px'>
+  <h6>The active development branch is <i><a href="https://github.com/alec1o/Netly/tree/dev">'dev'</a><i>, while the production branch is <i><a href="https://github.com/alec1o/Netly/tree/main">'main'</a></i>.</h6>
+  <h6>Netly version 4 will be released soon, help validating the new way of interacting with netly. <i><a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">See more</a></i>.</h6>
+</div>
 
 <br>
 
-<h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
+<h1 align="center"><a href="https://github.com/alec1o/Netly">Netly</a></h1>
 
 <h6 align="center"><sub>
 powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
 
 <div align="center">
-  <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
+  <a href="#">
+    <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
+  </a>
 </div>
 
 ##### Project
