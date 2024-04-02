@@ -107,6 +107,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <th><sub>4.x.x</sub></th>
 <td><sub>Development</sub></td>
 <td><sub>HTTP client and server support</sub></td>
+<td><sub>RUDP client and server support</sub></td>
 <td><sub>WebSocket client and server</sub></td>
 <td><sub>Syntax and internal improvement</sub></td>
 <td><sub>Code XML comments improvement</sub></td>
@@ -120,6 +121,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td><sub>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</sub></td>
 <td><sub>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
 <td><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
+<td></td>
 </tr>
 <tr>
 <th><sub>2.x.x</sub></th>
@@ -129,12 +131,14 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td></td>
 <td></td>
 <td></td>
+<td></td>
 </tr>
 <tr>
 <th><sub>1.x.x</sub></th>
 <td><sub>Legacy</sub></td>
 <td><sub>TCP support</sub></td>
 <td><sub>UDP Support</sub></td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
