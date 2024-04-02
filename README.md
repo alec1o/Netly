@@ -66,6 +66,8 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <br>
 
 <div>
+    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" width="400px" /></a>
+    <hr>
     <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" /></a>
 </div>
 
