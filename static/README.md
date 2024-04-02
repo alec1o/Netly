@@ -5,9 +5,21 @@
 <hr><br>
 
 ### Rules
+* ##### Sponsors Banner
+    ```rb
+    # resolution
+    - width: 1024px
+    - height: 128px
+    
+    # color
+    - '#2050ce'
+    
+    # font
+    - Amaranth
 
-```rb
-# Sponsors Image Resolution
-width: 1024px
-height: 128px
-```
+    # font size
+    - 32~42 (prefered)
+    
+    # application
+    - Pixlr (pixlr.com)
+    ```
