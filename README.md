@@ -430,7 +430,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
-<details open><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details close><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -495,6 +495,29 @@ server.To.Close();
 
 <tr>
 <th align="center" valign="top"><sub>HTTP<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+</tr>
+
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>RUDP<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
@@ -749,7 +772,7 @@ state in sync</i>, for example <i>only</i> sending data when confirming that the
 <br>
 <br>
 
-<details open><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
+<details close><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
 
 ```csharp
 using System;
