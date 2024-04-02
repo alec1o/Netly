@@ -1,7 +1,5 @@
-<div align='center' size='10px'>
-  <h6>The active development branch is <i><a href="https://github.com/alec1o/Netly/tree/dev">'dev'</a></i>, while the production branch is <i><a href="https://github.com/alec1o/Netly/tree/main">'main'</a></i>.</h6>
-  <h6>Netly version 4 will be released soon, help validating the new way of interacting with netly. <i><a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">See more</a></i>.</h6>
-</div>
+> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev"), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
+> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <br>
 
