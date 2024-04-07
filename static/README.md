@@ -11,12 +11,24 @@
     - width: 1024px
     - height: 128px
     
-    # color
+    # font color
     - '#2050ce'
     
-    # font
+    # font family
     - Amaranth
 
+    # icon align
+    - width x: 235
+    - width y: ~
+    - position x: 0
+    - position y: ~
+
+    # font align
+    - width x: 781
+    - width y: ~
+    - position x: 243
+    - position y: ~
+    
     # font size
     - 32~42 (prefered)
     
