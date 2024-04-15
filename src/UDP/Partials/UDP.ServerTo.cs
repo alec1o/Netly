@@ -7,17 +7,16 @@ namespace Netly
 {
     public partial class UDP
     {
-        public partial class Server
+        public partial class Server 
         {
-            public class _To : ITo
+            public class ServerTo : UDP.IServerTo
             {
-                private bool UseConnection => _server.UseConnection;
                 private readonly Server _server;
                 public bool IsOpened { get; set; }
                 public Host Host { get; set; }
                 public List<Client> Clients { get; set; }
 
-                public _To(Server server)
+                public ServerTo(Server server)
                 {
                     _server = server;
                     IsOpened = false;
@@ -31,6 +30,26 @@ namespace Netly
                 }
 
                 public Task Close()
+                {
+                    throw new System.NotImplementedException();
+                }
+
+                public Task BroadcastData(byte[] data)
+                {
+                    throw new System.NotImplementedException();
+                }
+
+                public Task BroadcastData(string data, NE.Encoding encoding)
+                {
+                    throw new System.NotImplementedException();
+                }
+
+                public Task BroadcastEvent(string name, byte[] data)
+                {
+                    throw new System.NotImplementedException();
+                }
+
+                public Task BroadcastEvent(string name, string data, NE.Encoding encoding)
                 {
                     throw new System.NotImplementedException();
                 }

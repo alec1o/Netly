@@ -9,9 +9,8 @@ namespace Netly
             string Id { get; }
             Host Host { get; }
             bool IsOpened { get; }
-            bool UseConnection { get; }
-            Server.ITo To { get; }
-            Server.IOn On { get; }
+            IServerTo To { get; }
+            IServerOn On { get; }
             IClient[] Clients { get; }
         }
     }

@@ -8,22 +8,20 @@ namespace Netly
     {
         public partial class Server : IServer
         {
-            private readonly _On _on;
-            private readonly _To _to;
+            private readonly ServerOn _on;
+            private readonly ServerTo _to;
             public string Id { get; }
             public Host Host => _to.Host;
             public bool IsOpened => _to.IsOpened;
-            public bool UseConnection { get; }
-            public ITo To => _to;
-            public IOn On => _on;
-            public IClient[] Clients =>  _to.Clients.Select(x => (IClient)x).ToArray();
+            public IServerTo To => _to;
+            public IServerOn On => _on;
+            public IClient[] Clients => _to.Clients.Select(x => (IClient)x).ToArray();
 
-            private Server(bool useConnection)
+            private Server()
             {
-                _on = new _On();
-                _to = new _To(this);
                 Id = Guid.NewGuid().ToString();
-                UseConnection = useConnection;
+                _on = new ServerOn();
+                _to = new ServerTo(this);
             }
         }
     }
