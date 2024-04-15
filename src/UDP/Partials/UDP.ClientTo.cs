@@ -11,7 +11,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class _To : ITo
+            internal class ClientTo : IClientTo
             {
                 public Host Host { get; private set; }
                 public bool IsOpened => IsConnected();
@@ -21,7 +21,7 @@ namespace Netly
 
                 private string Id => _client._id;
 
-                private _On On => _client._on;
+                private ClientOn ClientOn => _client._on;
 
                 private Socket _socket;
 
@@ -35,7 +35,7 @@ namespace Netly
 
                 /* ---- CONSTRUCTOR --- */
 
-                private _To()
+                private ClientTo()
                 {
                     _socket = null;
                     _isOpening = false;
@@ -46,13 +46,13 @@ namespace Netly
                     Host = Host.Default;
                 }
 
-                public _To(Client client) : this()
+                public ClientTo(Client client) : this()
                 {
                     _client = client;
                     _isClosed = true;
                 }
 
-                public _To(Client client, Host host, out bool success) : this()
+                public ClientTo(Client client, Host host, out bool success) : this()
                 {
                     _client = client;
                     _socket = null;
@@ -75,7 +75,7 @@ namespace Netly
                         {
                             _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
-                            On.m_onModify?.Invoke(null, _socket);
+                            ClientOn.OnModify?.Invoke(null, _socket);
 
                             _socket.Connect(host.Address, host.Port);
 
@@ -83,13 +83,13 @@ namespace Netly
 
                             _isClosed = false;
 
-                            On.m_onOpen?.Invoke(null, null);
+                            ClientOn.OnOpen?.Invoke(null, null);
 
                             InitReceiver();
                         }
                         catch (Exception e)
                         {
-                            On.m_onError?.Invoke(null, e);
+                            ClientOn.OnError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -122,7 +122,7 @@ namespace Netly
                             if (_isClosed is false)
                             {
                                 _isClosed = true;
-                                On.m_onClose?.Invoke(null, null);
+                                ClientOn.OnClose?.Invoke(null, null);
                             }
 
                             _isClosing = false;
@@ -170,9 +170,9 @@ namespace Netly
                 {
                     if (_isServer is false) return;
 
-                    On.m_onModify?.Invoke(null, _socket);
+                    ClientOn.OnModify?.Invoke(null, _socket);
 
-                    On.m_onOpen?.Invoke(null, null);
+                    ClientOn.OnOpen?.Invoke(null, null);
 
                     InitReceiver();
                 }
@@ -184,11 +184,11 @@ namespace Netly
 
                     if (content.buffer == null)
                     {
-                        On.m_onData?.Invoke(null, bytes);
+                        ClientOn.OnData?.Invoke(null, bytes);
                     }
                     else
                     {
-                        On.m_onEvent?.Invoke(null, (content.name, content.buffer));
+                        ClientOn.OnEvent?.Invoke(null, (content.name, content.buffer));
                     }
                 }
 

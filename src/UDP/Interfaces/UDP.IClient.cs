@@ -9,8 +9,8 @@ namespace Netly
             string Id { get; }
             Host Host { get; }
             bool IsOpened { get; }
-            Client.ITo To { get; }
-            Client.IOn On { get; }
+            IClientTo To { get; }
+            IClientOn On { get; }
         }
     }
 }
