@@ -15,9 +15,6 @@ namespace Netly
             {
                 public Host Host { get; private set; }
                 public bool IsOpened => IsConnected();
-
-                private bool UseConnection => _client._useConnection;
-                private int ConnectionTimeout => _client._connectionTimeout;
                 private DateTime _connectionTimer;
 
                 private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
@@ -58,18 +55,13 @@ namespace Netly
                 public _To(Client client, Host host, out bool success) : this()
                 {
                     _client = client;
-                    CreateUdpSocket(ref host, out _socket);
+                    _socket = null;
                     _isServer = true;
                     _isClosed = false;
                     success = true;
                 }
 
                 /* ---- INTERFACE --- */
-
-                private static void CreateUdpSocket(ref Host host, out Socket socket)
-                {
-                    socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                }
 
                 public Task Open(Host host)
                 {
@@ -81,7 +73,7 @@ namespace Netly
                     {
                         try
                         {
-                            CreateUdpSocket(ref host, out _socket);
+                            _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
                             On.m_onModify?.Invoke(null, _socket);
 
@@ -171,16 +163,7 @@ namespace Netly
 
                 private bool IsConnected()
                 {
-                    try
-                    {
-                        if (_socket == null || !_socket.Connected) return false;
-                        const int timeout = 5000;
-                        return !(_socket.Poll(timeout, SelectMode.SelectRead) && _socket.Available == 0);
-                    }
-                    catch
-                    {
-                        return false;
-                    }
+                    return _socket == null || _isClosed;
                 }
 
                 public void InitServerSide()
@@ -209,43 +192,6 @@ namespace Netly
                     }
                 }
 
-                private void UpdateTimeout()
-                {
-                    _connectionTimer = DateTime.Now.AddMilliseconds(ConnectionTimeout);
-                }
-
-                private bool IsTimeout()
-                {
-                    return DateTime.Now > _connectionTimer;
-                }
-
-                private void InitPing()
-                {
-                    if (!UseConnection) return;
-
-                    UpdateTimeout();
-
-                    ThreadPool.QueueUserWorkItem(_ =>
-                    {
-                        // 3 ping message per second
-                        const int pingPerSecond = 3;
-                        const int sleepDelay = 1000 / pingPerSecond;
-
-                        while (IsOpened)
-                        {
-                            Data(StdPingBuffer);
-                            
-                            if (IsTimeout())
-                            {
-                                Close();
-                                break;
-                            }
-
-                            Thread.Sleep(sleepDelay);
-                        }
-                    });
-                }
-
                 private void ReceiveJob()
                 {
                     // Info: Is max UDP packet size.
@@ -267,20 +213,9 @@ namespace Netly
                                 break;
                             }
 
-                            if (UseConnection)
-                            {
-                                UpdateTimeout();
-                            }
-
                             byte[] data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            if (size == 1 && data[0] == StdPingByte)
-                            {
-                                // ignore ping message
-                                continue;
-                            }
 
                             PushResult(ref data);
                         }
