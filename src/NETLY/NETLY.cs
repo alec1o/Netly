@@ -18,7 +18,7 @@
         /// <summary>
         /// Netly supported protocols
         /// </summary>
-        public static readonly string[] Protocols = new[] { "TCP", "UDP", "HTTP", "WebSocket" };
+        public static readonly string[] Protocols = new[] { "TCP", "UDP", "HTTP", "RUDP", "WebSocket" };
 
         /// <summary>
         /// Netly Git repository

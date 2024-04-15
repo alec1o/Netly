@@ -1,21 +1,18 @@
-<table>
-  <tr>
-    <td>
-      <p>WARNING: <a href="https://github.com/alec1o/Netly/discussions/36#discussion-6204441">NETLY NEXT RELEASE <code>4.X.X</code> ALERT!</a></p>
-    </td>
-  </tr>
-</table>
+> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev"), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
+> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <br>
 
-<h1 align="center"><a href="https://github.com/alec1o/netly">Netly</a></h1>
+<h1 align="center"><a href="https://github.com/alec1o/Netly">Netly</a></h1>
 
 <h6 align="center"><sub>
 powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </h6>
 
 <div align="center">
-  <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
+  <a href="#">
+    <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
+  </a>
 </div>
 
 ##### Project
@@ -69,6 +66,8 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <br>
 
 <div>
+    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" width="400px" /></a>
+    <h6></h6> <!-- padding and margin -->
     <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" /></a>
 </div>
 
@@ -110,6 +109,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <th><sub>4.x.x</sub></th>
 <td><sub>Development</sub></td>
 <td><sub>HTTP client and server support</sub></td>
+<td><sub>RUDP client and server support</sub></td>
 <td><sub>WebSocket client and server</sub></td>
 <td><sub>Syntax and internal improvement</sub></td>
 <td><sub>Code XML comments improvement</sub></td>
@@ -123,6 +123,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td><sub>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</sub></td>
 <td><sub>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
 <td><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
+<td></td>
 </tr>
 <tr>
 <th><sub>2.x.x</sub></th>
@@ -132,12 +133,14 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <td></td>
 <td></td>
 <td></td>
+<td></td>
 </tr>
 <tr>
 <th><sub>1.x.x</sub></th>
 <td><sub>Legacy</sub></td>
 <td><sub>TCP support</sub></td>
 <td><sub>UDP Support</sub></td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
@@ -429,7 +432,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
-<details open><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details close><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -494,6 +497,29 @@ server.To.Close();
 
 <tr>
 <th align="center" valign="top"><sub>HTTP<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+</details>
+</td>
+</tr>
+
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>RUDP<strong></strong></sub></th>
 <td>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
@@ -748,7 +774,7 @@ state in sync</i>, for example <i>only</i> sending data when confirming that the
 <br>
 <br>
 
-<details open><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
+<details close><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
 
 ```csharp
 using System;
