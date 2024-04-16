@@ -10,19 +10,19 @@ namespace Netly
         {
             private readonly ClientOn _on;
             private readonly ClientTo _to;
-            private readonly string _id;
 
             public bool IsOpened => _to.IsOpened;
             public Host Host => _to.Host;
             public IClientTo To => _to;
             public IClientOn On => _on;
-            public string Id => _id;
+            public string Id { get; }
+
 
             public Client()
             {
+                Id = Guid.NewGuid().ToString();
                 _on = new ClientOn();
                 _to = new ClientTo(this);
-                _id = Guid.NewGuid().ToString();
             }
 
             internal Client(ref Host host, ref Socket socket) : this()
