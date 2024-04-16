@@ -43,7 +43,7 @@ namespace Netly
 
                 public Host Host { get; private set; }
                 public bool IsOpened => !_isClosed && _socket != null;
-                private ClientOn ClientOn => _client._on;
+                private ClientOn On => _client._on;
 
                 public Task Open(Host host)
                 {
@@ -57,7 +57,7 @@ namespace Netly
                         {
                             _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
-                            ClientOn.OnModify?.Invoke(null, _socket);
+                            On.OnModify?.Invoke(null, _socket);
 
                             _socket.Connect(host.Address, host.Port);
 
@@ -67,13 +67,13 @@ namespace Netly
 
                             InitReceiver();
 
-                            ClientOn.OnOpen?.Invoke(null, null);
+                            On.OnOpen?.Invoke(null, null);
                         }
                         catch (Exception e)
                         {
                             _isClosed = true;
                             NETLY.Logger.PushError(e);
-                            ClientOn.OnError?.Invoke(null, e);
+                            On.OnError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -109,14 +109,7 @@ namespace Netly
                         _isOpeningOrClosing = false;
                         _isClosed = true;
 
-                        try
-                        {
-                            ClientOn.OnClose?.Invoke(null, null);
-                        }
-                        catch (Exception e)
-                        {
-                            NETLY.Logger.PushError(e);
-                        }
+                        On.OnClose?.Invoke(null, null);
                     });
                 }
 
@@ -144,9 +137,9 @@ namespace Netly
                 {
                     if (_isServer is false) return;
 
-                    ClientOn.OnModify?.Invoke(null, _socket);
+                    On.OnModify?.Invoke(null, _socket);
 
-                    ClientOn.OnOpen?.Invoke(null, null);
+                    On.OnOpen?.Invoke(null, null);
                 }
 
 
@@ -155,9 +148,9 @@ namespace Netly
                     (string name, byte[] buffer) content = EventManager.Verify(bytes);
 
                     if (content.buffer == null)
-                        ClientOn.OnData?.Invoke(null, bytes);
+                        On.OnData?.Invoke(null, bytes);
                     else
-                        ClientOn.OnEvent?.Invoke(null, (content.name, content.buffer));
+                        On.OnEvent?.Invoke(null, (content.name, content.buffer));
                 }
 
                 private void ReceiveJob()
