@@ -5,9 +5,22 @@ namespace Netly
 {
     public static partial class UDP
     {
+        /// <summary>
+        /// UDP-Server actions container (interface)
+        /// </summary>
         public interface IServerTo
         {
+            /// <summary>
+            /// Use to open connection (if disconnected)
+            /// </summary>
+            /// <param name="host">Host (local endpoint)</param>
+            /// <returns></returns>
             Task Open(Host host);
+            
+            /// <summary>
+            /// Use to close connection (if connected)
+            /// </summary>
+            /// <returns></returns>
             Task Close();
         }
     }

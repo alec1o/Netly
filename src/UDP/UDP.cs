@@ -1,7 +1,7 @@
 ﻿namespace Netly
 {
     /// <summary>
-    /// UDP Container
+    /// Netly UDP
     /// </summary>
     public static partial class UDP
     {
