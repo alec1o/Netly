@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using Netly.Core;
 
 namespace Netly
@@ -24,12 +25,13 @@ namespace Netly
                 _id = Guid.NewGuid().ToString();
             }
 
-            internal Client(IServer server, Host host, out bool success) : this()
+            internal Client(ref Host host, ref Socket socket) : this()
             {
-                _to = new ClientTo(this, host, out success);
+                _to = new ClientTo(this, ref host, ref socket);
             }
 
             internal void InitServerSide() => _to.InitServerSide();
+            internal void OnServerBuffer(ref byte[] buffer) => _to.OnServerBuffer(ref buffer);
         }
     }
 }

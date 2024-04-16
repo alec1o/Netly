@@ -17,7 +17,7 @@ namespace Netly
             public IServerOn On => _on;
             public IClient[] Clients => _to.Clients.Select(x => (IClient)x).ToArray();
 
-            private Server()
+            public Server()
             {
                 Id = Guid.NewGuid().ToString();
                 _on = new ServerOn();

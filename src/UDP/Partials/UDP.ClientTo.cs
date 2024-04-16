@@ -14,60 +14,41 @@ namespace Netly
             internal class ClientTo : IClientTo
             {
                 public Host Host { get; private set; }
-                public bool IsOpened => IsConnected();
-                private DateTime _connectionTimer;
-
-                private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
-
-                private string Id => _client._id;
-
+                public bool IsOpened => !_isClosed && _socket != null;
                 private ClientOn ClientOn => _client._on;
-
                 private Socket _socket;
-
-                private bool
-                    _isOpening,
-                    _isClosing,
-                    _isClosed;
-
+                private bool _isClosed, _isOpeningOrClosing;
                 private readonly Client _client;
                 private readonly bool _isServer;
-
-                /* ---- CONSTRUCTOR --- */
 
                 private ClientTo()
                 {
                     _socket = null;
-                    _isOpening = false;
-                    _isClosing = false;
                     _isServer = false;
                     _isClosed = true;
-                    _connectionTimer = DateTime.Now;
+                    _isOpeningOrClosing = false;
                     Host = Host.Default;
                 }
 
                 public ClientTo(Client client) : this()
                 {
                     _client = client;
-                    _isClosed = true;
                 }
 
-                public ClientTo(Client client, Host host, out bool success) : this()
+                public ClientTo(Client client, ref Host host, ref Socket socket) : this()
                 {
+                    Host = host;
                     _client = client;
-                    _socket = null;
+                    _socket = socket;
                     _isServer = true;
                     _isClosed = false;
-                    success = true;
                 }
-
-                /* ---- INTERFACE --- */
 
                 public Task Open(Host host)
                 {
-                    if (_isOpening || _isClosing || IsOpened || _isServer) return Task.CompletedTask;
+                    if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
 
-                    _isOpening = true;
+                    _isOpeningOrClosing = true;
 
                     return Task.Run(() =>
                     {
@@ -83,87 +64,81 @@ namespace Netly
 
                             _isClosed = false;
 
-                            ClientOn.OnOpen?.Invoke(null, null);
-
                             InitReceiver();
+
+                            ClientOn.OnOpen?.Invoke(null, null);
                         }
                         catch (Exception e)
                         {
+                            _isClosed = true;
+                            NETLY.Logger.PushError(e);
                             ClientOn.OnError?.Invoke(null, e);
                         }
                         finally
                         {
-                            _isOpening = false;
+                            _isOpeningOrClosing = false;
                         }
                     });
                 }
 
                 public Task Close()
                 {
-                    if (_isOpening || _isClosing) return Task.CompletedTask;
+                    if (_isOpeningOrClosing || !IsOpened) return Task.CompletedTask;
 
-                    _isClosing = true;
+                    _isOpeningOrClosing = true;
 
                     return Task.Run(() =>
                     {
+                        if (!_isServer)
+                        {
+                            try
+                            {
+                                _socket?.Shutdown(SocketShutdown.Both);
+                                _socket?.Close();
+                                _socket?.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                NETLY.Logger.PushError(e);
+                            }
+                            finally
+                            {
+                                _socket = null;
+                            }
+                        }
+
+                        _isOpeningOrClosing = false;
+                        _isClosed = true;
+
                         try
                         {
-                            _socket?.Close();
-                            _socket?.Dispose();
+                            ClientOn.OnClose?.Invoke(null, null);
                         }
                         catch (Exception e)
                         {
                             NETLY.Logger.PushError(e);
-                        }
-                        finally
-                        {
-                            _socket = null;
-
-                            if (_isClosed is false)
-                            {
-                                _isClosed = true;
-                                ClientOn.OnClose?.Invoke(null, null);
-                            }
-
-                            _isClosing = false;
                         }
                     });
                 }
 
                 public void Data(byte[] data)
                 {
-                    if (CanSend == false || data == null) return;
-
-                    SendDispatch(data);
+                    Send(data);
                 }
-
 
                 public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
-                    if (CanSend == false || data == null) return;
-
-                    SendDispatch(NE.GetBytes(data, encoding));
+                    Send(NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
-                    if (CanSend == false || data == null || name == null) return;
-
-                    SendDispatch(EventManager.Create(name, data));
+                    Send(EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
-                    if (CanSend == false || data == null || name == null) return;
-
-                    SendDispatch(EventManager.Create(name, NE.GetBytes(data, encoding)));
-                }
-
-                /* ---- INTERNAL --- */
-
-                private bool IsConnected()
-                {
-                    return _socket == null || _isClosed;
+                    Send(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 public void InitServerSide()
@@ -173,8 +148,6 @@ namespace Netly
                     ClientOn.OnModify?.Invoke(null, _socket);
 
                     ClientOn.OnOpen?.Invoke(null, null);
-
-                    InitReceiver();
                 }
 
 
@@ -194,18 +167,22 @@ namespace Netly
 
                 private void ReceiveJob()
                 {
-                    // Info: Is max UDP packet size.
-                    // Docs: https://en.wikipedia.org/wiki/User_Datagram_Protocol
-                    // Size: 65,536 (64kb).
-                    byte[] buffer = new byte[1024 * 64];
-                    EndPoint endpoint = Host.EndPoint;
-                    _connectionTimer = DateTime.Now;
+                    int length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+                    byte[] buffer = new byte[length];
+                    EndPoint point = Host.EndPoint;
 
                     while (IsOpened)
                     {
                         try
                         {
-                            int size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
+                            int size = _socket.ReceiveFrom
+                            (
+                                buffer: buffer,
+                                offset: 0,
+                                size: buffer.Length,
+                                socketFlags: SocketFlags.None,
+                                remoteEP: ref point
+                            );
 
                             if (size <= 0)
                             {
@@ -229,23 +206,41 @@ namespace Netly
                     Close();
                 }
 
-                private void SendDispatch(byte[] bytes)
+                private void Send(byte[] bytes)
                 {
-                    if (!IsOpened) return;
+                    if (bytes == null || bytes.Length <= 0 || !IsOpened) return;
 
                     try
                     {
-                        _socket?.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, callback: null, state: null);
+                        _socket?.BeginSendTo
+                        (
+                            buffer: bytes,
+                            offset: 0,
+                            size: bytes.Length,
+                            socketFlags: SocketFlags.None,
+                            remoteEP: Host.EndPoint,
+                            callback: null,
+                            state: null
+                        );
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // Ignored
+                        NETLY.Logger.PushError(e);
                     }
                 }
 
                 private void InitReceiver()
                 {
-                    new Thread(ReceiveJob) { IsBackground = true }.Start();
+                    new Thread(ReceiveJob)
+                    {
+                        IsBackground = true,
+                        Priority = ThreadPriority.Highest,
+                    }.Start();
+                }
+
+                public void OnServerBuffer(ref byte[] buffer)
+                {
+                    PushResult(ref buffer);
                 }
             }
         }
