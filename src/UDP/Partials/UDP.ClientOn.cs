@@ -11,11 +11,11 @@ namespace Netly
             internal class ClientOn : IClientOn
             {
                 public EventHandler OnClose;
+                public EventHandler<byte[]> OnData;
                 public EventHandler<Exception> OnError;
+                public EventHandler<(string name, byte[] buffer)> OnEvent;
                 public EventHandler<Socket> OnModify;
                 public EventHandler OnOpen;
-                public EventHandler<byte[]> OnData;
-                public EventHandler<(string name, byte[] buffer)> OnEvent;
 
                 public void Open(Action callback)
                 {

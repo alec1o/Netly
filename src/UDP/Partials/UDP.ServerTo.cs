@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,17 +12,13 @@ namespace Netly
     {
         public partial class Server
         {
-            public class ServerTo : UDP.IServerTo
+            public class ServerTo : IServerTo
             {
                 private readonly Server _server;
-                private ServerOn On => _server._on;
-                public bool IsOpened => !_isClosed && _socket != null;
-                public Host Host { get; set; }
-                public List<Client> Clients { get; set; }
-
-                private Socket _socket;
 
                 private bool _isClosed, _isOpeningOrClosing;
+
+                private Socket _socket;
 
                 private ServerTo()
                 {
@@ -39,6 +34,11 @@ namespace Netly
                 {
                     _server = server;
                 }
+
+                private ServerOn On => _server._on;
+                public bool IsOpened => !_isClosed && _socket != null;
+                public Host Host { get; set; }
+                public List<Client> Clients { get; set; }
 
                 public Task Open(Host host)
                 {
@@ -88,10 +88,7 @@ namespace Netly
                         {
                             _socket?.Shutdown(SocketShutdown.Both);
 
-                            foreach (var client in Clients)
-                            {
-                                await client.To.Close();
-                            }
+                            foreach (var client in Clients) await client.To.Close();
 
                             Clients.Clear();
 
@@ -117,42 +114,38 @@ namespace Netly
                     new Thread(AcceptJob)
                     {
                         IsBackground = true,
-                        Priority = ThreadPriority.Highest,
+                        Priority = ThreadPriority.Highest
                     }.Start();
                 }
 
                 private void AcceptJob()
                 {
-                    int length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                    byte[] buffer = new byte[length];
-                    EndPoint point = Host.EndPoint;
+                    var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+                    var buffer = new byte[length];
+                    var point = Host.EndPoint;
 
                     while (IsOpened)
-                    {
                         try
                         {
-                            int size = _socket.ReceiveFrom
+                            var size = _socket.ReceiveFrom
                             (
-                                buffer: buffer,
-                                offset: 0,
-                                size: buffer.Length,
-                                socketFlags: SocketFlags.None,
-                                remoteEP: ref point
+                                buffer,
+                                0,
+                                buffer.Length,
+                                SocketFlags.None,
+                                ref point
                             );
-                            
-                            if (size <= 0)
-                            {
-                                continue;
-                            }
 
-                            byte[] data = new byte[size];
+                            if (size <= 0) continue;
+
+                            var data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
 
-                            Host newHost = new Host(point);
+                            var newHost = new Host(point);
 
                             // Find a client
-                            Client client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
+                            var client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
 
                             if (client == null)
                             {
@@ -175,7 +168,6 @@ namespace Netly
                         {
                             NETLY.Logger.PushError(e);
                         }
-                    }
                 }
             }
         }

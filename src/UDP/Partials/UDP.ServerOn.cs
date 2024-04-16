@@ -10,11 +10,11 @@ namespace Netly
         {
             internal class ServerOn : IServerOn
             {
+                public EventHandler<IClient> OnAccept;
                 public EventHandler OnClose;
                 public EventHandler<Exception> OnError;
                 public EventHandler<Socket> OnModify;
                 public EventHandler OnOpen;
-                public EventHandler<IClient> OnAccept;
 
                 public void Open(Action callback)
                 {

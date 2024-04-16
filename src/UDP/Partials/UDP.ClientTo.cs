@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,13 +12,10 @@ namespace Netly
         {
             internal class ClientTo : IClientTo
             {
-                public Host Host { get; private set; }
-                public bool IsOpened => !_isClosed && _socket != null;
-                private ClientOn ClientOn => _client._on;
-                private Socket _socket;
-                private bool _isClosed, _isOpeningOrClosing;
                 private readonly Client _client;
                 private readonly bool _isServer;
+                private bool _isClosed, _isOpeningOrClosing;
+                private Socket _socket;
 
                 private ClientTo()
                 {
@@ -43,6 +39,10 @@ namespace Netly
                     _isServer = true;
                     _isClosed = false;
                 }
+
+                public Host Host { get; private set; }
+                public bool IsOpened => !_isClosed && _socket != null;
+                private ClientOn ClientOn => _client._on;
 
                 public Task Open(Host host)
                 {
@@ -90,7 +90,6 @@ namespace Netly
                     return Task.Run(() =>
                     {
                         if (!_isServer)
-                        {
                             try
                             {
                                 _socket?.Shutdown(SocketShutdown.Both);
@@ -105,7 +104,6 @@ namespace Netly
                             {
                                 _socket = null;
                             }
-                        }
 
                         _isOpeningOrClosing = false;
                         _isClosed = true;
@@ -156,32 +154,27 @@ namespace Netly
                     (string name, byte[] buffer) content = EventManager.Verify(bytes);
 
                     if (content.buffer == null)
-                    {
                         ClientOn.OnData?.Invoke(null, bytes);
-                    }
                     else
-                    {
                         ClientOn.OnEvent?.Invoke(null, (content.name, content.buffer));
-                    }
                 }
 
                 private void ReceiveJob()
                 {
-                    int length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                    byte[] buffer = new byte[length];
-                    EndPoint point = Host.EndPoint;
+                    var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+                    var buffer = new byte[length];
+                    var point = Host.EndPoint;
 
                     while (IsOpened)
-                    {
                         try
                         {
-                            int size = _socket.ReceiveFrom
+                            var size = _socket.ReceiveFrom
                             (
-                                buffer: buffer,
-                                offset: 0,
-                                size: buffer.Length,
-                                socketFlags: SocketFlags.None,
-                                remoteEP: ref point
+                                buffer,
+                                0,
+                                buffer.Length,
+                                SocketFlags.None,
+                                ref point
                             );
 
                             if (size <= 0)
@@ -190,7 +183,7 @@ namespace Netly
                                 break;
                             }
 
-                            byte[] data = new byte[size];
+                            var data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
 
@@ -201,7 +194,6 @@ namespace Netly
                             NETLY.Logger.PushError(e);
                             if (!IsOpened) break;
                         }
-                    }
 
                     Close();
                 }
@@ -214,13 +206,13 @@ namespace Netly
                     {
                         _socket?.BeginSendTo
                         (
-                            buffer: bytes,
-                            offset: 0,
-                            size: bytes.Length,
-                            socketFlags: SocketFlags.None,
-                            remoteEP: Host.EndPoint,
-                            callback: null,
-                            state: null
+                            bytes,
+                            0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            Host.EndPoint,
+                            null,
+                            null
                         );
                     }
                     catch (Exception e)
@@ -234,7 +226,7 @@ namespace Netly
                     new Thread(ReceiveJob)
                     {
                         IsBackground = true,
-                        Priority = ThreadPriority.Highest,
+                        Priority = ThreadPriority.Highest
                     }.Start();
                 }
 
