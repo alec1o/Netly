@@ -84,5 +84,39 @@ namespace Netly.Core
         {
             return _endpoint.ToString();
         }
+
+        /// <summary>
+        /// Compare Host. Check IP/Port
+        /// </summary>
+        /// <param name="object">Object</param>
+        /// <returns></returns>
+        public override bool Equals(object @object)
+        {
+            return Equals(this, @object);
+        }
+
+        /// <summary>
+        ///  Compare two (2) Host. Check IP/Port
+        /// </summary>
+        /// <param name="objectA">Object A</param>
+        /// <param name="objectB">Object B</param>
+        /// <returns>Return true if those object is Host and have same value</returns>
+        public new static bool Equals(object objectA, object objectB)
+        {
+            if (objectA == null || objectB == null) return false;
+
+            if (objectA.GetType() == typeof(Host) && objectB.GetType() == typeof(Host))
+            {
+                return ((Host)objectA).ToString() == ((Host)objectB).ToString();
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            if (_endpoint == null) return 0;
+            return _endpoint.GetHashCode();
+        }
     }
 }
