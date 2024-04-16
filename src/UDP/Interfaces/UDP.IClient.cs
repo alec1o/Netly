@@ -1,13 +1,13 @@
 ﻿using Netly.Core;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class UDP
+    public static partial class IUDP
     {
         /// <summary>
         ///     Netly UDP-Client (interface)
         /// </summary>
-        public interface IClient
+        public interface Client
         {
             /// <summary>
             ///     Client ID (readonly)
@@ -27,12 +27,12 @@ namespace Netly
             /// <summary>
             ///     Actions container
             /// </summary>
-            IClientTo To { get; }
+            ClientTo To { get; }
 
             /// <summary>
             ///     Callbacks container
             /// </summary>
-            IClientOn On { get; }
+            ClientOn On { get; }
         }
     }
 }

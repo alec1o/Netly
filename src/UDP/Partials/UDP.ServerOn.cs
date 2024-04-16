@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using Netly.Core;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -8,9 +9,9 @@ namespace Netly
     {
         public partial class Server
         {
-            internal class ServerOn : IServerOn
+            internal class ServerOn : IUDP.ServerOn
             {
-                public EventHandler<IClient> OnAccept;
+                public EventHandler<IUDP.Client> OnAccept;
                 public EventHandler OnClose;
                 public EventHandler<Exception> OnError;
                 public EventHandler<Socket> OnModify;
@@ -36,7 +37,7 @@ namespace Netly
                     OnModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
                 }
 
-                public void Accept(Action<IClient> callback)
+                public void Accept(Action<IUDP.Client> callback)
                 {
                     OnAccept += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
                 }

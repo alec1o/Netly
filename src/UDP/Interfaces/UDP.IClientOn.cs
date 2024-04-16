@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class UDP
+    public static partial class IUDP
     {
         /// <summary>
         ///     UDP-Client callbacks container (interface)
         /// </summary>
-        public interface IClientOn : IOn<Socket>
+        public interface ClientOn : IOn<Socket>
         {
             /// <summary>
             ///     Handle received raw data

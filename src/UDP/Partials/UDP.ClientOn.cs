@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using Netly.Core;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -8,7 +9,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class ClientOn : IClientOn
+            internal class ClientOn : IUDP.ClientOn
             {
                 public EventHandler OnClose;
                 public EventHandler<byte[]> OnData;
