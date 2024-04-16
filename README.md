@@ -672,7 +672,7 @@ public class Example : Script
         }
         else
         {            
-            if (Input.GetKeyDown(KeyCode.Space)
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
             }
@@ -737,7 +737,7 @@ public class Example : MonoBehaviour
         }
         else
         {            
-            if (Input.GetKeyDown(KeyCode.Space)
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
             }
