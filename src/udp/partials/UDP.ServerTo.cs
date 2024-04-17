@@ -39,7 +39,7 @@ namespace Netly
                 private ServerOn On => _server._on;
                 public bool IsOpened => !_isClosed && _socket != null;
                 public Host Host { get; set; }
-                public List<Client> Clients { get; set; }
+                public List<Client> Clients { get; }
 
                 public Task Open(Host host)
                 {

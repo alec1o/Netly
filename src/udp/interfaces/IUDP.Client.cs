@@ -5,7 +5,7 @@ namespace Netly.Interfaces
     public static partial class IUDP
     {
         /// <summary>
-        ///     Netly UDP-Client (interface)
+        ///     UDP Client instance (interface)
         /// </summary>
         public interface Client
         {
@@ -15,7 +15,7 @@ namespace Netly.Interfaces
             string Id { get; }
 
             /// <summary>
-            ///     Client EndPoint
+            ///     Remote Host
             /// </summary>
             Host Host { get; }
 

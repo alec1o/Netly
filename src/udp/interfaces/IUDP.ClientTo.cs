@@ -6,7 +6,7 @@ namespace Netly.Interfaces
     public static partial class IUDP
     {
         /// <summary>
-        ///     UDP-Client actions container (interface)
+        ///     UDP Client actions container (interface)
         /// </summary>
         public interface ClientTo
         {

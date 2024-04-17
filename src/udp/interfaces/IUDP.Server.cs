@@ -5,12 +5,12 @@ namespace Netly.Interfaces
     public static partial class IUDP
     {
         /// <summary>
-        ///     Netly UDP-Server (interface)
+        ///     UDP Server (interface)
         /// </summary>
         public interface Server
         {
             /// <summary>
-            ///     Server id (readonly)
+            ///     Server ID (readonly)
             /// </summary>
             string Id { get; }
 

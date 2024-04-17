@@ -6,18 +6,18 @@ namespace Netly.Interfaces
     public static partial class IUDP
     {
         /// <summary>
-        ///     UDP-Client callbacks container (interface)
+        ///     UDP Client callbacks container (interface)
         /// </summary>
         public interface ClientOn : IOn<Socket>
         {
             /// <summary>
-            ///     Handle received raw data
+            ///     Use to handle raw data receiving event
             /// </summary>
             /// <param name="callback">Callback function</param>
             void Data(Action<byte[]> callback);
 
             /// <summary>
-            ///     Handle received event (netly event)
+            ///     Use to handle event receive event (netly event)
             /// </summary>
             /// <param name="callback">Callback function</param>
             void Event(Action<string, byte[]> callback);

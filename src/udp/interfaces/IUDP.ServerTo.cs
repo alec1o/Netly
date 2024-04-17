@@ -6,45 +6,45 @@ namespace Netly.Interfaces
     public static partial class IUDP
     {
         /// <summary>
-        ///     UDP-Server actions container (interface)
+        ///     UDP Server actions container (interface)
         /// </summary>
         public interface ServerTo
         {
             /// <summary>
-            ///     Use to open connection (if disconnected)
+            ///     Use to open listening connection
             /// </summary>
             /// <param name="host">Host (local endpoint)</param>
             /// <returns></returns>
             Task Open(Host host);
 
             /// <summary>
-            ///     Use to close connection (if connected)
+            ///     Use to close listening connection
             /// </summary>
             /// <returns></returns>
             Task Close();
 
             /// <summary>
-            ///     Send raw data for all connected client
+            ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">data - bytes</param>
             void DataBroadcast(byte[] data);
 
             /// <summary>
-            ///     Send raw data for all connected client
+            ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
             void DataBroadcast(string data, NE.Encoding encoding = NE.Encoding.UTF8);
 
             /// <summary>
-            ///     Send event (netly event) for all connected client
+            ///     Use to send event (netly event) to all connected clients
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - bytes</param>
             void EventBroadcast(string name, byte[] data);
 
             /// <summary>
-            ///     Send event (netly event) for all connected client
+            ///     Use to send event (netly event) to all connected clients
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
@@ -52,14 +52,14 @@ namespace Netly.Interfaces
             void EventBroadcast(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8);
 
             /// <summary>
-            ///     Send raw data for custom host
+            ///     Use to send raw data to a custom host
             /// </summary>
             /// <param name="targetHost">Target host</param>
             /// <param name="data">data - bytes </param>
             void Data(Host targetHost, byte[] data);
 
             /// <summary>
-            ///     Send raw data for custom host
+            ///     Use to send raw data to a custom host
             /// </summary>
             /// <param name="targetHost">Target host</param>
             /// <param name="data">Data - string</param>
@@ -67,7 +67,7 @@ namespace Netly.Interfaces
             void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8);
 
             /// <summary>
-            ///     Send event (netly event) for custom host
+            ///     Use to send event (netly event) to a custom host
             /// </summary>
             /// <param name="host">Target host</param>
             /// <param name="name">Event name</param>
@@ -75,7 +75,7 @@ namespace Netly.Interfaces
             void Event(Host host, string name, byte[] data);
 
             /// <summary>
-            ///     Send event (netly event) for custom host
+            ///     Use to send event (netly event) to a custom host
             /// </summary>
             /// <param name="targetHost">Target host</param>
             /// <param name="name">Event name</param>
