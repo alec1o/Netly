@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -117,7 +116,7 @@ namespace Netly
                 public void Data(byte[] data)
                 {
                     if (!IsOpened || data == null) return;
-                    
+
                     Send(data);
                 }
 
@@ -131,42 +130,42 @@ namespace Netly
                 public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (!IsOpened || data == null) return;
-                    
+
                     Send(NE.GetBytes(data, encoding));
                 }
 
                 public void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (!IsOpened || targetHost == null || data == null) return;
-                    
+
                     Send(targetHost, NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
                     if (!IsOpened || name == null || data == null) return;
-                    
+
                     Send(EventManager.Create(name, data));
                 }
 
                 public void Event(Host targetHost, string name, byte[] data)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
-                    
+
                     Send(targetHost, EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (!IsOpened || name == null || data == null) return;
-                    
+
                     Send(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 public void Event(Host targetHost, string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
-                    
+
                     Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
@@ -197,7 +196,6 @@ namespace Netly
                     var point = Host.EndPoint;
 
                     while (IsOpened)
-                    {
                         try
                         {
                             var size = _socket.ReceiveFrom
@@ -226,7 +224,6 @@ namespace Netly
                             NETLY.Logger.PushError(e);
                             if (!IsOpened) break;
                         }
-                    }
 
                     Close();
                 }
@@ -244,13 +241,13 @@ namespace Netly
                     {
                         _socket?.BeginSendTo
                         (
-                            buffer: bytes,
-                            offset: 0,
-                            size: bytes.Length,
-                            socketFlags: SocketFlags.None,
-                            remoteEP: host.EndPoint,
-                            callback: null,
-                            state: null
+                            bytes,
+                            0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            host.EndPoint,
+                            null,
+                            null
                         );
                     }
                     catch (Exception e)

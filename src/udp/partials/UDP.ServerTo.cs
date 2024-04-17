@@ -110,24 +110,6 @@ namespace Netly
                     });
                 }
 
-                private void Broadcast(byte[] data)
-                {
-                    try
-                    {
-                        if (Clients.Count > 0)
-                        {
-                            foreach (var client in Clients)
-                            {
-                                client?.To.Data(data);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        NETLY.Logger.PushError(e);
-                    }
-                }
-
                 public void DataBroadcast(byte[] data)
                 {
                     if (!IsOpened || data == null) return;
@@ -152,7 +134,7 @@ namespace Netly
                 public void EventBroadcast(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     if (!IsOpened || name == null || data == null) return;
-                    
+
                     Broadcast(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
@@ -184,6 +166,20 @@ namespace Netly
                     Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
+                private void Broadcast(byte[] data)
+                {
+                    try
+                    {
+                        if (Clients.Count > 0)
+                            foreach (var client in Clients)
+                                client?.To.Data(data);
+                    }
+                    catch (Exception e)
+                    {
+                        NETLY.Logger.PushError(e);
+                    }
+                }
+
                 private void Send(Host host, byte[] bytes)
                 {
                     if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
@@ -192,13 +188,13 @@ namespace Netly
                     {
                         _socket?.BeginSendTo
                         (
-                            buffer: bytes,
-                            offset: 0,
-                            size: bytes.Length,
-                            socketFlags: SocketFlags.None,
-                            remoteEP: host.EndPoint,
-                            callback: null,
-                            state: null
+                            bytes,
+                            0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            host.EndPoint,
+                            null,
+                            null
                         );
                     }
                     catch (Exception e)
@@ -224,7 +220,6 @@ namespace Netly
                     var point = Host.EndPoint;
 
                     while (IsOpened)
-                    {
                         try
                         {
                             var size = _socket.ReceiveFrom
@@ -268,7 +263,6 @@ namespace Netly
                         {
                             NETLY.Logger.PushError(e);
                         }
-                    }
                 }
             }
         }
