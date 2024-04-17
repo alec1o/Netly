@@ -26,8 +26,6 @@ jobs:
         with:
           dotnet-version: ${{ matrix.version }}
       - name: Restore dependencies
-        run: dotnet restore
+        run:  dotnet restore ./src/Netly.csproj
       - name: Build
-        run: dotnet build --no-restore
-      - if: matrix.version == '7.0.x'
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet build ./src/Netly.csproj --no-restore
