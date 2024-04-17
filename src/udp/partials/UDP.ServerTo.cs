@@ -178,6 +178,7 @@ namespace Netly
                     var point = Host.EndPoint;
 
                     while (IsOpened)
+                    {
                         try
                         {
                             var size = _socket.ReceiveFrom
@@ -221,6 +222,7 @@ namespace Netly
                         {
                             NETLY.Logger.PushError(e);
                         }
+                    }
                 }
             }
         }
