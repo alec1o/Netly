@@ -9,7 +9,7 @@ namespace Netly
     {
         public partial class Server
         {
-            internal class ServerOn : IUDP.ServerOn
+            private class ServerOn : IUDP.ServerOn
             {
                 public EventHandler<IUDP.Client> OnAccept;
                 public EventHandler OnClose;

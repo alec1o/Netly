@@ -11,7 +11,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class ClientTo : IUDP.ClientTo
+            private class ClientTo : IUDP.ClientTo
             {
                 private readonly Client _client;
                 private readonly bool _isServer;

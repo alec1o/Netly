@@ -13,7 +13,7 @@ namespace Netly
     {
         public partial class Server
         {
-            public class ServerTo : IUDP.ServerTo
+            private class ServerTo : IUDP.ServerTo
             {
                 private readonly Server _server;
 
