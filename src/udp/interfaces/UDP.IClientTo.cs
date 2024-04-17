@@ -3,12 +3,12 @@ using Netly.Core;
 
 namespace Netly.Interfaces
 {
-    public static partial class IUDP
+    public static partial class UDP
     {
         /// <summary>
         ///     UDP-Client actions container (interface)
         /// </summary>
-        public interface ClientTo
+        public interface IClientTo
         {
             /// <summary>
             ///     Use to open connection (if disconnected)

@@ -3,12 +3,12 @@ using System.Net.Sockets;
 
 namespace Netly.Interfaces
 {
-    public static partial class IUDP
+    public static partial class UDP
     {
         /// <summary>
         ///     UDP-Client callbacks container (interface)
         /// </summary>
-        public interface ClientOn : IOn<Socket>
+        public interface IClientOn : IOn<Socket>
         {
             /// <summary>
             ///     Handle received raw data

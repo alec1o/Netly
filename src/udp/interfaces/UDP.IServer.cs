@@ -2,12 +2,12 @@
 
 namespace Netly.Interfaces
 {
-    public static partial class IUDP
+    public static partial class UDP
     {
         /// <summary>
         ///     Netly UDP-Server (interface)
         /// </summary>
-        public interface Server
+        public interface IServer
         {
             /// <summary>
             ///     Server id (readonly)
@@ -27,17 +27,17 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Actions container
             /// </summary>
-            ServerTo To { get; }
+            IServerTo To { get; }
 
             /// <summary>
             ///     Callbacks container
             /// </summary>
-            ServerOn On { get; }
+            IServerOn On { get; }
 
             /// <summary>
             ///     Collections of connected client
             /// </summary>
-            Client[] Clients { get; }
+            IClient[] Clients { get; }
         }
     }
 }

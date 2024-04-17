@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Net.Sockets;
 using Netly.Core;
-using Netly.Interfaces;
 
 namespace Netly
 {
     public static partial class UDP
     {
-        public partial class Client : IUDP.Client
+        public partial class Client : Interfaces.UDP.IClient
         {
             private readonly ClientOn _on;
             private readonly ClientTo _to;
@@ -27,8 +26,8 @@ namespace Netly
 
             public bool IsOpened => _to.IsOpened;
             public Host Host => _to.Host;
-            public IUDP.ClientTo To => _to;
-            public IUDP.ClientOn On => _on;
+            public Interfaces.UDP.IClientTo To => _to;
+            public Interfaces.UDP.IClientOn On => _on;
             public string Id { get; }
 
             internal void InitServerSide()

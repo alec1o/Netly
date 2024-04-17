@@ -3,7 +3,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
-using Netly.Interfaces;
 
 namespace Netly
 {
@@ -11,7 +10,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class ClientTo : IUDP.ClientTo
+            internal class ClientTo : Interfaces.UDP.IClientTo
             {
                 private readonly Client _client;
                 private readonly bool _isServer;

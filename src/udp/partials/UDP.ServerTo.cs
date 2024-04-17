@@ -5,7 +5,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
-using Netly.Interfaces;
 
 namespace Netly
 {
@@ -13,7 +12,7 @@ namespace Netly
     {
         public partial class Server
         {
-            public class ServerTo : IUDP.ServerTo
+            public class ServerTo : Interfaces.UDP.IServerTo
             {
                 private readonly Server _server;
 
