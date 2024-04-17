@@ -25,7 +25,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <br>
 
-<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP
+<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP, Reliable UDP (RUDP)
 and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
 <br>
@@ -109,7 +109,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <th><sub>4.x.x</sub></th>
 <td><sub>Development</sub></td>
 <td><sub>HTTP client and server support</sub></td>
-<td><sub>RUDP client and server support</sub></td>
+<td><sub>Reliable UDP (RUDP) client and server support</sub></td>
 <td><sub>WebSocket client and server</sub></td>
 <td><sub>Syntax and internal improvement</sub></td>
 <td><sub>Code XML comments improvement</sub></td>
@@ -672,7 +672,7 @@ public class Example : Script
         }
         else
         {            
-            if (Input.GetKeyDown(KeyCode.Space)
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
             }
@@ -737,7 +737,7 @@ public class Example : MonoBehaviour
         }
         else
         {            
-            if (Input.GetKeyDown(KeyCode.Space)
+            if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
             }
