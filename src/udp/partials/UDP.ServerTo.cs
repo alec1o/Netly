@@ -110,10 +110,56 @@ namespace Netly
                     });
                 }
 
+                private void Broadcast(byte[] data)
+                {
+                    try
+                    {
+                        if (Clients.Count > 0)
+                        {
+                            foreach (var client in Clients)
+                            {
+                                client?.To.Data(data);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        NETLY.Logger.PushError(e);
+                    }
+                }
+
+                public void DataBroadcast(byte[] data)
+                {
+                    if (!IsOpened || data == null) return;
+
+                    Broadcast(data);
+                }
+
+                public void DataBroadcast(string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    if (!IsOpened || data == null) return;
+
+                    Broadcast(NE.GetBytes(data, encoding));
+                }
+
+                public void EventBroadcast(string name, byte[] data)
+                {
+                    if (!IsOpened || name == null || data == null) return;
+
+                    Broadcast(EventManager.Create(name, data));
+                }
+
+                public void EventBroadcast(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    if (!IsOpened || name == null || data == null) return;
+                    
+                    Broadcast(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                }
+
                 public void Data(Host targetHost, byte[] data)
                 {
                     if (!IsOpened || targetHost == null || data == null) return;
-                    
+
                     Send(targetHost, data);
                 }
 
