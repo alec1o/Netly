@@ -110,6 +110,58 @@ namespace Netly
                     });
                 }
 
+                public void Data(Host targetHost, byte[] data)
+                {
+                    if (!IsOpened || targetHost == null || data == null) return;
+                    
+                    Send(targetHost, data);
+                }
+
+                public void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    if (!IsOpened || targetHost == null || data == null) return;
+
+                    Send(targetHost, NE.GetBytes(data, encoding));
+                }
+
+                public void Event(Host targetHost, string name, byte[] data)
+                {
+                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+
+                    Send(targetHost, EventManager.Create(name, data));
+                }
+
+                public void Event(Host targetHost, string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+
+                    Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
+                }
+
+                private void Send(Host host, byte[] bytes)
+                {
+                    if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
+
+                    try
+                    {
+                        _socket?.BeginSendTo
+                        (
+                            buffer: bytes,
+                            offset: 0,
+                            size: bytes.Length,
+                            socketFlags: SocketFlags.None,
+                            remoteEP: host.EndPoint,
+                            callback: null,
+                            state: null
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        NETLY.Logger.PushError(e);
+                    }
+                }
+
+
                 private void InitAccept()
                 {
                     new Thread(AcceptJob)
