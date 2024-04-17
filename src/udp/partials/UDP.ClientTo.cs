@@ -116,41 +116,57 @@ namespace Netly
 
                 public void Data(byte[] data)
                 {
+                    if (!IsOpened || data == null) return;
+                    
                     Send(data);
                 }
 
                 public void Data(Host targetHost, byte[] data)
                 {
+                    if (!IsOpened || targetHost == null || data == null) return;
+
                     Send(targetHost, data);
                 }
 
                 public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
+                    if (!IsOpened || data == null) return;
+                    
                     Send(NE.GetBytes(data, encoding));
                 }
 
                 public void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
+                    if (!IsOpened || targetHost == null || data == null) return;
+                    
                     Send(targetHost, NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
+                    if (!IsOpened || name == null || data == null) return;
+                    
                     Send(EventManager.Create(name, data));
                 }
 
                 public void Event(Host targetHost, string name, byte[] data)
                 {
+                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+                    
                     Send(targetHost, EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
+                    if (!IsOpened || name == null || data == null) return;
+                    
                     Send(EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 public void Event(Host targetHost, string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
+                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+                    
                     Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
