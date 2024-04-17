@@ -2,7 +2,7 @@
 _layout: landing
 ---
 
-<h1 align="center" style="color: #2050ce;">Netly</h1>
+<h1 style="text-align: center; color: #2050ce;">Netly</h1>
 
 <br>
 
