@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,9 +119,19 @@ namespace Netly
                     Send(data);
                 }
 
+                public void Data(Host targetHost, byte[] data)
+                {
+                    Send(targetHost, data);
+                }
+
                 public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     Send(NE.GetBytes(data, encoding));
+                }
+
+                public void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    Send(targetHost, NE.GetBytes(data, encoding));
                 }
 
                 public void Event(string name, byte[] data)
@@ -128,9 +139,19 @@ namespace Netly
                     Send(EventManager.Create(name, data));
                 }
 
+                public void Event(Host targetHost, string name, byte[] data)
+                {
+                    Send(targetHost, EventManager.Create(name, data));
+                }
+
                 public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
                 {
                     Send(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                }
+
+                public void Event(Host targetHost, string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                {
+                    Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
                 }
 
                 public void InitServerSide()
@@ -194,19 +215,24 @@ namespace Netly
 
                 private void Send(byte[] bytes)
                 {
-                    if (bytes == null || bytes.Length <= 0 || !IsOpened) return;
+                    Send(Host, bytes);
+                }
+
+                private void Send(Host host, byte[] bytes)
+                {
+                    if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
 
                     try
                     {
                         _socket?.BeginSendTo
                         (
-                            bytes,
-                            0,
-                            bytes.Length,
-                            SocketFlags.None,
-                            Host.EndPoint,
-                            null,
-                            null
+                            buffer: bytes,
+                            offset: 0,
+                            size: bytes.Length,
+                            socketFlags: SocketFlags.None,
+                            remoteEP: host.EndPoint,
+                            callback: null,
+                            state: null
                         );
                     }
                     catch (Exception e)
