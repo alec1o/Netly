@@ -1,19 +1,19 @@
 ﻿namespace Netly
 {
     /// <summary>
-    ///     Netly UDP
+    ///     UDP Implementation
     /// </summary>
     public static partial class UDP
     {
         /// <summary>
-        ///     Netly UDP-Server
+        ///     UDP Server implementation
         /// </summary>
         public partial class Server
         {
         }
 
         /// <summary>
-        ///     Netly UDP-Client
+        ///     UDP Client implementation
         /// </summary>
         public partial class Client
         {
