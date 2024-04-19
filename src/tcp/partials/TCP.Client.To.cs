@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
@@ -100,7 +101,7 @@ namespace Netly
                             }
                         }
 
-                        // It block main thread and have a timeout.
+                        // It blocks main thread and have a timeout.
                         new Thread(Callback) { IsBackground = true }.Start();
                     }
                     else
@@ -227,7 +228,14 @@ namespace Netly
                     IsEncrypted = enable;
                 }
 
-                public void Data(string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                public void Data(string data)
+                {
+                    if (CanSend == false || data == null) return;
+
+                    SendDispatch(NE.GetBytes(data));
+                }
+
+                public void Data(string data, Encoding encoding)
                 {
                     if (CanSend == false || data == null) return;
 
@@ -241,7 +249,14 @@ namespace Netly
                     SendDispatch(EventManager.Create(name, data));
                 }
 
-                public void Event(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8)
+                public void Event(string name, string data)
+                {
+                    if (CanSend == false || data == null || name == null) return;
+
+                    SendDispatch(EventManager.Create(name, NE.GetBytes(data)));
+                }
+
+                public void Event(string name, string data, Encoding encoding)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
@@ -335,7 +350,7 @@ namespace Netly
                                     }
                                 }
 
-                                // all callbacks is true.
+                                // all callbacks are true.
                                 return isValid;
                             }
                         );

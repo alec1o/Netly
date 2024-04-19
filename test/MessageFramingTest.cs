@@ -1,4 +1,5 @@
-﻿using Netly.Core;
+﻿using Netly;
+using Netly.Core;
 using Xunit.Abstractions;
 
 namespace test;
