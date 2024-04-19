@@ -168,7 +168,7 @@ namespace Netly
 
                 public void Data(string buffer, bool isText)
                 {
-                    Send(NE.GetBytes(buffer, NE.Default), isText);
+                    Send(NE.GetBytes(buffer, NE.DefaultEncoding), isText);
                 }
 
                 public void Event(string name, byte[] buffer)
