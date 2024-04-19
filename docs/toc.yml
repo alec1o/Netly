@@ -1,4 +1,6 @@
 - name: "Manual"
-  href: manual/
-- name: "C# API"
-  href: api/
+  href: /manual.html
+- name: "API Reference"
+  href: /api.html
+- name: "Changelog"
+  href: /changelog.html
