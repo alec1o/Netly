@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text;
+using System.Threading.Tasks;
 using Netly.Core;
 
 namespace Netly.Interfaces
@@ -33,8 +34,14 @@ namespace Netly.Interfaces
             ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">Data - string</param>
+            void DataBroadcast(string data);
+            
+            /// <summary>
+            ///     Use to send raw data to all connected clients
+            /// </summary>
+            /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
-            void DataBroadcast(string data, NE.Encoding encoding = NE.Encoding.UTF8);
+            void DataBroadcast(string data, Encoding encoding);
 
             /// <summary>
             ///     Use to send event (netly event) to all connected clients
@@ -48,8 +55,15 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
+            void EventBroadcast(string name, string data);
+            
+            /// <summary>
+            ///     Use to send event (netly event) to all connected clients
+            /// </summary>
+            /// <param name="name">Event name</param>
+            /// <param name="data">Event data - string</param>
             /// <param name="encoding">Event data encoding method</param>
-            void EventBroadcast(string name, string data, NE.Encoding encoding = NE.Encoding.UTF8);
+            void EventBroadcast(string name, string data, Encoding encoding);
 
             /// <summary>
             ///     Use to send raw data to a custom host
@@ -63,8 +77,15 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="targetHost">Target host</param>
             /// <param name="data">Data - string</param>
+            void Data(Host targetHost, string data);
+            
+            /// <summary>
+            ///     Use to send raw data to a custom host
+            /// </summary>
+            /// <param name="targetHost">Target host</param>
+            /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
-            void Data(Host targetHost, string data, NE.Encoding encoding = NE.Encoding.UTF8);
+            void Data(Host targetHost, string data, Encoding encoding);
 
             /// <summary>
             ///     Use to send event (netly event) to a custom host
@@ -80,8 +101,16 @@ namespace Netly.Interfaces
             /// <param name="targetHost">Target host</param>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
+            void Event(Host targetHost, string name, string data);
+            
+            /// <summary>
+            ///     Use to send event (netly event) to a custom host
+            /// </summary>
+            /// <param name="targetHost">Target host</param>
+            /// <param name="name">Event name</param>
+            /// <param name="data">Event data - string</param>
             /// <param name="encoding">Event data encoding method</param>
-            void Event(Host targetHost, string name, string data, NE.Encoding encoding = NE.Encoding.UTF8);
+            void Event(Host targetHost, string name, string data, Encoding encoding);
         }
     }
 }
