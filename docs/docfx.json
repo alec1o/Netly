@@ -193,7 +193,7 @@
         "template": [
             "default",
             "modern",
-            "netly-theme"
+            "templates/NetlyFx"
         ],
         "globalMetadata": {
             "_appName": "Netly",
