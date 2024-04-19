@@ -38,7 +38,7 @@ _layout: landing
 			<li>SSL/TLS</li>
 			<li>WebSocket</li>
 			<li>RUDP (Reliable UDP)</li>
-			<li>*Message Framing with (``TCP``, ``SSL/TLS``)</li>
+			<li>*Message Framing with (<code>TCP</code>, <code>SSL/TLS</code>)</li>
 		</ul>
 	</article>
 </section>
