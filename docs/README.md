@@ -9,9 +9,12 @@
 # Installing DocFx
 $ dotnet tool update -g docfx
 
+# Clone and apply old netly project for api generation references (bash command)
+$ chmod 777 ./config.sh && ./config.sh
+
 # Run project in development mode (docfx don't have watch mode)
 $ docfx docfx.json --serve
 
-# Build documentation for production
+# Build documentation for production (default output is _site)
 $ docfx build docfx.json --output <path>
 ```
