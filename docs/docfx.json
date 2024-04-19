@@ -3,14 +3,172 @@
         {
             "src": [
                 {
-                    "src": "../src",
+                    "src": "_build/dev",
                     "files": [
-                        "**/*.csproj"
+                        "/**.csproj"
                     ]
                 }
             ],
-            "dest": "api"
+            "dest": "api/dev",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v1.0.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v1.0.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v1.1.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v1.1.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.0.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.0.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.1.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.1.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.1.1",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.1.1",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.2.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.2.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.3.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.3.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.4.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.4.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.5.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.5.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.5.1",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.5.1",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v2.5.2",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v2.5.2",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v3.0.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v3.0.0",
+            "outputFormat": "apiPage"
+        },
+        {
+            "src": [
+                {
+                    "src": "_build/v3.1.0",
+                    "files": [
+                        "/**.csproj"
+                    ]
+                }
+            ],
+            "dest": "api/v3.1.0",
+            "outputFormat": "apiPage"
         }
+        
     ],
     "build": {
         "content": [
@@ -19,7 +177,8 @@
                     "**/*.{md,yml}"
                 ],
                 "exclude": [
-                    "_site/**"
+                    "_site/**",
+                    "_build/**"
                 ]
             }
         ],
@@ -41,6 +200,7 @@
             "_appTitle": "Netly",
             "_appFooter": "<div id='footer-content'><span>Copyright &copy; 2022-2024 Netly, by <a target='_blank' href='http://www.alecio.me'>Alecio Furanze</a>.</span><span>Hosting provided by <a target='_blank' href='http://www.kezero.com'>KeZero</a></span></div>",
             "_enableSearch": true,
+            "_disableBreadcrumb": true,
             "_appLogoPath": "images/netly-logo-3.png",
             "_appFaviconPath": "images/netly-logo-8.png",
             "pdf": false,
