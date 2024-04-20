@@ -1,0 +1,36 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  test:
+    # config strategy
+    strategy:
+      max-parallel: 3
+      matrix:
+        version: [ 8.0 ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    # config os
+    runs-on: ${{ matrix.os }}
+    # config steps
+    steps:
+      # config environment
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        # config dotnet version
+        with:
+          dotnet-version: ${{ matrix.version }}
+      # restore dependencies
+      - name: Restore Test Project
+        run: dotnet restore ./test/NetlyTest.csproj
+      # run netly test
+      - name: Test Netly Library
+        run: dotnet test ./test/NetlyTest.csproj --no-restore
