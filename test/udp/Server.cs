@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using Netly;
 using Netly.Core;
 
@@ -118,7 +119,7 @@ public class Server
 
         await server.To.Open(randomHost);
         Assert.True(server.IsOpened);
-        
+
         await server.To.Close();
         Assert.False(server.IsOpened);
 
@@ -166,15 +167,61 @@ public class Server
         }
     }
 
-    [Fact(Skip = "TODO: wait for client")]
-    public void SendData()
+    [Fact]
+    public async void Accept()
     {
-        throw new NotImplementedException();
-    }
+        Host host = new Host("127.0.0.1", 43940);
+        bool sOpen = false, sClose = false, sError = false;
+        int sAccept = 0;
 
-    [Fact(Skip = "TODO: wait for client")]
-    public void SendEvent()
-    {
-        throw new NotImplementedException();
+        UDP.Server server = new UDP.Server();
+
+        server.On.Open(() => sOpen = true);
+        server.On.Error((e) => sError = true);
+        server.On.Close(() => sClose = true);
+        server.On.Accept(c => c.On.Open(() => sAccept++));
+
+        await server.To.Open(host);
+
+        Assert.True(sOpen);
+        Assert.False(sClose);
+        Assert.False(sError);
+        Assert.Equal(0, sAccept);
+
+        var client1 = await MyClient();
+        var client2 = await MyClient();
+        var client3 = await MyClient();
+        
+        await Task.Delay(50);
+        
+        await client1.To.Close();
+        await client2.To.Close();
+        await client3.To.Close();
+        
+        Assert.Equal(3, sAccept);
+        
+        async Task<UDP.Client> MyClient()
+        {
+            bool cClose = false, cOpen = false, cError = false;
+
+            UDP.Client client = new();
+
+            client.On.Open(() => cOpen = true);
+            client.On.Close(() => cClose = true);
+            client.On.Error(_ => cError = true);
+
+            await client.To.Open(host);
+
+            Assert.True(cOpen);
+            Assert.False(cClose);
+            Assert.False(cError);
+
+            for (int i = 0; i < 3; i++)
+            {
+                client.To.Data(Guid.NewGuid().ToString());
+            }
+
+            return client;
+        }
     }
 }
