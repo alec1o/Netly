@@ -1,8 +1,7 @@
-using System.Net;
 using System.Net.Sockets;
 using Netly;
 using Netly.Core;
-using test;
+using NotSupportedException = System.NotSupportedException;
 
 // ReSharper disable once CheckNamespace
 namespace com.netly.udp;
@@ -221,7 +220,7 @@ public class Client
         });
 
         // connect in random port
-        await server.To.Open(new Host(IPAddress.Loopback, 12780));
+        await server.To.Open(HostManager.GenerateLocalHost());
 
         Assert.True(sConnected);
         Assert.False(sError);
@@ -313,7 +312,7 @@ public class Client
         });
 
         // connect in random port
-        await server.To.Open(new Host(IPAddress.Loopback, 12781));
+        await server.To.Open(HostManager.GenerateLocalHost());
 
         Assert.True(sConnected);
         Assert.False(sError);
@@ -362,7 +361,7 @@ public class Client
     [Fact]
     async void ReceiveDataAndEvent()
     {
-        Host host = new Host(IPAddress.Loopback, 43893);
+        Host host = HostManager.GenerateLocalHost();
         bool sOpen = false, sClose = false, sError = false;
         int sAccept = 0;
 

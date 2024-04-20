@@ -1,6 +1,4 @@
-using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using Netly;
 using Netly.Core;
 
@@ -57,7 +55,7 @@ public class Server
         server.On.Open(() => connected = true);
         server.On.Error(_ => error = true);
 
-        await server.To.Open(MyHost);
+        await server.To.Open(HostManager.GenerateLocalHost());
         await server.To.Close();
 
         Assert.True(modify);
@@ -80,7 +78,7 @@ public class Server
         server.On.Error(_ => error = true);
         server.On.Close(() => disconnected = true);
 
-        await server.To.Open(MyHost);
+        await server.To.Open(HostManager.GenerateLocalHost());
         await server.To.Close();
 
         Assert.True(modify);
@@ -147,7 +145,7 @@ public class Server
 
         server.On.Close(() => { disconnect = true; });
 
-        await server.To.Open(MyHost);
+        await server.To.Open(HostManager.GenerateLocalHost());
         await server.To.Close();
 
         Assert.True(modify);
@@ -170,7 +168,7 @@ public class Server
     [Fact]
     public async void Accept()
     {
-        Host host = new Host("127.0.0.1", 43940);
+        Host host = HostManager.GenerateLocalHost();
         bool sOpen = false, sClose = false, sError = false;
         int sAccept = 0;
 
