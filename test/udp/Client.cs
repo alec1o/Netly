@@ -221,7 +221,7 @@ public class Client
         });
 
         // connect in random port
-        await server.To.Open(new Host(IPAddress.Loopback, 0));
+        await server.To.Open(new Host(IPAddress.Loopback, 12780));
 
         Assert.True(sConnected);
         Assert.False(sError);
@@ -313,7 +313,7 @@ public class Client
         });
 
         // connect in random port
-        await server.To.Open(new Host(IPAddress.Loopback, 0));
+        await server.To.Open(new Host(IPAddress.Loopback, 12781));
 
         Assert.True(sConnected);
         Assert.False(sError);
