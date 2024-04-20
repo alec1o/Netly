@@ -17,6 +17,7 @@ jobs:
   build:
     # config strategy
     strategy:
+      fail-fast: false
       max-parallel: 3
       matrix:
         version: [ 6.0 ]
