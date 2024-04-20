@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Text;
 using System.Web;
 using Netly.Core;
 
@@ -35,7 +36,7 @@ namespace Netly
                 }
 
                 {
-                    // NOTE: it will modified with method that receive request
+                    // NOTE: it will modify with method that receive request
                     Params = new Dictionary<string, string>();
                 }
 
@@ -58,14 +59,14 @@ namespace Netly
 
                     IsEncrypted = request.IsSecureConnection;
 
-                    Encoding = NE.GetProtocolFromNativeEncoding(request.ContentEncoding);
+                    RequestEncoding = request.ContentEncoding;
 
                     // TODO: detect enctype from Header
                     var enctype = Enctype.PlainText;
 
                     var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
-                    Body = new Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, enctype, RequestEncoding);
                 }
             }
 
@@ -94,7 +95,7 @@ namespace Netly
                 }
 
                 {
-                    // NOTE: it will modified with method that receive request
+                    // NOTE: it will modify with method that receive request
                     Params = new Dictionary<string, string>();
                 }
 
@@ -122,7 +123,7 @@ namespace Netly
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "WSS";
 
                     // Not applicable
-                    Encoding = NE.Encoding.UTF8;
+                    RequestEncoding = Encoding.UTF8;
 
                     // Not applicable
                     var enctype = Enctype.PlainText;
@@ -130,7 +131,7 @@ namespace Netly
                     // Not applicable
                     var buffer = Array.Empty<byte>();
 
-                    Body = new Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, enctype, RequestEncoding);
                 }
             }
 
@@ -199,17 +200,17 @@ namespace Netly
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "HTTPS";
 
                     // TODO: detect encoding from Header
-                    Encoding = NE.Encoding.UTF8;
+                    RequestEncoding = Encoding.UTF8;
 
                     // TODO: detect enctype from Header
                     var enctype = Enctype.PlainText;
 
                     byte[] buffer = message.Content.ReadAsByteArrayAsync().Result;
-                    Body = new Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, enctype, RequestEncoding);
                 }
             }
 
-            public NE.Encoding Encoding { get; }
+            public Encoding RequestEncoding { get; }
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }
             public Dictionary<string, string> Params { get; }

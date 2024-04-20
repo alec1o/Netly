@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using Netly.Core;
 
@@ -20,7 +21,7 @@ namespace Netly
                 /// <param name="method">Http method</param>
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
-                Task Fetch(string method, string url, byte[] body = null);
+                Task Fetch(string method, string url, byte[] body);
 
                 /// <summary>
                 ///     Create http fetch <br/>
@@ -29,8 +30,17 @@ namespace Netly
                 /// <param name="method">Http method</param>
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
-                /// <param name="encode">Body encoding algorithm</param>
-                Task Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8);
+                Task Fetch(string method, string url, string body);
+
+                /// <summary>
+                ///     Create http fetch <br/>
+                ///     + Only if(IsOpened==false)
+                /// </summary>
+                /// <param name="method">Http method</param>
+                /// <param name="url">Fetch url</param>
+                /// <param name="body">Request body</param>
+                /// <param name="encoding">Body encoding algorithm</param>
+                Task Fetch(string method, string url, string body, Encoding encoding);
             }
         }
     }

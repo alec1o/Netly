@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using Netly.Core;
 
 namespace Netly
@@ -21,7 +22,7 @@ namespace Netly
             /// <summary>
             ///     Response encoding
             /// </summary>
-            NE.Encoding Encoding { get; set; }
+            Encoding ResponseEncoding { get; set; }
 
             /// <summary>
             ///     Return true if response connection is opened

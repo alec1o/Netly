@@ -2,10 +2,10 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Netly.Core;
 
 namespace Netly
 {
@@ -123,7 +123,12 @@ namespace Netly
                     });
                 }
 
-                public Task Fetch(string method, string url, string body = null, NE.Encoding encode = NE.Encoding.UTF8)
+                public Task Fetch(string method, string url, string body)
+                {
+                    return Fetch(method, url, NE.GetBytes(body ?? string.Empty));
+                }
+
+                public Task Fetch(string method, string url, string body, Encoding encode)
                 {
                     return Fetch(method, url, NE.GetBytes(body ?? string.Empty, encode));
                 }

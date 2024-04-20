@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using Netly.Core;
 
 namespace Netly
@@ -12,7 +13,7 @@ namespace Netly
             /// <summary>
             ///     Request encoding
             /// </summary>
-            NE.Encoding Encoding { get; }
+            Encoding RequestEncoding { get; }
 
             /// <summary>
             ///     Request Headers

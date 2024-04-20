@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
@@ -178,7 +179,7 @@ namespace Netly
 
                 public void Event(string name, string buffer)
                 {
-                    Send(EventManager.Create(name, NE.GetBytes(buffer, NE.Encoding.UTF8)), false);
+                    Send(EventManager.Create(name, NE.GetBytes(buffer, Encoding.UTF8)), false);
                 }
 
                 private void Send(byte[] buffer, bool isText)

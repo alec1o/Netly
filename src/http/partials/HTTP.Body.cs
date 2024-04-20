@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Netly.Core;
 
 namespace Netly
@@ -8,7 +9,7 @@ namespace Netly
     {
         internal class Body : IBody
         {
-            public Body(byte[] buffer, Enctype enctype, NE.Encoding encoding)
+            public Body(byte[] buffer, Enctype enctype, Encoding encoding)
             {
                 Binary = buffer;
                 Enctype = enctype;

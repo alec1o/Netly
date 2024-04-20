@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using Netly.Core;
 
@@ -16,7 +17,7 @@ namespace Netly
             internal Response(HttpListenerResponse response)
             {
                 IsOpened = true;
-                Encoding = NE.Encoding.UTF8;
+                ResponseEncoding = Encoding.UTF8;
                 Headers = new Dictionary<string, string>
                 {
                     { "Server", "NETLY HTTP/S" },
@@ -29,12 +30,12 @@ namespace Netly
 
             public Dictionary<string, string> Headers { get; }
             public Cookie[] Cookies { get; set; }
-            public NE.Encoding Encoding { get; set; }
+            public Encoding ResponseEncoding { get; set; }
             public bool IsOpened { get; private set; }
 
             public void Send(int statusCode, string textBuffer)
             {
-                Send(statusCode, NE.GetBytes(textBuffer, Encoding));
+                Send(statusCode, NE.GetBytes(textBuffer, ResponseEncoding));
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
@@ -42,7 +43,7 @@ namespace Netly
                 if (!IsOpened) return;
                 IsOpened = false;
 
-                Write(statusCode, byteBuffer, Encoding);
+                Write(statusCode, byteBuffer, ResponseEncoding);
             }
 
             public void Redirect(string url)
@@ -57,7 +58,7 @@ namespace Netly
                 IsOpened = false;
 
                 Headers.Add("Location", url);
-                Write(redirectCode, Array.Empty<byte>(), NE.Encoding.UTF8);
+                Write(redirectCode, Array.Empty<byte>(), Encoding.UTF8);
             }
 
             public void Close()
@@ -84,7 +85,7 @@ namespace Netly
                 foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
             }
 
-            private void Write(int statusCode, byte[] buffer, NE.Encoding encoding)
+            private void Write(int statusCode, byte[] buffer, Encoding encoding)
             {
                 Task.Run(() =>
                 {
@@ -94,7 +95,7 @@ namespace Netly
                         WriteCookies();
 
                         _response.StatusCode = statusCode;
-                        _response.ContentEncoding = NE.GetNativeEncodingFromProtocol(encoding);
+                        _response.ContentEncoding = encoding;
                         _response.ContentLength64 = buffer.Length;
                         _response.OutputStream.Write(buffer, 0, buffer.Length);
                         _response.Close();
