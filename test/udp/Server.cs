@@ -179,7 +179,15 @@ public class Server
         server.On.Open(() => sOpen = true);
         server.On.Error((e) => sError = true);
         server.On.Close(() => sClose = true);
-        server.On.Accept(c => c.On.Open(() => sAccept++));
+        server.On.Accept(c =>
+        {
+            // client accepted
+            c.On.Open(() =>
+            {
+                // increase
+                sAccept++;
+            });
+        });
 
         await server.To.Open(host);
 

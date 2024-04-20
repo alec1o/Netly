@@ -372,7 +372,10 @@ public class Client
         server.On.Close(() => sClose = true);
         server.On.Accept(myClient =>
         {
-            myClient.On.Open(() => sAccept++);
+            myClient.On.Open(() =>
+            {
+                sAccept++;
+            });
             myClient.On.Data(x => myClient.To.Data(x));
             myClient.On.Event((n, x) => myClient.To.Event(n, x));
         });
@@ -384,9 +387,9 @@ public class Client
         Assert.False(sError);
         Assert.Equal(0, sAccept);
 
-        var client1 = MyClient();
-        var client2 = MyClient();
-        var client3 = MyClient();
+        var client1 = await MyClient();
+        var client2 = await MyClient();
+        var client3 = await MyClient();
 
         await Task.Delay(10);
 
