@@ -1,13 +1,15 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET
+name: .NET UNIT TEST (run unit test)
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches:
+      - "*"
   pull_request:
-    branches: [ "main", "dev" ]
+    branches:
+      - "*"
 
 jobs:
   test:
