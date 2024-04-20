@@ -358,7 +358,16 @@ public class Client
         Assert.False(server.IsOpened);
         Assert.False(client.IsOpened);
     }
+
+    [Fact(Skip = "TODO: impl receive data")]
+    void ReceiveData()
     {
-        throw new NotImplementedException();
+        
+    }
+    
+    [Fact(Skip = "TODO: impl receive event")]
+    void ReceiveEvent()
+    {
+        
     }
 }
