@@ -16,7 +16,7 @@ namespace Netly
             {
                 private readonly Client _client;
                 private readonly bool _isServer;
-                private bool _isClosed, _isOpeningOrClosing;
+                private bool _isClosed, _isOpeningOrClosing, _initServerSide;
                 private Socket _socket;
 
                 private ClientTo()
@@ -25,6 +25,7 @@ namespace Netly
                     _isServer = false;
                     _isClosed = true;
                     _isOpeningOrClosing = false;
+                    _initServerSide = false;
                     Host = Host.Default;
                 }
 
@@ -124,7 +125,7 @@ namespace Netly
                 public void Data(string data)
                 {
                     if (!IsOpened || data == null) return;
-                    
+
                     Send(NE.GetBytes(data));
                 }
 
@@ -138,7 +139,7 @@ namespace Netly
                 public void Data(Host targetHost, string data)
                 {
                     if (!IsOpened || targetHost == null || data == null) return;
-                    
+
                     Send(targetHost, NE.GetBytes(data));
                 }
 
@@ -166,7 +167,7 @@ namespace Netly
                 public void Event(string name, string data)
                 {
                     if (!IsOpened || name == null || data == null) return;
-                    
+
                     Send(EventManager.Create(name, NE.GetBytes(data)));
                 }
 
@@ -200,7 +201,8 @@ namespace Netly
 
                 public void InitServerSide()
                 {
-                    if (_isServer is false) return;
+                    if (!_isServer || _initServerSide) return;
+                    _initServerSide = true;
 
                     On.OnModify?.Invoke(null, _socket);
 

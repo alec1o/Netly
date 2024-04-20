@@ -121,7 +121,7 @@ namespace Netly
                 public void DataBroadcast(string data)
                 {
                     if (!IsOpened || data == null) return;
-                    
+
                     Broadcast(NE.GetBytes(data));
                 }
 
@@ -268,24 +268,26 @@ namespace Netly
 
                             var newHost = new Host(point);
 
-                            // Find a client
+                            // Find a client connected user by endpoint connection (IP, PORT)
                             var client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
 
                             if (client == null)
                             {
                                 // Create new client
                                 client = new Client(ref newHost, ref _socket);
-
-                                Clients.Add(client);
-
-                                On.OnAccept?.Invoke(null, client);
-
                                 client.On.Close(() => Clients.Remove(client));
 
+                                // save client on list of connected client
+                                Clients.Add(client);
+                                
+                                // invoke accept event
+                                On.OnAccept?.Invoke(null, client);
+                                
+                                // init client server-side behave
                                 client.InitServerSide();
                             }
 
-                            // publish data for client
+                            // publish data for a connected client
                             client.OnServerBuffer(ref data);
                         }
                         catch (Exception e)
