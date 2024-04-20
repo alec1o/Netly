@@ -3,6 +3,10 @@
 
 name: .NET RELEASE BUILD TEST (test build with all .NET Core SDK version)
 
+concurrency:
+  group: "${{ github.workflow }}/${{ github.ref }}"
+  cancel-in-progress: false
+
 on:
   push:
     branches: [ "main" ]

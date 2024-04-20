@@ -3,6 +3,10 @@
 
 name: .NET DEVELOPMENT BUILD TEST (test build with once .NET Core SDK version)
 
+concurrency:
+  group: "${{ github.workflow }}/${{ github.ref }}"
+  cancel-in-progress: false
+
 on:
   push:
     branches: [ "dev" ]

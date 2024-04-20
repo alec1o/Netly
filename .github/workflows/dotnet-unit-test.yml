@@ -3,6 +3,10 @@
 
 name: .NET UNIT TEST (run unit test)
 
+concurrency:
+  group: "${{ github.workflow }}/${{ github.ref }}"
+  cancel-in-progress: false
+
 on:
   push:
     branches:
