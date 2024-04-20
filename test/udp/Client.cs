@@ -288,12 +288,12 @@ public class Client
         server.On.Open(() => sConnected = true);
         server.On.Close(() => sClosed = true);
         server.On.Error(e => sError = true);
-        server.On.Accept((client) =>
+        server.On.Accept((myClient) =>
         {
             int count = 0;
-            client.On.Open(() => sAccept = true);
+            myClient.On.Open(() => sAccept = true);
 
-            client.On.Event((name, data) =>
+            myClient.On.Event((name, data) =>
             {
                 count++;
 
@@ -359,15 +359,80 @@ public class Client
         Assert.False(client.IsOpened);
     }
 
-    [Fact(Skip = "TODO: impl receive data")]
-    void ReceiveData()
+    [Fact]
+    async void ReceiveDataAndEvent()
     {
-        
-    }
-    
-    [Fact(Skip = "TODO: impl receive event")]
-    void ReceiveEvent()
-    {
-        
+        Host host = new Host(IPAddress.Loopback, 43893);
+        bool sOpen = false, sClose = false, sError = false;
+        int sAccept = 0;
+
+        UDP.Server server = new();
+        server.On.Open(() => sOpen = true);
+        server.On.Error(_ => sError = true);
+        server.On.Close(() => sClose = true);
+        server.On.Accept(myClient =>
+        {
+            myClient.On.Open(() => sAccept++);
+            myClient.On.Data(x => myClient.To.Data(x));
+            myClient.On.Event((n, x) => myClient.To.Event(n, x));
+        });
+
+        await server.To.Open(host);
+
+        Assert.True(sOpen);
+        Assert.False(sClose);
+        Assert.False(sError);
+        Assert.Equal(0, sAccept);
+
+        var client1 = MyClient();
+        var client2 = MyClient();
+        var client3 = MyClient();
+
+        await Task.Delay(10);
+
+        Assert.Equal(3, sAccept);
+
+        async Task<UDP.Client> MyClient()
+        {
+            string sentData = Guid.NewGuid().ToString();
+            string sentEventName = Guid.NewGuid().ToString();
+            string sentEventData = Guid.NewGuid().ToString();
+
+            string recvData = string.Empty;
+            string recvEventName = string.Empty;
+            string recvEventData = string.Empty;
+
+            bool cClose = false, cOpen = false, cError = false;
+
+            UDP.Client client = new();
+
+            client.On.Open(() => cOpen = true);
+            client.On.Close(() => cClose = true);
+            client.On.Error(_ => cError = true);
+            client.On.Data(x => recvData = NE.GetString(x));
+            client.On.Event((n, x) =>
+            {
+                recvEventName = n;
+                recvEventData = NE.GetString(x);
+            });
+
+
+            await client.To.Open(host);
+
+            Assert.True(cOpen);
+            Assert.False(cClose);
+            Assert.False(cError);
+
+            client.To.Data(sentData);
+            client.To.Event(sentEventName, sentEventData);
+
+            await Task.Delay(100);
+
+            Assert.Equal(sentData, recvData);
+            Assert.Equal(sentEventName, recvEventName);
+            Assert.Equal(sentEventData, recvEventData);
+
+            return client;
+        }
     }
 }
