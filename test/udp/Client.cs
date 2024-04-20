@@ -97,7 +97,18 @@ public class Client
         client.On.Open(() => connected = true);
         client.On.Error(_ => error = true);
 
-        await client.To.Open(new Host("127.0.0.1", 0));
+
+        if (!OperatingSystem.IsWindows())
+        {
+            /*
+             * WARNING:
+             * windows allow open udp connection at 0 port.
+             * this test is disabled for run in windows because will fail.
+            */
+            await client.To.Open(new Host("127.0.0.1", 0));
+            await client.To.Close();
+        }
+
         await client.To.Open(null);
         await client.To.Close();
 
