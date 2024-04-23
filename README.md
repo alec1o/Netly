@@ -501,6 +501,63 @@ server.To.Close();
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
+
+HTTP.Client client = new HTTP.Client();
+
+// add http header for request
+client.Headers.Add("Content-Type", "json");
+client.Headers.Add("Token", "ImGui.h");
+
+// add http url queries e.g: https://www.alec1o.com/?page=about&version=4
+client.Queries.Add("page", "about");
+client.Queries.Add("version", "4");
+
+// set request timeout (ms) default 15s (15000ms), 0 or negative value means infinite timeout.
+client.Timeout = 6000; // 6s
+
+// is opened: while is requesting
+bool isFetching = client.IsOpened;
+```
+
+```csharp
+HttpClient http = null;
+
+// called before try connect to server
+// modify the HttpClient object
+client.On.Modify((HttpClient instance) =>
+{
+    http = instance;
+});
+
+// connection is opened and fetch server.
+client.On.Open((response) =>
+{
+    // you can use "http" instance on this scope (isn't null)
+    if (http.<foo> == <bar>) { ... }
+});
+
+// erro on fetch, it can be timeout or whatever error
+// but if you receives error it mean the operation is called or done
+client.On.Error((Exception exception) =>
+{
+    Ny.Logger.PushError(exception);
+});
+
+// connection is closed with fetch server.
+client.On.Close(() =>
+{
+     if (http.<bar> == <foo>) { ... }
+});
+```
+
+```csharp
+
+// used to fetch a server
+client.To.Open("method e.g GET", "url", "body, allow null");
+
+// used for cancel opened request
+client.To.Close();
 
 ```
 
