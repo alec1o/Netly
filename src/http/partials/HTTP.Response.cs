@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Netly.Core;
@@ -12,9 +13,16 @@ namespace Netly
         internal class Response : IResponse
         {
             private readonly HttpListenerResponse _response;
+            private readonly HttpResponseMessage _message;
 
 
-            internal Response(HttpListenerResponse response)
+            public Response(HttpResponseMessage message)
+            {
+                _message = message;
+                throw new NotImplementedException();
+            }
+            
+            public Response(HttpListenerResponse response)
             {
                 IsOpened = true;
                 ResponseEncoding = Encoding.UTF8;

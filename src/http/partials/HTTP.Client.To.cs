@@ -25,11 +25,11 @@ namespace Netly
                     _client = client;
                 }
 
-                public Task Fetch(string method, string url, byte[] body = null)
+                public Task Open(string method, string url, byte[] body = null)
                 {
                     if (IsOpened)
                     {
-                        // NOTE: it now allow fetch multi request
+                        // NOTE: it now allows fetch multi request
                         Exception e = new Exception
                         (
                             $"[{nameof(Client)}] execute a fetch when exist a operation with same this instance. " +
@@ -44,7 +44,6 @@ namespace Netly
 
                     // start and block operation
                     IsOpened = true;
-                    On.m_onOpen(null, null);
 
                     return Task.Run(async () =>
                     {
@@ -105,9 +104,9 @@ namespace Netly
 
                             var response = await http.SendAsync(message, CancellationToken.None);
 
-                            var request = new Request(response);
+                            var myResponse = new Response(response);
 
-                            On.m_onFetch?.Invoke(null, request);
+                            On.m_onOpen?.Invoke(null, myResponse);
                         }
                         catch (Exception ex)
                         {
@@ -123,14 +122,20 @@ namespace Netly
                     });
                 }
 
-                public Task Fetch(string method, string url, string body)
+                public Task Open(string method, string url, string body)
                 {
-                    return Fetch(method, url, NE.GetBytes(body ?? string.Empty));
+                    return Open(method, url, NE.GetBytes(body ?? string.Empty));
                 }
 
-                public Task Fetch(string method, string url, string body, Encoding encode)
+                public Task Open(string method, string url, string body, Encoding encode)
                 {
-                    return Fetch(method, url, NE.GetBytes(body ?? string.Empty, encode));
+                    return Open(method, url, NE.GetBytes(body ?? string.Empty, encode));
+                }
+
+                public Task Close()
+                {
+                    // TODO: impl it
+                    throw new NotImplementedException();
                 }
 
                 public int GetTimeout() => _timeout;

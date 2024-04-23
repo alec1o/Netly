@@ -21,7 +21,7 @@ namespace Netly
                 /// <param name="method">Http method</param>
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
-                Task Fetch(string method, string url, byte[] body);
+                Task Open(string method, string url, byte[] body);
 
                 /// <summary>
                 ///     Create http fetch <br/>
@@ -30,7 +30,7 @@ namespace Netly
                 /// <param name="method">Http method</param>
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
-                Task Fetch(string method, string url, string body);
+                Task Open(string method, string url, string body);
 
                 /// <summary>
                 ///     Create http fetch <br/>
@@ -40,7 +40,13 @@ namespace Netly
                 /// <param name="url">Fetch url</param>
                 /// <param name="body">Request body</param>
                 /// <param name="encoding">Body encoding algorithm</param>
-                Task Fetch(string method, string url, string body, Encoding encoding);
+                Task Open(string method, string url, string body, Encoding encoding);
+
+                /// <summary>
+                ///     Cancel opened operation
+                /// </summary>
+                /// <returns></returns>
+                Task Close();
             }
         }
     }

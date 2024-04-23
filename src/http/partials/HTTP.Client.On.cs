@@ -12,13 +12,7 @@ namespace Netly
                 public EventHandler m_onClose;
                 public EventHandler<Exception> m_onError;
                 public EventHandler<System.Net.Http.HttpClient> m_onModify;
-                public EventHandler m_onOpen;
-                public EventHandler<IRequest> m_onFetch;
-
-                public void Open(Action callback)
-                {
-                    m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());
-                }
+                public EventHandler<IResponse> m_onOpen;
 
                 public void Error(Action<Exception> callback)
                 {
@@ -35,9 +29,9 @@ namespace Netly
                     m_onModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
                 }
 
-                public void Fetch(Action<IRequest> callback)
+                public void Open(Action<IResponse> callback)
                 {
-                    m_onFetch += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
                 }
             }
         }
