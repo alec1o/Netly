@@ -328,6 +328,11 @@ server.On.Error((exception) =>
 
 server.On.Accept((client) =>
 {
+    client.On.Modify((socket) =>
+    {
+        printf("modify client socket e.g Enable NoDelay");
+    });
+
     client.On.Open(() =>
     {
         printf("client connected");
