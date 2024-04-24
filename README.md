@@ -233,7 +233,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 <table>
 <tr>
 <th align="center" valign="top"><sub>TCP<strong></strong></sub></th>
-<td>
+<td width="100%">
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
