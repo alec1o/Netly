@@ -1,5 +1,8 @@
-> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev"), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
-> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
+> ###### The active development branch is [_'
+dev'_](https://github.com/alec1o/Netly/tree/dev"), while the production branch is [_'
+main'_](https://github.com/alec1o/Netly/tree/main).
+> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
+more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <br>
 
@@ -25,7 +28,8 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <br>
 
-<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP, Reliable UDP (RUDP)
+<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP,
+Reliable UDP (RUDP)
 and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
 
 <br>
@@ -625,6 +629,7 @@ server.To.Close();
 ```
 
 ##### Map
+
 ```csharp
 // Map path
 server.Map.Get("/", async (req, res) => {
@@ -666,6 +671,7 @@ You can map:
 ```
 
 ##### Middleware
+
 ```csharp
 /* Note: Callback return
     true: next callback can be executed
@@ -718,6 +724,7 @@ server.Middleware.Add("/dashboard", async (req, res) =>
     return Foo.Bar(req.Cookies);
 });
 ```
+
 </details>
 </td>
 </tr>
@@ -752,12 +759,12 @@ client.On.Error((exception) =>
     printf("connection error on open");
 });
 
-client.On.Data((bytes) =>
+client.On.Data((bytes, type) =>
 {
     printf("connection received a raw data");
 });
 
-client.On.Event((name, eventBytes) =>
+client.On.Event((name, bytes, type) =>
 {
     printf("connection received a event");
 });
@@ -792,6 +799,7 @@ using Netly;
 
 RUDP.Server server = new RUDP.Server();
 ```
+
 ```csharp
 server.On.Open(() =>
 {
@@ -840,6 +848,7 @@ server.On.Accept((client) =>
     });    
 });
 ```
+
 ```csharp
 // open connection
 server.To.Open(new Host("127.0.0.1", 8080));
@@ -872,6 +881,7 @@ using Netly;
 
 HTTP.WebSocket client = new HTTP.WebSocket();
 ```
+
 ```csharp
 client.On.Open(() =>
 {
@@ -903,6 +913,7 @@ client.On.Modify((wsSocket) =>
     // modify websocket socket
 });
 ```
+
 ```csharp
 // open websocket client connection
 client.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
@@ -931,6 +942,7 @@ using Netly;
 
 HTTP.Server server = new HTTP.Server();
 ```
+
 ```csharp
 server.Map.WebSocket("/chat/{token}", async (req, ws) =>
 {
@@ -981,6 +993,7 @@ server.Map.Websocket("/echo", (req, ws) =>
     });
 });
 ```
+
 ```csharp
 server.On.Open(() =>
 {
@@ -1007,6 +1020,7 @@ server.To.Open(new Uri("http://127.0.0.1:8080/"));
 // Close http server connection
 server.To.Close();
 ```
+
 ```csharp
 // open websocket client connection
 server.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
@@ -1026,6 +1040,7 @@ server.To.WebsocketEventBroadcast("event name", "my message", BufferType.Text);
 //      binnary message
 server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
 ```
+
 </details>
 
 <a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
