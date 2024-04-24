@@ -500,6 +500,15 @@ server.To.Open(new Host("127.0.0.1", 8080));
 
 // close connection
 server.To.Close();
+
+// broadcast raw data for all connected client
+server.To.DataBroadcast("text buffer");
+server.To.DataBroadcast(new byte[] { 1, 2, 3 });
+
+// broadcast event (netly event) for all connected client
+server.To.EventBroadcast("event name", "text buffer");
+server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
+ 
 ```
 
 </details>
