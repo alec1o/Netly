@@ -898,13 +898,21 @@ client.On.Error((exception) =>
     // error on open websocket connectin
 });
 
-client.On.Data((bytes, messageType) =>
+client.On.Data((bytes, type) =>
 {
+    if (type == HTTP.Binary) { ... }
+    else if (type == HTTP.Text) { ... }
+    else { /* NOTE: it's imposible */ }
+    
     // raw data received from server
 });
 
-client.On.Event((name, bytes) =>
+client.On.Event((name, bytes, type) =>
 {
+    if (type == HTTP.Binary) { ... }
+    else if (type == HTTP.Text) { ... }
+    else { /* NOTE: it's imposible */ }
+    
     // event received from server
 });
 
@@ -923,15 +931,15 @@ client.To.Close();
 
 // send raw data for server
 //      text message
-client.To.Data("my message", BufferType.Text);
+client.To.Data("my message", HTTP.Text);
 //      binnary message
-client.To.Data(NE.GetBytes("my buffer"), BufferType.Binnary);
+client.To.Data(NE.GetBytes("my buffer"), HTTP.Binary);
 
 // send event (netly event) for server
 //      text message
-client.To.Event("event name", "my message", BufferType.Text);
+client.To.Event("event name", "my message", HTTP.Text);
 //      binnary message
-client.To.Data("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
+client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary); 
 ```
 
 </details>
@@ -982,13 +990,21 @@ server.Map.Websocket("/echo", (req, ws) =>
         // server-side websocket connection closed
     });
     
-    ws.On.Data((bytes, messageType) =>
+    ws.On.Data((bytes, type) =>
     {
+        if (type == HTTP.Binary) { ... }
+        else if (type == HTTP.Text) { ... }
+        else { /* NOTE: it's imposible */ }
+        
         // server-side websocket received raw data
     });
     
-    ws.On.Event((name, bytes) =>
+    ws.On.Event((name, bytes, type) =>
     {
+        if (type == HTTP.Binary) { ... }
+        else if (type == HTTP.Text) { ... }
+        else { /* NOTE: it's imposible */ }
+        
         // server-side websocket received event
     });
 });
@@ -1030,15 +1046,15 @@ server.To.Close();
 
 // broadcast raw data for all connected websocket socket
 //      text message
-server.To.WebsocketDataBroadcast("my message", BufferType.Text);
+server.To.WebsocketDataBroadcast("my message", HTTP.Text);
 //      binnary message
-server.To.WebsocketDataBroadcast(NE.GetBytes("my buffer"), BufferType.Binnary);
+server.To.WebsocketDataBroadcast(NE.GetBytes("my buffer"), HTTP.Binary);
 
 // broadcast event (netly event) for all connected websocket socket
 //      text message
-server.To.WebsocketEventBroadcast("event name", "my message", BufferType.Text);
+server.To.WebsocketEventBroadcast("event name", "my message", HTTP.Text);
 //      binnary message
-server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
+server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.Binary); 
 ```
 
 </details>
