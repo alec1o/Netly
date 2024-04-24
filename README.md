@@ -785,16 +785,118 @@ client.To.Close();
 //      text message
 client.To.Data("my message", BufferType.Text);
 //      binnary message
-client.To.Data(NE.GetBytes("my buffer"), BufferType.Binnary); 
+client.To.Data(NE.GetBytes("my buffer"), BufferType.Binnary);
+
+// send event (netly event) for server
+//      text message
+client.To.Event("event name", "my message", BufferType.Text);
+//      binnary message
+client.To.Data("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
 ```
 
 </details>
 <details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+HTTP.Server server = new HTTP.Server();
 ```
+```csharp
+server.Map.WebSocket("/chat/{token}", async (req, ws) =>
+{
+    // Accept websocket from dyanamic path
+    string token = req.Params["token"];
+    
+    // validate websocket connection from params
+    if (Foo.Bar(token) == false)
+    {
+        ws.To.Close();
+    }
+    
+    ws.On.Modify(...);
+    ws.On.Open(...);
+    ws.On.Close(...);
+    ws.On.Data(...);
+    ws.On.Event(...);
+});
 
+
+server.Map.Websocket("/echo", (req, ws) =>
+{
+    // Handle websocket on /echo path
+    
+    ws.On.Modify((wsSocket) =>
+    {
+        // modify server-side websocket ocket
+    });
+    
+    ws.On.Open(() =>
+    {
+        // server-side websocket connection opened
+    });
+    
+    ws.On.Close(() =>
+    {
+        // server-side websocket connection closed
+    });
+    
+    ws.On.Data((bytes, messageType) =>
+    {
+        // server-side websocket received raw data
+    });
+    
+    ws.On.Event((name, bytes) =>
+    {
+        // server-side websocket received event
+    });
+});
+```
+```csharp
+server.On.Open(() =>
+{
+    // http server opened 
+});
+server.On.Close(() =>
+{
+    // http server closed 
+});
+
+server.On.Error((exception) =>
+{
+    // http server open error
+});
+
+server.On.Modify((httpListener) =>
+{
+    // HttpListener instance, called before try open connection.    
+});
+
+// Open http server connection
+server.To.Open(new Uri("http://127.0.0.1:8080/"));
+
+// Close http server connection
+server.To.Close();
+```
+```csharp
+// open websocket client connection
+server.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
+
+// close websocket client connection
+server.To.Close();
+
+// broadcast raw data for all connected websocket socket
+//      text message
+server.To.WebsocketDataBroadcast("my message", BufferType.Text);
+//      binnary message
+server.To.WebsocketDataBroadcast(NE.GetBytes("my buffer"), BufferType.Binnary);
+
+// broadcast event (netly event) for all connected websocket socket
+//      text message
+server.To.WebsocketEventBroadcast("event name", "my message", BufferType.Text);
+//      binnary message
+server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
+```
 </details>
 </td>
 </tr>
