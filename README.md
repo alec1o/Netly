@@ -945,14 +945,17 @@ client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary);
 
 ```csharp
 using Netly;
+using Netly.Interfaces;
 
 HTTP.Server server = new HTTP.Server();
+
+IHTTP.WebSocket[] Clients = server.WebSocketClients;
 ```
 
 ```csharp
 server.Map.WebSocket("/chat/{token}", async (req, ws) =>
 {
-    // Accept websocket from dyanamic path
+    // Accept websocket from dynamic path
     string token = req.Params["token"];
     
     // validate websocket connection from params
