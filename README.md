@@ -742,7 +742,8 @@ server.Middleware.Add("/dashboard", async (req, res) =>
 using Netly;
 
 HTTP.WebSocket client = new HTTP.WebSocket();
-
+```
+```csharp
 client.On.Open(() =>
 {
     // websocket connection opened
@@ -772,6 +773,19 @@ client.On.Modify((wsSocket) =>
 {
     // modify websocket socket
 });
+```
+```csharp
+// open websocket client connection
+client.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
+
+// close websocket client connection
+client.To.Close();
+
+// send raw data for server
+//      text message
+client.To.Data("my message", BufferType.Text);
+//      binnary message
+client.To.Data(NE.GetBytes("my buffer"), BufferType.Binnary); 
 ```
 
 </details>
