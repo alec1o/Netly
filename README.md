@@ -369,6 +369,14 @@ server.To.Close();
 
 // enable encryption support (must called before server.To.Open)
 server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
+
+// broadcast raw data for all connected client
+server.To.DataBroadcast("text buffer");
+server.To.DataBroadcast(new byte[] { 1, 2, 3 });
+
+// broadcast event (netly event) for all connected client
+server.To.EventBroadcast("event name", "text buffer");
+server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
 ```
 
 </details>
