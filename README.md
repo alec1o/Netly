@@ -2,9 +2,9 @@
 <table>
 <td aligh="right">
 <p></p>
-💔<sup> Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 😔</span>
-</table>
+💔<sup> Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 😔</sup>
 </td>
+</table>
 </div>
 
 
