@@ -109,15 +109,12 @@ namespace Netly
                         throw new NotImplementedException();
                         On.OnOpen?.Invoke(null, null);
                     });
-                    
+
                     _udp.On.Error(exception =>
                     {
                         // invoke connection error: from udp to rudp
                         On.OnError?.Invoke(null, exception);
                     });
-                    
-                    const long binaryLiteral =  0b_11111111_11111111_11111111_11111111_11111111_11111111_11111111_1111111;
-
                     
                     _udp.On.Modify(socket =>
                     {
