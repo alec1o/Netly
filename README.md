@@ -1,3 +1,13 @@
+<div align="right">
+<table>
+<td aligh="right">
+<p></p>
+💔<sup> Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 😔</span>
+</table>
+</td>
+</div>
+
+
 > ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
 > <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
