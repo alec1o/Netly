@@ -788,7 +788,72 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8, RUDP.Reliable);
 <details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+RUDP.Server server = new RUDP.Server();
+```
+```csharp
+server.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+server.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+server.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+server.On.Accept((client) =>
+{
+    client.On.Open(() =>
+    {
+        printf("client connected");
+    });
+    
+    client.On.Close(() =>
+    {
+        // Only if use connection is enabled.
+        printf("client disconnected");
+    });
+    
+    client.On.Data((bytes, type) =>
+    {
+        if (type == RUDP.Reliable) { ... }
+        else if (type == RUDP.Unreliable) { ... }
+        else { /* NOTE: it's imposible */ }
+        
+        printf("client received a raw data");
+    });
+    
+    client.On.Event((name, type) =>
+    
+        if (type == RUDP.Reliable) { ... }
+        else if (type == RUDP.Unreliable) { ... }
+        else { /* NOTE: it's imposible */ }
+        
+        printf("client received a event");
+    });    
+});
+```
+```csharp
+// open connection
+server.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection
+server.To.Close();
+
+// broadcast raw data for all connected client
+server.To.DataBroadcast("text buffer", RUDP.Unreliable);
+server.To.DataBroadcast(new byte[] { 1, 2, 3 }, RUDP.Reliable);
+
+// broadcast event (netly event) for all connected client
+server.To.EventBroadcast("event name", "text buffer", RUDP.Unreliable);
+server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 }, RUDP.Reliable);
 ```
 
 </details>
