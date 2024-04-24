@@ -385,7 +385,7 @@ server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
 ```csharp
 using Netly;
 
-UDP.Client client = new UDP.Client(useConnection: true, timeout: 15000);
+UDP.Client client = new UDP.Client();
 ```
 
 ```csharp
@@ -442,7 +442,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```csharp
 using Netly;
 
-UDP.Server server = new UDP.Server(useConnection: true, timeout: 15000);
+UDP.Server server = new UDP.Server();
 ```
 
 ```csharp
