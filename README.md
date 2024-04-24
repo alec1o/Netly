@@ -1,6 +1,4 @@
-> ###### The active development branch is [_'
-dev'_](https://github.com/alec1o/Netly/tree/dev"), while the production branch is [_'
-main'_](https://github.com/alec1o/Netly/tree/main).
+> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
 > <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
@@ -449,7 +447,7 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
-<details close><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
@@ -1266,7 +1264,7 @@ public class Example : MonoBehaviour
 <sub>
 <strong>You should never initialize events in an uncontrolled loop</strong>, (**.On) stores functions that will be
 called when something happens and these functions only need to be initialized once. <i>Understand,
-It doesn't means that every event will only have one callback attached to it,
+It doesn't mean that every event will only have one callback attached to it,
 but it means not to keep calling (**.On) frequently like in Loops</i>.
 See examples below of good and bad use.
 </sub>
@@ -1281,7 +1279,7 @@ state in sync</i>, for example <i>only</i> sending data when confirming that the
 <br>
 <br>
 
-<details close><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
 
 ```csharp
 using System;
