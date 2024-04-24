@@ -739,7 +739,39 @@ server.Middleware.Add("/dashboard", async (req, res) =>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+HTTP.WebSocket client = new HTTP.WebSocket();
+
+client.On.Open(() =>
+{
+    // websocket connection opened
+});
+
+client.On.Close(() =>
+{
+    // websocket connection closed
+});
+
+client.On.Error((exception) =>
+{
+    // error on open websocket connectin
+});
+
+client.On.Data((bytes, messageType) =>
+{
+    // raw data received from server
+});
+
+client.On.Event((name, bytes) =>
+{
+    // event received from server
+});
+
+client.On.Modify((wsSocket) =>
+{
+    // modify websocket socket
+});
 ```
 
 </details>
