@@ -565,9 +565,140 @@ client.To.Close();
 <details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
+
+HTTP.Server server = new HTTP.Server();
+
+// return true if server is serve http context
+bool isServe = server.IsOpened;
 
 ```
 
+```csharp
+
+server.On.Open(() =>
+{
+    // http server opened 
+});
+server.On.Close(() =>
+{
+    // http server closed 
+});
+
+server.On.Error((exception) =>
+{
+    // http server open error
+});
+
+server.On.Modify((httpListener) =>
+{
+    // HttpListener instance, called before try open connection.    
+});
+
+// Open http server connection
+server.To.Open(new Uri("http://127.0.0.1:8080/"));
+
+// Close http server connection
+server.To.Close();
+```
+
+##### Map
+```csharp
+// Map path
+server.Map.Get("/", async (req, res) => {
+    // Handle async: GET
+})
+
+server.Map.Post("/user", (req, res) => {
+    // Handle sync: POST
+});
+
+// map using dynamic URL
+server.Map.Delete("/post/{userId}/group/{groupId}", async (req, res)) => 
+{
+    string userId = req.Param["userId"];
+    string groupId = req.Param["groupId"];
+    
+    // Handle async: Delete from dynamic URL path 
+});
+
+server.Map.WebSocket("/echo", (req, ws) =>
+{
+    // Handle websocket connection from path
+});
+
+/*
+You can map: 
+ * Get     # get request
+ * Post    # post request
+ * Delete  # delete request
+ * Put     # put request
+ * Patch   # patch request
+ * Trace   # trace request
+ * Options # options request
+ * Head    # head request, (only head)
+ * All     # all http nethod request
+ * WebSocket   # websocket request
+*/
+    
+```
+
+##### Middleware
+```csharp
+/* Note: Callback return
+    true: next callback can be executed
+    false: next or others callback can't executed
+
+    Note: Middlewares is executed in added order
+    Global middleware have more priority than Local middleware
+*/
+
+server.Middleware.Add(async (req, res) => {
+    // e.g Verify user location
+    
+    // success, execute next callback
+    return true;
+});
+
+// Global middleware
+server.Middleware.Add(async (req, res) => {
+    // e.g verify banned IP
+    
+    // success, execute next callback
+    return true;
+});
+
+// Local middleware
+server.Middleware.Add("/admin", async (req, res) => {
+    // e.g Detect if the ip is allowed to access
+     
+    if(Foo.Bar(req) == false)
+    {
+        if (Foo.Bar() == true)
+        {
+            await res.Redirect("https://www.example.com");
+        }
+        else
+        {
+            res.Header.Add("Content-Type", "application/json;charset=UTF-8");
+            await res.Send(404, "Response Content Here");   
+        }            
+    }
+          
+    // fail, stop and close connection if is opened
+    return false;
+});
+
+// Local Middleware
+server.Middleware.Add("/dashboard", async (req, res) =>
+{
+    // e.g Check session from cookies.
+    return Foo.Bar(req.Cookies);
+});
+```
+
+##### Demos
+- ###### [Websocket Examples](https://github.com/alec1o/Netly/issues/43)
 </details>
 </td>
 </tr>
