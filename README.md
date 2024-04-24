@@ -731,7 +731,57 @@ server.Middleware.Add("/dashboard", async (req, res) =>
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
+using Netly;
 
+RUDP.Client client = new RUDP.Client();
+```
+
+```csharp
+client.On.Open(() =>
+{
+    printf("connection opened");
+});
+
+client.On.Close(() =>
+{
+    printf("connection closed");
+});
+
+client.On.Error((exception) =>
+{
+    printf("connection error on open");
+});
+
+client.On.Data((bytes) =>
+{
+    printf("connection received a raw data");
+});
+
+client.On.Event((name, eventBytes) =>
+{
+    printf("connection received a event");
+});
+
+client.On.Modify((socket) =>
+{
+    printf("called before try open connection.");
+});
+```
+
+```csharp
+// open connection if closed
+client.To.Open(new Host("127.0.0.1", 8080));
+
+// close connection if opened
+client.To.Close();
+
+// send raw data if connected
+client.To.Data(new byte[2] { 128, 255 }, RUDP.Unreliable);
+client.To.Data("hello world", NE.Encoding.UTF8, RUDP.Reliable);
+
+// send event if connected
+client.To.Event("name", new byte[2] { 128, 255 }, RUDP.Unreliable);
+client.To.Event("name", "hello world", NE.Encoding.UTF8, RUDP.Reliable);
 ```
 
 </details>
