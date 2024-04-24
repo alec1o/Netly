@@ -701,9 +701,6 @@ server.Middleware.Add("/dashboard", async (req, res) =>
     return Foo.Bar(req.Cookies);
 });
 ```
-
-##### Demos
-- ###### [Websocket Examples](https://github.com/alec1o/Netly/issues/43)
 </details>
 </td>
 </tr>
@@ -898,7 +895,11 @@ server.To.WebsocketEventBroadcast("event name", "my message", BufferType.Text);
 server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), BufferType.Binnary); 
 ```
 </details>
+
+<sup>[``Community examples ``](https://github.com/alec1o/Netly/issues/43) <sup>From issues</sup></sup>
+
 </td>
+
 </tr>
 </table>
 
