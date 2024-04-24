@@ -913,7 +913,7 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), Buffer
 ```
 </details>
 
-<img src="/static/transparent-horizontal-1px-2048px.png" width="100%">
+<a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
 
 <sup>[``Community examples``](https://github.com/alec1o/Netly/issues/43) <sup> From issues</sup></sup>
 
