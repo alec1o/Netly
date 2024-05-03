@@ -2,7 +2,6 @@
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
 
@@ -102,7 +101,7 @@ namespace Netly
                         }
 
                         // It blocks main thread and have a timeout.
-                        new Thread(Callback) { IsBackground = true }.Start();
+                        Task.Run(Callback);
                     }
                     else
                     {
@@ -292,7 +291,7 @@ namespace Netly
 
                 private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
                 {
-                    int timeout = reset ? Timeout.Infinite : EncryptionTimeout;
+                    int timeout = reset ? System.Threading.Timeout.Infinite : EncryptionTimeout;
 
                     stream.ReadTimeout = timeout;
                     stream.WriteTimeout = timeout;
@@ -377,67 +376,7 @@ namespace Netly
                     }
                 }
 
-                private void ReceiveJob()
-                {
-                    byte[] buffer = new byte
-                    [
-                        // Maximum/Default receive buffer length.
-                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
-                    ];
-
-                    MessageFraming framing = new MessageFraming();
-
-                    if (IsFraming)
-                    {
-                        framing.OnData(data => PushResult(ref data));
-
-                        // Framing not match:
-                        // Endpoint part isn't using framing or is using different framing protocol
-                        framing.OnError(exception =>
-                        {
-                            NETLY.Logger.PushError(exception);
-                            Close();
-                        });
-                    }
-
-                    while (_socket != null)
-                    {
-                        try
-                        {
-                            int size = IsEncrypted
-                                ? _sslStream.Read(buffer, 0, buffer.Length)
-                                : _netStream.Read(buffer, 0, buffer.Length);
-
-                            if (size <= 0)
-                            {
-                                if (IsOpened) continue;
-                                break;
-                            }
-
-                            byte[] data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            if (IsFraming)
-                            {
-                                framing.Add(data);
-                            }
-                            else
-                            {
-                                PushResult(ref data);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            NETLY.Logger.PushError(e);
-                            if (!IsOpened) break;
-                        }
-                    }
-
-                    Close();
-                }
-
-                private void SendDispatch(byte[] bytes)
+                void SendDispatch(byte[] bytes)
                 {
                     if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
 
@@ -463,9 +402,84 @@ namespace Netly
                     }
                 }
 
-                private void InitReceiver()
+                void InitReceiver()
                 {
-                    new Thread(ReceiveJob) { IsBackground = true }.Start();
+                    byte[] buffer = new byte
+                    [
+                        // Maximum/Default receive buffer length.
+                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
+                    ];
+
+                    MessageFraming framing = new MessageFraming();
+
+                    if (IsFraming)
+                    {
+                        framing.OnData(data => PushResult(ref data));
+
+                        // Framing not match:
+                        // Endpoint part isn't using framing or is using different framing protocol
+                        framing.OnError(exception =>
+                        {
+                            NETLY.Logger.PushError(exception);
+                            Close();
+                        });
+                    }
+
+                    ReceiverUpdate();
+
+                    void ReceiverUpdate()
+                    {
+                        if (IsEncrypted)
+                        {
+                            _sslStream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, null);
+                        }
+                        else
+                        {
+                            _netStream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, null);
+                        }
+                    }
+
+                    void ReceiveCallback(IAsyncResult result)
+                    {
+                        try
+                        {
+                            int size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
+
+                            if (size <= 0)
+                            {
+                                if (IsOpened)
+                                {
+                                    ReceiverUpdate();
+                                }
+                                else
+                                {
+                                    Close();
+                                }
+
+                                return;
+                            }
+
+                            byte[] data = new byte[size];
+
+                            Array.Copy(buffer, 0, data, 0, data.Length);
+
+                            if (IsFraming)
+                            {
+                                framing.Add(data);
+                            }
+                            else
+                            {
+                                PushResult(ref data);
+                            }
+                            
+                            ReceiverUpdate();
+                        }
+                        catch (Exception e)
+                        {
+                            NETLY.Logger.PushError(e);
+                            Close();
+                        }
+                    }
                 }
             }
         }
