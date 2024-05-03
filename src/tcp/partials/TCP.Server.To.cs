@@ -158,12 +158,86 @@ namespace Netly
 
                 private void InitAccept()
                 {
+                    void UpdateAccept()
+                    {
+                        if (IsOpened)
+                        {
+                            _socket.BeginAccept(AcceptCallback, null);
+                        }
+                    }
+
+                    void AcceptCallback(IAsyncResult result)
+                    {
+                        try
+                        {
+                            Socket socket = _socket.EndAccept(result);
+
+                            lock (_lockAccept)
+                            {
+                                _socketList.Add(socket);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            NETLY.Logger.PushError(e);
+                        }
+                        finally
+                        {
+                            UpdateAccept();
+                        }
+                    }
+
+                    void AcceptValidation()
+                    {
+                        while (IsOpened)
+                        {
+                            // it is just check.
+                            // it mustn't use lock for not use lock resources and decrees accept performance
+                            // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+                            // ReSharper disable once InconsistentlySynchronizedField
+                            // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+                            if (_socketList.Count <= 0) continue;
+
+                            Socket socket;
+
+                            lock (_lockAccept)
+                            {
+                                // FIFO: (First In First Out) strategy
+                                socket = _socketList[0];
+                                _socketList.RemoveAt(0);
+                            }
+
+                            new Client(socket, _server, serverValidatorCallback: (client, success) =>
+                            {
+                                if (success)
+                                {
+                                    lock (_lockClient)
+                                    {
+                                        client.On.Close(() => RemoveClient(client.Id));
+
+                                        Clients.Add(client.Id, client);
+
+                                        On.m_onAccept?.Invoke(null, client);
+
+                                        client.InitServerSide();
+                                    }
+                                }
+                                else
+                                {
+                                    socket.Close();
+                                    socket.Dispose();
+                                }
+                            }).InitServerValidator();
+                        }
+                    }
+
+
+                    // Accept
+                    UpdateAccept();
                     // true: thread is destroyed normally when program end (non-force required)
                     // false: this thread will be persistent and will block the destruction of main process (force quit required)
                     const bool isBackground = true;
-                    // *-*-*-*-*-*-*-*-*-*-*-*-*-*-
-                    new Thread(AcceptJob) { IsBackground = isBackground }.Start();
-                    new Thread(InitClientJob) { IsBackground = isBackground }.Start();
+                    new Thread(AcceptValidation) { IsBackground = isBackground }.Start();
                 }
 
                 private void RemoveClient(string id)
@@ -171,70 +245,6 @@ namespace Netly
                     lock (_lockClient)
                     {
                         Clients.Remove(id);
-                    }
-                }
-
-                private void AcceptJob()
-                {
-                    while (IsOpened)
-                    {
-                        try
-                        {
-                            Socket socket = _socket.Accept();
-
-                            lock (_lockAccept)
-                            {
-                                _socketList.Add(socket);
-                            }
-                        }
-                        catch
-                        {
-                            // Ignored
-                        }
-                    }
-                }
-
-                private void InitClientJob()
-                {
-                    while (IsOpened)
-                    {
-                        // it is just check.
-                        // it mustn't use lock for not use lock resources and decrees accept performance
-                        // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-                        if (_socketList.Count <= 0) continue;
-
-                        Socket socket;
-
-                        lock (_lockAccept)
-                        {
-                            // FIFO: (First In First Out) strategy
-                            socket = _socketList[0];
-                            _socketList.RemoveAt(0);
-                        }
-
-                        new Client(socket, _server, serverValidatorCallback: (client, success) =>
-                        {
-                            if (success)
-                            {
-                                lock (_lockClient)
-                                {
-                                    client.On.Close(() => RemoveClient(client.Id));
-
-                                    Clients.Add(client.Id, client);
-
-                                    On.m_onAccept?.Invoke(null, client);
-
-                                    client.InitServerSide();
-                                }
-                            }
-                            else
-                            {
-                                socket.Close();
-                                socket.Dispose();
-                            }
-                        }).InitServerValidator();
                     }
                 }
             }
