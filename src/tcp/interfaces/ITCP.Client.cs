@@ -1,18 +1,18 @@
 ﻿using Netly.Core;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class TCP
+    public static partial class ITCP
     {
-        public interface IClient
+        public interface Client
         {
             string Id { get; }
             Host Host { get; }
             bool IsOpened { get; }
             bool IsFraming { get; }
             bool IsEncrypted { get; }
-            Client.ITo To { get; }
-            Client.IOn On { get; }
+            ClientTo To { get; }
+            ClientOn On { get; }
         }
     }
 }

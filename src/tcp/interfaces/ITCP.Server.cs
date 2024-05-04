@@ -2,11 +2,11 @@
 using System.Security.Cryptography.X509Certificates;
 using Netly.Core;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class TCP
+    public static partial class ITCP
     {
-        internal interface IServer
+        internal interface Server
         {
             string Id { get; }
             Host Host { get; }
@@ -15,9 +15,9 @@ namespace Netly
             X509Certificate Certificate { get; }
             SslProtocols EncryptionProtocol { get; }
             bool IsEncrypted { get; }
-            Server.ITo To { get; }
-            Server.IOn On { get; }
-            IClient[] Clients { get; }
+            ITCP.ServerTo To { get; }
+            ITCP.ServerOn On { get; }
+            ITCP.Client[] Clients { get; }
         }
     }
 }
