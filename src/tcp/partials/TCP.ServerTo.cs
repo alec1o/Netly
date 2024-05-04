@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Core;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -13,16 +14,16 @@ namespace Netly
     {
         public partial class Server
         {
-            internal class _To : ITo
+            internal class ServerTo : ITCP.ServerTo
             {
                 private readonly Server _server;
                 public bool IsOpened => _socket != null;
                 public Host Host { get; private set; }
-                private _On On => _server._on;
+                private ServerOn On => _server._on;
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
-                public Dictionary<string, IClient> Clients { get; private set; }
+                public Dictionary<string, ITCP.Client> Clients { get; private set; }
 
 
                 private Socket _socket;
@@ -35,9 +36,9 @@ namespace Netly
                     _isClosing,
                     _isClosed;
 
-                private _To()
+                private ServerTo()
                 {
-                    Clients = new Dictionary<string, IClient>();
+                    Clients = new Dictionary<string, ITCP.Client>();
                     _socketList = new List<Socket>();
                     _socket = null;
                     _isOpening = false;
@@ -50,7 +51,7 @@ namespace Netly
                     _defaultBacklog = (int)SocketOptionName.MaxConnections;
                 }
 
-                public _To(Server server) : this()
+                public ServerTo(Server server) : this()
                 {
                     _server = server;
                 }

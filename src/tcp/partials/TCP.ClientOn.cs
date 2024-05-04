@@ -4,6 +4,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using Netly.Core;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -11,7 +12,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class _On : IOn
+            internal class ClientOn : ITCP.ClientOn
             {
                 public EventHandler m_onClose;
                 public EventHandler<Exception> m_onError;
@@ -22,7 +23,7 @@ namespace Netly
 
                 public readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> m_onEncryption;
 
-                public _On()
+                public ClientOn()
                 {
                     m_onEncryption = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
                 }

@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Netly.Core;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -11,7 +12,7 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class _To : ITo
+            internal class ClientTo : ITCP.ClientTo
             {
                 public Host Host { get; private set; }
                 public bool IsEncrypted { get; private set; }
@@ -23,7 +24,7 @@ namespace Netly
 
                 private string Id => _client._id;
 
-                private _On On => _client._on;
+                private ClientOn On => _client._on;
 
                 private Socket _socket;
                 private NetworkStream _netStream;
@@ -35,7 +36,7 @@ namespace Netly
                     _isClosed;
 
                 private readonly Client _client;
-                private readonly IServer _server;
+                private readonly ITCP.Server _server;
                 private readonly bool _isServer;
                 private const int _64kb = 1024 * 64; // 65,536 (64kb)
                 private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
@@ -44,7 +45,7 @@ namespace Netly
 
                 /* ---- CONSTRUCTOR --- */
 
-                private _To()
+                private ClientTo()
                 {
                     _socket = null;
                     _netStream = null;
@@ -59,13 +60,13 @@ namespace Netly
                     IsEncrypted = false;
                 }
 
-                public _To(Client client) : this()
+                public ClientTo(Client client) : this()
                 {
                     _client = client;
                     _isClosed = true;
                 }
 
-                public _To(Client client, Socket socket, IServer server, Action<Client, bool> validatorAction) : this()
+                public ClientTo(Client client, Socket socket, ITCP.Server server, Action<Client, bool> validatorAction) : this()
                 {
                     _client = client;
                     _server = server;
