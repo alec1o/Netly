@@ -1069,9 +1069,9 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 
 </details>
 
-<a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
-
 <sup>[``Community examples``](https://github.com/alec1o/Netly/issues/43) <sup> From issues</sup></sup>
+
+<a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
 
 </td>
 
