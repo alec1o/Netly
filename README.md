@@ -1,4 +1,6 @@
-> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
+> ###### The active development branch is [_'
+dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'
+main'_](https://github.com/alec1o/Netly/tree/main).
 > <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
@@ -116,45 +118,59 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 > <sub>Notable changes</sub>
 
 <table>
-<tr>
-<th><sub>4.x.x</sub></th>
-<td><sub>Development</sub></td>
-<td><sub>HTTP client and server support</sub></td>
-<td><sub>Reliable UDP (RUDP) client and server support</sub></td>
-<td><sub>WebSocket client and server</sub></td>
-<td><sub>Syntax and internal improvement</sub></td>
-<td><sub>Code XML comments improvement</sub></td>
-<td><sub>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></sub></td>
+<tr> <!-- title -->
+<th><sub>v1.x.x</sub></th>
+<th><sub>v2.x.x</sub></th>
+<th><sub>v3.x.x</sub></th>
+<th><sub>v4.x.x</sub></th>
 </tr>
-<tr>
-<th><sub>3.x.x</sub></th>
-<td><sub>Stable</sub></td>
-<td><sub>TCP with TLS/SSL support</sub></td>
-<td><sub>UDP with connection (timeout response)</sub></td>
-<td><sub>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</sub></td>
-<td><sub>Update for <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
-<td><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
-<td></td>
+<tr> <!-- status -->
+<td valign="center" align="center"><sup><sub><i>Legacy</i></sub></sup></td>
+<td valign="center" align="center"><sup><sub><i>Legacy</i></sub></sup></td>
+<td valign="center" align="center"><sup><sub><i>Stable</i></sub></sup></td>
+<td valign="center" align="center"><sup><sub><i>Development</i></sub></sup></td>
 </tr>
-<tr>
-<th><sub>2.x.x</sub></th>
-<td><sub>Legacy</sub></td>
-<td><sub>TCP with <a href="https://bit.ly/message-framing">Message Framing</a> support</sub></td>
-<td><sub>TCP and UDP performance increase</sub></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<tr> <!-- row #1 -->
+<td valign="top" align="left"><sub>TCP Support</sub></td>
+<td valign="top" align="left"><sub>TCP with <a href="https://bit.ly/message-framing">Message Framing support</a></sub></td>
+<td valign="top" align="left"><sub>TCP with TLS/SSL support</sub></td>
+<td valign="top" align="left"><sub>HTTP client and server support</sub></td>
 </tr>
-<tr>
-<th><sub>1.x.x</sub></th>
-<td><sub>Legacy</sub></td>
-<td><sub>TCP support</sub></td>
-<td><sub>UDP Support</sub></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<tr> <!-- row #2 -->
+<td valign="top" align="left"><sub>UDP Support</sub></td>
+<td valign="top" align="left"><sub>TCP and UDP performance increase</sub></td>
+<td valign="top" align="left"><sub>UDP with connection (timeout response)</sub></td>
+<td valign="top" align="left"><sub>Reliable UDP (RUDP) client and server support</sub></td>
+</tr>
+<tr> <!-- row #3 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>New Message Framing protocol and performance increase</sub></td>
+<td valign="top" align="left"><sub>WebSocket client and server support</sub></td>
+</tr>
+<tr> <!-- row #4 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>Upgrade to <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
+<td valign="top" align="left"><sub>Upgrade to <a href="https://github.com/alec1o/Byter">Byter 3.0</a></sub></td>
+</tr>
+<tr> <!-- row #4 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
+<td valign="top" align="left"><sub>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></sub></td>
+</tr>
+<tr> <!-- row #5 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>Syntax and internal improvement</sub></td>
+</tr>
+<tr> <!-- row #6 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>XML comments improvement</sub></td>
 </tr>
 </table>
 
