@@ -145,7 +145,7 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 <tr> <!-- row #3 -->
 <td valign="top" align="left"></td>
 <td valign="top" align="left"></td>
-<td valign="top" align="left"><sub>New Message Framing protocol and performance increase</sub></td>
+<td valign="top" align="left"><sub>New <a href="https://bit.ly/message-framing">Message Framing</a> protocol and performance increase</sub></td>
 <td valign="top" align="left"><sub>WebSocket client and server support</sub></td>
 </tr>
 <tr> <!-- row #4 -->
