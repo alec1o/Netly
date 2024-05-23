@@ -34,50 +34,33 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
       <th align="center" valign="center"><sub><strong>Overview</strong></sub></th>
 <td>
 <br>
-
 <sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP,
 Reliable UDP (RUDP)
 and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
-
+<br>
 <br>
 </td>
     </tr>
     <tr>
-      <th align="center" valign="center"><sub><strong>Link's</strong></sub></th>
+      <th align="center" valign="center"><sub><strong>Website</strong></sub></th>
 <td>
-
-> <sub>Official website</sub>
-
-| <sub>Repository</sub> | <sub>Documentation</sub> |
-| :--        | :--           |
-|<sub><a href="https://github.com/alec1o/Netly"><i>github.com/alec1o/netly</i></a></sub> | <sub><a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com</i></a></sub> |
-
 <br>
-</td>
-    </tr>
-    <tr>
-      <th align="center" valign="center"><sub><strong>Install</strong></sub></th>
-<td>
-
-> <sub>Official publisher</sub>
-
-| <sub>Nuget</sub>                                                    | <sub>Unity Asset Store</sub>                                                                     |
-|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
+<sub>Repository: <a href="https://github.com/alec1o/Netly"><i>github.com/alec1o/netly</i></a></sub>
+<br>
+<sub>Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com</i></a></sub>
+<br>
+<br>
 </td>
     </tr>
     <tr>
         <th align="center" valign="center"><sub><strong>Sponsor</strong></sub></th>
 <td>
-
-> <sub>Official sponsors</sub>
-
+<br>
 <div>
-    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" height="30px" /></a>
-    <h6></h6> <!-- padding and margin -->
-    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="30px" /></a>
+    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" height="35px" /></a>
+    <br>
+    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="35px" /></a>
 </div>
-
 <br>
 </td>
     </tr>
@@ -97,10 +80,20 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
 
 > <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and
 > feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
-
+<br>
 </td>
     </tr>
 </table>
+
+<br>
+
+##### Installing
+
+> <sub>Official publisher</sub>
+
+| <sub>Nuget</sub> | <sub>Unity Asset Store</sub>|
+|------------------|-----------------------------|
+| <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
 <br>
 
