@@ -45,41 +45,37 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
     <tr>
       <th align="center" valign="center"><sub><strong>Link's</strong></sub></th>
 <td>
-<br>
 
-<sub>
-Repository: <a href="https://github.com/alec1o/Netly"><i>github.com/alec1o/netly</i></a>
-<br>
-Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com</i></a>
-</sub>
+> <sub>Official website</sub>
 
-<br>
+| <sub>Repository</sub> | <sub>Documentation</sub> |
+| :--        | :--           |
+|<sub><a href="https://github.com/alec1o/Netly"><i>github.com/alec1o/netly</i></a></sub> | <sub><a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com</i></a></sub> |
+
 <br>
 </td>
     </tr>
     <tr>
       <th align="center" valign="center"><sub><strong>Install</strong></sub></th>
 <td>
-<br>
 
 > <sub>Official publisher</sub>
 
 | <sub>Nuget</sub>                                                    | <sub>Unity Asset Store</sub>                                                                     |
 |---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
-
-<br>
 </td>
     </tr>
     <tr>
         <th align="center" valign="center"><sub><strong>Sponsor</strong></sub></th>
 <td>
-<br>
+
+> <sub>Official sponsors</sub>
 
 <div>
-    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" width="400px" /></a>
+    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" height="30px" /></a>
     <h6></h6> <!-- padding and margin -->
-    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" width="400px" /></a>
+    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="30px" /></a>
 </div>
 
 <br>
@@ -88,8 +84,6 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
     <tr>
         <th align="center" valign="center"><sup><strong>Supporter</strong></sup></th>
 <td>
-<br>
-
 <h6>Why Contribute to Netly</h6>
 
 > <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By
@@ -104,7 +98,6 @@ Documentation: <a href="https://netly.docs.kezero.com"><i>netly.docs.kezero.com<
 > <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and
 > feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 
-<br>
 </td>
     </tr>
 </table>
