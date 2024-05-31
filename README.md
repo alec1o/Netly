@@ -189,7 +189,7 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
 <td valign="top" align="left">
 <br>
 
-- <sub>[Byter](https://github.com/alec1o/Byter)</sub>
+<a href="https://github.com/alec1o/Byter"><img alt="byter logo" src="static/Byter-logo-512/sprite_1.png" width="24px"> <sup><strong>Byter</strong></sup></a>
 
 <br>
 </td>
