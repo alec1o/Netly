@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netly", "src\Netly.csproj", "{3D08D394-C773-41CA-A7F9-79A9FEA5A25A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetlyTest", "test\NetlyTest.csproj", "{756E85AF-0258-44E5-8EA6-CBABD9259770}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "test\Test.csproj", "{756E85AF-0258-44E5-8EA6-CBABD9259770}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
