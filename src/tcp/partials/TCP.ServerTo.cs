@@ -152,6 +152,15 @@ namespace Netly
                         client.Value.To.Event(name, data);
                     }
                 }
+
+                public void EventBroadcast(string name, byte[] data)
+                {
+                    foreach (var client in Clients)
+                    {
+                        client.Value.To.Event(name, data);
+                    }
+                }
+
                 public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
                     SslProtocols protocols)
                 {
