@@ -1,5 +1,4 @@
 ﻿using System;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly

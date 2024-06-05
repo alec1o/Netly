@@ -3,7 +3,7 @@
     /// <summary>
     /// Netly Library Info
     /// </summary>
-    public static partial class MyNetly
+    public static partial class NetlyEnvironment
     {
         /// <summary>
         /// Netly Name
@@ -29,13 +29,20 @@
         /// Netly logger hub
         /// </summary>
         public static readonly ILogger Logger;
-
+        
+        /// <summary>
+        /// Netly main thread
+        /// </summary>
+        public static readonly IMainThread MainThread;
+        
+        
         /// <summary>
         /// Init Netly
         /// </summary>
-        static MyNetly()
+        static NetlyEnvironment()
         {
-            Logger = new _Logger();
+            Logger = new MyLogger();
+            MainThread = new MyMainThread();
         }
     }
 }

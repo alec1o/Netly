@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly.Interfaces
 {

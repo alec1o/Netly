@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Byter;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly
@@ -75,7 +74,7 @@ namespace Netly
                         catch (Exception e)
                         {
                             _isClosed = true;
-                            MyNetly.Logger.PushError(e);
+                            NetlyEnvironment.Logger.Create(e);
                             On.OnError?.Invoke(null, e);
                         }
                         finally
@@ -102,7 +101,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                MyNetly.Logger.PushError(e);
+                                NetlyEnvironment.Logger.Create(e);
                             }
                             finally
                             {
@@ -162,42 +161,42 @@ namespace Netly
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Send(EventManager.Create(name, data));
+                    Send(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Send(EventManager.Create(name, data.GetBytes()));
+                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(Host targetHost, string name, byte[] data)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
 
-                    Send(targetHost, EventManager.Create(name, data));
+                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void Event(Host targetHost, string name, string data)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
 
-                    Send(targetHost, EventManager.Create(name, data.GetBytes()));
+                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Send(EventManager.Create(name, data.GetBytes(encoding)));
+                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 public void Event(Host targetHost, string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
 
-                    Send(targetHost, EventManager.Create(name, data.GetBytes(encoding)));
+                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 public void InitServerSide()
@@ -213,7 +212,7 @@ namespace Netly
 
                 private void PushResult(ref byte[] bytes)
                 {
-                    (string name, byte[] buffer) content = EventManager.Verify(bytes);
+                    (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
 
                     if (content.buffer == null)
                         On.OnData?.Invoke(null, bytes);
@@ -253,7 +252,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            MyNetly.Logger.PushError(e);
+                            NetlyEnvironment.Logger.Create(e);
                             if (!IsOpened) break;
                         }
 
@@ -284,7 +283,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        MyNetly.Logger.PushError(e);
+                        NetlyEnvironment.Logger.Create(e);
                     }
                 }
 

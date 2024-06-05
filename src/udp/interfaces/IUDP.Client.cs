@@ -1,6 +1,4 @@
-﻿using Netly.Core;
-
-namespace Netly.Interfaces
+﻿namespace Netly.Interfaces
 {
     public static partial class IUDP
     {

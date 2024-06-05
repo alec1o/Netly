@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Byter;
-using Netly.Core;
 
 namespace Netly
 {
@@ -13,8 +12,8 @@ namespace Netly
     {
         internal class Response : IResponse
         {
-            private readonly HttpListenerResponse _response;
             private readonly HttpResponseMessage _message;
+            private readonly HttpListenerResponse _response;
 
 
             public Response(HttpResponseMessage message)
@@ -22,7 +21,7 @@ namespace Netly
                 _message = message;
                 throw new NotImplementedException();
             }
-            
+
             public Response(HttpListenerResponse response)
             {
                 IsOpened = true;

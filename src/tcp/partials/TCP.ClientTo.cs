@@ -2,9 +2,9 @@
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly
@@ -15,34 +15,24 @@ namespace Netly
         {
             internal class ClientTo : ITCP.ClientTo
             {
-                public Host Host { get; private set; }
-                public bool IsEncrypted { get; private set; }
-                public bool IsOpened => IsConnected();
+                private const int _64kb = 1024 * 64; // 65,536 (64kb)
+                private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
 
-                private bool IsFraming => _client._isFraming;
-
-                private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
-
-                private string Id => _client._id;
-
-                private ClientOn On => _client._on;
-
-                private Socket _socket;
-                private NetworkStream _netStream;
-                private SslStream _sslStream;
+                private readonly Client _client;
+                private readonly bool _isServer;
+                private readonly ITCP.Server _server;
+                private readonly Action<Client, bool> _serverValidatorCallback;
+                private bool _initServerValidator;
 
                 private bool
                     _isOpening,
                     _isClosing,
                     _isClosed;
 
-                private readonly Client _client;
-                private readonly ITCP.Server _server;
-                private readonly bool _isServer;
-                private const int _64kb = 1024 * 64; // 65,536 (64kb)
-                private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
-                private bool _initServerValidator;
-                private readonly Action<Client, bool> _serverValidatorCallback;
+                private NetworkStream _netStream;
+
+                private Socket _socket;
+                private SslStream _sslStream;
 
                 /* ---- CONSTRUCTOR --- */
 
@@ -67,7 +57,8 @@ namespace Netly
                     _isClosed = true;
                 }
 
-                public ClientTo(Client client, Socket socket, ITCP.Server server, Action<Client, bool> validatorAction) : this()
+                public ClientTo(Client client, Socket socket, ITCP.Server server,
+                    Action<Client, bool> validatorAction) : this()
                 {
                     _client = client;
                     _server = server;
@@ -80,45 +71,17 @@ namespace Netly
                     _serverValidatorCallback = validatorAction;
                 }
 
-                /* ---- INTERFACE --- */
+                public Host Host { get; private set; }
+                public bool IsEncrypted { get; private set; }
+                public bool IsOpened => IsConnected();
 
-                public void InitServerValidator()
-                {
-                    if (_initServerValidator) return;
-                    _initServerValidator = true;
+                private bool IsFraming => _client.IsFraming;
 
-                    if (IsEncrypted)
-                    {
-                        void Callback()
-                        {
-                            try
-                            {
-                                InitEncryption();
-                                _serverValidatorCallback?.Invoke(_client, true);
-                            }
-                            catch
-                            {
-                                _serverValidatorCallback?.Invoke(_client, false);
-                            }
-                        }
+                private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
 
-                        // It blocks main thread and have a timeout.
-                        Task.Run(Callback);
-                    }
-                    else
-                    {
-                        _serverValidatorCallback?.Invoke(_client, true);
-                    }
-                }
+                private string Id => _client.Id;
 
-                private static void SetDefaultSocketOption(ref Socket socket)
-                {
-                    SocketOptionLevel socketLevel = SocketOptionLevel.Socket;
-
-                    socket.SetSocketOption(socketLevel, SocketOptionName.SendBuffer, _64kb);
-
-                    socket.SetSocketOption(socketLevel, SocketOptionName.ReceiveBuffer, _64kb);
-                }
+                private ClientOn On => _client._on;
 
                 public Task Open(Host host)
                 {
@@ -182,7 +145,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            MyNetly.Logger.PushError(e);
+                            NetlyEnvironment.Logger.Create(e);
                         }
                         finally
                         {
@@ -211,20 +174,16 @@ namespace Netly
                 public void Encryption(bool enable)
                 {
                     if (_isServer)
-                    {
                         throw new InvalidOperationException
                         (
                             $"Must not modify ({nameof(Encryption)}) of server-side client."
                         );
-                    }
 
                     if (IsOpened)
-                    {
                         throw new InvalidOperationException
                         (
                             $"Must not modify ({nameof(Encryption)}) while socket is Connected."
                         );
-                    }
 
                     IsEncrypted = enable;
                 }
@@ -240,28 +199,68 @@ namespace Netly
                 {
                     if (CanSend == false || data == null) return;
 
-                    SendDispatch(data.GetBytes( encoding));
+                    SendDispatch(data.GetBytes(encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    SendDispatch(EventManager.Create(name, data));
+                    SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    SendDispatch(EventManager.Create(name, data.GetBytes()));
+                    SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    SendDispatch(EventManager.Create(name, data.GetBytes( encoding)));
+                    SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                }
+
+                /* ---- INTERFACE --- */
+
+                public void InitServerValidator()
+                {
+                    if (_initServerValidator) return;
+                    _initServerValidator = true;
+
+                    if (IsEncrypted)
+                    {
+                        void Callback()
+                        {
+                            try
+                            {
+                                InitEncryption();
+                                _serverValidatorCallback?.Invoke(_client, true);
+                            }
+                            catch
+                            {
+                                _serverValidatorCallback?.Invoke(_client, false);
+                            }
+                        }
+
+                        // It blocks main thread and have a timeout.
+                        Task.Run(Callback);
+                    }
+                    else
+                    {
+                        _serverValidatorCallback?.Invoke(_client, true);
+                    }
+                }
+
+                private static void SetDefaultSocketOption(ref Socket socket)
+                {
+                    var socketLevel = SocketOptionLevel.Socket;
+
+                    socket.SetSocketOption(socketLevel, SocketOptionName.SendBuffer, _64kb);
+
+                    socket.SetSocketOption(socketLevel, SocketOptionName.ReceiveBuffer, _64kb);
                 }
 
                 /* ---- INTERNAL --- */
@@ -293,7 +292,7 @@ namespace Netly
 
                 private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
                 {
-                    int timeout = reset ? System.Threading.Timeout.Infinite : EncryptionTimeout;
+                    var timeout = reset ? Timeout.Infinite : EncryptionTimeout;
 
                     stream.ReadTimeout = timeout;
                     stream.WriteTimeout = timeout;
@@ -309,7 +308,7 @@ namespace Netly
                     {
                         _sslStream = new SslStream(_netStream, false);
 
-                        SetEncryptionTimeout(ref _sslStream, reset: false);
+                        SetEncryptionTimeout(ref _sslStream, false);
 
                         _sslStream.AuthenticateAsServer
                         (
@@ -323,8 +322,8 @@ namespace Netly
                     {
                         _sslStream = new SslStream
                         (
-                            innerStream: _netStream,
-                            leaveInnerStreamOpen: false,
+                            _netStream,
+                            false,
                             userCertificateSelectionCallback: null,
                             userCertificateValidationCallback: (sender, certificate, chain, errors) =>
                             {
@@ -333,22 +332,19 @@ namespace Netly
                                 // callbacks not found.
                                 if (encryptionCallbackList.Count <= 0)
                                 {
-                                    MyNetly.Logger.PushWarning(
+                                    NetlyEnvironment.Logger.Create(
                                         $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
                                     return true;
                                 }
 
-                                bool isValid = true;
+                                var isValid = true;
 
                                 foreach (var callback in encryptionCallbackList)
                                 {
                                     isValid = callback.Invoke(certificate, chain, errors);
 
                                     // error on validate certificate
-                                    if (isValid is false)
-                                    {
-                                        break;
-                                    }
+                                    if (isValid is false) break;
                                 }
 
                                 // all callbacks are true.
@@ -356,47 +352,36 @@ namespace Netly
                             }
                         );
 
-                        SetEncryptionTimeout(ref _sslStream, reset: false);
+                        SetEncryptionTimeout(ref _sslStream, false);
 
-                        _sslStream.AuthenticateAsClient(targetHost: string.Empty);
+                        _sslStream.AuthenticateAsClient(string.Empty);
                     }
 
-                    SetEncryptionTimeout(ref _sslStream, reset: true);
+                    SetEncryptionTimeout(ref _sslStream, true);
                 }
 
                 private void PushResult(ref byte[] bytes)
                 {
-                    (string name, byte[] buffer) content = EventManager.Verify(bytes);
+                    (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
 
                     if (content.buffer == null)
-                    {
                         On.m_onData?.Invoke(null, bytes);
-                    }
                     else
-                    {
                         On.m_onEvent?.Invoke(null, (content.name, content.buffer));
-                    }
                 }
 
-                void SendDispatch(byte[] bytes)
+                private void SendDispatch(byte[] bytes)
                 {
                     if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
 
                     try
                     {
-                        if (IsFraming)
-                        {
-                            bytes = MessageFraming.CreateMessage(bytes);
-                        }
+                        if (IsFraming) bytes = NetlyEnvironment.MessageFraming.CreateMessage(bytes);
 
                         if (IsEncrypted)
-                        {
                             _sslStream?.BeginWrite(bytes, 0, bytes.Length, null, null);
-                        }
                         else
-                        {
                             _netStream?.BeginWrite(bytes, 0, bytes.Length, null, null);
-                        }
                     }
                     catch
                     {
@@ -404,15 +389,15 @@ namespace Netly
                     }
                 }
 
-                void InitReceiver()
+                private void InitReceiver()
                 {
-                    byte[] buffer = new byte
+                    var buffer = new byte
                     [
                         // Maximum/Default receive buffer length.
                         (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                     ];
 
-                    MessageFraming framing = new MessageFraming();
+                    NetlyEnvironment.MessageFraming framing = new NetlyEnvironment.MessageFraming();
 
                     if (IsFraming)
                     {
@@ -422,7 +407,7 @@ namespace Netly
                         // Endpoint part isn't using framing or is using different framing protocol
                         framing.OnError(exception =>
                         {
-                            MyNetly.Logger.PushError(exception);
+                            NetlyEnvironment.Logger.Create(exception);
                             Close();
                         });
                     }
@@ -432,53 +417,41 @@ namespace Netly
                     void ReceiverUpdate()
                     {
                         if (IsEncrypted)
-                        {
                             _sslStream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, null);
-                        }
                         else
-                        {
                             _netStream.BeginRead(buffer, 0, buffer.Length, ReceiveCallback, null);
-                        }
                     }
 
                     void ReceiveCallback(IAsyncResult result)
                     {
                         try
                         {
-                            int size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
+                            var size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
 
                             if (size <= 0)
                             {
                                 if (IsOpened)
-                                {
                                     ReceiverUpdate();
-                                }
                                 else
-                                {
                                     Close();
-                                }
 
                                 return;
                             }
 
-                            byte[] data = new byte[size];
+                            var data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
 
                             if (IsFraming)
-                            {
                                 framing.Add(data);
-                            }
                             else
-                            {
                                 PushResult(ref data);
-                            }
-                            
+
                             ReceiverUpdate();
                         }
                         catch (Exception e)
                         {
-                            MyNetly.Logger.PushError(e);
+                            NetlyEnvironment.Logger.Create(e);
                             Close();
                         }
                     }

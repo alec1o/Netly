@@ -1,5 +1,4 @@
 using System.Net;
-using Netly.Core;
 
 namespace Netly
 {

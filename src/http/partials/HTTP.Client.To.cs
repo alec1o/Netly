@@ -16,29 +16,30 @@ namespace Netly
         {
             private class _ITo : ITo
             {
-                private _IOn On => _client._on;
                 private readonly Client _client;
                 private int _timeout;
-                public bool IsOpened { get; private set; }
 
                 public _ITo(Client client)
                 {
                     _client = client;
                 }
 
+                private _IOn On => _client._on;
+                public bool IsOpened { get; private set; }
+
                 public Task Open(string method, string url, byte[] body = null)
                 {
                     if (IsOpened)
                     {
                         // NOTE: it now allows fetch multi request
-                        Exception e = new Exception
+                        var e = new Exception
                         (
                             $"[{nameof(Client)}] execute a fetch when exist a operation with same this instance. " +
                             "You must wait for release this operation, " +
                             "for handle it you can use those callbacks: Close, Fetch and, Error"
                         );
 
-                        MyNetly.Logger.PushError(e);
+                        NetlyEnvironment.Logger.Create(e);
 
                         throw e;
                     }
@@ -50,7 +51,7 @@ namespace Netly
                     {
                         try
                         {
-                            var http = new System.Net.Http.HttpClient();
+                            var http = new HttpClient();
 
                             var host = new Uri(url);
 
@@ -69,12 +70,8 @@ namespace Netly
                                 var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
 
                                 foreach (var key in queries.Keys)
-                                {
                                     if (!string.IsNullOrWhiteSpace(key))
-                                    {
                                         queryBuilder.Add(key, queries[key] ?? string.Empty);
-                                    }
-                                }
 
                                 uriBuilder.Query = queryBuilder.ToString();
                                 host = new Uri(uriBuilder.ToString());
@@ -91,10 +88,7 @@ namespace Netly
 
                             message.Headers.Clear();
 
-                            foreach (var header in _client.Headers)
-                            {
-                                message.Headers.Add(header.Key, header.Value);
-                            }
+                            foreach (var header in _client.Headers) message.Headers.Add(header.Key, header.Value);
 
                             #endregion
 
@@ -111,7 +105,7 @@ namespace Netly
                         }
                         catch (Exception ex)
                         {
-                            MyNetly.Logger.PushError(ex);
+                            NetlyEnvironment.Logger.Create(ex);
                             On.m_onError?.Invoke(null, ex);
                         }
                         finally
@@ -139,27 +133,26 @@ namespace Netly
                     throw new NotImplementedException();
                 }
 
-                public int GetTimeout() => _timeout;
+                public int GetTimeout()
+                {
+                    return _timeout;
+                }
 
                 public void SetTimeout(int timeout)
                 {
                     // connection is opened error.
                     if (IsOpened)
-                    {
                         throw new InvalidOperationException
                         (
                             "You can modify timeout when request is on progress."
                         );
-                    }
 
                     // invalid timeout value (is negative)
                     if (_timeout < -1)
-                    {
                         throw new ArgumentOutOfRangeException
                         (
                             $"({timeout}) is invalid timeout value. it must be posetive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
                         );
-                    }
 
                     // success, timeout changed!
                     _timeout = timeout;

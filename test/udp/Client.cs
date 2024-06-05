@@ -1,7 +1,6 @@
 using System.Net.Sockets;
 using Byter;
 using Netly;
-using Netly.Core;
 using NotSupportedException = System.NotSupportedException;
 
 // ReSharper disable once CheckNamespace

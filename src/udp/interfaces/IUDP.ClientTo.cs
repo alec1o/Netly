@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly.Interfaces
 {
@@ -42,7 +41,7 @@ namespace Netly.Interfaces
             /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
             void Data(string data, Encoding encoding);
-            
+
             /// <summary>
             ///     Send raw data for custom host
             /// </summary>

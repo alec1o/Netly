@@ -10,44 +10,29 @@ namespace Netly
         internal static class Path
         {
             /// <summary>
-            /// Validate regular path regex e.g.: /root/path/
-            /// </summary>
-            public static readonly Regex ValidateRegularPathRegex;
-
-            /// <summary>
-            /// Validate param path regex e.g.: /root/home/{user}/code/{file}/
-            /// </summary>
-            public static readonly Regex ValidateParamPathRegex;
-
-            /// <summary>
-            /// Validate param field e.g.: {user}, {file}
-            /// </summary>
-            public static readonly Regex ValidateParamFieldRegex;
-
-            /// <summary>
-            /// Regex Timout. It prevent attacks
+            ///     Regex Timout. It prevent attacks
             /// </summary>
             public const int RegexTimeout = 5000;
 
             /// <summary>
-            /// Param Parsing Result
+            ///     Validate regular path regex e.g.: /root/path/
             /// </summary>
-            public struct ParseResult
-            {
-                public bool Valid { get; private set; }
-                public KeyValuePair<string, string>[] Params { get; private set; }
+            public static readonly Regex ValidateRegularPathRegex;
 
-                public ParseResult(bool valid = false, KeyValuePair<string, string>[] @params = null)
-                {
-                    Valid = valid;
-                    Params = @params ?? Array.Empty<KeyValuePair<string, string>>();
-                }
-            }
+            /// <summary>
+            ///     Validate param path regex e.g.: /root/home/{user}/code/{file}/
+            /// </summary>
+            public static readonly Regex ValidateParamPathRegex;
+
+            /// <summary>
+            ///     Validate param field e.g.: {user}, {file}
+            /// </summary>
+            public static readonly Regex ValidateParamFieldRegex;
 
             static Path()
             {
-                RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
-                TimeSpan timeout = TimeSpan.FromMilliseconds(RegexTimeout);
+                var options = RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.CultureInvariant;
+                var timeout = TimeSpan.FromMilliseconds(RegexTimeout);
 
                 ValidateRegularPathRegex =
                     new Regex("^([/][a-zA-Z0-9-._@]+)([/][a-zA-Z0-9-._@]+)*([/]?)?$", options, timeout);
@@ -61,7 +46,7 @@ namespace Netly
 
             public static bool IsValid(string path)
             {
-                string value = (path ?? string.Empty).Trim();
+                var value = (path ?? string.Empty).Trim();
 
                 // Prevent Regex -> ArgumentNullException 
                 if (string.IsNullOrWhiteSpace(value)) return false;
@@ -76,7 +61,7 @@ namespace Netly
                 catch (RegexMatchTimeoutException e)
                 {
                     // Prevent Regex -> RegexMatchTimeoutException (Regex Attack)
-                    MyNetly.Logger.PushError(e);
+                    NetlyEnvironment.Logger.Create(e);
                     return false;
                 }
             }
@@ -128,7 +113,7 @@ namespace Netly
             }
 
             /// <summary>
-            /// Parse custom path to get params
+            ///     Parse custom path to get params
             /// </summary>
             /// <param name="originalPath">Path custom: e.g.? /root/{folder}/</param>
             /// <param name="inputPath">Absolute path: e.g.: /root/home/</param>
@@ -136,9 +121,9 @@ namespace Netly
             public static ParseResult ParseParam(string originalPath, string inputPath)
             {
                 // VALIDATE INPUTS
-                string path = (originalPath ?? String.Empty).Trim();
+                var path = (originalPath ?? string.Empty).Trim();
                 // is path but this path don't contain especial keys ("{" and "}")
-                string input = (inputPath ?? String.Empty).Trim();
+                var input = (inputPath ?? string.Empty).Trim();
 
                 if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(input)) return new ParseResult();
 
@@ -154,30 +139,28 @@ namespace Netly
                 // invalid input-path syntax. it must be regular path e.g.: /root/home/files.however/
                 if (!IsRegularPath(input)) return new ParseResult();
 
-                string[] pathPoints = path.Split('/');
-                string[] inputPoints = input.Split('/');
+                var pathPoints = path.Split('/');
+                var inputPoints = input.Split('/');
 
                 // incompatible paths
                 if (pathPoints.Length != inputPoints.Length) return new ParseResult();
 
                 // is temp!
-                List<KeyValuePair<string, string>> paramsList = new List<KeyValuePair<string, string>>();
+                var paramsList = new List<KeyValuePair<string, string>>();
 
                 // processing
-                for (int i = 0; i < pathPoints.Length; i++)
+                for (var i = 0; i < pathPoints.Length; i++)
                 {
-                    string pathValue = pathPoints[i];
-                    string inputValue = inputPoints[i];
+                    var pathValue = pathPoints[i];
+                    var inputValue = inputPoints[i];
 
                     // skin isn't custom path 
                     if (pathValue == inputValue) continue;
 
                     // check if is custom path
                     if (!ValidateParamFieldRegex.IsMatch(pathValue))
-                    {
                         // isn't custom path and it mean that the paths is incompatible
                         return new ParseResult();
-                    }
 
                     // remove especial characters
                     var regularParamName = pathValue.ToList();
@@ -193,7 +176,22 @@ namespace Netly
                 // empty params
                 if (paramsList.Count <= 0) return new ParseResult();
 
-                return new ParseResult(valid: true, @params: paramsList.ToArray());
+                return new ParseResult(true, paramsList.ToArray());
+            }
+
+            /// <summary>
+            ///     Param Parsing Result
+            /// </summary>
+            public struct ParseResult
+            {
+                public bool Valid { get; }
+                public KeyValuePair<string, string>[] Params { get; }
+
+                public ParseResult(bool valid = false, KeyValuePair<string, string>[] @params = null)
+                {
+                    Valid = valid;
+                    Params = @params ?? Array.Empty<KeyValuePair<string, string>>();
+                }
             }
         }
     }

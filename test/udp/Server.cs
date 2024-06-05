@@ -1,6 +1,5 @@
 using System.Net.Sockets;
 using Netly;
-using Netly.Core;
 
 // ReSharper disable once CheckNamespace
 namespace com.netly.udp;

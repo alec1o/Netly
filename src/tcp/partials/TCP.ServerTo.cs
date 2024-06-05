@@ -5,7 +5,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly
@@ -16,25 +15,18 @@ namespace Netly
         {
             internal class ServerTo : ITCP.ServerTo
             {
-                private readonly Server _server;
-                public bool IsOpened => _socket != null;
-                public Host Host { get; private set; }
-                private ServerOn On => _server._on;
-                public bool IsEncrypted { get; private set; }
-                public X509Certificate Certificate { get; private set; }
-                public SslProtocols EncryptionProtocol { get; private set; }
-                public Dictionary<string, ITCP.Client> Clients { get; private set; }
-
-
-                private Socket _socket;
-                private readonly object _lockAccept, _lockClient;
-                private readonly List<Socket> _socketList;
                 private readonly int _defaultBacklog;
+                private readonly object _lockAccept, _lockClient;
+                private readonly Server _server;
+                private readonly List<Socket> _socketList;
 
                 private bool
                     _isOpening,
                     _isClosing,
                     _isClosed;
+
+
+                private Socket _socket;
 
                 private ServerTo()
                 {
@@ -56,7 +48,18 @@ namespace Netly
                     _server = server;
                 }
 
-                public Task Open(Host host) => Open(host, _defaultBacklog);
+                public bool IsOpened => _socket != null;
+                public Host Host { get; private set; }
+                private ServerOn On => _server._on;
+                public bool IsEncrypted { get; private set; }
+                public X509Certificate Certificate { get; private set; }
+                public SslProtocols EncryptionProtocol { get; private set; }
+                public Dictionary<string, ITCP.Client> Clients { get; }
+
+                public Task Open(Host host)
+                {
+                    return Open(host, _defaultBacklog);
+                }
 
                 public Task Open(Host host, int backlog)
                 {
@@ -68,7 +71,7 @@ namespace Netly
                     {
                         try
                         {
-                            Socket socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                            var socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                             On.m_onModify?.Invoke(null, socket);
 
@@ -107,10 +110,7 @@ namespace Netly
                         {
                             _socket.Close();
 
-                            foreach (var client in Clients.Values)
-                            {
-                                client.To.Close();
-                            }
+                            foreach (var client in Clients.Values) client.To.Close();
 
                             _socket.Dispose();
                         }
@@ -131,46 +131,32 @@ namespace Netly
 
                 public void DataBroadcast(string data)
                 {
-                    foreach (var client in Clients)
-                    {
-                        client.Value.To.Data(data);
-                    }
+                    foreach (var client in Clients) client.Value.To.Data(data);
                 }
 
                 public void DataBroadcast(byte[] data)
                 {
-                    foreach (var client in Clients)
-                    {
-                        client.Value.To.Data(data);
-                    }
+                    foreach (var client in Clients) client.Value.To.Data(data);
                 }
 
                 public void EventBroadcast(string name, string data)
                 {
-                    foreach (var client in Clients)
-                    {
-                        client.Value.To.Event(name, data);
-                    }
+                    foreach (var client in Clients) client.Value.To.Event(name, data);
                 }
 
                 public void EventBroadcast(string name, byte[] data)
                 {
-                    foreach (var client in Clients)
-                    {
-                        client.Value.To.Event(name, data);
-                    }
+                    foreach (var client in Clients) client.Value.To.Event(name, data);
                 }
 
                 public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
                     SslProtocols protocols)
                 {
                     if (IsOpened || _isClosing || _isOpening)
-                    {
                         throw new InvalidOperationException
                         (
                             $"You must not update {nameof(Encryption)} while {nameof(IsOpened)} is {IsOpened}"
                         );
-                    }
 
 
                     if (enableEncryption)
@@ -186,24 +172,21 @@ namespace Netly
 
                 private int ClampBacklog(int backlog)
                 {
-                    return (backlog <= 0) || (backlog >= _defaultBacklog) ? _defaultBacklog : backlog;
+                    return backlog <= 0 || backlog >= _defaultBacklog ? _defaultBacklog : backlog;
                 }
 
                 private void InitAccept()
                 {
                     void UpdateAccept()
                     {
-                        if (IsOpened)
-                        {
-                            _socket.BeginAccept(AcceptCallback, null);
-                        }
+                        if (IsOpened) _socket.BeginAccept(AcceptCallback, null);
                     }
 
                     void AcceptCallback(IAsyncResult result)
                     {
                         try
                         {
-                            Socket socket = _socket.EndAccept(result);
+                            var socket = _socket.EndAccept(result);
 
                             lock (_lockAccept)
                             {
@@ -212,7 +195,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            MyNetly.Logger.PushError(e);
+                            NetlyEnvironment.Logger.Create(e);
                         }
                         finally
                         {
@@ -240,7 +223,7 @@ namespace Netly
                                 _socketList.RemoveAt(0);
                             }
 
-                            new Client(socket, _server, serverValidatorCallback: (client, success) =>
+                            new Client(socket, _server, (client, success) =>
                             {
                                 if (success)
                                 {

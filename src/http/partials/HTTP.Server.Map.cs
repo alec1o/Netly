@@ -154,8 +154,7 @@ namespace Netly
                 {
                     path = (path ?? string.Empty).Trim();
 
-                    MyNetly.Logger.PushLog
-                    (
+                    NetlyEnvironment.Logger.Create(
                         $"Add Path: {path} | IsValid: {Path.IsValid(path)} | UseParams: {Path.IsParamPath(path)}"
                     );
 
@@ -163,12 +162,12 @@ namespace Netly
                     {
                         var map = new MapContainer
                         (
-                            path: path,
-                            useParams: Path.IsParamPath(path),
-                            method: method,
-                            isWebsocket: isWebsocket,
-                            httpCallback: httpCallback,
-                            websocketCallback: websocketCallback
+                            path,
+                            Path.IsParamPath(path),
+                            method,
+                            isWebsocket,
+                            httpCallback,
+                            websocketCallback
                         );
                         m_mapList.Add(map);
                     }

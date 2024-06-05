@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
-using Netly.Core;
 using Netly.Interfaces;
-
+using Env = Netly.NetlyEnvironment;
 namespace Netly
 {
     public static partial class UDP
@@ -19,27 +18,27 @@ namespace Netly
 
                 public void Open(Action callback)
                 {
-                    OnOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Error(Action<Exception> callback)
                 {
-                    OnError += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Close(Action callback)
                 {
-                    OnClose += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Modify(Action<Socket> callback)
                 {
-                    OnModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Accept(Action<IUDP.Client> callback)
                 {
-                    OnAccept += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    OnAccept += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
             }
         }

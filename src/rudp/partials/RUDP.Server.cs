@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly

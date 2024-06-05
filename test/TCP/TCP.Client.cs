@@ -1,7 +1,6 @@
 ﻿using Netly;
 using System.Net;
 using Byter;
-using Netly.Core;
 
 namespace test.TestTCP;
 

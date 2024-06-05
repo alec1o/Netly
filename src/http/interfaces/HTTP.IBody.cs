@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Netly.Core;
 
 namespace Netly
 {

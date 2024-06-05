@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Web;
-using Netly.Core;
 
 namespace Netly
 {
@@ -87,9 +86,8 @@ namespace Netly
                     var cookiesList = new List<Cookie>();
 
                     if (ws.Options.Cookies != null)
-                    {
-                        foreach (var cookie in ws.Options.Cookies.GetCookies(uri)) cookiesList.Add((Cookie)cookie);
-                    }
+                        foreach (var cookie in ws.Options.Cookies.GetCookies(uri))
+                            cookiesList.Add((Cookie)cookie);
 
                     Cookies = cookiesList.ToArray();
                 }
@@ -137,18 +135,18 @@ namespace Netly
 
             internal Request(HttpResponseMessage message)
             {
-                Uri uri = message.RequestMessage.RequestUri;
+                var uri = message.RequestMessage.RequestUri;
 
                 {
                     Headers = new Dictionary<string, string>();
 
                     foreach (var header in message.Headers)
                     {
-                        string value = string.Empty;
+                        var value = string.Empty;
 
                         if (header.Value.Any())
                         {
-                            bool isFirst = true;
+                            var isFirst = true;
                             foreach (var key in header.Value)
                             {
                                 // prepare for parsing e.g: "<..>; <..>; <..>; <...>"
@@ -205,7 +203,7 @@ namespace Netly
                     // TODO: detect enctype from Header
                     var enctype = Enctype.PlainText;
 
-                    byte[] buffer = message.Content.ReadAsByteArrayAsync().Result;
+                    var buffer = message.Content.ReadAsByteArrayAsync().Result;
                     Body = new Body(buffer, enctype, RequestEncoding);
                 }
             }
@@ -227,7 +225,7 @@ namespace Netly
             public int Status { get; }
 
             /// <summary>
-            /// Set queries from a exist uri
+            ///     Set queries from a exist uri
             /// </summary>
             /// <param name="uri">Uri instance</param>
             private void SetQueriesFromUri(Uri uri)
@@ -235,10 +233,7 @@ namespace Netly
                 var uriBuilder = new UriBuilder(uri);
                 var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
 
-                foreach (var queryName in queryBuilder.AllKeys)
-                {
-                    Queries.Add(queryName, queryBuilder[queryName]);
-                }
+                foreach (var queryName in queryBuilder.AllKeys) Queries.Add(queryName, queryBuilder[queryName]);
             }
         }
     }

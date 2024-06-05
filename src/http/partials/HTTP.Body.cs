@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using Byter;
-using Netly.Core;
 
 namespace Netly
 {

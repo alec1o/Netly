@@ -1,6 +1,5 @@
 ﻿using System.Security.Authentication;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly.Interfaces
 {

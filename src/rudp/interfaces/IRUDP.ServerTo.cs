@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly.Interfaces
 {
@@ -35,7 +34,7 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="data">Data - string</param>
             void DataBroadcast(string data);
-            
+
             /// <summary>
             ///     Use to send raw data to all connected clients
             /// </summary>
@@ -56,7 +55,7 @@ namespace Netly.Interfaces
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
             void EventBroadcast(string name, string data);
-            
+
             /// <summary>
             ///     Use to send event (netly event) to all connected clients
             /// </summary>

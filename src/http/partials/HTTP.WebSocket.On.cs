@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
-using Netly.Core;
-
+using Env = Netly.NetlyEnvironment;
 namespace Netly
 {
     public partial class HTTP
@@ -19,39 +18,39 @@ namespace Netly
 
                 public void Open(Action callback)
                 {
-                    m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    m_onOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Error(Action<Exception> callback)
                 {
-                    m_onError += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Close(Action callback)
                 {
-                    m_onClose += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    m_onClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Modify(Action<ClientWebSocket> callback)
                 {
-                    m_onModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Data(Action<byte[], bool> callback)
                 {
                     m_onData += (@object, @event) =>
-                        MainThread.Add(() => callback?.Invoke(@event.buffer, @event.isText));
+                        Env.MainThread.Add(() => callback?.Invoke(@event.buffer, @event.isText));
                 }
 
                 public void Event(Action<string, byte[]> callback)
                 {
                     m_onEvent += (@object, @event) =>
-                        MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer));
+                        Env.MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer));
                 }
 
                 public void Close(Action<WebSocketCloseStatus> callback)
                 {
-                    m_onClose += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
             }
         }

@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using Netly.Core;
 
 namespace Netly
 {
@@ -82,7 +81,7 @@ namespace Netly
 
 
             /// <summary>
-            ///     Http Status Code. <br/>
+            ///     Http Status Code. <br />
             ///     if value is -1 mean: (not applicable on context).
             /// </summary>
             int Status { get; }

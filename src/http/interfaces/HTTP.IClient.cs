@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net.Http;
-using Netly.Core;
 
 namespace Netly
 {

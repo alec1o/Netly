@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Byter;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly
@@ -69,21 +68,21 @@ namespace Netly
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, data));
+                    Broadcast(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void EventBroadcast(string name, string data)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, data.GetBytes()));
+                    Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, data.GetBytes(encoding)));
+                    Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 private void Broadcast(byte[] data)

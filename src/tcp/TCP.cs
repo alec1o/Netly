@@ -1,19 +1,19 @@
 ﻿namespace Netly
 {
     /// <summary>
-    /// TCP Container
+    ///     TCP Container
     /// </summary>
     public static partial class TCP
     {
         /// <summary>
-        /// TCP Server
+        ///     TCP Server
         /// </summary>
         public partial class Server
         {
         }
 
         /// <summary>
-        /// TCP Client
+        ///     TCP Client
         /// </summary>
         public partial class Client
         {

@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Byter;
-using Netly.Core;
 
 namespace Netly
 {
@@ -15,9 +14,9 @@ namespace Netly
         {
             private class _To : ITo
             {
-                public readonly Dictionary<string, string> m_headers = new Dictionary<string, string>();
                 private readonly bool _isServerSide;
                 private readonly WebSocket _socket;
+                public readonly Dictionary<string, string> m_headers = new Dictionary<string, string>();
                 private bool _tryConnecting, _tryClosing, _initServerSide;
                 private ClientWebSocket _websocket;
                 private System.Net.WebSockets.WebSocket _websocketServerSide;
@@ -175,12 +174,12 @@ namespace Netly
 
                 public void Event(string name, byte[] buffer)
                 {
-                    Send(EventManager.Create(name, buffer), false);
+                    Send(NetlyEnvironment.EventManager.Create(name, buffer), false);
                 }
 
                 public void Event(string name, string buffer)
                 {
-                    Send(EventManager.Create(name, buffer.GetBytes(Encoding.UTF8)), false);
+                    Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(Encoding.UTF8)), false);
                 }
 
                 private void Send(byte[] buffer, bool isText)
@@ -214,15 +213,11 @@ namespace Netly
                 private void _ReceiveData()
                 {
                     if (_isServerSide)
-                    {
                         // optimize server resources.
                         ThreadPool.QueueUserWorkItem(ReceiveJob);
-                    }
                     else
-                    {
                         // dedicate thread
                         new Thread(ReceiveJob) { IsBackground = true }.Start();
-                    }
                 }
 
                 private async void ReceiveJob(object _)
@@ -250,7 +245,7 @@ namespace Netly
 
                             Array.Copy(buffer.Array, 0, data, 0, data.Length);
 
-                            var eventData = EventManager.Verify(data);
+                            var eventData = NetlyEnvironment.EventManager.Verify(data);
 
                             if (eventData.data != null && eventData.name != null)
                                 // Is Netly Event

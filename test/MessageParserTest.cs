@@ -1,6 +1,7 @@
-﻿namespace test;
+﻿using Netly;
 
-using Netly.Core;
+namespace test;
+
 
 public class MessageParserTest
 {
@@ -10,9 +11,9 @@ public class MessageParserTest
         string eventName = "sample";
         byte[] eventData = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-        byte[] buffer = EventManager.Create(eventName, eventData);
+        byte[] buffer = NetlyEnvironment.EventManager.Create(eventName, eventData);
 
-        var result = EventManager.Verify(buffer);
+        var result = NetlyEnvironment.EventManager.Verify(buffer);
 
         string bufferName = result.name;
         byte[] bufferData = result.data;

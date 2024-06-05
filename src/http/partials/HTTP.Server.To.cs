@@ -103,7 +103,7 @@ namespace Netly
                         while (IsOpened)
                         {
                             HttpListenerContext context = null;
-                            MyNetly.Logger.PushLog("Request entry.");
+                            NetlyEnvironment.Logger.Create("Request entry.");
 
                             try
                             {
@@ -112,14 +112,14 @@ namespace Netly
                             catch (Exception e)
                             {
                                 context = null;
-                                MyNetly.Logger.PushLog($"Request fail: {e}");
+                                NetlyEnvironment.Logger.Create($"Request fail: {e}");
                             }
                             finally
                             {
                                 if (context != null)
                                     Task.Run(() =>
                                     {
-                                        MyNetly.Logger.PushLog("Task Init");
+                                        NetlyEnvironment.Logger.Create("Task Init");
 
                                         try
                                         {
@@ -128,10 +128,10 @@ namespace Netly
                                         }
                                         catch (Exception e)
                                         {
-                                            MyNetly.Logger.PushLog($"Task error: {e}");
+                                            NetlyEnvironment.Logger.Create($"Task error: {e}");
                                         }
 
-                                        MyNetly.Logger.PushLog("Task End");
+                                        NetlyEnvironment.Logger.Create("Task End");
                                     });
                             }
                         }
@@ -155,13 +155,13 @@ namespace Netly
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
-                    MyNetly.Logger.PushLog("Request processing.");
+                    NetlyEnvironment.Logger.Create("Request processing.");
 
                     var request = new Request(context.Request);
                     var response = new Response(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
-                    MyNetly.Logger.PushLog("Request starting.");
+                    NetlyEnvironment.Logger.Create("Request starting.");
 
                     var skipNextMiddleware = false;
 
@@ -186,15 +186,13 @@ namespace Netly
 
                     #region GLOBAL MIDDLEWARE
 
-                    MyNetly.Logger.PushLog($"Global middleware. Search middlewares...");
+                    NetlyEnvironment.Logger.Create("Global middleware. Search middlewares...");
 
                     var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
                         if (x.Path == _Middleware.GLOBAL_PATH)
-                        {
                             // is only global path
                             return true;
-                        }
 
                         return false;
                     });
@@ -202,7 +200,8 @@ namespace Netly
                     if (!skipNextMiddleware)
                     {
                         RunMiddlewares(globalMiddlewares.ToArray());
-                        MyNetly.Logger.PushLog($"[END] running global middleware (next: {!skipNextMiddleware})");
+                        NetlyEnvironment.Logger.Create(
+                            $"[END] running global middleware (next: {!skipNextMiddleware})");
                     }
 
                     if (skipNextMiddleware) return;
@@ -213,21 +212,19 @@ namespace Netly
 
                     #region LOCAL MIDDLEWARE
 
-                    MyNetly.Logger.PushLog($"Local middleware. Search middlewares...");
+                    NetlyEnvironment.Logger.Create("Local middleware. Search middlewares...");
 
                     var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
-                        // only local middleware is allows
+                        // only local middleware is allowing
                         if (x.Path == _Middleware.GLOBAL_PATH) return false;
 
                         if (!x.UseParams)
-                        {
                             // simple path compare
                             return Path.ComparePath(request.Path, x.Path);
-                        }
 
                         // compare custom path
-                        var result = Path.ParseParam(originalPath: x.Path, inputPath: request.Path);
+                        var result = Path.ParseParam(x.Path, request.Path);
 
                         // custom path is valid.
                         if (result.Valid)
@@ -251,7 +248,8 @@ namespace Netly
                     if (!skipNextMiddleware)
                     {
                         RunMiddlewares(localMiddlewares.ToArray());
-                        MyNetly.Logger.PushLog($"[END] running local middleware (next: {!skipNextMiddleware})");
+                        NetlyEnvironment.Logger.Create(
+                            $"[END] running local middleware (next: {!skipNextMiddleware})");
                     }
 
                     if (skipNextMiddleware) return;
@@ -275,25 +273,21 @@ namespace Netly
                         {
                             // handle all method
                             var handleMethod =
-                            (
                                 string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
                                 ||
                                 string.Equals(request.Method.Method, x.Method,
-                                    StringComparison.CurrentCultureIgnoreCase)
-                            );
+                                    StringComparison.CurrentCultureIgnoreCase);
 
                             if (!handleMethod) return false;
                         }
 
                         // compare regular path
                         if (!x.UseParams)
-                        {
                             // simple path compare
                             return Path.ComparePath(request.Path, x.Path);
-                        }
 
                         // compare custom path
-                        var result = Path.ParseParam(originalPath: x.Path, inputPath: request.Path);
+                        var result = Path.ParseParam(x.Path, request.Path);
 
                         // custom path is valid.
                         if (result.Valid)

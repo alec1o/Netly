@@ -17,6 +17,7 @@ namespace Netly
                 /// </summary>
                 /// <param name="callback">Callback</param>
                 void Open(Action<IResponse> callback);
+
                 /// <summary>
                 ///     Use to handle connection error event
                 /// </summary>

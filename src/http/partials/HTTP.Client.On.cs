@@ -1,5 +1,6 @@
 ﻿using System;
-using Netly.Core;
+using System.Net.Http;
+using Env = Netly.NetlyEnvironment;
 
 namespace Netly
 {
@@ -11,27 +12,27 @@ namespace Netly
             {
                 public EventHandler m_onClose;
                 public EventHandler<Exception> m_onError;
-                public EventHandler<System.Net.Http.HttpClient> m_onModify;
+                public EventHandler<HttpClient> m_onModify;
                 public EventHandler<IResponse> m_onOpen;
 
                 public void Error(Action<Exception> callback)
                 {
-                    m_onError += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Close(Action callback)
                 {
-                    m_onClose += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    m_onClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
-                public void Modify(Action<System.Net.Http.HttpClient> callback)
+                public void Modify(Action<HttpClient> callback)
                 {
-                    m_onModify += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Open(Action<IResponse> callback)
                 {
-                    m_onOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    m_onOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
             }
         }

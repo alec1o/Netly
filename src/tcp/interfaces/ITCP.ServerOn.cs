@@ -7,7 +7,7 @@ namespace Netly.Interfaces
     {
         public interface ServerOn : IOn<Socket>
         {
-            void Accept(Action<ITCP.Client> callback);
+            void Accept(Action<Client> callback);
         }
     }
 }

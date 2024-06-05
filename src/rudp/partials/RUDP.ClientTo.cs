@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly
@@ -13,9 +12,9 @@ namespace Netly
             private class ClientTo : IRUDP.ClientTo
             {
                 private readonly Client _client;
+                private readonly object _timerLock;
                 private readonly UDP.Client _udp;
                 private DateTime _timer;
-                private readonly object _timerLock;
 
                 private ClientTo()
                 {
@@ -83,10 +82,8 @@ namespace Netly
 
                         // ignore ping data, ping data is only for internal use and isn't invoked
                         if (!IsPing(ref data))
-                        {
                             // raw data received
                             On.OnData?.Invoke(null, data);
-                        }
                     });
 
                     _udp.On.Event((name, data) =>
@@ -96,12 +93,10 @@ namespace Netly
 
                         // ignore ping data, ping data is only for internal use and isn't invoked
                         if (!IsPing(ref data))
-                        {
                             // raw data received
-                            On.OnEvent?.Invoke(null, (name: name, buffer: data));
-                        }
+                            On.OnEvent?.Invoke(null, (name, buffer: data));
                     });
-                    
+
                     _udp.On.Open(() =>
                     {
                         // invoke connection error: from udp to rudp
@@ -115,13 +110,13 @@ namespace Netly
                         // invoke connection error: from udp to rudp
                         On.OnError?.Invoke(null, exception);
                     });
-                    
+
                     _udp.On.Modify(socket =>
                     {
                         // invoke connection modify: from udp to rudp
                         On.OnModify?.Invoke(null, socket);
                     });
-                    
+
                     _udp.On.Close(() =>
                     {
                         // invoke connection close: from udp to rudp

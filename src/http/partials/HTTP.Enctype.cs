@@ -6,7 +6,7 @@
         {
             UrlEncoded = 0,
             Multipart = 1,
-            PlainText = 2,
+            PlainText = 2
         }
     }
 }

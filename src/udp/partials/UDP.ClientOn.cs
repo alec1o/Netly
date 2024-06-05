@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
-using Netly.Core;
 using Netly.Interfaces;
-
+using Env = Netly.NetlyEnvironment;
 namespace Netly
 {
     public static partial class UDP
@@ -20,32 +19,32 @@ namespace Netly
 
                 public void Open(Action callback)
                 {
-                    OnOpen += (@object, @event) => MainThread.Add(() => callback?.Invoke());
+                    OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Error(Action<Exception> callback)
                 {
-                    OnError += (@object, @event) => MainThread.Add(() => callback?.Invoke(@event));
+                    OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Close(Action callback)
                 {
-                    OnClose += (@object, e) => MainThread.Add(() => callback?.Invoke());
+                    OnClose += (@object, e) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Modify(Action<Socket> callback)
                 {
-                    OnModify += (@object, e) => MainThread.Add(() => callback?.Invoke(e));
+                    OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
                 }
 
                 public void Data(Action<byte[]> callback)
                 {
-                    OnData += (@object, e) => MainThread.Add(() => callback?.Invoke(e));
+                    OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
                 }
 
                 public void Event(Action<string, byte[]> callback)
                 {
-                    OnEvent += (@object, e) => MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
+                    OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
                 }
             }
         }

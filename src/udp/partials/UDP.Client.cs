@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Sockets;
-using Netly.Core;
 using Netly.Interfaces;
 
 namespace Netly

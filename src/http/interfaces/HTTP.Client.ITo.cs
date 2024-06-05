@@ -1,7 +1,5 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
-using Netly.Core;
 
 namespace Netly
 {
@@ -15,7 +13,7 @@ namespace Netly
             public interface ITo
             {
                 /// <summary>
-                ///     Create http fetch <br/>
+                ///     Create http fetch <br />
                 ///     + Only if(IsOpened==false)
                 /// </summary>
                 /// <param name="method">Http method</param>
@@ -24,7 +22,7 @@ namespace Netly
                 Task Open(string method, string url, byte[] body);
 
                 /// <summary>
-                ///     Create http fetch <br/>
+                ///     Create http fetch <br />
                 ///     + Only if(IsOpened==false)
                 /// </summary>
                 /// <param name="method">Http method</param>
@@ -33,7 +31,7 @@ namespace Netly
                 Task Open(string method, string url, string body);
 
                 /// <summary>
-                ///     Create http fetch <br/>
+                ///     Create http fetch <br />
                 ///     + Only if(IsOpened==false)
                 /// </summary>
                 /// <param name="method">Http method</param>

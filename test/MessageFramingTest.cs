@@ -1,6 +1,5 @@
 ﻿using Byter;
 using Netly;
-using Netly.Core;
 using Xunit.Abstractions;
 
 namespace test;
@@ -29,10 +28,10 @@ public class MessageFramingTest
 
         bool isLast = false;
 
-        byte[] buffer = new List<byte[]> { MessageFraming.PREFIX, size1, value1, MessageFraming.PREFIX, size2 }
+        byte[] buffer = new List<byte[]> { NetlyEnvironment.MessageFraming.Prefix, size1, value1, NetlyEnvironment.MessageFraming.Prefix, size2 }
             .SelectMany(x => x).ToArray();
 
-        MessageFraming package = new MessageFraming();
+        NetlyEnvironment.MessageFraming package = new NetlyEnvironment.MessageFraming();
 
         package.OnData((data) =>
         {
