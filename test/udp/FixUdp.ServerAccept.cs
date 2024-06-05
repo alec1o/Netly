@@ -5,6 +5,15 @@ public partial class FixUdp
     [Fact]
     public void ServerAccept()
     {
+        // Skip macOS Test: Firewall isn't allowing UDP connection.
+        if (OperatingSystem.IsMacOS())
+        {
+            // https://github.com/dotnet/runtime/issues/97718
+            // https://support.apple.com/guide/mac-help/change-firewall-settings-on-mac-mh11783/mac
+            output.WriteLine("macOS is skipped because firewall problem");
+            return;
+        }
+
         Server();
 
         async Task Client(Host host)
@@ -41,7 +50,7 @@ public partial class FixUdp
 
         async void Server()
         {
-            var host = new Host(IPAddress.IPv6Loopback, HostManager.GenerateLocalHost().Port);
+            var host = HostManager.GenerateLocalHost();
 
             UDP.Server server = new();
 
