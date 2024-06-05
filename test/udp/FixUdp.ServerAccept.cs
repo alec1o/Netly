@@ -41,7 +41,7 @@ public partial class FixUdp
 
         async void Server()
         {
-            var host = new Host(IPAddress.Any, HostManager.GenerateLocalHost().Port);
+            var host = new Host(IPAddress.IPv6Loopback, HostManager.GenerateLocalHost().Port);
 
             UDP.Server server = new();
 
