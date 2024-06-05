@@ -39,7 +39,7 @@ jobs:
           dotnet-version: ${{ matrix.version }}
       # restore dependencies
       - name: Restore Test Project
-        run: dotnet restore ./test/NetlyTest.csproj
+        run: dotnet restore ./test/Test.csproj
       # run netly test
       - name: Test Netly Library
-        run: dotnet test ./test/NetlyTest.csproj --no-restore
+        run: dotnet test ./test/Test.csproj --no-restore
