@@ -24,8 +24,8 @@ jobs:
       matrix:
         version: [ 8.0 ]
         # temp: disable macos test
-        # os: [ ubuntu-latest, windows-latest, macos-latest ]
-        os: [ ubuntu-latest, windows-latest ]
+        # os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     # config os
     runs-on: ${{ matrix.os }}
     # config steps
