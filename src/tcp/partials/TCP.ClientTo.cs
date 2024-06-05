@@ -3,6 +3,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using Byter;
 using Netly.Core;
 using Netly.Interfaces;
 
@@ -232,14 +233,14 @@ namespace Netly
                 {
                     if (CanSend == false || data == null) return;
 
-                    SendDispatch(NE.GetBytes(data));
+                    SendDispatch(data.GetBytes());
                 }
 
                 public void Data(string data, Encoding encoding)
                 {
                     if (CanSend == false || data == null) return;
 
-                    SendDispatch(NE.GetBytes(data, encoding));
+                    SendDispatch(data.GetBytes( encoding));
                 }
 
                 public void Event(string name, byte[] data)
@@ -253,14 +254,14 @@ namespace Netly
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    SendDispatch(EventManager.Create(name, NE.GetBytes(data)));
+                    SendDispatch(EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (CanSend == false || data == null || name == null) return;
 
-                    SendDispatch(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                    SendDispatch(EventManager.Create(name, data.GetBytes( encoding)));
                 }
 
                 /* ---- INTERNAL --- */

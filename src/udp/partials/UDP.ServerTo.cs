@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Byter;
 using Netly.Core;
 using Netly.Interfaces;
 
@@ -122,14 +123,14 @@ namespace Netly
                 {
                     if (!IsOpened || data == null) return;
 
-                    Broadcast(NE.GetBytes(data));
+                    Broadcast(data.GetBytes());
                 }
 
                 public void DataBroadcast(string data, Encoding encoding)
                 {
                     if (!IsOpened || data == null) return;
 
-                    Broadcast(NE.GetBytes(data, encoding));
+                    Broadcast(data.GetBytes(encoding));
                 }
 
                 public void EventBroadcast(string name, byte[] data)
@@ -143,14 +144,14 @@ namespace Netly
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, NE.GetBytes(data)));
+                    Broadcast(EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                    Broadcast(EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 public void Data(Host targetHost, byte[] data)
@@ -164,14 +165,14 @@ namespace Netly
                 {
                     if (!IsOpened || targetHost == null || data == null) return;
 
-                    Send(targetHost, NE.GetBytes(data));
+                    Send(targetHost, data.GetBytes());
                 }
 
                 public void Data(Host targetHost, string data, Encoding encoding)
                 {
                     if (!IsOpened || targetHost == null || data == null) return;
 
-                    Send(targetHost, NE.GetBytes(data, encoding));
+                    Send(targetHost, data.GetBytes(encoding));
                 }
 
                 public void Event(Host targetHost, string name, byte[] data)
@@ -185,14 +186,14 @@ namespace Netly
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
 
-                    Send(targetHost, EventManager.Create(name, NE.GetBytes(data)));
+                    Send(targetHost, EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(Host targetHost, string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || targetHost == null || name == null || data == null) return;
 
-                    Send(targetHost, EventManager.Create(name, NE.GetBytes(data, encoding)));
+                    Send(targetHost, EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 private void Broadcast(byte[] data)
@@ -279,10 +280,10 @@ namespace Netly
 
                                 // save client on list of connected client
                                 Clients.Add(client);
-                                
+
                                 // invoke accept event
                                 On.OnAccept?.Invoke(null, client);
-                                
+
                                 // init client server-side behave
                                 client.InitServerSide();
                             }

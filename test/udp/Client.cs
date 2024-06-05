@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using Byter;
 using Netly;
 using Netly.Core;
 using NotSupportedException = System.NotSupportedException;
@@ -207,10 +208,10 @@ public class Client
                 switch (count)
                 {
                     case 1:
-                        recvData1 = NE.GetString(data);
+                        recvData1 = data.GetString();
                         break;
                     case 2:
-                        recvData2 = NE.GetString(data);
+                        recvData2 = data.GetString();
                         break;
                     default:
                         Assert.Fail(new NotSupportedException().ToString());
@@ -299,10 +300,10 @@ public class Client
                 switch (count)
                 {
                     case 1:
-                        recvData1 = new(name, NE.GetString(data));
+                        recvData1 = new(name, data.GetString());
                         break;
                     case 2:
-                        recvData2 = new(name, NE.GetString(data));
+                        recvData2 = new(name, data.GetString());
                         break;
                     default:
                         Assert.Fail(new NotSupportedException().ToString());
@@ -411,11 +412,11 @@ public class Client
             client.On.Open(() => cOpen = true);
             client.On.Close(() => cClose = true);
             client.On.Error(_ => cError = true);
-            client.On.Data(x => recvData = NE.GetString(x));
+            client.On.Data(x => recvData = x.GetString());
             client.On.Event((n, x) =>
             {
                 recvEventName = n;
-                recvEventData = NE.GetString(x);
+                recvEventData =  x.GetString();
             });
 
 

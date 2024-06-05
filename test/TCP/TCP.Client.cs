@@ -1,5 +1,6 @@
 ﻿using Netly;
 using System.Net;
+using Byter;
 using Netly.Core;
 
 namespace test.TestTCP;
@@ -87,9 +88,9 @@ public class TcpClientTest
         await server.To.Open(Host);
         Assert.True(server.IsOpened);
 
-        byte[] dataSent = NE.GetBytes("Hello Server");
+        byte[] dataSent = "Hello Server".GetBytes();
         byte[] dataReceive = Array.Empty<byte>();
-        (string name, byte[] data) eventSent = ("Sample Event", NE.GetBytes("Netly event is amazing"));
+        (string name, byte[] data) eventSent = ("Sample Event", "Netly event is amazing".GetBytes());
         (string name, byte[] data) eventReceive = (string.Empty, Array.Empty<byte>());
         
         var client = new TCP.Client();

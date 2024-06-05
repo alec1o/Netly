@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Byter;
 using Netly.Core;
 using Netly.Interfaces;
 
@@ -54,14 +55,14 @@ namespace Netly
                 {
                     if (!IsOpened || data == null) return;
 
-                    Broadcast(NE.GetBytes(data));
+                    Broadcast(data.GetBytes());
                 }
 
                 public void DataBroadcast(string data, Encoding encoding)
                 {
                     if (!IsOpened || data == null) return;
 
-                    Broadcast(NE.GetBytes(data, encoding));
+                    Broadcast(data.GetBytes(encoding));
                 }
 
                 public void EventBroadcast(string name, byte[] data)
@@ -75,14 +76,14 @@ namespace Netly
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, NE.GetBytes(data)));
+                    Broadcast(EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
-                    Broadcast(EventManager.Create(name, NE.GetBytes(data, encoding)));
+                    Broadcast(EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 private void Broadcast(byte[] data)

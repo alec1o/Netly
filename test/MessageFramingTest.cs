@@ -1,4 +1,5 @@
-﻿using Netly;
+﻿using Byter;
+using Netly;
 using Netly.Core;
 using Xunit.Abstractions;
 
@@ -16,8 +17,8 @@ public class MessageFramingTest
     [Fact]
     public void EndToEnd()
     {
-        byte[] value1 = NE.GetBytes("HELLO WORLD");
-        byte[] value2 = NE.GetBytes("NETLY IS EASY");
+        byte[] value1 = ("HELLO WORLD").GetBytes();
+        byte[] value2 = ("NETLY IS EASY").GetBytes();
 
         byte[] size1 = BitConverter.GetBytes(value1.Length);
         byte[] size2 = BitConverter.GetBytes(value2.Length);

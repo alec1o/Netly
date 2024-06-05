@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Byter;
 using Netly.Core;
 
 namespace Netly
@@ -13,7 +14,7 @@ namespace Netly
             {
                 Binary = buffer;
                 Enctype = enctype;
-                Text = NE.GetString(buffer, encoding);
+                Text = buffer.GetString(encoding);
                 TextQueries = new Dictionary<string, string>();
                 BinaryQueries = new Dictionary<string, byte[]>();
 

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Byter;
 
 namespace Netly
 {
@@ -124,12 +125,12 @@ namespace Netly
 
                 public Task Open(string method, string url, string body)
                 {
-                    return Open(method, url, NE.GetBytes(body ?? string.Empty));
+                    return Open(method, url, body.GetBytes());
                 }
 
                 public Task Open(string method, string url, string body, Encoding encode)
                 {
-                    return Open(method, url, NE.GetBytes(body ?? string.Empty, encode));
+                    return Open(method, url, body.GetBytes(encode));
                 }
 
                 public Task Close()

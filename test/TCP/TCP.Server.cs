@@ -1,4 +1,5 @@
-﻿using Netly.Core;
+﻿using Byter;
+using Netly.Core;
 using Xunit.Abstractions;
 
 namespace test.TestTCP;
@@ -77,18 +78,18 @@ public class TcpServerTest
         bool isConnected = false;
         bool isDisconnected = false;
         // data send
-        byte[] client1DataSend = NE.GetBytes("Netly Library: Client 1");
-        byte[] client2DataSend = NE.GetBytes("Netly Library: Client 2");
-        byte[] client3DataSend = NE.GetBytes("Netly Library: Client 3");
+        byte[] client1DataSend = "Netly Library: Client 1".GetBytes();
+        byte[] client2DataSend = "Netly Library: Client 2".GetBytes();
+        byte[] client3DataSend = "Netly Library: Client 3".GetBytes();
         // data receive
         byte[] client1DataReceived = Array.Empty<byte>();
         byte[] client2DataReceived = Array.Empty<byte>();
         byte[] client3DataReceived = Array.Empty<byte>();
 
         // event send
-        (string name, byte[] data) client1EventSend = ("Event Name Client 1", NE.GetBytes("Event Client 1"));
-        (string name, byte[] data) client2EventSend = ("Event Name Client 2", NE.GetBytes("Event Client 2"));
-        (string name, byte[] data) client3EventSend = ("Event Name Client 3", NE.GetBytes("Event Client 3"));
+        (string name, byte[] data) client1EventSend = ("Event Name Client 1", "Event Client 1".GetBytes());
+        (string name, byte[] data) client2EventSend = ("Event Name Client 2", "Event Client 2".GetBytes());
+        (string name, byte[] data) client3EventSend = ("Event Name Client 3", "Event Client 3".GetBytes());
         // event receive
         (string name, byte[] data) client1EventReceived = (string.Empty, Array.Empty<byte>());
         (string name, byte[] data) client2EventReceived = (string.Empty, Array.Empty<byte>());
@@ -133,7 +134,7 @@ public class TcpServerTest
 
             c.On.Event((name, data) =>
             {
-                _output.WriteLine($"client {id}, event ({name}) {NE.GetString(data)}");
+                _output.WriteLine($"client {id}, event ({name}) {data.GetString()}");
                 switch (id)
                 {
                     case 1:

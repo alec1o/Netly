@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Byter;
 using Netly.Core;
 
 namespace Netly
@@ -43,7 +44,7 @@ namespace Netly
 
             public void Send(int statusCode, string textBuffer)
             {
-                Send(statusCode, NE.GetBytes(textBuffer, ResponseEncoding));
+                Send(statusCode, textBuffer.GetBytes(ResponseEncoding));
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
