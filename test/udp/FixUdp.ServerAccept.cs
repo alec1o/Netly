@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixUdp
 {
     [Fact]
@@ -39,7 +41,7 @@ public partial class FixUdp
 
         async void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new Host(IPAddress.Any, HostManager.GenerateLocalHost().Port);
 
             UDP.Server server = new();
 
@@ -79,7 +81,7 @@ public partial class FixUdp
             {
                 await Client(server.Host);
             }
-            
+
             Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
