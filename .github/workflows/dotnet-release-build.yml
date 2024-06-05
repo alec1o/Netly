@@ -38,5 +38,5 @@ jobs:
         run: dotnet restore ./src/Netly.csproj
       # build netly library
       - name: Build Netly Library
-        run: dotnet build ./src/Netly.csproj --no-restore
+        run: dotnet build ./src/Netly.csproj -c Release --no-restore
           
