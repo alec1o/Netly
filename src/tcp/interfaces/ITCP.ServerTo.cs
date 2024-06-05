@@ -13,6 +13,7 @@ namespace Netly.Interfaces
             Task Close();
             void DataBroadcast(string data);
             void DataBroadcast(byte[] data);
+            void EventBroadcast(string name, string data);
             void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols);
         }
     }
