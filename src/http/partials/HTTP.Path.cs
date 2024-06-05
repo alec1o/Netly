@@ -76,7 +76,7 @@ namespace Netly
                 catch (RegexMatchTimeoutException e)
                 {
                     // Prevent Regex -> RegexMatchTimeoutException (Regex Attack)
-                    NETLY.Logger.PushError(e);
+                    MyNetly.Logger.PushError(e);
                     return false;
                 }
             }

@@ -103,7 +103,7 @@ namespace Netly
                         while (IsOpened)
                         {
                             HttpListenerContext context = null;
-                            NETLY.Logger.PushLog("Request entry.");
+                            MyNetly.Logger.PushLog("Request entry.");
 
                             try
                             {
@@ -112,14 +112,14 @@ namespace Netly
                             catch (Exception e)
                             {
                                 context = null;
-                                NETLY.Logger.PushLog($"Request fail: {e}");
+                                MyNetly.Logger.PushLog($"Request fail: {e}");
                             }
                             finally
                             {
                                 if (context != null)
                                     Task.Run(() =>
                                     {
-                                        NETLY.Logger.PushLog("Task Init");
+                                        MyNetly.Logger.PushLog("Task Init");
 
                                         try
                                         {
@@ -128,10 +128,10 @@ namespace Netly
                                         }
                                         catch (Exception e)
                                         {
-                                            NETLY.Logger.PushLog($"Task error: {e}");
+                                            MyNetly.Logger.PushLog($"Task error: {e}");
                                         }
 
-                                        NETLY.Logger.PushLog("Task End");
+                                        MyNetly.Logger.PushLog("Task End");
                                     });
                             }
                         }
@@ -155,13 +155,13 @@ namespace Netly
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
-                    NETLY.Logger.PushLog("Request processing.");
+                    MyNetly.Logger.PushLog("Request processing.");
 
                     var request = new Request(context.Request);
                     var response = new Response(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
-                    NETLY.Logger.PushLog("Request starting.");
+                    MyNetly.Logger.PushLog("Request starting.");
 
                     var skipNextMiddleware = false;
 
@@ -186,7 +186,7 @@ namespace Netly
 
                     #region GLOBAL MIDDLEWARE
 
-                    NETLY.Logger.PushLog($"Global middleware. Search middlewares...");
+                    MyNetly.Logger.PushLog($"Global middleware. Search middlewares...");
 
                     var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
@@ -202,7 +202,7 @@ namespace Netly
                     if (!skipNextMiddleware)
                     {
                         RunMiddlewares(globalMiddlewares.ToArray());
-                        NETLY.Logger.PushLog($"[END] running global middleware (next: {!skipNextMiddleware})");
+                        MyNetly.Logger.PushLog($"[END] running global middleware (next: {!skipNextMiddleware})");
                     }
 
                     if (skipNextMiddleware) return;
@@ -213,7 +213,7 @@ namespace Netly
 
                     #region LOCAL MIDDLEWARE
 
-                    NETLY.Logger.PushLog($"Local middleware. Search middlewares...");
+                    MyNetly.Logger.PushLog($"Local middleware. Search middlewares...");
 
                     var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
@@ -251,7 +251,7 @@ namespace Netly
                     if (!skipNextMiddleware)
                     {
                         RunMiddlewares(localMiddlewares.ToArray());
-                        NETLY.Logger.PushLog($"[END] running local middleware (next: {!skipNextMiddleware})");
+                        MyNetly.Logger.PushLog($"[END] running local middleware (next: {!skipNextMiddleware})");
                     }
 
                     if (skipNextMiddleware) return;

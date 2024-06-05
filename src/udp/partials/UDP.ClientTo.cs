@@ -75,7 +75,7 @@ namespace Netly
                         catch (Exception e)
                         {
                             _isClosed = true;
-                            NETLY.Logger.PushError(e);
+                            MyNetly.Logger.PushError(e);
                             On.OnError?.Invoke(null, e);
                         }
                         finally
@@ -102,7 +102,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NETLY.Logger.PushError(e);
+                                MyNetly.Logger.PushError(e);
                             }
                             finally
                             {
@@ -253,7 +253,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NETLY.Logger.PushError(e);
+                            MyNetly.Logger.PushError(e);
                             if (!IsOpened) break;
                         }
 
@@ -284,7 +284,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NETLY.Logger.PushError(e);
+                        MyNetly.Logger.PushError(e);
                     }
                 }
 

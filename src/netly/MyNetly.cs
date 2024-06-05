@@ -3,7 +3,7 @@
     /// <summary>
     /// Netly Library Info
     /// </summary>
-    public static partial class NETLY
+    public static partial class MyNetly
     {
         /// <summary>
         /// Netly Name
@@ -33,7 +33,7 @@
         /// <summary>
         /// Init Netly
         /// </summary>
-        static NETLY()
+        static MyNetly()
         {
             Logger = new _Logger();
         }

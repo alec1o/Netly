@@ -212,7 +212,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NETLY.Logger.PushError(e);
+                            MyNetly.Logger.PushError(e);
                         }
                         finally
                         {
