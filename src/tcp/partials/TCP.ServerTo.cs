@@ -136,6 +136,14 @@ namespace Netly
                         client.Value.To.Data(data);
                     }
                 }
+
+                public void DataBroadcast(byte[] data)
+                {
+                    foreach (var client in Clients)
+                    {
+                        client.Value.To.Data(data);
+                    }
+                }
                 public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
                     SslProtocols protocols)
                 {
