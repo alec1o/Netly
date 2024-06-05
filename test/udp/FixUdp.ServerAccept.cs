@@ -79,6 +79,8 @@ public partial class FixUdp
             {
                 await Client(server.Host);
             }
+            
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
         }
