@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -220,44 +220,6 @@ namespace Netly
                         On.OnEvent?.Invoke(null, (content.name, content.buffer));
                 }
 
-                private void ReceiveJob()
-                {
-                    var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                    var buffer = new byte[length];
-                    var point = Host.EndPoint;
-
-                    while (IsOpened)
-                        try
-                        {
-                            var size = _socket.ReceiveFrom
-                            (
-                                buffer,
-                                0,
-                                buffer.Length,
-                                SocketFlags.None,
-                                ref point
-                            );
-
-                            if (size <= 0)
-                            {
-                                if (IsOpened) continue;
-                                break;
-                            }
-
-                            var data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            PushResult(ref data);
-                        }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                            if (!IsOpened) break;
-                        }
-
-                    Close();
-                }
 
                 private void Send(byte[] bytes)
                 {
@@ -289,11 +251,60 @@ namespace Netly
 
                 private void InitReceiver()
                 {
-                    new Thread(ReceiveJob)
+                    EndPoint endpoint = Host.Default.EndPoint;
+
+                    var buffer = new byte
+                    [
+                        // Maximum/Default receive buffer length.
+                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
+                    ];
+
+                    ReceiverUpdate();
+
+                    void ReceiverUpdate()
                     {
-                        IsBackground = true,
-                        Priority = ThreadPriority.Highest
-                    }.Start();
+                        _socket.BeginReceiveFrom
+                        (
+                            buffer,
+                            0,
+                            buffer.Length,
+                            SocketFlags.None,
+                            ref endpoint,
+                            ReceiveCallback,
+                            null
+                        );
+                    }
+
+                    void ReceiveCallback(IAsyncResult result)
+                    {
+                        try
+                        {
+                            var size = _socket.EndReceiveFrom(result, ref endpoint);
+
+                            if (size <= 0)
+                            {
+                                if (IsOpened)
+                                    ReceiverUpdate();
+                                else
+                                    Close();
+
+                                return;
+                            }
+
+                            var data = new byte[size];
+
+                            Array.Copy(buffer, 0, data, 0, data.Length);
+
+                            PushResult(ref data);
+
+                            ReceiverUpdate();
+                        }
+                        catch (Exception e)
+                        {
+                            NetlyEnvironment.Logger.Create(e);
+                            Close();
+                        }
+                    }
                 }
 
                 public void OnServerBuffer(ref byte[] buffer)
