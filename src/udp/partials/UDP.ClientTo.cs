@@ -208,7 +208,6 @@ namespace Netly
                     On.OnOpen?.Invoke(null, null);
                 }
 
-
                 private void PushResult(ref byte[] bytes)
                 {
                     (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
@@ -218,7 +217,6 @@ namespace Netly
                     else
                         On.OnEvent?.Invoke(null, (content.name, content.buffer));
                 }
-
 
                 private void Send(byte[] bytes)
                 {
