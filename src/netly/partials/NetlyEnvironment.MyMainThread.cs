@@ -6,7 +6,7 @@ namespace Netly
     public partial class NetlyEnvironment
     {
         /// <summary>
-        /// Netly: MainThread
+        ///     Netly: MainThread
         /// </summary>
         private class MyMainThread : IMainThread
         {
@@ -14,12 +14,12 @@ namespace Netly
             private readonly object _lock = new object();
 
             /// <summary>
-            /// Automatic dispatch callbacks
+            ///     Automatic dispatch callbacks
             /// </summary>
             public bool IsAutomatic { get; set; } = true;
 
             /// <summary>
-            /// Add callback to execute on (Main/Own)Thread
+            ///     Add callback to execute on (Main/Own)Thread
             /// </summary>
             /// <param name="callback">callback</param>
             public void Add(Action callback)
@@ -27,27 +27,23 @@ namespace Netly
                 if (callback == null) return;
 
                 if (IsAutomatic)
-                {
                     callback.Invoke();
-                }
                 else
-                {
                     lock (_lock)
                     {
                         _callbacks.Add(callback);
                     }
-                }
             }
 
             /// <summary>
-            /// Use to clean/publish/dispatch callbacks <br/> 
-            /// WARNING: only if "Automatic == false"
+            ///     Use to clean/publish/dispatch callbacks <br />
+            ///     WARNING: only if "Automatic == false"
             /// </summary>
             public void Dispatch()
             {
                 if (IsAutomatic) return;
 
-                Action[] actions = Array.Empty<Action>();
+                var actions = Array.Empty<Action>();
 
                 lock (_lock)
                 {
@@ -58,10 +54,7 @@ namespace Netly
                     }
                 }
 
-                foreach (Action action in actions)
-                {
-                    action.Invoke();
-                }
+                foreach (var action in actions) action.Invoke();
             }
         }
     }

@@ -98,7 +98,7 @@ namespace Netly
 
                             SetDefaultSocketOption(ref _socket);
 
-                            On.m_onModify?.Invoke(null, _socket);
+                            On.OnModify?.Invoke(null, _socket);
 
                             _socket.Connect(host.Address, host.Port);
 
@@ -110,13 +110,13 @@ namespace Netly
 
                             _isClosed = false;
 
-                            On.m_onOpen?.Invoke(null, null);
+                            On.OnOpen?.Invoke(null, null);
 
                             InitReceiver();
                         }
                         catch (Exception e)
                         {
-                            On.m_onError?.Invoke(null, e);
+                            On.OnError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -156,7 +156,7 @@ namespace Netly
                             if (_isClosed is false)
                             {
                                 _isClosed = true;
-                                On.m_onClose?.Invoke(null, null);
+                                On.OnClose?.Invoke(null, null);
                             }
 
                             _isClosing = false;
@@ -283,9 +283,9 @@ namespace Netly
                 {
                     if (_isServer is false) return;
 
-                    On.m_onModify?.Invoke(null, _socket);
+                    On.OnModify?.Invoke(null, _socket);
 
-                    On.m_onOpen?.Invoke(null, null);
+                    On.OnOpen?.Invoke(null, null);
 
                     InitReceiver();
                 }
@@ -327,7 +327,7 @@ namespace Netly
                             userCertificateSelectionCallback: null,
                             userCertificateValidationCallback: (sender, certificate, chain, errors) =>
                             {
-                                var encryptionCallbackList = On.m_onEncryption;
+                                var encryptionCallbackList = On.OnEncryption;
 
                                 // callbacks not found.
                                 if (encryptionCallbackList.Count <= 0)
@@ -365,9 +365,9 @@ namespace Netly
                     (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
 
                     if (content.buffer == null)
-                        On.m_onData?.Invoke(null, bytes);
+                        On.OnData?.Invoke(null, bytes);
                     else
-                        On.m_onEvent?.Invoke(null, (content.name, content.buffer));
+                        On.OnEvent?.Invoke(null, (content.name, content.buffer));
                 }
 
                 private void SendDispatch(byte[] bytes)
@@ -397,7 +397,7 @@ namespace Netly
                         (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                     ];
 
-                    NetlyEnvironment.MessageFraming framing = new NetlyEnvironment.MessageFraming();
+                    var framing = new NetlyEnvironment.MessageFraming();
 
                     if (IsFraming)
                     {

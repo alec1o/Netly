@@ -6,8 +6,8 @@ namespace Netly
     {
         private class MyLogger : ILogger
         {
-            private EventHandler<string> _messageEvent;
             private EventHandler<Exception> _errorEvent;
+            private EventHandler<string> _messageEvent;
 
             public void Create(string message)
             {
@@ -32,13 +32,9 @@ namespace Netly
             private void Invoke(Action action, bool isMainThread)
             {
                 if (isMainThread)
-                {
                     MainThread.Add(action);
-                }
                 else
-                {
                     action?.Invoke();
-                }
             }
         }
     }

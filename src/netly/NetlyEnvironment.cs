@@ -1,43 +1,43 @@
 ﻿namespace Netly
 {
     /// <summary>
-    /// Netly Library Info
+    ///     Netly Library Info
     /// </summary>
     public static partial class NetlyEnvironment
     {
         /// <summary>
-        /// Netly Name
+        ///     Netly Name
         /// </summary>
         public const string Name = "Netly";
 
         /// <summary>
-        /// Netly Version
+        ///     Netly Version
         /// </summary>
         public const string Version = "4.0.0";
 
         /// <summary>
-        /// Netly supported protocols
-        /// </summary>
-        public static readonly string[] Protocols = new[] { "TCP", "UDP", "HTTP", "RUDP", "WebSocket" };
-
-        /// <summary>
-        /// Netly Git repository
+        ///     Netly Git repository
         /// </summary>
         public const string GitRepository = "https://github.com/alec1o/Netly";
 
         /// <summary>
-        /// Netly logger hub
+        ///     Netly supported protocols
+        /// </summary>
+        public static readonly string[] Protocols = { "TCP", "UDP", "HTTP", "RUDP", "WebSocket" };
+
+        /// <summary>
+        ///     Netly logger hub
         /// </summary>
         public static readonly ILogger Logger;
-        
+
         /// <summary>
-        /// Netly main thread
+        ///     Netly main thread
         /// </summary>
         public static readonly IMainThread MainThread;
-        
-        
+
+
         /// <summary>
-        /// Init Netly
+        ///     Init Netly
         /// </summary>
         static NetlyEnvironment()
         {

@@ -73,7 +73,7 @@ namespace Netly
                         {
                             var socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                            On.m_onModify?.Invoke(null, socket);
+                            On.OnModify?.Invoke(null, socket);
 
                             socket.Bind(host.EndPoint);
 
@@ -85,13 +85,13 @@ namespace Netly
 
                             _isClosed = false;
 
-                            On.m_onOpen?.Invoke(null, null);
+                            On.OnOpen?.Invoke(null, null);
 
                             InitAccept();
                         }
                         catch (Exception e)
                         {
-                            On.m_onError?.Invoke(null, e);
+                            On.OnError?.Invoke(null, e);
                         }
 
                         _isOpening = false;
@@ -124,7 +124,7 @@ namespace Netly
                             _isClosed = true;
                             _isClosing = false;
                             Clients.Clear();
-                            On.m_onClose?.Invoke(null, null);
+                            On.OnClose?.Invoke(null, null);
                         }
                     });
                 }
@@ -233,7 +233,7 @@ namespace Netly
 
                                         Clients.Add(client.Id, client);
 
-                                        On.m_onAccept?.Invoke(null, client);
+                                        On.OnAccept?.Invoke(null, client);
 
                                         client.InitServerSide();
                                     }

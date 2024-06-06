@@ -11,11 +11,11 @@ namespace Netly
 
             public static (string name, byte[] data) Verify(byte[] buffer)
             {
-                using (Reader r = new Reader(buffer))
+                using (var r = new Reader(buffer))
                 {
-                    string key = r.Read<string>(Encoding.ASCII);
-                    string name = r.Read<string>(Encoding.UTF8);
-                    byte[] data = r.Read<byte[]>();
+                    var key = r.Read<string>(Encoding.ASCII);
+                    var name = r.Read<string>(Encoding.UTF8);
+                    var data = r.Read<byte[]>();
 
                     if (r.Success && key is ProtocolKey) return (name, data);
 
@@ -25,7 +25,7 @@ namespace Netly
 
             public static byte[] Create(string name, byte[] data)
             {
-                using (Writer w = new Writer())
+                using (var w = new Writer())
                 {
                     w.Write(ProtocolKey, Encoding.ASCII);
                     w.Write(name, Encoding.UTF8);

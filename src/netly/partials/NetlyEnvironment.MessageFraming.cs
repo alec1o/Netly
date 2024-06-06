@@ -3,33 +3,32 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
 namespace Netly
 {
     public partial class NetlyEnvironment
     {
         /// <summary>
-        /// Netly: Message framing
+        ///     Netly: Message framing
         /// </summary>
         public class MessageFraming
         {
             /// <summary>
-            /// Netly message framing prefix: [ 0, 8, 16, 32, 64, 128 ] (6 byte overhead/size)
+            ///     Netly message framing prefix: [ 0, 8, 16, 32, 64, 128 ] (6 byte overhead/size)
             /// </summary>
-            public static readonly byte[] Prefix = new byte[] { 0, 8, 16, 32, 64, 128 };
+            public static readonly byte[] Prefix = { 0, 8, 16, 32, 64, 128 };
 
-            private static int _maxSize = (1024 * 1024) * 8; // 8 MB
-            private static int _udpBuffer = (1024 * 1024) * 1; // 1 MB
+            private static int _maxSize = 1024 * 1024 * 8; // 8 MB
+            private static int _udpBuffer = 1024 * 1024 * 1; // 1 MB
             private readonly object _lock = new object();
+
+            private List<byte> _buffer = new List<byte>();
 
             private Action<byte[]> _onData;
             private Action<Exception> _onError;
-
-            private List<byte> _buffer = new List<byte>();
             private int _size;
 
             /// <summary>
-            /// Max buffer size (prevent memory leak). Default is 8.388.608 (8MB)
+            ///     Max buffer size (prevent memory leak). Default is 8.388.608 (8MB)
             /// </summary>
             public static int MaxSize
             {
@@ -38,7 +37,7 @@ namespace Netly
             }
 
             /// <summary>
-            /// Max udp package (prevent memory leak). Default is 1.048.576 (1MB)
+            ///     Max udp package (prevent memory leak). Default is 1.048.576 (1MB)
             /// </summary>
             public static int UdpBuffer
             {
@@ -47,20 +46,20 @@ namespace Netly
             }
 
             /// <summary>
-            /// Create message framing bytes (attach prefix)<br/>
-            /// Protocol:
-            /// <br/> [ 0, 8, 16, 32, 64, 128 ] + [ BUFFER_LENGTH ] + [ BUFFER ]
+            ///     Create message framing bytes (attach prefix)<br />
+            ///     Protocol:
+            ///     <br /> [ 0, 8, 16, 32, 64, 128 ] + [ BUFFER_LENGTH ] + [ BUFFER ]
             /// </summary>
             /// <param name="value">Input</param>
             /// <returns></returns>
             public static byte[] CreateMessage(byte[] value)
             {
-                byte[] size = BitConverter.GetBytes((int)value.Length);
+                var size = BitConverter.GetBytes(value.Length);
                 return new byte[3][] { Prefix, size, value }.SelectMany(x => x).ToArray();
             }
 
             /// <summary>
-            /// Called when have data
+            ///     Called when have data
             /// </summary>
             /// <param name="callback">Callback</param>
             public void OnData(Action<byte[]> callback)
@@ -69,7 +68,7 @@ namespace Netly
             }
 
             /// <summary>
-            /// Called when have error
+            ///     Called when have error
             /// </summary>
             /// <param name="callback">Callback</param>
             public void OnError(Action<Exception> callback)
@@ -78,7 +77,7 @@ namespace Netly
             }
 
             /// <summary>
-            /// Clear buffer
+            ///     Clear buffer
             /// </summary>
             public void Clear()
             {
@@ -93,16 +92,15 @@ namespace Netly
             {
                 if (buffer == null || !(buffer.Length >= Prefix.Length)) return false;
 
-                for (int i = 0; i < Prefix.Length; i++)
-                {
-                    if (buffer[i] != Prefix[i]) return false;
-                }
+                for (var i = 0; i < Prefix.Length; i++)
+                    if (buffer[i] != Prefix[i])
+                        return false;
 
                 return true;
             }
 
             /// <summary>
-            /// Add buffer in flow
+            ///     Add buffer in flow
             /// </summary>
             /// <param name="buffer"></param>
             public void Add(byte[] buffer)
@@ -112,9 +110,9 @@ namespace Netly
                     _buffer.AddRange(buffer);
 
                     INIT:
-                    if (_size == 0 && _buffer.Count >= (sizeof(int) + Prefix.Length))
+                    if (_size == 0 && _buffer.Count >= sizeof(int) + Prefix.Length)
                     {
-                        byte[] b = _buffer.GetRange(0, Prefix.Length).ToArray();
+                        var b = _buffer.GetRange(0, Prefix.Length).ToArray();
                         _buffer.RemoveRange(0, Prefix.Length);
 
                         if (!IsPrefix(b))
@@ -123,7 +121,7 @@ namespace Netly
                             return;
                         }
 
-                        int len = BitConverter.ToInt32(_buffer.GetRange(0, sizeof(int)).ToArray(), 0);
+                        var len = BitConverter.ToInt32(_buffer.GetRange(0, sizeof(int)).ToArray(), 0);
 
                         if (len > MaxSize || len <= 0)
                         {
@@ -132,28 +130,23 @@ namespace Netly
                                 $"is low, (received value: {len}, max value: {MaxSize}"));
                             return;
                         }
-                        else
-                        {
-                            _size = len;
-                            _buffer.RemoveRange(0, sizeof(int));
-                        }
+
+                        _size = len;
+                        _buffer.RemoveRange(0, sizeof(int));
                     }
 
                     if (_size > 0 && _buffer.Count >= _size)
                     {
-                        byte[] data = _buffer.GetRange(0, _size).ToArray();
+                        var data = _buffer.GetRange(0, _size).ToArray();
                         _buffer.RemoveRange(0, _size);
                         _size = 0;
 
-                        byte[] _temp = _buffer.GetRange(0, _buffer.Count).ToArray();
+                        var _temp = _buffer.GetRange(0, _buffer.Count).ToArray();
                         _buffer = _temp.ToList();
 
                         _onData?.Invoke(data);
 
-                        if (_buffer.Count > 0)
-                        {
-                            goto INIT;
-                        }
+                        if (_buffer.Count > 0) goto INIT;
                     }
                 }
             }
