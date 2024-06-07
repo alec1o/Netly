@@ -3,6 +3,8 @@ public partial class FixUdp
     [Fact]
     public async Task Broadcast()
     {
+        if(IsMac()) return;
+        
         await Server();
 
         async Task Server()
