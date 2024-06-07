@@ -1072,7 +1072,43 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 
 </details>
 
-<sup>[``Community examples``](https://github.com/alec1o/Netly/issues/43) <sup> From issues</sup></sup>
+</td>
+
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>Byter<strong></strong></sub></th>
+<td>
+<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+
+```csharp
+```
+
+```csharp
+```
+
+```csharp
+```
+
+</details>
+<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+
+```csharp
+
+```
+
+```csharp
+```
+
+```csharp
+```
+
+```csharp
+```
+
+</details>
 
 <a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
 
