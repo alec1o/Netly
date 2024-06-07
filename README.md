@@ -1,10 +1,12 @@
-> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
+> ###### The active development branch is [_'
+dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'
+main'_](https://github.com/alec1o/Netly/tree/main).
 > <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <div align="right">
 <table>
-<td aligh="right">
+<td align="right">
 <p></p>
 <sup>⭐ Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 💙</sup>
 </td>
@@ -91,8 +93,9 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
 
 > <sub>Official publisher</sub>
 
-| <sub>Nuget</sub> | <sub>Unity Asset Store</sub>|
-|------------------|-----------------------------|
+| <sub>Nuget</sub>                                                    | <sub>Unity Asset Store</sub>                                                                     |
+|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
 <br>
@@ -178,7 +181,8 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
     - <sub>Windows</sub>
     - <sub>Android</sub>
     - <sub>iOS</sub>
-    - <sub>macOS <a href="https://github.com/dotnet/runtime/issues/97718#issuecomment-1923700076"><sup><i><strong>(may need to customize firewall for udp and rudp)</strong><i></sup></sub></a><br><br>
+    - <sub>macOS <a href="https://github.com/dotnet/runtime/issues/97718#issuecomment-1923700076"><sup><i><strong>(may
+      need to customize firewall for udp and rudp)</strong><i></sup></sub></a><br><br>
     - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
       should be considered a bug and reported.<i><sub>
 
@@ -189,9 +193,8 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
         <th><sub>Dependencies</sub></th>
 <td valign="top" align="left">
 <br>
-
-<a href="https://github.com/alec1o/Byter"><img alt="byter logo" src="static/Byter-logo-512/sprite_1.png" width="24px"> <sup><strong>Byter</strong></sup></a>
-
+<a href="https://github.com/alec1o/Byter"><img alt="byter logo" src="static/Byter-logo-512/sprite_1.png" width="24px"> <sup><strong>
+Byter</strong></sup></a>
 <br>
 </td>
     </tr>
