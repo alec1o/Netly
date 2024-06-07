@@ -1167,12 +1167,30 @@ using Byter;
 
 ___
 
-_NOTE: Primitive can serialize/deserialize complex data, e.g. 
-``T[], List<T>, Class, Struct, Enum``.
-but when you create deserialize your class/struct it must have (public generic constructor)
-is public constructor without arguments e.g. ``Human human = new Human();``
-and the class/struct propriety must have public and get/set or not private access
-e.g. ``public string name`` or ``public string Name { get; set; }``_
+###### Warning
+Primitive can serialize/deserialize complex data, e.g. (T[], List<T>, Class, Struct, Enum).<br>
+But when you want to deserialize your (Class, Structure, List<Class/Struct>, Class/Struct[]), It must have:
+- (generic and public constructor: is a public constructor with no arguments, e.g. which allows:
+  ```csharp
+  Human human = new Human();
+  ```
+- And the class/struct property must have public access and { get; set; } or not private
+for example. (In byter programming, _ONLY PROPERTIES THAT CAN BE READ AND WRITTEN WILL BE SERIALIZED AND DESERIALIZED)_
+  ```csharp
+  // valid
+  public string Name;
+  public string Name { get; set; }
+  internal string Name; // !!! if visible from Byter
+  internal string Name { get; set; }; // !!! if visible from Byter
+  
+  // invalid
+  private string Name;
+  private string Name { get; set; }
+  internal string Name; // !!! if unvisible from Byter
+  internal string Name { get; set; }; // !!! if unvisible from Byter
+  ```
+
+___
 
 - <strong><sub>Complex Data</sub></strong>
     ```cs
