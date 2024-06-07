@@ -35,6 +35,19 @@
         /// </summary>
         public static readonly IMainThread MainThread;
 
+        /// <summary>
+        ///     RUDP Message Type
+        /// </summary>
+        public struct OrderType
+        {
+            internal readonly object Content;
+
+            internal OrderType(object content)
+            {
+                Content = content;
+            }
+        }
+
 
         /// <summary>
         ///     Init Netly
