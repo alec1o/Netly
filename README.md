@@ -1081,7 +1081,7 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 <tr>
 <th align="center" valign="top"><sub>Byter<strong></strong></sub></th>
 <td>
-<details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Primitive</sub></sup></strong></summary>
 
 ```csharp
 ```
@@ -1093,20 +1093,73 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 ```
 
 </details>
-<details><summary>📄 <strong><sup><sub>Server</sub></sup></strong></summary>
+<details><summary>📄 <strong><sup><sub>Extension</sub></sup></strong></summary>
 
 ```csharp
-
+using Byter;
 ```
 
-```csharp
-```
+- [<i><sub>Global Default Encoding (source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
+    ```csharp
+    // update global defaut encoding, by default is UTF8
+    StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
+    ```
 
-```csharp
-```
+- <strong><sub>Convert string to byte[]</sub></strong>
+    ```csharp
+    // using global encoding (*UTF8)
+    byte[] username  = "@alec1o".GetBytes(); 
+    
+    // using UNICODE (*UTF16) encoding
+    byte[] message = "Hello 👋 World 🌎".GetBytes(Encoding.Unicode); 
+    
+    // using UTF32 encoding
+    string secreatWord = "I'm not human, I'm  a concept.";
+    byte[] secreat = secreatWord.GetBytes(Encoding.UTF32);
+    ```
 
-```csharp
-```
+- <strong><sub>Convert byte[] to string</sub></strong>
+    ```csharp
+    // using global encoding (*UTF8)
+    string username  = new byte[] { ... }.GetString(); 
+    
+    // using UNICODE (*UTF16) encoding
+    string message = new byte[] { ... }.GetString(Encoding.Unicode); 
+    
+    // using UTF32 encoding
+    byte[] secreat = new byte[] { ... };
+    string secreatWord = secreat.GetString(Encoding.UTF32);
+    ```
+
+- <strong><sub>Capitalize string</sub></strong>
+    ```rb
+    string name = "alECio furanZE".ToCapitalize();
+    # Alecio Furanze
+    
+    string title = "i'M noT humAn";
+    title = title.ToCapitalize();
+    # I'm Not Human
+    ```
+
+- <strong><sub>UpperCase string</sub></strong>
+    ```rb
+    string name = "alECio furanZE".ToUpperCase();
+    # ALECIO FURANZE
+    
+    string title = "i'M noT humAn";
+    title = title.ToUpperCase();
+    # I'M NOT HUMAN
+    ```
+
+- <strong><sub>LowerCase string</sub></strong>
+    ```rb
+    string name = "ALEciO FUraNZE".ToLowerCase();
+    # alecio furanze
+    
+    string title = "i'M Not huMAN";
+    title = title.ToLowerCase();
+    # i'm not human
+    ```
 
 </details>
 
