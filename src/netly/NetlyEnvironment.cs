@@ -1,4 +1,6 @@
-﻿namespace Netly
+﻿using System;
+
+namespace Netly
 {
     /// <summary>
     ///     Netly Library Info
@@ -36,15 +38,19 @@
         public static readonly IMainThread MainThread;
 
         /// <summary>
-        ///     RUDP Message Type
+        ///     Message Type
         /// </summary>
-        public struct OrderType
+        public class MessageType
         {
-            internal readonly object Content;
-
-            internal OrderType(object content)
+            internal MessageType()
             {
-                Content = content;
+            }
+
+            internal static Exception InvalidRudpException = new Exception($"The {nameof(MessageType)} isn't RUDP type");
+
+            internal static bool IsRudp(MessageType content)
+            {
+                return content == RUDP.Reliable || content == RUDP.Unreliable;
             }
         }
 
