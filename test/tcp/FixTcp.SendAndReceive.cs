@@ -115,7 +115,7 @@ public partial class FixTcp
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 50);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
