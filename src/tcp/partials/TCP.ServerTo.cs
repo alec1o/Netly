@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Netly.Interfaces;
@@ -134,6 +135,11 @@ namespace Netly
                     foreach (var client in Clients) client.Value.To.Data(data);
                 }
 
+                public void DataBroadcast(string data, Encoding encoding)
+                {
+                    foreach (var client in Clients) client.Value.To.Data(data, encoding);
+                }
+
                 public void DataBroadcast(byte[] data)
                 {
                     foreach (var client in Clients) client.Value.To.Data(data);
@@ -142,6 +148,11 @@ namespace Netly
                 public void EventBroadcast(string name, string data)
                 {
                     foreach (var client in Clients) client.Value.To.Event(name, data);
+                }
+
+                public void EventBroadcast(string name, string data, Encoding encoding)
+                {
+                    foreach (var client in Clients) client.Value.To.Data(data, encoding);
                 }
 
                 public void EventBroadcast(string name, byte[] data)
