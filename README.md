@@ -1099,9 +1099,9 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 using Byter;
 ```
 
-- [<i><sub>Global Default Encoding (source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
+-  <strong><sub>Global Default Encoding</sub></strong> [<i><sub>(source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
     ```csharp
-    // update global defaut encoding, by default is UTF8
+    // update global defaut encoding. Default is UTF8
     StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
     ```
 
