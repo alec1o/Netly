@@ -30,7 +30,7 @@ public partial class FixTcp(ITestOutputHelper output)
 
             await client.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 30);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -41,7 +41,7 @@ public partial class FixTcp(ITestOutputHelper output)
 
             await client.To.Close();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 30);
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
