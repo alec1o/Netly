@@ -172,6 +172,11 @@ namespace Netly
                     Send(buffer.GetBytes(), isText);
                 }
 
+                public void Data(string buffer, bool isText, Encoding encoding)
+                {
+                    Send(buffer.GetBytes(encoding), isText);
+                }
+
                 public void Event(string name, byte[] buffer)
                 {
                     Send(NetlyEnvironment.EventManager.Create(name, buffer), false);
@@ -179,7 +184,12 @@ namespace Netly
 
                 public void Event(string name, string buffer)
                 {
-                    Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(Encoding.UTF8)), false);
+                    Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), false);
+                }
+
+                public void Event(string name, string buffer, Encoding encoding)
+                {
+                    Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), false);
                 }
 
                 private void Send(byte[] buffer, bool isText)
@@ -190,7 +200,7 @@ namespace Netly
                     var messageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
                     // Is Always true because our send all buffer on same moment is internal
                     // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
-                    var endOfMessage = true;
+                    const bool endOfMessage = true;
 
                     if (_isServerSide)
                         _websocketServerSide.SendAsync

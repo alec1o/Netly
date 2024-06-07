@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Netly
@@ -42,6 +43,14 @@ namespace Netly
                 void Data(string buffer, bool isText);
 
                 /// <summary>
+                ///     Send data for server (string)
+                /// </summary>
+                /// <param name="buffer">Data buffer</param>
+                /// <param name="isText">"True" meaning is Text format</param>
+                /// <param name="encoding">String encoding</param>
+                void Data(string buffer, bool isText, Encoding encoding);
+
+                /// <summary>
                 ///     Send Netly event for server (bytes)
                 /// </summary>
                 /// <param name="name">Event name</param>
@@ -54,6 +63,14 @@ namespace Netly
                 /// <param name="name">Event name</param>
                 /// <param name="buffer">Event buffer</param>
                 void Event(string name, string buffer);
+
+                /// <summary>
+                ///     Send Netly event for server (string)
+                /// </summary>
+                /// <param name="name">Event name</param>
+                /// <param name="buffer">Event buffer</param>
+                /// <param name="encoding">String encoding</param>
+                void Event(string name, string buffer, Encoding encoding);
             }
         }
     }

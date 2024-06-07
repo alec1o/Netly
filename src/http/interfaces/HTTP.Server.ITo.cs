@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Netly
@@ -23,6 +24,14 @@ namespace Netly
                 ///     Close Server Connection
                 /// </summary>
                 Task Close();
+
+                void WebsocketDataBroadcast(byte[] data, bool isText);
+                void WebsocketDataBroadcast(string data, bool isText);
+                void WebsocketDataBroadcast(string data, bool isText, Encoding encoding);
+
+                void WebsocketEventBroadcast(string name, byte[] data);
+                void WebsocketEventBroadcast(string name, string data);
+                void WebsocketEventBroadcast(string name, string data, Encoding encoding);
             }
         }
     }

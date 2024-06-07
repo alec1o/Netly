@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +17,8 @@ namespace Netly
                 private readonly Server _server;
                 private HttpListener _listener;
                 private bool _tryOpen, _tryClose;
+                private List<WebSocket> _webSockets = new List<WebSocket>();
+                private object _websocketListLock = new object();
 
                 public _To(Server server)
                 {
@@ -94,6 +98,72 @@ namespace Netly
                             _server._on.m_onClose?.Invoke(null, null);
                         }
                     });
+                }
+
+                public void WebsocketDataBroadcast(byte[] data, bool isText)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Data(data, isText);
+                        }
+                    }
+                }
+
+                public void WebsocketDataBroadcast(string data, bool isText)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Data(data, isText);
+                        }
+                    }
+                }
+
+                public void WebsocketDataBroadcast(string data, bool isText, Encoding encoding)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Data(data, isText, encoding);
+                        }
+                    }
+                }
+
+                public void WebsocketEventBroadcast(string name, byte[] data)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Event(name, data);
+                        }
+                    }
+                }
+
+                public void WebsocketEventBroadcast(string name, string data)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Event(name, data);
+                        }
+                    }
+                }
+
+                public void WebsocketEventBroadcast(string name, string data, Encoding encoding)
+                {
+                    lock (_websocketListLock)
+                    {
+                        foreach (var ws in _webSockets)
+                        {
+                            ws.To.Event(name, data, encoding);
+                        }
+                    }
                 }
 
                 private void ReceiveRequests()
@@ -371,6 +441,19 @@ namespace Netly
                         var ws = await context.AcceptWebSocketAsync(null);
 
                         var websocket = new WebSocket(ws.WebSocket, request);
+
+                        lock (_websocketListLock)
+                        {
+                            _webSockets.Add(websocket);
+                        }
+
+                        websocket.On.Close(() =>
+                        {
+                            lock (_websocketListLock)
+                            {
+                                _webSockets.Add(websocket);
+                            }
+                        });
 
                         myPaths.ForEach(x => x.WebsocketCallback?.Invoke(request, websocket));
 
