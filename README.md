@@ -1118,7 +1118,10 @@ using Byter;
     Student student = primitive.Get.Struct<Student>();
     Employee employee = primitive.Get.Class<Employee>();
     
-    // NOTE: Primitive don't make exception when diserialize error, don't need try/catch block
+    /*
+        * NOTE: Primitive don't make exception when diserialize error,
+        * don't need try/catch block
+    */
     if (primitive.IsValid is false)
     {
         // discart this. +1/all failed on deserialize
@@ -1164,9 +1167,12 @@ using Byter;
 
 ___
 
-_NOTE: Primitive can serialize/deserialize complex data, e.g. ``T[], List<T>, Class, Struct, Enum``. but when you create
-deserialize your class/struct it must have (public generic constructor) is public constructor without arguments
-e.g. ``Human human = new Human();`` and the class/struct propriety must have public and get/set or not private access e.g. ``public string name`` or ``public string Name { get; set; }``_
+_NOTE: Primitive can serialize/deserialize complex data, e.g. 
+``T[], List<T>, Class, Struct, Enum``.
+but when you create deserialize your class/struct it must have (public generic constructor)
+is public constructor without arguments e.g. ``Human human = new Human();``
+and the class/struct propriety must have public and get/set or not private access
+e.g. ``public string name`` or ``public string Name { get; set; }``_
 
 - <strong><sub>Complex Data</sub></strong>
     ```cs
