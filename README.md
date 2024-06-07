@@ -1079,21 +1079,134 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 <tr><th></th></tr>
 
 <tr>
-<th align="center" valign="top"><sub>Byter<strong></strong></sub></th>
+<th align="center" valign="top"><a href="https://github.com/alec1o/Byter"><sub>Byter<strong></strong></sub></a></th>
 <td>
 
 ###### For more information and details see [Byter's](https://github.com/alec1o/Byter) official information
+
 > <sub>Byter documentation: [alec1o/Byter](https://github.com/alec1o/Byter)</sub>
 <details><summary>📄 <strong><sup><sub>Primitive</sub></sup></strong></summary>
 
 ```csharp
+using Byter;
 ```
 
-```csharp
-```
+- <strong><sub>Serialize</sub></strong>  <sub>_(have +20 types of data supported, e.g. enum, bool, array, list, class,
+  struct,... [see official docs](https://github.com/alec1o/Byter)_</sub>
+    ```csharp
+    Primitive primitive = new();
+    
+    // add element
+    
+    primitive.Add.ULong(1024);                 // e.g. Id
+    primitive.Add.DateTime(DateTime.UtcNow);   // e.g. Sent Time
+    primitive.Add.Struct(new Student() {...}); // e.g Student
+    primitive.Add.Class(new Employee() {...}); // e.g Employee
+    ...
+    
+    // get buffer
+    byte[] buffer = primitive.GetBytes();
+    ```
 
-```csharp
-```
+- <strong><sub>Deserialize</sub></strong>
+    ```csharp
+    // WARNING: Need primitive buffer to deserialize
+    Primitive primitive = new(...buffer);
+    
+    ulong id = primitive.Get.ULong();
+    DateTime sentTime = primitive.Get.DateTime();
+    Student student = primitive.Get.Struct<Student>();
+    Employee employee = primitive.Get.Class<Employee>();
+    
+    // NOTE: Primitive don't make exception when diserialize error, don't need try/catch block
+    if (primitive.IsValid is false)
+    {
+        // discart this. +1/all failed on deserialize
+        return;
+    }
+    
+    // deserialized sucessful
+    ```
+- <strong><sub>*Dynamic Read Technical</sub></strong>
+    ```csharp
+    Primitive primitive = new(...buffer);
+    
+    var topic = primitive.Get.Enum<Topic>();
+    
+    if(!primitive.IsValid) return; // discart this, topic not found.
+    
+    switch(topic)
+    {
+        case Topic.Student:
+        {
+            // read student info e.g.
+            var student = primitive.Get.Struct<Student>();
+            ...
+            return;
+        }
+        
+        case Topic.Employee:
+        {
+            // read employee info e.g.
+            var employee = primitive.Get.Class<Employee>();
+            ...
+            return;
+        }
+        
+        default:
+        {        
+            // discart this, topic not found. 
+            ...
+            return;
+        }
+    }
+    ```
+
+___
+
+_NOTE: Primitive can serialize/deserialize complex data, e.g. ``T[], List<T>, Class, Struct, Enum``. but when you create
+deserialize your class/struct it must have (public generic constructor) is public constructor without arguments
+e.g. ``Human human = new Human();`` and the class/struct propriety must have public and get/set or not private access e.g. ``public string name`` or ``public string Name { get; set; }``_
+
+- <strong><sub>Complex Data</sub></strong>
+    ```cs
+    public class Human
+    {
+        public BigInteger IdNumber { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public GenderType Gender { get; set; } // enum
+        public byte[] Picture { get; set; }
+        
+    }
+    
+    public class Employee
+    {
+        public Human Human { get; set; }
+        public string Position { get; set; }
+        public DateTime HireDate { get; set; }
+        public int YearsOfService { get; set; }
+    }
+    
+    public struct Student 
+    {
+        public string Major { get; set; }
+        public DateTime EnrollmentDate { get; set; }
+        public List<Book> Books { get; set; }   
+        
+    }
+    
+    public class Book
+    {
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public string ISBN { get; set; }
+        public int PublicationYear { get; set; }
+        public string Publisher { get; set; }
+        public decimal Price { get; set; }
+    }
+    ```
 
 </details>
 <details><summary>📄 <strong><sup><sub>Extension</sub></sup></strong></summary>
@@ -1102,11 +1215,12 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 using Byter;
 ```
 
--  <strong><sub>Global Default Encoding</sub></strong> [<i><sub>(source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
-    ```csharp
-    // update global defaut encoding. Default is UTF8
-    StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
-    ```
+- <strong><sub>Global Default
+  Encoding</sub></strong> [<i><sub>(source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
+   ```csharp
+   // update global defaut encoding. Default is UTF8
+   StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
+   ```
 
 - <strong><sub>Convert string to byte[]</sub></strong>
     ```csharp
