@@ -1192,7 +1192,9 @@ for example. (In byter programming, _ONLY PROPERTIES THAT CAN BE READ AND WRITTE
 
 ___
 
-- <strong><sub>Complex Data</sub></strong>
+###### Example
+
+- <strong><sub>Sample of complex data</sub></strong>
     ```cs
     public class Human
     {
