@@ -95,7 +95,6 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
 | <sub>Nuget</sub>                                                    | <sub>Unity Asset Store</sub>                                                                     |
 |---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
-| <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
 <br>
 
