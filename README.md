@@ -1081,6 +1081,9 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 <tr>
 <th align="center" valign="top"><sub>Byter<strong></strong></sub></th>
 <td>
+
+###### For more information and details see [Byter's](https://github.com/alec1o/Byter) official information
+> <sub>Byter documentation: [https://github.com/alec1o/Byter](https://github.com/alec1o/Byter)</sub>
 <details><summary>📄 <strong><sup><sub>Primitive</sub></sup></strong></summary>
 
 ```csharp
