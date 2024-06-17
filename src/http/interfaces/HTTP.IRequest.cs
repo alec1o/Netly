@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -77,7 +78,7 @@ namespace Netly
             /// <summary>
             ///     Request Body
             /// </summary>
-            IBody Body { get; }
+            IHTTP.Body Body { get; }
 
 
             /// <summary>

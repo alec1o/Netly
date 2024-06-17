@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class HTTP
+    public static partial class IHTTP
     {
-        public interface IBody
+        public interface Body
         {
             /// <summary>
             ///     Enctype type
             /// </summary>
-            Enctype Enctype { get; }
+            HTTP.Enctype Enctype { get; }
 
             /// <summary>
             ///     Text buffer

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Web;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -221,11 +222,11 @@ namespace Netly
             public bool IsWebSocket { get; }
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
-            public IBody Body { get; }
+            public IHTTP.Body Body { get; }
             public int Status { get; }
 
             /// <summary>
-            ///     Set queries from a exist uri
+            ///     Set queries from an exist uri
             /// </summary>
             /// <param name="uri">Uri instance</param>
             private void SetQueriesFromUri(Uri uri)

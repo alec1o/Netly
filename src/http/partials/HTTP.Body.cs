@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using Byter;
+using Netly.Interfaces;
 
 namespace Netly
 {
     public partial class HTTP
     {
-        internal class Body : IBody
+        internal class Body : IHTTP.Body
         {
             public Body(byte[] buffer, Enctype enctype, Encoding encoding)
             {
