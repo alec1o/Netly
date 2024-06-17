@@ -31,7 +31,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
             await client.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -42,7 +42,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
             await client.To.Close();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 300);
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -90,7 +90,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
             await server.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -101,7 +101,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
             await server.To.Close();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 300);
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);

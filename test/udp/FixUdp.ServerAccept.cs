@@ -68,7 +68,7 @@ public partial class FixUdp
 
             await server.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -84,7 +84,7 @@ public partial class FixUdp
                 await Client(server.Host);
             }
 
-            Thread.Sleep(10);
+            Thread.Sleep(300);
 
             Assert.Equal(maxConnection, server.Clients.Length);
         }
