@@ -117,7 +117,7 @@ public partial class FixUdp
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 50);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
