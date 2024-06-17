@@ -4,7 +4,6 @@
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <div align="right">
-  <table align="right" valign="center">
   <table>
     <td align="left">
       <p>
