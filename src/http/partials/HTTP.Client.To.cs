@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Byter;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -14,17 +15,17 @@ namespace Netly
     {
         public partial class Client
         {
-            private class _ITo : ITo
+            private class ClientTo : IHTTP.ClientTo
             {
                 private readonly Client _client;
                 private int _timeout;
 
-                public _ITo(Client client)
+                public ClientTo(Client client)
                 {
                     _client = client;
                 }
 
-                private _IOn On => _client._on;
+                private ClientOn On => _client._on;
                 public bool IsOpened { get; private set; }
 
                 public Task Open(string method, string url, byte[] body = null)
@@ -95,24 +96,24 @@ namespace Netly
                             http.BaseAddress = host;
                             http.Timeout = timeout;
 
-                            On.m_onModify?.Invoke(null, http);
+                            On.OnModify?.Invoke(null, http);
 
                             var response = await http.SendAsync(message, CancellationToken.None);
 
                             var myResponse = new Response(response);
 
-                            On.m_onOpen?.Invoke(null, myResponse);
+                            On.OnOpen?.Invoke(null, myResponse);
                         }
                         catch (Exception ex)
                         {
                             NetlyEnvironment.Logger.Create(ex);
-                            On.m_onError?.Invoke(null, ex);
+                            On.OnError?.Invoke(null, ex);
                         }
                         finally
                         {
                             // release operation
                             IsOpened = false;
-                            On.m_onClose?.Invoke(null, null);
+                            On.OnClose?.Invoke(null, null);
                         }
                     });
                 }

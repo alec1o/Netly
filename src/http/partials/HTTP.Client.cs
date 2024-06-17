@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using Netly.Interfaces;
 
 namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Client : IClient
+        public partial class Client : IHTTP.Client
         {
-            private readonly _IOn _on;
-            private readonly _ITo _to;
+            private readonly ClientOn _on;
+            private readonly ClientTo _to;
 
             /// <summary>
             ///     Create HTTP.Client instance
@@ -17,8 +18,8 @@ namespace Netly
                 Headers = new Dictionary<string, string>();
                 Queries = new Dictionary<string, string>();
 
-                _on = new _IOn();
-                _to = new _ITo(this);
+                _on = new ClientOn();
+                _to = new ClientTo(this);
 
                 On = _on;
                 To = _to;
@@ -55,12 +56,12 @@ namespace Netly
             /// <summary>
             ///     Fetch callback handler
             /// </summary>
-            public IOn On { get; }
+            public IHTTP.ClientOn On { get; }
 
             /// <summary>
             ///     Fetch action creator
             /// </summary>
-            public ITo To { get; }
+            public IHTTP.ClientTo To { get; }
         }
     }
 }

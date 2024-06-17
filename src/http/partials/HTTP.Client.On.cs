@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using Netly.Interfaces;
 using Env = Netly.NetlyEnvironment;
 
 namespace Netly
@@ -8,31 +9,31 @@ namespace Netly
     {
         public partial class Client
         {
-            internal class _IOn : IOn
+            internal class ClientOn : IHTTP.ClientOn
             {
-                public EventHandler m_onClose;
-                public EventHandler<Exception> m_onError;
-                public EventHandler<HttpClient> m_onModify;
-                public EventHandler<IResponse> m_onOpen;
+                public EventHandler OnClose { get; private set; } = delegate { };
+                public EventHandler<Exception> OnError { get; private set; } = delegate { };
+                public EventHandler<HttpClient> OnModify { get; private set; } = delegate { };
+                public EventHandler<IResponse> OnOpen { get; private set; } = delegate { };
 
                 public void Error(Action<Exception> callback)
                 {
-                    m_onError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                    OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Close(Action callback)
                 {
-                    m_onClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                    OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
                 }
 
                 public void Modify(Action<HttpClient> callback)
                 {
-                    m_onModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                    OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
                 public void Open(Action<IResponse> callback)
                 {
-                    m_onOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                    OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
             }
         }
