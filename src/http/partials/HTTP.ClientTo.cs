@@ -95,12 +95,12 @@ namespace Netly
 
                             http.BaseAddress = host;
                             http.Timeout = timeout;
-
+                            
                             On.OnModify?.Invoke(null, http);
 
                             var response = await http.SendAsync(message, CancellationToken.None);
 
-                            var myResponse = new Response(response);
+                            var myResponse = new ClientResponse(ref response, ref http);
 
                             On.OnOpen?.Invoke(null, myResponse);
                         }

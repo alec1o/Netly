@@ -13,15 +13,7 @@ namespace Netly
     {
         internal class Response : IHTTP.Response
         {
-            private readonly HttpResponseMessage _message;
             private readonly HttpListenerResponse _response;
-
-
-            public Response(HttpResponseMessage message)
-            {
-                _message = message;
-                throw new NotImplementedException();
-            }
 
             public Response(HttpListenerResponse response)
             {

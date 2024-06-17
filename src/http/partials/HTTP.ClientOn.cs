@@ -14,7 +14,7 @@ namespace Netly
                 public EventHandler OnClose { get; private set; } = delegate { };
                 public EventHandler<Exception> OnError { get; private set; } = delegate { };
                 public EventHandler<HttpClient> OnModify { get; private set; } = delegate { };
-                public EventHandler<IHTTP.Response> OnOpen { get; private set; } = delegate { };
+                public EventHandler<IHTTP.ClientResponse> OnOpen { get; private set; } = delegate { };
 
                 public void Error(Action<Exception> callback)
                 {
@@ -31,7 +31,7 @@ namespace Netly
                     OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
 
-                public void Open(Action<IHTTP.Response> callback)
+                public void Open(Action<IHTTP.ClientResponse> callback)
                 {
                     OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
                 }
