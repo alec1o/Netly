@@ -27,19 +27,32 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 </div>
 
 > ###### Version 4 Development Status
-| Tasks                                                                   | Status                               |
-|-------------------------------------------------------------------------|--------------------------------------|
-| <a href="https://github.com/alec1o/Byter"><sub><i>Byter 3</i></sub></a> | 👌 <sup><i>Perfect</i></sup>         |
-| <sub><i><sup>V4</sup> Documentation</i></sub>                           | 🔩 <sup><i>Initialized</i></sup>     |
-| <sub><i>TCP.Client</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
-| <sub><i>TCP.Server</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
-| <sub><i>UDP.Client</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
-| <sub><i>UDP.Server</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
-| <sub><i>HTTP.Client</i></sub>                                           | 🔧 <sup><i>Experimental</i></sup>    |
-| <sub><i>HTTP.Server</i></sub>                                           | 🔧 <sup><i>Experimental</i></sup>    |
-| <sub><i>HTTP.Websocket </i></sub>                                       | 🔧 <sup><i>Experimental</i></sup>    | 
-| <sub><i>RUDP.Client</i></sub>                                           | 🚫 <sup><i>Not Implemented</i></sup> |
-| <sub><i>RUDP.Server</i></sub>                                           | 🚫 <sup><i>Not Implemented</i></sup> |
+
+<table>
+  <tr>
+    <th align="left" valign="center">👌 <i>Perfect</i></th>
+    <td><a href="https://github.com/alec1o/Byter"><sub><i>Byter 3</i></sub></a></td>
+    <td><sub><i>TCP.Client</i></sub></td>
+    <td><sub><i>TCP.Server</i></sub></td>
+    <td><sub><i>UDP.Client</i></sub></td> 
+    <td><sub><i>UDP.Server</i></sub></td>
+  </tr>
+  <tr>
+    <th align="left" valign="center">🔧 <i>Experimental</i></th>
+    <td><sub><i>HTTP.Client</i></sub></td>
+    <td><sub><i>HTTP.Server</i></sub></td>
+    <td><sub><i>HTTP.Websocket </i></sub></td>   
+  </tr>
+  <tr>
+    <th align="left" valign="center">🚫 <i>Not Implemented</i></th>
+    <td><sub><i>RUDP.Client</i></sub></td> 
+    <td><sub><i>RUDP.Server</i></sub></td>
+  </tr>
+  <tr>
+    <th align="left" valign="center">🔩 <i>Initialized</i></th>
+    <td><sub><i><sup>V4</sup> Documentation</i></sub></td>
+  </tr>
+</table>
 
 <br>
 
