@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class HTTP
+    public static partial class IHTTP
     {
-        internal interface IClient
+        internal interface Client
         {
             Dictionary<string, string> Headers { get; }
             Dictionary<string, string> Queries { get; }
@@ -12,8 +12,8 @@ namespace Netly
             int Timeout { get; set; }
             bool IsOpened { get; }
 
-            Client.IOn On { get; }
-            Client.ITo To { get; }
+            ClientOn On { get; }
+            ClientTo To { get; }
         }
     }
 }
