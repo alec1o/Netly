@@ -4,12 +4,13 @@
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <div align="right">
-<table>
-<td align="right">
-<p></p>
-<sup>⭐ Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 💙</sup>
-</td>
-</table>
+  <table align="right" valign="center">
+    <td align="left">
+      <p>
+        <sup>⭐ Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 💙</sup>
+      </p>
+    </td>
+  </table>
 </div>
 
 <br>
