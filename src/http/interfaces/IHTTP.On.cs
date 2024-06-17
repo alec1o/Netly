@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Netly
+namespace Netly.Interfaces
 {
     public interface IOn<out TModifyType>
     {

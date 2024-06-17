@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class HTTP
+    public static partial class IHTTP
     {
-        internal interface IWebSocket
+        public interface WebSocket
         {
             /// <summary>
             ///     Connection request
             /// </summary>
-            IRequest Request { get; }
+            Request Request { get; }
 
             /// <summary>
             ///     Connection Headers
@@ -30,12 +30,12 @@ namespace Netly
             /// <summary>
             ///     Event Handler
             /// </summary>
-            WebSocket.IOn On { get; }
+            WebSocketOn On { get; }
 
             /// <summary>
             ///     Event Creator
             /// </summary>
-            WebSocket.ITo To { get; }
+            WebSocketTo To { get; }
         }
     }
 }

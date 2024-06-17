@@ -2,11 +2,11 @@
 using System.Net;
 using System.Text;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class HTTP
+    public static partial class IHTTP
     {
-        public interface IResponse
+        public interface Response
         {
             /// <summary>
             ///     Response Headers

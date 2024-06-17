@@ -2,13 +2,12 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using Netly.Interfaces;
 
-namespace Netly
+namespace Netly.Interfaces
 {
-    public static partial class HTTP
+    public static partial class IHTTP
     {
-        public interface IRequest
+        public interface Request
         {
             /// <summary>
             ///     Request encoding
@@ -78,7 +77,7 @@ namespace Netly
             /// <summary>
             ///     Request Body
             /// </summary>
-            IHTTP.Body Body { get; }
+            Body Body { get; }
 
 
             /// <summary>

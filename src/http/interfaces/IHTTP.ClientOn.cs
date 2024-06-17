@@ -14,7 +14,7 @@ namespace Netly.Interfaces
             ///     Handle fetch response
             /// </summary>
             /// <param name="callback">Callback</param>
-            void Open(Action<HTTP.IResponse> callback);
+            void Open(Action<Response> callback);
 
             /// <summary>
             ///     Use to handle connection error event
