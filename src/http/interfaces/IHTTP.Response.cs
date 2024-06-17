@@ -21,7 +21,7 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Response encoding
             /// </summary>
-            Encoding ResponseEncoding { get; set; }
+            Encoding Encoding { get; set; }
 
             /// <summary>
             ///     Return true if response connection is opened

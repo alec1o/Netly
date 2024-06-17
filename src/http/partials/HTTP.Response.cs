@@ -5,12 +5,13 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Byter;
+using Netly.Interfaces;
 
 namespace Netly
 {
     public partial class HTTP
     {
-        internal class Response : IResponse
+        internal class Response : IHTTP.Response
         {
             private readonly HttpResponseMessage _message;
             private readonly HttpListenerResponse _response;
@@ -25,7 +26,7 @@ namespace Netly
             public Response(HttpListenerResponse response)
             {
                 IsOpened = true;
-                ResponseEncoding = Encoding.UTF8;
+                Encoding = Encoding.UTF8;
                 Headers = new Dictionary<string, string>
                 {
                     { "Server", "NETLY HTTP/S" },
@@ -38,12 +39,12 @@ namespace Netly
 
             public Dictionary<string, string> Headers { get; }
             public Cookie[] Cookies { get; set; }
-            public Encoding ResponseEncoding { get; set; }
+            public Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
 
             public void Send(int statusCode, string textBuffer)
             {
-                Send(statusCode, textBuffer.GetBytes(ResponseEncoding));
+                Send(statusCode, textBuffer.GetBytes(Encoding));
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
@@ -51,7 +52,7 @@ namespace Netly
                 if (!IsOpened) return;
                 IsOpened = false;
 
-                Write(statusCode, byteBuffer, ResponseEncoding);
+                Write(statusCode, byteBuffer, Encoding);
             }
 
             public void Redirect(string url)

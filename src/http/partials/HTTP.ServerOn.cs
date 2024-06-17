@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Netly.Interfaces;
 using Env = Netly.NetlyEnvironment;
 
 namespace Netly
@@ -8,7 +9,7 @@ namespace Netly
     {
         public partial class Server
         {
-            internal class _On : IOn
+            internal class ServerOn : IHTTP.ServerOn
             {
                 public EventHandler m_onClose;
                 public EventHandler<Exception> m_onError;

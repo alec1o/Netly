@@ -12,7 +12,7 @@ namespace Netly
 {
     public partial class HTTP
     {
-        internal class Request : IRequest
+        internal class Request : IHTTP.Request
         {
             internal Request(HttpListenerRequest request)
             {
@@ -59,14 +59,14 @@ namespace Netly
 
                     IsEncrypted = request.IsSecureConnection;
 
-                    RequestEncoding = request.ContentEncoding;
+                    Encoding = request.ContentEncoding;
 
                     // TODO: detect enctype from Header
                     var enctype = Enctype.PlainText;
 
                     var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
-                    Body = new Body(buffer, enctype, RequestEncoding);
+                    Body = new Body(buffer, enctype, Encoding);
                 }
             }
 
@@ -122,7 +122,7 @@ namespace Netly
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "WSS";
 
                     // Not applicable
-                    RequestEncoding = Encoding.UTF8;
+                    Encoding = Encoding.UTF8;
 
                     // Not applicable
                     var enctype = Enctype.PlainText;
@@ -130,7 +130,7 @@ namespace Netly
                     // Not applicable
                     var buffer = Array.Empty<byte>();
 
-                    Body = new Body(buffer, enctype, RequestEncoding);
+                    Body = new Body(buffer, enctype, Encoding);
                 }
             }
 
@@ -199,17 +199,17 @@ namespace Netly
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "HTTPS";
 
                     // TODO: detect encoding from Header
-                    RequestEncoding = Encoding.UTF8;
+                    Encoding = Encoding.UTF8;
 
                     // TODO: detect enctype from Header
                     var enctype = Enctype.PlainText;
 
                     var buffer = message.Content.ReadAsByteArrayAsync().Result;
-                    Body = new Body(buffer, enctype, RequestEncoding);
+                    Body = new Body(buffer, enctype, Encoding);
                 }
             }
 
-            public Encoding RequestEncoding { get; }
+            public Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }
             public Dictionary<string, string> Params { get; }

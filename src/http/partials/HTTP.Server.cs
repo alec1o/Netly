@@ -1,30 +1,31 @@
 ﻿using System;
+using Netly.Interfaces;
 
 namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Server : IServer
+        public partial class Server : IHTTP.Server
         {
-            private readonly _Map _map;
-            private readonly _Middleware _middleware;
-            private readonly _On _on;
-            private readonly _To _to;
+            private readonly Map _map;
+            private readonly Middleware _middleware;
+            private readonly ServerOn _serverOn;
+            private readonly ServerTo _serverTo;
 
             public Server()
             {
-                _on = new _On();
-                _map = new _Map(this);
-                _middleware = new _Middleware(this);
-                _to = new _To(this);
+                _serverOn = new ServerOn();
+                _map = new Map(this);
+                _middleware = new Middleware(this);
+                _serverTo = new ServerTo(this);
             }
 
-            public bool IsOpened => _to.IsOpened;
-            public Uri Host => _to.Host;
-            public IMap Map => _map;
-            public IMiddleware Middleware => _middleware;
-            public IOn On => _on;
-            public ITo To => _to;
+            public bool IsOpened => _serverTo.IsOpened;
+            public Uri Host => _serverTo.Host;
+            public IHTTP.Map Map => _map;
+            public IHTTP.Middleware Middleware => _middleware;
+            public IHTTP.ServerOn On => _serverOn;
+            public IHTTP.ServerTo To => _serverTo;
         }
     }
 }

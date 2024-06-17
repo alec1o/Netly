@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Netly.Interfaces;
 
 namespace Netly
 {
@@ -12,7 +13,7 @@ namespace Netly
     {
         public partial class Server
         {
-            internal class _To : ITo
+            internal class ServerTo : IHTTP.ServerTo
             {
                 private readonly Server _server;
                 private HttpListener _listener;
@@ -20,7 +21,7 @@ namespace Netly
                 private List<WebSocket> _webSockets = new List<WebSocket>();
                 private object _websocketListLock = new object();
 
-                public _To(Server server)
+                public ServerTo(Server server)
                 {
                     _server = server;
                 }
@@ -43,7 +44,7 @@ namespace Netly
 
                             server.Prefixes.Add(httpUrl);
 
-                            _server._on.m_onModify?.Invoke(null, server);
+                            _server._serverOn.m_onModify?.Invoke(null, server);
 
                             server.Start();
 
@@ -51,13 +52,13 @@ namespace Netly
 
                             _listener = server;
 
-                            _server._on.m_onOpen?.Invoke(null, null);
+                            _server._serverOn.m_onOpen?.Invoke(null, null);
 
                             ReceiveRequests();
                         }
                         catch (Exception e)
                         {
-                            _server._on.m_onError?.Invoke(null, e);
+                            _server._serverOn.m_onError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -95,7 +96,7 @@ namespace Netly
                         {
                             _tryClose = false;
                             _listener = null;
-                            _server._on.m_onClose?.Invoke(null, null);
+                            _server._serverOn.m_onClose?.Invoke(null, null);
                         }
                     });
                 }
@@ -235,7 +236,7 @@ namespace Netly
 
                     var skipNextMiddleware = false;
 
-                    void RunMiddlewares(IMiddlewareInfo[] middlewares)
+                    void RunMiddlewares(IHTTP.MiddlewareDescriptor[] middlewares)
                     {
                         foreach (var middleware in middlewares)
                         {
@@ -260,7 +261,7 @@ namespace Netly
 
                     var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
-                        if (x.Path == _Middleware.GLOBAL_PATH)
+                        if (x.Path == HTTP.Middleware.GLOBAL_PATH)
                             // is only global path
                             return true;
 
@@ -287,7 +288,7 @@ namespace Netly
                     var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
                         // only local middleware is allowing
-                        if (x.Path == _Middleware.GLOBAL_PATH) return false;
+                        if (x.Path == HTTP.Middleware.GLOBAL_PATH) return false;
 
                         if (!x.UseParams)
                             // simple path compare
@@ -343,7 +344,7 @@ namespace Netly
                         {
                             // handle all method
                             var handleMethod =
-                                string.Equals(x.Method, _Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                                string.Equals(x.Method, HTTP.Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
                                 ||
                                 string.Equals(request.Method.Method, x.Method,
                                     StringComparison.CurrentCultureIgnoreCase);

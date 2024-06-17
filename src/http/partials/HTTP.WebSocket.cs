@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using Netly.Interfaces;
 
 namespace Netly
 {
     public partial class HTTP
     {
-        public partial class WebSocket : IWebSocket
+        public partial class WebSocket : IHTTP.WebSocket
         {
-            private readonly _On _on = new _On();
-            private readonly _To _to;
+            internal readonly WebsocketOn _websocketOn = new WebsocketOn();
+            internal readonly WebsocketTo _to;
 
             /// <summary>
             ///     Create Websocket Client Instance
             /// </summary>
             public WebSocket()
             {
-                _to = new _To(this);
+                _to = new WebsocketTo(this);
             }
 
             /// <summary>
@@ -23,17 +24,17 @@ namespace Netly
             /// </summary>
             /// <param name="serverSocket"></param>
             /// <param name="request"></param>
-            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, IRequest request)
+            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, IHTTP.Request request)
             {
-                _to = new _To(this, serverSocket, request);
+                _to = new WebsocketTo(this, serverSocket, request);
             }
 
-            public IRequest Request => _to.m_request;
+            public IHTTP.Request Request => _to.m_request;
             public Dictionary<string, string> Headers => _to.m_headers;
             public Uri Host => _to.m_uri;
             public bool IsOpened => _to.IsConnected();
-            public IOn On => _on;
-            public ITo To => _to;
+            public IHTTP.WebSocketOn On => _websocketOn;
+            public IHTTP.WebSocketTo To => _to;
 
             internal void InitWebSocketServerSide()
             {
