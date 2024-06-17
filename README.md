@@ -26,6 +26,23 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   </a>
 </div>
 
+> ###### Version 4 Development Status
+| Tasks                                                                   | Status                               |
+|-------------------------------------------------------------------------|--------------------------------------|
+| <a href="https://github.com/alec1o/Byter"><sub><i>Byter 3</i></sub></a> | 👌 <sup><i>Perfect</i></sup>         |
+| <sub><i><sup>V4</sup> Documentation</i></sub>                           | 🔩 <sup><i>Initialized</i></sup>     |
+| <sub><i>TCP.Client</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
+| <sub><i>TCP.Server</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
+| <sub><i>UDP.Client</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
+| <sub><i>UDP.Server</i></sub>                                            | 👌 <sup><i>Perfect<i></sup>          |
+| <sub><i>HTTP.Client</i></sub>                                           | 🔧 <sup><i>Experimental</i></sup>    |
+| <sub><i>HTTP.Server</i></sub>                                           | 🔧 <sup><i>Experimental</i></sup>    |
+| <sub><i>HTTP.Websocket </i></sub>                                       | 🔧 <sup><i>Experimental</i></sup>    | 
+| <sub><i>RUDP.Client</i></sub>                                           | 🚫 <sup><i>Not Implemented</i></sup> |
+| <sub><i>RUDP.Server</i></sub>                                           | 🚫 <sup><i>Not Implemented</i></sup> |
+
+<br>
+
 ##### Project
 
 > <sub>Get basic information about this project called [Netly](https://github.com/alec1o/Netly)</sub>
