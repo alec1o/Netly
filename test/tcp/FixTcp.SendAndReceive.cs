@@ -86,7 +86,7 @@ public partial class FixTcp
 
             bool isOpen = false, isClose = false, isError = false, isModify = false;
             byte[] dataSent = Guid.NewGuid().ToString().GetBytes();
-            byte[] dataReceived = [];
+            List<byte> dataReceived = [];
             (string name, byte[] data) eventSent = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString().GetBytes());
             (string name, byte[] data) eventReceived = (string.Empty, []);
 
@@ -94,7 +94,7 @@ public partial class FixTcp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => dataReceived = bytes);
+            client.On.Data(bytes => dataReceived.AddRange(bytes));
             client.On.Event((name, bytes) => eventReceived = (name, bytes));
             {
                 Assert.False(client.IsOpened);
