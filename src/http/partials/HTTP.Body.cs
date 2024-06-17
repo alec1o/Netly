@@ -20,7 +20,7 @@ namespace Netly
 
                 switch (enctype)
                 {
-                    case Enctype.PlainText:
+                    case Enctype.None:
                         // None, Don't have enctype
                         break;
                     case Enctype.Multipart:

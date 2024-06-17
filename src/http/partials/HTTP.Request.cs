@@ -62,7 +62,7 @@ namespace Netly
                     Encoding = request.ContentEncoding;
 
                     // TODO: detect enctype from Header
-                    var enctype = Enctype.PlainText;
+                    var enctype = Enctype.None;
 
                     var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
@@ -125,7 +125,7 @@ namespace Netly
                     Encoding = Encoding.UTF8;
 
                     // Not applicable
-                    var enctype = Enctype.PlainText;
+                    var enctype = Enctype.None;
 
                     // Not applicable
                     var buffer = Array.Empty<byte>();
@@ -202,7 +202,7 @@ namespace Netly
                     Encoding = Encoding.UTF8;
 
                     // TODO: detect enctype from Header
-                    var enctype = Enctype.PlainText;
+                    var enctype = Enctype.None;
 
                     var buffer = message.Content.ReadAsByteArrayAsync().Result;
                     Body = new Body(buffer, enctype, Encoding);

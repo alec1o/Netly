@@ -4,9 +4,9 @@
     {
         public enum Enctype
         {
-            UrlEncoded = 0,
-            Multipart = 1,
-            PlainText = 2
+            None = 0,
+            UrlEncoded = 1,
+            Multipart = 2,
         }
     }
 }
