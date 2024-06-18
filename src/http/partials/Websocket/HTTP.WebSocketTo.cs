@@ -15,12 +15,11 @@ namespace Netly
         {
             private readonly bool _isServerSide;
             private readonly WebSocket _socket;
-            public readonly Dictionary<string, string> m_headers = new Dictionary<string, string>();
+            public readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
             private bool _tryConnecting, _tryClosing, _initServerSide;
             private ClientWebSocket _websocket;
             private System.Net.WebSockets.WebSocket _websocketServerSide;
-            public IHTTP.Request m_request;
-            public Uri m_uri = new Uri("https://www.example.com");
+            public Uri MyUri = new Uri("https://www.example.com");
 
             public WebsocketTo(WebSocket socket)
             {
@@ -28,16 +27,18 @@ namespace Netly
                 _tryConnecting = false;
                 _tryClosing = false;
                 _isServerSide = false;
-                m_request = null;
+                MyRequest = null;
             }
 
-            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IHTTP.Request request)
+            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IHTTP.Request myRequest)
             {
                 _socket = socket;
                 _isServerSide = true;
                 _websocketServerSide = websocket;
-                m_request = request;
+                MyRequest = myRequest;
             }
+
+            public IHTTP.Request MyRequest { get; private set; }
 
             public Task Open(Uri host)
             {
@@ -51,19 +52,19 @@ namespace Netly
                     {
                         var ws = new ClientWebSocket();
 
-                        foreach (var header in m_headers) ws.Options.SetRequestHeader(header.Key, header.Value);
+                        foreach (var header in Headers) ws.Options.SetRequestHeader(header.Key, header.Value);
 
-                        _socket._websocketOn.m_onModify?.Invoke(null, ws);
+                        _socket._on.OnModify?.Invoke(null, ws);
 
                         await ws.ConnectAsync(host, CancellationToken.None);
 
-                        m_request = new Request(ws, host, m_headers);
+                        MyRequest = new Request(ws, host, Headers);
 
-                        m_uri = host;
+                        MyUri = host;
 
                         _websocket = ws;
 
-                        _socket._websocketOn.m_onOpen?.Invoke(null, null);
+                        _socket._on.OnOpen?.Invoke(null, null);
 
                         _ReceiveData();
                     }
@@ -83,7 +84,7 @@ namespace Netly
                             _websocket = null;
                         }
 
-                        _socket._websocketOn.m_onError?.Invoke(null, e);
+                        _socket._on.OnError?.Invoke(null, e);
                     }
                     finally
                     {
@@ -156,7 +157,7 @@ namespace Netly
                             _websocket = null;
 
                         _tryClosing = false;
-                        _socket._websocketOn.m_onClose?.Invoke(null, status);
+                        _socket._on.OnClose?.Invoke(null, status);
                     }
                 });
             }
@@ -258,10 +259,10 @@ namespace Netly
 
                         if (eventData.data != null && eventData.name != null)
                             // Is Netly Event
-                            _socket._websocketOn.m_onEvent?.Invoke(null, (eventData.name, eventData.data));
+                            _socket._on.OnEvent?.Invoke(null, (eventData.name, eventData.data));
                         else
                             // Is Default buffer
-                            _socket._websocketOn.m_onData?.Invoke(null,
+                            _socket._on.OnData?.Invoke(null,
                                 (data, result.MessageType == WebSocketMessageType.Text));
                     }
                 }
