@@ -7,8 +7,8 @@ namespace Netly
     {
         public partial class Client : IHTTP.Client
         {
-            private readonly ClientOn _on;
-            private readonly ClientTo _to;
+            internal readonly ClientOn _on;
+            internal readonly ClientTo _to;
 
             /// <summary>
             ///     Create HTTP.Client instance

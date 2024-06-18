@@ -13,171 +13,170 @@ namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Client
+        internal class ClientTo : IHTTP.ClientTo
         {
-            private class ClientTo : IHTTP.ClientTo
+            private readonly Client _client;
+            private int _timeout;
+            private readonly CancellationTokenSource _cancellationToken;
+
+            public ClientTo(Client client)
             {
-                private readonly Client _client;
-                private int _timeout;
+                _client = client;
+                _cancellationToken = new CancellationTokenSource();
+            }
 
-                public ClientTo(Client client)
+            private ClientOn On => _client._on;
+            public bool IsOpened { get; private set; }
+
+            public Task Open(string method, string url, byte[] body = null)
+            {
+                if (IsOpened)
                 {
-                    _client = client;
+                    // NOTE: it now allows fetch multi request
+                    var e = new Exception
+                    (
+                        $"[{nameof(Client)}] execute a fetch when exist a operation with same this instance. " +
+                        "You must wait for release this operation, " +
+                        "for handle it you can use those callbacks: Close, Fetch and, Error"
+                    );
+
+                    NetlyEnvironment.Logger.Create(e);
+
+                    throw e;
                 }
 
-                private ClientOn On => _client._on;
-                public bool IsOpened { get; private set; }
+                // start and block operation
+                IsOpened = true;
 
-                public Task Open(string method, string url, byte[] body = null)
+                return Task.Run(async () =>
                 {
-                    if (IsOpened)
+                    try
                     {
-                        // NOTE: it now allows fetch multi request
-                        var e = new Exception
-                        (
-                            $"[{nameof(Client)}] execute a fetch when exist a operation with same this instance. " +
-                            "You must wait for release this operation, " +
-                            "for handle it you can use those callbacks: Close, Fetch and, Error"
-                        );
+                        var http = new HttpClient();
 
-                        NetlyEnvironment.Logger.Create(e);
+                        var host = new Uri(url);
 
-                        throw e;
+                        var timeout = _timeout <= 0
+                            ? System.Threading.Timeout.InfiniteTimeSpan
+                            : TimeSpan.FromMilliseconds(_timeout);
+
+                        var httpMethod = new HttpMethod(method.Trim().ToUpper());
+
+                        #region Set Queries On Request
+
+                        var queries = _client.Queries;
+                        if (queries != null && queries.Count > 0)
+                        {
+                            var uriBuilder = new UriBuilder(host);
+                            var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                            foreach (var key in queries.Keys)
+                                if (!string.IsNullOrWhiteSpace(key))
+                                    queryBuilder.Add(key, queries[key] ?? string.Empty);
+
+                            uriBuilder.Query = queryBuilder.ToString();
+                            host = new Uri(uriBuilder.ToString());
+                        }
+
+                        #endregion
+
+                        var message = new HttpRequestMessage(httpMethod, host);
+
+                        var buffer = body ?? Array.Empty<byte>();
+                        message.Content = new BodyContent(ref buffer);
+
+                        #region Set Headers On Request
+
+                        message.Headers.Clear();
+
+                        foreach (var header in _client.Headers) message.Headers.Add(header.Key, header.Value);
+
+                        #endregion
+
+                        http.BaseAddress = host;
+                        http.Timeout = timeout;
+
+                        On.OnModify?.Invoke(null, http);
+
+                        var response = await http.SendAsync(message, _cancellationToken.Token);
+
+                        var myResponse = new ClientResponse(ref response, ref http);
+
+                        On.OnOpen?.Invoke(null, myResponse);
                     }
-
-                    // start and block operation
-                    IsOpened = true;
-
-                    return Task.Run(async () =>
+                    catch (Exception ex)
                     {
-                        try
-                        {
-                            var http = new HttpClient();
+                        NetlyEnvironment.Logger.Create(ex);
+                        On.OnError?.Invoke(null, ex);
+                    }
+                    finally
+                    {
+                        // release operation
+                        IsOpened = false;
+                        On.OnClose?.Invoke(null, null);
+                    }
+                });
+            }
 
-                            var host = new Uri(url);
+            public Task Open(string method, string url, string body)
+            {
+                return Open(method, url, body.GetBytes());
+            }
 
-                            var timeout = _timeout <= 0
-                                ? System.Threading.Timeout.InfiniteTimeSpan
-                                : TimeSpan.FromMilliseconds(_timeout);
+            public Task Open(string method, string url, string body, Encoding encode)
+            {
+                return Open(method, url, body.GetBytes(encode));
+            }
 
-                            var httpMethod = new HttpMethod(method.Trim().ToUpper());
 
-                            #region Set Queries On Request
+            public int GetTimeout()
+            {
+                return _timeout;
+            }
 
-                            var queries = _client.Queries;
-                            if (queries != null && queries.Count > 0)
-                            {
-                                var uriBuilder = new UriBuilder(host);
-                                var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+            public void SetTimeout(int timeout)
+            {
+                // connection is opened error.
+                if (IsOpened)
+                    throw new InvalidOperationException
+                    (
+                        "You can modify timeout when request is on progress."
+                    );
 
-                                foreach (var key in queries.Keys)
-                                    if (!string.IsNullOrWhiteSpace(key))
-                                        queryBuilder.Add(key, queries[key] ?? string.Empty);
+                // invalid timeout value (is negative)
+                if (_timeout < -1)
+                    throw new ArgumentOutOfRangeException
+                    (
+                        $"({timeout}) is invalid timeout value. it must be posetive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
+                    );
 
-                                uriBuilder.Query = queryBuilder.ToString();
-                                host = new Uri(uriBuilder.ToString());
-                            }
-
-                            #endregion
-
-                            var message = new HttpRequestMessage(httpMethod, host);
-
-                            var buffer = body ?? Array.Empty<byte>();
-                            message.Content = new BodyContent(ref buffer);
-
-                            #region Set Headers On Request
-
-                            message.Headers.Clear();
-
-                            foreach (var header in _client.Headers) message.Headers.Add(header.Key, header.Value);
-
-                            #endregion
-
-                            http.BaseAddress = host;
-                            http.Timeout = timeout;
-
-                            On.OnModify?.Invoke(null, http);
-
-                            var response = await http.SendAsync(message, CancellationToken.None);
-
-                            var myResponse = new ClientResponse(ref response, ref http);
-
-                            On.OnOpen?.Invoke(null, myResponse);
-                        }
-                        catch (Exception ex)
-                        {
-                            NetlyEnvironment.Logger.Create(ex);
-                            On.OnError?.Invoke(null, ex);
-                        }
-                        finally
-                        {
-                            // release operation
-                            IsOpened = false;
-                            On.OnClose?.Invoke(null, null);
-                        }
-                    });
-                }
-
-                public Task Open(string method, string url, string body)
-                {
-                    return Open(method, url, body.GetBytes());
-                }
-
-                public Task Open(string method, string url, string body, Encoding encode)
-                {
-                    return Open(method, url, body.GetBytes(encode));
-                }
+                // success, timeout changed!
+                _timeout = timeout;
+            }
 
                 public Task Close()
                 {
                     // TODO: impl it
                     throw new NotImplementedException();
                 }
+            private class BodyContent : HttpContent
+            {
+                private readonly byte[] _buffer;
 
-                public int GetTimeout()
+                public BodyContent(ref byte[] buffer)
                 {
-                    return _timeout;
+                    _buffer = buffer;
                 }
 
-                public void SetTimeout(int timeout)
+                protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
                 {
-                    // connection is opened error.
-                    if (IsOpened)
-                        throw new InvalidOperationException
-                        (
-                            "You can modify timeout when request is on progress."
-                        );
-
-                    // invalid timeout value (is negative)
-                    if (_timeout < -1)
-                        throw new ArgumentOutOfRangeException
-                        (
-                            $"({timeout}) is invalid timeout value. it must be posetive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
-                        );
-
-                    // success, timeout changed!
-                    _timeout = timeout;
+                    return stream.WriteAsync(_buffer, 0, _buffer.Length);
                 }
 
-                private class BodyContent : HttpContent
+                protected override bool TryComputeLength(out long length)
                 {
-                    private readonly byte[] _buffer;
-
-                    public BodyContent(ref byte[] buffer)
-                    {
-                        _buffer = buffer;
-                    }
-
-                    protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
-                    {
-                        return stream.WriteAsync(_buffer, 0, _buffer.Length);
-                    }
-
-                    protected override bool TryComputeLength(out long length)
-                    {
-                        length = _buffer.Length;
-                        return true;
-                    }
+                    length = _buffer.Length;
+                    return true;
                 }
             }
         }

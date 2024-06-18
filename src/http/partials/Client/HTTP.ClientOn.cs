@@ -7,34 +7,31 @@ namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Client
+        internal class ClientOn : IHTTP.ClientOn
         {
-            internal class ClientOn : IHTTP.ClientOn
+            public EventHandler OnClose { get; private set; } = delegate { };
+            public EventHandler<Exception> OnError { get; private set; } = delegate { };
+            public EventHandler<HttpClient> OnModify { get; private set; } = delegate { };
+            public EventHandler<IHTTP.ClientResponse> OnOpen { get; private set; } = delegate { };
+
+            public void Error(Action<Exception> callback)
             {
-                public EventHandler OnClose { get; private set; } = delegate { };
-                public EventHandler<Exception> OnError { get; private set; } = delegate { };
-                public EventHandler<HttpClient> OnModify { get; private set; } = delegate { };
-                public EventHandler<IHTTP.ClientResponse> OnOpen { get; private set; } = delegate { };
+                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+            }
 
-                public void Error(Action<Exception> callback)
-                {
-                    OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
-                }
+            public void Close(Action callback)
+            {
+                OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+            }
 
-                public void Close(Action callback)
-                {
-                    OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
-                }
+            public void Modify(Action<HttpClient> callback)
+            {
+                OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+            }
 
-                public void Modify(Action<HttpClient> callback)
-                {
-                    OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
-                }
-
-                public void Open(Action<IHTTP.ClientResponse> callback)
-                {
-                    OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
-                }
+            public void Open(Action<IHTTP.ClientResponse> callback)
+            {
+                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
             }
         }
     }
