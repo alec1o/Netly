@@ -43,13 +43,13 @@ namespace Netly.Interfaces
             void Send(int statusCode, byte[] byteBuffer);
 
             /// <summary>
-            ///     Redirect connection for a url.<br />Using
+            ///     Redirect connection for an url.<br />Using
             /// </summary>
             /// <param name="url">redirect location</param>
             void Redirect(string url);
 
             /// <summary>
-            ///     Redirect connection for a url.<br />Using
+            ///     Redirect connection for an url.<br />Using
             /// </summary>
             /// <param name="redirectCode">redirect http code</param>
             /// <param name="url">redirect location</param>
