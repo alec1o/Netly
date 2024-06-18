@@ -8,25 +8,25 @@ namespace Netly
     {
         internal class Middleware : IHTTP.Middleware
         {
-            public const string GLOBAL_PATH = "*";
+            public const string GlobalPath = "*";
 
             private readonly List<IHTTP.MiddlewareDescriptor> _middlewares;
-            public readonly Server m_server;
+            public readonly Server Server;
 
             public Middleware(Server server)
             {
-                m_server = server;
+                Server = server;
                 _middlewares = new List<IHTTP.MiddlewareDescriptor>();
             }
 
             public IHTTP.MiddlewareDescriptor[] Middlewares => _middlewares.ToArray();
 
-            public bool Add(Func<IHTTP.Request, IHTTP.Response, bool> middleware)
+            public bool Add(Func<IHTTP.Request, IHTTP.ServerResponse, bool> middleware)
             {
-                return Add(GLOBAL_PATH, middleware);
+                return Add(GlobalPath, middleware);
             }
 
-            public bool Add(string path, Func<IHTTP.Request, IHTTP.Response, bool> middleware)
+            public bool Add(string path, Func<IHTTP.Request, IHTTP.ServerResponse, bool> middleware)
             {
                 if (middleware == null) return false;
 
@@ -36,7 +36,7 @@ namespace Netly
 
                 if (string.IsNullOrWhiteSpace(path)) return false;
 
-                if (GLOBAL_PATH.Equals(path) || Path.IsValid(path))
+                if (GlobalPath.Equals(path) || Path.IsValid(path))
                 {
                     _middlewares.Add(new MiddlewareDescriptor(path, Path.IsParamPath(path), middleware));
                     return true;

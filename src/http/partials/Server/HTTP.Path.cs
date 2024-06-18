@@ -10,7 +10,7 @@ namespace Netly
         internal static class Path
         {
             /// <summary>
-            ///     Regex Timout. It prevent attacks
+            ///     Regex Timout. It prevents attacks
             /// </summary>
             public const int RegexTimeout = 5000;
 

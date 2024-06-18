@@ -16,10 +16,10 @@ namespace Netly
             internal class ServerTo : IHTTP.ServerTo
             {
                 private readonly Server _server;
-                private HttpListener _listener;
-                private bool _tryOpen, _tryClose;
                 private readonly List<WebSocket> _websocketList = new List<WebSocket>();
                 private readonly object _websocketListLock = new object();
+                private HttpListener _listener;
+                private bool _tryOpen, _tryClose;
 
                 public ServerTo(Server server)
                 {
@@ -44,7 +44,7 @@ namespace Netly
 
                             server.Prefixes.Add(httpUrl);
 
-                            _server._serverOn.m_onModify?.Invoke(null, server);
+                            _server._serverOn.OnModify?.Invoke(null, server);
 
                             server.Start();
 
@@ -52,13 +52,13 @@ namespace Netly
 
                             _listener = server;
 
-                            _server._serverOn.m_onOpen?.Invoke(null, null);
+                            _server._serverOn.OnOpen?.Invoke(null, null);
 
                             ReceiveRequests();
                         }
                         catch (Exception e)
                         {
-                            _server._serverOn.m_onError?.Invoke(null, e);
+                            _server._serverOn.OnError?.Invoke(null, e);
                         }
                         finally
                         {
@@ -83,13 +83,10 @@ namespace Netly
                                 _listener.Abort();
                                 _listener.Close();
                             }
-                            
+
                             lock (_websocketListLock)
                             {
-                                foreach (var socket in _websocketList)
-                                {
-                                    socket.To.Close();
-                                }
+                                foreach (var socket in _websocketList) socket.To.Close();
                             }
                         }
                         catch
@@ -100,7 +97,7 @@ namespace Netly
                         {
                             _tryClose = false;
                             _listener = null;
-                            _server._serverOn.m_onClose?.Invoke(null, null);
+                            _server._serverOn.OnClose?.Invoke(null, null);
                         }
                     });
                 }
@@ -109,10 +106,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Data(data, isText);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Data(data, isText);
                     }
                 }
 
@@ -120,10 +114,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Data(data, isText);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Data(data, isText);
                     }
                 }
 
@@ -131,10 +122,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Data(data, isText, encoding);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Data(data, isText, encoding);
                     }
                 }
 
@@ -142,10 +130,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Event(name, data);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Event(name, data);
                     }
                 }
 
@@ -153,10 +138,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Event(name, data);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Event(name, data);
                     }
                 }
 
@@ -164,10 +146,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _websocketList)
-                        {
-                            ws.To.Event(name, data, encoding);
-                        }
+                        foreach (var ws in _websocketList) ws.To.Event(name, data, encoding);
                     }
                 }
 
@@ -233,7 +212,7 @@ namespace Netly
                     NetlyEnvironment.Logger.Create("Request processing.");
 
                     var request = new Request(context.Request);
-                    var response = new Response(context.Response);
+                    var response = new ServerResponse(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
                     NetlyEnvironment.Logger.Create("Request starting.");
@@ -265,7 +244,7 @@ namespace Netly
 
                     var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
-                        if (x.Path == HTTP.Middleware.GLOBAL_PATH)
+                        if (x.Path == HTTP.Middleware.GlobalPath)
                             // is only global path
                             return true;
 
@@ -292,7 +271,7 @@ namespace Netly
                     var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
                     {
                         // only local middleware is allowing
-                        if (x.Path == HTTP.Middleware.GLOBAL_PATH) return false;
+                        if (x.Path == HTTP.Middleware.GlobalPath) return false;
 
                         if (!x.UseParams)
                             // simple path compare

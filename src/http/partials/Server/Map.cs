@@ -33,7 +33,7 @@ namespace Netly
                 );
             }
 
-            public void All(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void All(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -45,7 +45,7 @@ namespace Netly
                 );
             }
 
-            public void Get(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Get(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -57,7 +57,7 @@ namespace Netly
                 );
             }
 
-            public void Put(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Put(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -69,7 +69,7 @@ namespace Netly
                 );
             }
 
-            public void Head(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Head(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -81,7 +81,7 @@ namespace Netly
                 );
             }
 
-            public void Post(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Post(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -93,7 +93,7 @@ namespace Netly
                 );
             }
 
-            public void Patch(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Patch(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -106,7 +106,7 @@ namespace Netly
                 );
             }
 
-            public void Delete(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Delete(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -118,7 +118,7 @@ namespace Netly
                 );
             }
 
-            public void Trace(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Trace(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -130,7 +130,7 @@ namespace Netly
                 );
             }
 
-            public void Options(string path, Action<IHTTP.Request, IHTTP.Response> callback)
+            public void Options(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -147,7 +147,7 @@ namespace Netly
                 string path,
                 string method,
                 bool isWebsocket,
-                Action<IHTTP.Request, IHTTP.Response> httpCallback,
+                Action<IHTTP.Request, IHTTP.ServerResponse> httpCallback,
                 Action<IHTTP.Request, WebSocket> websocketCallback
             )
             {
@@ -178,7 +178,7 @@ namespace Netly
                 public string Path { get; }
                 public string Method { get; }
                 public bool IsWebsocket { get; }
-                public Action<IHTTP.Request, IHTTP.Response> HttpCallback { get; }
+                public Action<IHTTP.Request, IHTTP.ServerResponse> HttpCallback { get; }
                 public Action<IHTTP.Request, WebSocket> WebsocketCallback { get; }
 
                 public MapContainer
@@ -187,7 +187,7 @@ namespace Netly
                     bool useParams,
                     string method,
                     bool isWebsocket,
-                    Action<IHTTP.Request, IHTTP.Response> httpCallback,
+                    Action<IHTTP.Request, IHTTP.ServerResponse> httpCallback,
                     Action<IHTTP.Request, WebSocket> websocketCallback
                 )
                 {

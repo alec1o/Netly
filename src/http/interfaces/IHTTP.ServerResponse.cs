@@ -6,7 +6,7 @@ namespace Netly.Interfaces
 {
     public static partial class IHTTP
     {
-        public interface Response
+        public interface ServerResponse
         {
             /// <summary>
             ///     Response Headers

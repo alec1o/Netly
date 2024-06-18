@@ -16,7 +16,7 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="middleware">Middleware handler</param>
             /// <returns>true if callback added successful</returns>
-            bool Add(Func<Request, Response, bool> middleware);
+            bool Add(Func<Request, ServerResponse, bool> middleware);
 
             /// <summary>
             ///     Add local middleware handler
@@ -25,7 +25,7 @@ namespace Netly.Interfaces
             /// <param name="middleware">Middleware handler</param>
             /// <returns>true if callback added successful</returns>
             /// <returns></returns>
-            bool Add(string path, Func<Request, Response, bool> middleware);
+            bool Add(string path, Func<Request, ServerResponse, bool> middleware);
         }
     }
 }
