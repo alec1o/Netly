@@ -128,6 +128,11 @@ namespace Netly
                 return Open(method, url, body.GetBytes(encode));
             }
 
+            public Task Close()
+            {
+                _cancellationToken.Cancel(throwOnFirstException: true);
+                return Task.CompletedTask;
+            }
 
             public int GetTimeout()
             {
@@ -154,11 +159,6 @@ namespace Netly
                 _timeout = timeout;
             }
 
-                public Task Close()
-                {
-                    // TODO: impl it
-                    throw new NotImplementedException();
-                }
             private class BodyContent : HttpContent
             {
                 private readonly byte[] _buffer;
