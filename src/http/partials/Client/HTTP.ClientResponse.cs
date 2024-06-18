@@ -95,7 +95,7 @@ namespace Netly
                 if (key.Contains("ASCII")) return Encoding.ASCII;
                 if (key.Contains("UTF-16")) return Encoding.Unicode;
                 if (key.Contains("UTF-32")) return Encoding.UTF32;
-                
+
                 // https://en.wikipedia.org/wiki/Character_encodings_in_HTML
                 return Encoding.UTF8;
             }
@@ -105,13 +105,13 @@ namespace Netly
                 var comparisonType = StringComparison.InvariantCultureIgnoreCase;
                 var value = Headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
                 var key = (value.Value ?? string.Empty).ToUpper();
-                
+
                 if (string.IsNullOrWhiteSpace(key)) return Enctype.None;
-                
+
                 if (key.Contains("application/x-www-form-urlencoded")) return Enctype.UrlEncoded;
                 if (key.Contains("multipart/form-data")) return Enctype.Multipart;
                 if (key.Contains("text/plain")) return Enctype.PlainText;
-                
+
                 return Enctype.None;
             }
         }

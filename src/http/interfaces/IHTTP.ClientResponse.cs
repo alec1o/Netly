@@ -12,12 +12,12 @@ namespace Netly.Interfaces
             /// Native Response Object
             /// </summary>
             HttpResponseMessage NativeResponse { get; }
-            
+
             /// <summary>
             /// Native Client Object
             /// </summary>
             HttpClient NativeClient { get; }
-            
+
             /// <summary>
             ///     Response encoding
             /// </summary>
@@ -32,12 +32,12 @@ namespace Netly.Interfaces
             ///     Response Queries
             /// </summary>
             Dictionary<string, string> Queries { get; }
-            
+
             /// <summary>
             ///     Request Http Method
             /// </summary>
             HttpMethod Method { get; }
-            
+
             /// <summary>
             ///     Response Enctype
             /// </summary>
@@ -67,7 +67,7 @@ namespace Netly.Interfaces
             ///     Request Body
             /// </summary>
             Body Body { get; }
-            
+
             /// <summary>
             ///     Http Status Code. <br />
             ///     if value is -1 mean: (not applicable on context).

@@ -57,7 +57,7 @@ namespace Netly
                         var host = new Uri(url);
 
                         var timeout = _timeout <= 0
-                            ? System.Threading.Timeout.InfiniteTimeSpan
+                            ? Timeout.InfiniteTimeSpan
                             : TimeSpan.FromMilliseconds(_timeout);
 
                         var httpMethod = new HttpMethod(method.Trim().ToUpper());
@@ -130,7 +130,7 @@ namespace Netly
 
             public Task Close()
             {
-                _cancellationToken.Cancel(throwOnFirstException: true);
+                _cancellationToken.Cancel(true);
                 return Task.CompletedTask;
             }
 
