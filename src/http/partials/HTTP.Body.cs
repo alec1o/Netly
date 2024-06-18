@@ -20,17 +20,23 @@ namespace Netly
 
                 switch (enctype)
                 {
-                    case Enctype.None:
-                        // None, Don't have enctype
-                        break;
                     case Enctype.Multipart:
+                    {
                         // TODO: parse buffer for Enctype.Multipart
                         break;
+                    }
                     case Enctype.UrlEncoded:
+                    {
                         // TODO: parse buffer for Enctype.UrlEncoded
                         break;
+                    }
+                    case Enctype.PlainText:
+                    case Enctype.None:
                     default:
-                        throw new NotImplementedException(enctype.ToString());
+                    {
+                        // N/A
+                        break;
+                    }
                 }
             }
 
