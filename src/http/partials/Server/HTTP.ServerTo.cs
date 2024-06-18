@@ -18,8 +18,8 @@ namespace Netly
                 private readonly Server _server;
                 private HttpListener _listener;
                 private bool _tryOpen, _tryClose;
-                private List<WebSocket> _webSockets = new List<WebSocket>();
-                private object _websocketListLock = new object();
+                private readonly List<WebSocket> _websocketList = new List<WebSocket>();
+                private readonly object _websocketListLock = new object();
 
                 public ServerTo(Server server)
                 {
@@ -83,10 +83,14 @@ namespace Netly
                                 _listener.Abort();
                                 _listener.Close();
                             }
-
-                            // TODO: Close all http connection
-
-                            // TODO: Close all websocket connection
+                            
+                            lock (_websocketListLock)
+                            {
+                                foreach (var socket in _websocketList)
+                                {
+                                    socket.To.Close();
+                                }
+                            }
                         }
                         catch
                         {
@@ -105,7 +109,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Data(data, isText);
                         }
@@ -116,7 +120,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Data(data, isText);
                         }
@@ -127,7 +131,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Data(data, isText, encoding);
                         }
@@ -138,7 +142,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Event(name, data);
                         }
@@ -149,7 +153,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Event(name, data);
                         }
@@ -160,7 +164,7 @@ namespace Netly
                 {
                     lock (_websocketListLock)
                     {
-                        foreach (var ws in _webSockets)
+                        foreach (var ws in _websocketList)
                         {
                             ws.To.Event(name, data, encoding);
                         }
@@ -445,14 +449,14 @@ namespace Netly
 
                         lock (_websocketListLock)
                         {
-                            _webSockets.Add(websocket);
+                            _websocketList.Add(websocket);
                         }
 
                         websocket.On.Close(() =>
                         {
                             lock (_websocketListLock)
                             {
-                                _webSockets.Add(websocket);
+                                _websocketList.Add(websocket);
                             }
                         });
 
