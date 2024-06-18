@@ -211,7 +211,7 @@ namespace Netly
                 {
                     NetlyEnvironment.Logger.Create("Request processing.");
 
-                    var request = new Request(context.Request);
+                    var request = new ServerRequest(context.Request);
                     var response = new ServerResponse(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 

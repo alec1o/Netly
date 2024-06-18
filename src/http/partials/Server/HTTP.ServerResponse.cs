@@ -103,7 +103,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         // TODO: Handle it
-                        Console.WriteLine($"{nameof(Request)} -> {nameof(Send)}: {e}");
+                        Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
                     }
                 });
             }

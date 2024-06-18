@@ -58,7 +58,7 @@ namespace Netly
 
                         await ws.ConnectAsync(host, CancellationToken.None);
 
-                        MyRequest = new Request(ws, host, Headers);
+                        MyRequest = new ServerRequest(ws, host, Headers);
 
                         MyUri = host;
 

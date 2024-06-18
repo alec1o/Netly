@@ -12,9 +12,9 @@ namespace Netly
 {
     public partial class HTTP
     {
-        internal class Request : IHTTP.Request
+        internal class ServerRequest : IHTTP.Request
         {
-            internal Request(HttpListenerRequest request)
+            internal ServerRequest(HttpListenerRequest request)
             {
                 {
                     Headers = new Dictionary<string, string>();
@@ -70,7 +70,7 @@ namespace Netly
                 }
             }
 
-            internal Request(ClientWebSocket ws, Uri uri, Dictionary<string, string> headers)
+            internal ServerRequest(ClientWebSocket ws, Uri uri, Dictionary<string, string> headers)
             {
                 // websocket client side
 
@@ -134,7 +134,7 @@ namespace Netly
                 }
             }
 
-            internal Request(HttpResponseMessage message)
+            internal ServerRequest(HttpResponseMessage message)
             {
                 var uri = message.RequestMessage.RequestUri;
 
