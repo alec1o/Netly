@@ -65,7 +65,7 @@ namespace Netly
 
                     var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
-                    Body = new Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, Encoding, Headers);
                 }
             }
 
@@ -122,12 +122,10 @@ namespace Netly
 
                     Encoding = GetEncodingFromHeader();
 
-                    var enctype = GetEnctypeFromHeader();
-
                     // Not applicable
                     var buffer = Array.Empty<byte>();
 
-                    Body = new Body(buffer, enctype, Encoding);
+                    Body = new Body(buffer, Encoding, Headers);
                 }
             }
 
@@ -197,10 +195,9 @@ namespace Netly
 
                     Encoding = GetEncodingFromHeader();
 
-                    var enctype = GetEnctypeFromHeader();
-
                     var buffer = message.Content.ReadAsByteArrayAsync().Result;
-                    Body = new Body(buffer, enctype, Encoding);
+                    
+                    Body = new Body(buffer, Encoding, Headers);
                 }
             }
 
@@ -218,7 +215,7 @@ namespace Netly
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
             public IHTTP.Body Body { get; }
-            public Enctype Enctype { get; }
+            public Enctype Enctype => Body.Enctype;
             public int Status { get; }
 
             /// <summary>

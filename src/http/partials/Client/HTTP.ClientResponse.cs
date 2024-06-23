@@ -44,9 +44,6 @@ namespace Netly
                 // method
                 Method = response.RequestMessage.Method;
 
-                // enctype
-                Enctype = GetEnctypeFromHeader();
-
                 // Url
                 Url = response.RequestMessage.RequestUri.AbsoluteUri;
 
@@ -61,7 +58,7 @@ namespace Netly
                     response.RequestMessage.RequestUri.Scheme.Equals("HTTPS", StringComparison.OrdinalIgnoreCase);
 
                 // body
-                Body = new Body(response.Content.ReadAsByteArrayAsync().Result, Enctype, Encoding);
+                Body = new Body(response.Content.ReadAsByteArrayAsync().Result, Encoding, Headers);
 
                 // status
                 Status = (int)response.StatusCode;
@@ -73,7 +70,7 @@ namespace Netly
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }
             public HttpMethod Method { get; }
-            public Enctype Enctype { get; }
+            public Enctype Enctype => Body.Enctype;
             public string Url { get; }
             public string Path { get; }
             public bool IsLocalRequest { get; }
@@ -98,21 +95,6 @@ namespace Netly
 
                 // https://en.wikipedia.org/wiki/Character_encodings_in_HTML
                 return Encoding.UTF8;
-            }
-
-            private Enctype GetEnctypeFromHeader()
-            {
-                var comparisonType = StringComparison.InvariantCultureIgnoreCase;
-                var value = Headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
-                var key = (value.Value ?? string.Empty).ToUpper();
-
-                if (string.IsNullOrWhiteSpace(key)) return Enctype.None;
-
-                if (key.Contains("application/x-www-form-urlencoded")) return Enctype.UrlEncoded;
-                if (key.Contains("multipart/form-data")) return Enctype.Multipart;
-                if (key.Contains("text/plain")) return Enctype.PlainText;
-
-                return Enctype.None;
             }
         }
     }
