@@ -21,7 +21,7 @@ namespace Netly
                 m_mapList = new List<MapContainer>();
             }
 
-            public void WebSocket(string path, Action<IHTTP.Request, IHTTP.WebSocket> callback)
+            public void WebSocket(string path, Action<IHTTP.ServerRequest, IHTTP.WebSocket> callback)
             {
                 Add
                 (
@@ -33,7 +33,7 @@ namespace Netly
                 );
             }
 
-            public void All(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void All(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -45,7 +45,7 @@ namespace Netly
                 );
             }
 
-            public void Get(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Get(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -57,7 +57,7 @@ namespace Netly
                 );
             }
 
-            public void Put(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Put(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -69,7 +69,7 @@ namespace Netly
                 );
             }
 
-            public void Head(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Head(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -81,7 +81,7 @@ namespace Netly
                 );
             }
 
-            public void Post(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Post(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -93,7 +93,7 @@ namespace Netly
                 );
             }
 
-            public void Patch(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Patch(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -106,7 +106,7 @@ namespace Netly
                 );
             }
 
-            public void Delete(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Delete(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -118,7 +118,7 @@ namespace Netly
                 );
             }
 
-            public void Trace(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Trace(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -130,7 +130,7 @@ namespace Netly
                 );
             }
 
-            public void Options(string path, Action<IHTTP.Request, IHTTP.ServerResponse> callback)
+            public void Options(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
             {
                 Add
                 (
@@ -147,8 +147,8 @@ namespace Netly
                 string path,
                 string method,
                 bool isWebsocket,
-                Action<IHTTP.Request, IHTTP.ServerResponse> httpCallback,
-                Action<IHTTP.Request, WebSocket> websocketCallback
+                Action<IHTTP.ServerRequest, IHTTP.ServerResponse> httpCallback,
+                Action<IHTTP.ServerRequest, WebSocket> websocketCallback
             )
             {
                 path = (path ?? string.Empty).Trim();
@@ -178,8 +178,8 @@ namespace Netly
                 public string Path { get; }
                 public string Method { get; }
                 public bool IsWebsocket { get; }
-                public Action<IHTTP.Request, IHTTP.ServerResponse> HttpCallback { get; }
-                public Action<IHTTP.Request, WebSocket> WebsocketCallback { get; }
+                public Action<IHTTP.ServerRequest, IHTTP.ServerResponse> HttpCallback { get; }
+                public Action<IHTTP.ServerRequest, WebSocket> WebsocketCallback { get; }
 
                 public MapContainer
                 (
@@ -187,8 +187,8 @@ namespace Netly
                     bool useParams,
                     string method,
                     bool isWebsocket,
-                    Action<IHTTP.Request, IHTTP.ServerResponse> httpCallback,
-                    Action<IHTTP.Request, WebSocket> websocketCallback
+                    Action<IHTTP.ServerRequest, IHTTP.ServerResponse> httpCallback,
+                    Action<IHTTP.ServerRequest, WebSocket> websocketCallback
                 )
                 {
                     Path = path;

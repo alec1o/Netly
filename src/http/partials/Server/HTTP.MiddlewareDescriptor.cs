@@ -9,10 +9,10 @@ namespace Netly
         {
             public string Path { get; }
             public bool UseParams { get; }
-            public Func<IHTTP.Request, IHTTP.ServerResponse, bool> Callback { get; }
+            public Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> Callback { get; }
 
             public MiddlewareDescriptor(string path, bool useParams,
-                Func<IHTTP.Request, IHTTP.ServerResponse, bool> callback)
+                Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> callback)
             {
                 Path = path;
                 UseParams = useParams;

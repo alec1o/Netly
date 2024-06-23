@@ -21,12 +21,12 @@ namespace Netly
 
             public IHTTP.MiddlewareDescriptor[] Middlewares => _middlewares.ToArray();
 
-            public bool Add(Func<IHTTP.Request, IHTTP.ServerResponse, bool> middleware)
+            public bool Add(Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> middleware)
             {
                 return Add(GlobalPath, middleware);
             }
 
-            public bool Add(string path, Func<IHTTP.Request, IHTTP.ServerResponse, bool> middleware)
+            public bool Add(string path, Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> middleware)
             {
                 if (middleware == null) return false;
 

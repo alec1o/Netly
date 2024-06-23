@@ -12,7 +12,7 @@ namespace Netly
 {
     public partial class HTTP
     {
-        internal class ServerRequest : IHTTP.Request
+        internal class ServerRequest : IHTTP.ServerRequest
         {
             internal ServerRequest(HttpListenerRequest request)
             {
@@ -61,8 +61,7 @@ namespace Netly
 
                     Encoding = request.ContentEncoding;
 
-                    // TODO: detect enctype from Header
-                    var enctype = Enctype.None;
+                    var enctype = GetEnctypeFromHeader();
 
                     var buffer = new byte[request.ContentLength64];
                     _ = request.InputStream.Read(buffer, 0, buffer.Length);
@@ -103,7 +102,7 @@ namespace Netly
                     Status = -1;
 
                     // Not applicable
-                    Method = HttpMethod.Head;
+                    Method = HttpMethod.Get;
 
                     Url = uri.AbsoluteUri;
 
@@ -121,11 +120,9 @@ namespace Netly
 
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "WSS";
 
-                    // Not applicable
-                    Encoding = Encoding.UTF8;
+                    Encoding = GetEncodingFromHeader();
 
-                    // Not applicable
-                    var enctype = Enctype.None;
+                    var enctype = GetEnctypeFromHeader();
 
                     // Not applicable
                     var buffer = Array.Empty<byte>();
@@ -198,11 +195,9 @@ namespace Netly
 
                     IsEncrypted = uri.IsAbsoluteUri && uri.Scheme.ToUpper() == "HTTPS";
 
-                    // TODO: detect encoding from Header
-                    Encoding = Encoding.UTF8;
+                    Encoding = GetEncodingFromHeader();
 
-                    // TODO: detect enctype from Header
-                    var enctype = Enctype.None;
+                    var enctype = GetEnctypeFromHeader();
 
                     var buffer = message.Content.ReadAsByteArrayAsync().Result;
                     Body = new Body(buffer, enctype, Encoding);
@@ -223,6 +218,7 @@ namespace Netly
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }
             public IHTTP.Body Body { get; }
+            public Enctype Enctype { get; }
             public int Status { get; }
 
             /// <summary>
@@ -235,6 +231,40 @@ namespace Netly
                 var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
 
                 foreach (var queryName in queryBuilder.AllKeys) Queries.Add(queryName, queryBuilder[queryName]);
+            }
+            
+            private Encoding GetEncodingFromHeader()
+            {
+                var comparisonType = StringComparison.InvariantCultureIgnoreCase;
+                var value = Headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
+                var key = (value.Value ?? string.Empty).ToUpper();
+
+                if (string.IsNullOrWhiteSpace(key)) return Encoding.UTF8;
+
+                // generic
+                if (key.Contains("UTF-8")) return Encoding.UTF8;
+                if (key.Contains("ISO-8859-1")) return Encoding.GetEncoding("ISO-8859-1");
+                if (key.Contains("ASCII")) return Encoding.ASCII;
+                if (key.Contains("UTF-16")) return Encoding.Unicode;
+                if (key.Contains("UTF-32")) return Encoding.UTF32;
+
+                // https://en.wikipedia.org/wiki/Character_encodings_in_HTML
+                return Encoding.UTF8;
+            }
+
+            private Enctype GetEnctypeFromHeader()
+            {
+                var comparisonType = StringComparison.InvariantCultureIgnoreCase;
+                var value = Headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
+                var key = (value.Value ?? string.Empty).ToUpper();
+
+                if (string.IsNullOrWhiteSpace(key)) return Enctype.None;
+
+                if (key.Contains("application/x-www-form-urlencoded")) return Enctype.UrlEncoded;
+                if (key.Contains("multipart/form-data")) return Enctype.Multipart;
+                if (key.Contains("text/plain")) return Enctype.PlainText;
+
+                return Enctype.None;
             }
         }
     }

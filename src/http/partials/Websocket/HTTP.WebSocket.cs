@@ -23,13 +23,13 @@ namespace Netly
             ///     Create Server Side Client Instance
             /// </summary>
             /// <param name="serverSocket"></param>
-            /// <param name="request"></param>
-            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, IHTTP.Request request)
+            /// <param name="serverRequest"></param>
+            internal WebSocket(System.Net.WebSockets.WebSocket serverSocket, IHTTP.ServerRequest serverRequest)
             {
-                _to = new WebsocketTo(this, serverSocket, request);
+                _to = new WebsocketTo(this, serverSocket, serverRequest);
             }
 
-            public IHTTP.Request Request => _to.MyRequest;
+            public IHTTP.ServerRequest ServerRequest => _to.MyServerRequest;
             public Dictionary<string, string> Headers => _to.Headers;
             public Uri Host => _to.MyUri;
             public bool IsOpened => _to.IsConnected();

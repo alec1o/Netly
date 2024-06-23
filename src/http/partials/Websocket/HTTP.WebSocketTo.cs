@@ -27,18 +27,18 @@ namespace Netly
                 _tryConnecting = false;
                 _tryClosing = false;
                 _isServerSide = false;
-                MyRequest = null;
+                MyServerRequest = null;
             }
 
-            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IHTTP.Request myRequest)
+            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IHTTP.ServerRequest myServerRequest)
             {
                 _socket = socket;
                 _isServerSide = true;
                 _websocketServerSide = websocket;
-                MyRequest = myRequest;
+                MyServerRequest = myServerRequest;
             }
 
-            public IHTTP.Request MyRequest { get; private set; }
+            public IHTTP.ServerRequest MyServerRequest { get; private set; }
 
             public Task Open(Uri host)
             {
@@ -58,7 +58,7 @@ namespace Netly
 
                         await ws.ConnectAsync(host, CancellationToken.None);
 
-                        MyRequest = new ServerRequest(ws, host, Headers);
+                        MyServerRequest = new ServerRequest(ws, host, Headers);
 
                         MyUri = host;
 

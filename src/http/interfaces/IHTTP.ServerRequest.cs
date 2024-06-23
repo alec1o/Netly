@@ -7,7 +7,7 @@ namespace Netly.Interfaces
 {
     public static partial class IHTTP
     {
-        public interface Request
+        public interface ServerRequest
         {
             /// <summary>
             ///     Request encoding
@@ -78,6 +78,11 @@ namespace Netly.Interfaces
             ///     Request Body
             /// </summary>
             Body Body { get; }
+            
+            /// <summary>
+            ///     Request Enctype
+            /// </summary>
+            HTTP.Enctype Enctype { get; }
 
 
             /// <summary>

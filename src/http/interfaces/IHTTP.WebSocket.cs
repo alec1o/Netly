@@ -10,7 +10,7 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Connection request
             /// </summary>
-            Request Request { get; }
+            ServerRequest ServerRequest { get; }
 
             /// <summary>
             ///     Connection Headers

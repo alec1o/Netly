@@ -22,7 +22,7 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Handler callback
             /// </summary>
-            Func<Request, ServerResponse, bool> Callback { get; }
+            Func<ServerRequest, ServerResponse, bool> Callback { get; }
         }
     }
 }
