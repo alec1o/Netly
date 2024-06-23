@@ -50,6 +50,7 @@ namespace Netly
 
             private Enctype GetEnctypeFromHeader(ref Dictionary<string, string> headers)
             {
+                // TODO: Fix Isn't working.
                 var comparisonType = StringComparison.InvariantCultureIgnoreCase;
                 var value = headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
                 var key = (value.Value ?? string.Empty).ToUpper();
