@@ -83,13 +83,6 @@ namespace Netly.Interfaces
             ///     Request Enctype
             /// </summary>
             HTTP.Enctype Enctype { get; }
-
-
-            /// <summary>
-            ///     Http Status Code. <br />
-            ///     if value is -1 mean: (not applicable on context).
-            /// </summary>
-            int Status { get; }
         }
     }
 }

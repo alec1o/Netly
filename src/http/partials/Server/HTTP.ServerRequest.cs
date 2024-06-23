@@ -41,8 +41,6 @@ namespace Netly
                 }
 
                 {
-                    Status = -1;
-
                     Method = new HttpMethod(request.HttpMethod);
 
                     Url = request.Url.AbsoluteUri;
@@ -98,9 +96,6 @@ namespace Netly
                 }
 
                 {
-                    // Not applicable
-                    Status = -1;
-
                     // Not applicable
                     Method = HttpMethod.Get;
 
@@ -173,8 +168,6 @@ namespace Netly
                 }
 
                 {
-                    Status = (int)message.StatusCode;
-
                     Method = message.RequestMessage.Method;
 
                     Url = uri.AbsoluteUri;
@@ -216,7 +209,6 @@ namespace Netly
             public bool IsEncrypted { get; }
             public IHTTP.Body Body { get; }
             public Enctype Enctype => Body.Enctype;
-            public int Status { get; }
 
             /// <summary>
             ///     Set queries from an exist uri
