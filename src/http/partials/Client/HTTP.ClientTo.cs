@@ -28,7 +28,12 @@ namespace Netly
             private ClientOn On => _client._on;
             public bool IsOpened { get; private set; }
 
-            public Task Open(string method, string url, byte[] body = null)
+            public Task Open(string method, string url)
+            {
+                return Open(method, url, Array.Empty<byte>());
+            }
+
+            public Task Open(string method, string url, byte[] body)
             {
                 if (IsOpened)
                 {

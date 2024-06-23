@@ -16,6 +16,14 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="method">Http method</param>
             /// <param name="url">Fetch url</param>
+            Task Open(string method, string url);
+            
+            /// <summary>
+            ///     Create http fetch <br />
+            ///     + Only if(IsOpened==false)
+            /// </summary>
+            /// <param name="method">Http method</param>
+            /// <param name="url">Fetch url</param>
             /// <param name="body">Request body</param>
             Task Open(string method, string url, byte[] body);
 
