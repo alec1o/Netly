@@ -194,13 +194,9 @@ namespace Netly
 
                 private async Task HandleConnection(HttpListenerContext context)
                 {
-                    NetlyEnvironment.Logger.Create("Request processing.");
-
                     var request = new ServerRequest(context.Request);
                     var response = new ServerResponse(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
-
-                    NetlyEnvironment.Logger.Create("Request starting.");
 
                     var skipNextMiddleware = false;
 
@@ -296,10 +292,7 @@ namespace Netly
                     #endregion
 
 
-                    // CALLBACK FOUNDER
-
-                    #region CALLBACK FOUNDER
-
+                    // SEARCH ROUTE
                     var myPaths = _server._map.m_mapList.FindAll(x =>
                     {
                         // websocket connection
@@ -347,36 +340,10 @@ namespace Netly
                         return false;
                     });
 
-                    #endregion
 
+                    // HANDLE HTTP REQUEST
                     if (request.IsWebSocket == false) // IS HTTP CONNECTION
                     {
-                        /*
-                            var paths = _server._map.m_mapList.FindAll(x =>
-                            {
-                                var comparePath = Path.ComparePath(request.Path, x.Path);
-                                Netly.Logger.PushLog($"Compare Path ({comparePath}): [{request.Path}] [{x.Path}]");
-                                if (!comparePath) return false;
-
-
-                                var compareMethod =
-                                    string.Equals(x.Method, _Map.ALL_METHOD, StringComparison.CurrentCultureIgnoreCase)
-                                    ||
-                                    string.Equals(request.Method.Method, x.Method,
-                                        StringComparison.CurrentCultureIgnoreCase);
-
-                                Netly.Logger.PushLog(
-                                    $"Compare Method ({compareMethod}): [{request.Method.Method.ToUpper()}] [{x.Method.ToUpper()}]");
-                                if (!compareMethod) return false;
-
-                                var isWebsocket = x.IsWebsocket;
-                                Netly.Logger.PushLog($"IsWebSocket: {isWebsocket}");
-                                if (isWebsocket) return false;
-
-                                return true;
-                            }).ToArray();
-                        */
-
                         if (myPaths.Count <= 0)
                         {
                             response.Send(404, notFoundMessage);
@@ -394,13 +361,9 @@ namespace Netly
                             }
                         });
                     }
-                    else // IS WEBSOCKET CONNECTION
+                    // IS WEBSOCKET CONNECTION
+                    else
                     {
-                        /*
-                            var paths = _server._map.m_mapList.FindAll(x =>
-                            Path.ComparePath(x.Path, request.Path) && x.IsWebsocket);
-                        */
-
                         if (myPaths.Count <= 0)
                         {
                             response.Send(404, notFoundMessage);
