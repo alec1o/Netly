@@ -54,7 +54,7 @@ namespace Netly
 
                             _server._serverOn.OnOpen?.Invoke(null, null);
 
-                            ReceiveRequests();
+                            InitAccept();
                         }
                         catch (Exception e)
                         {
@@ -150,50 +150,35 @@ namespace Netly
                     }
                 }
 
-                private void ReceiveRequests()
+                private void InitAccept()
                 {
-                    var thread = new Thread(() =>
+                    _listener.BeginGetContext(AcceptCallback, null);
+
+                    void AcceptCallback(IAsyncResult result)
                     {
-                        while (IsOpened)
+                        if (IsOpened)
                         {
-                            HttpListenerContext context = null;
-                            NetlyEnvironment.Logger.Create("Request entry.");
+                            HttpListenerContext context = _listener.EndGetContext(result);
 
-                            try
+                            Task.Run(async () =>
                             {
-                                context = _listener.GetContext();
-                            }
-                            catch (Exception e)
-                            {
-                                context = null;
-                                NetlyEnvironment.Logger.Create($"Request fail: {e}");
-                            }
-                            finally
-                            {
-                                if (context != null)
-                                    Task.Run(() =>
-                                    {
-                                        NetlyEnvironment.Logger.Create("Task Init");
+                                try
+                                {
+                                    await HandleConnection(context);
+                                }
+                                catch (Exception e)
+                                {
+                                    NetlyEnvironment.Logger.Create($"{this}: {e}");
+                                }
+                            });
 
-                                        try
-                                        {
-                                            var task = HandleConnection(context);
-                                            Task.WaitAll(task);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            NetlyEnvironment.Logger.Create($"Task error: {e}");
-                                        }
-
-                                        NetlyEnvironment.Logger.Create("Task End");
-                                    });
-                            }
+                            InitAccept();
                         }
-
-                        Close();
-                    }) { IsBackground = true };
-
-                    thread.Start();
+                        else
+                        {
+                            Close();
+                        }
+                    }
                 }
 
 
