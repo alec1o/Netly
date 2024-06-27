@@ -201,7 +201,7 @@ namespace Netly
 
                 if (middlewares.Count > 0)
                 {
-                    var descriptors = middlewares.FindAll(x =>
+                    var descriptors = middlewares.Where(x =>
                     {
                         // allow global middleware
                         if (x.Path == Middleware.GlobalPath) return true;
@@ -256,7 +256,7 @@ namespace Netly
                 }
 
                 // SEARCH ROUTE
-                var map = _server.MyMap.m_mapList.FindAll(x =>
+                var map = _server.MyMap.m_mapList.FirstOrDefault(x =>
                 {
                     // websocket connection
                     if (request.IsWebSocket)
@@ -301,7 +301,7 @@ namespace Netly
                     }
 
                     return false;
-                }).FirstOrDefault();
+                });
 
                 if (map == null)
                 {
