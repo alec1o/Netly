@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Netly.Interfaces;
 
@@ -198,99 +197,65 @@ namespace Netly
                     var response = new ServerResponse(context.Response);
                     var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
-                    var skipNextMiddleware = false;
-
-                    void RunMiddlewares(IHTTP.MiddlewareDescriptor[] middlewares)
+                    var middlewares = _server.Middleware.Middlewares.ToList();
+                    Console.WriteLine("Middleware found: " + middlewares.Count);
+                    if (middlewares.Count > 0)
                     {
-                        foreach (var middleware in middlewares)
+                        var descriptors = middlewares.FindAll(x =>
                         {
-                            if (skipNextMiddleware) break;
+                            // allow global middleware
+                            if (x.Path == HTTP.Middleware.GlobalPath) return true;
 
-                            var @continue = middleware.Callback(request, response);
+                            if (!x.UseParams)
+                                // simple path compare
+                                return Path.ComparePath(request.Path, x.Path);
 
-                            if (!@continue)
+                            // compare custom path
+                            var result = Path.ParseParam(x.Path, request.Path);
+
+                            // custom path is valid.
+                            if (result.Valid)
                             {
-                                skipNextMiddleware = true;
-                                response.Send(500, "Internal Server Error");
-                                break;
-                            }
-                        }
-                    }
+                                // set values in request object
+                                foreach (var myParam in result.Params)
+                                {
+                                    // only add value if not exist for prevent exception "Key in use!"
+                                    // optimization: if key exist it mean that it was added before with other callback
+                                    if (request.Params.ContainsKey(myParam.Key)) break;
+                                    // save params on object
+                                    request.Params.Add(myParam.Key, myParam.Value);
+                                }
 
-                    // GLOBAL MIDDLEWARES
-
-                    #region GLOBAL MIDDLEWARE
-
-                    NetlyEnvironment.Logger.Create("Global middleware. Search middlewares...");
-
-                    var globalMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
-                    {
-                        if (x.Path == HTTP.Middleware.GlobalPath)
-                            // is only global path
-                            return true;
-
-                        return false;
-                    });
-
-                    if (!skipNextMiddleware)
-                    {
-                        RunMiddlewares(globalMiddlewares.ToArray());
-                        NetlyEnvironment.Logger.Create(
-                            $"[END] running global middleware (next: {!skipNextMiddleware})");
-                    }
-
-                    if (skipNextMiddleware) return;
-
-                    #endregion
-
-                    // LOCAL MIDDLEWARES
-
-                    #region LOCAL MIDDLEWARE
-
-                    NetlyEnvironment.Logger.Create("Local middleware. Search middlewares...");
-
-                    var localMiddlewares = _server.Middleware.Middlewares.ToList().FindAll(x =>
-                    {
-                        // only local middleware is allowing
-                        if (x.Path == HTTP.Middleware.GlobalPath) return false;
-
-                        if (!x.UseParams)
-                            // simple path compare
-                            return Path.ComparePath(request.Path, x.Path);
-
-                        // compare custom path
-                        var result = Path.ParseParam(x.Path, request.Path);
-
-                        // custom path is valid.
-                        if (result.Valid)
-                        {
-                            // set values in request object
-                            foreach (var myParam in result.Params)
-                            {
-                                // only add value if not exist for prevent exception "Key in use!"
-                                // optimization: if key exist it mean that it was added before with other callback
-                                if (request.Params.ContainsKey(myParam.Key)) break;
-                                // save params on object
-                                request.Params.Add(myParam.Key, myParam.Value);
+                                return true;
                             }
 
-                            return true;
+                            return false;
+                        }).Select(x => (MiddlewareDescriptor)x).ToList();
+
+                        if (descriptors.Count > 0)
+                        {
+                            Console.WriteLine("Middleware des found: " + descriptors.Count);
+
+                            int count = descriptors.Count;
+
+                            for (int i = 0; i < count; i++)
+                            {
+                                var descriptor = descriptors[i];
+
+                                try
+                                {
+                                    descriptor.Next = descriptors[i + 1];
+                                }
+                                catch
+                                {
+                                    descriptor.Next = null;
+                                }
+                            }
+
+                            descriptors[0].Callback(request, response,
+                                () => descriptors[0].Next.Execute(request, response));
                         }
-
-                        return false;
-                    });
-
-                    if (!skipNextMiddleware)
-                    {
-                        RunMiddlewares(localMiddlewares.ToArray());
-                        NetlyEnvironment.Logger.Create(
-                            $"[END] running local middleware (next: {!skipNextMiddleware})");
                     }
-
-                    if (skipNextMiddleware) return;
-
-                    #endregion
-
 
                     // SEARCH ROUTE
                     var myPaths = _server._map.m_mapList.FindAll(x =>
