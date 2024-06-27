@@ -1,22 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Netly.Interfaces;
 
 namespace Netly
 {
     public partial class HTTP
     {
-        internal struct MiddlewareDescriptor : IHTTP.MiddlewareDescriptor
+        internal class MiddlewareDescriptor : IHTTP.MiddlewareDescriptor
         {
             public string Path { get; }
+            public MiddlewareDescriptor Next { get; set; }
+
+            public Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action>
+                Callback { get; internal set; }
+
             public bool UseParams { get; }
-            public Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> Callback { get; }
 
             public MiddlewareDescriptor(string path, bool useParams,
-                Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> callback)
+                Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> callback)
             {
                 Path = path;
                 UseParams = useParams;
                 Callback = callback;
+                Next = null;
+            }
+
+            public void Execute(IHTTP.ServerRequest request, IHTTP.ServerResponse response)
+            {
+                if(Next == null) return;
+                Next?.Callback(request, response, () => Next?.Execute(request, response));
             }
         }
     }
