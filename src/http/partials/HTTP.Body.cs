@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 using Byter;
 using Netly.Interfaces;
@@ -48,20 +46,10 @@ namespace Netly
                 }
             }
 
-            private Enctype GetEnctypeFromHeader(ref Dictionary<string, string> headers)
+            private Enctype GetEnctypeFromHeader(ref Dictionary<string, string> _)
             {
-                // TODO: Fix Isn't working.
-                var comparisonType = StringComparison.InvariantCultureIgnoreCase;
-                var value = headers.FirstOrDefault(x => x.Key.Equals("Content-Type", comparisonType));
-                var key = (value.Value ?? string.Empty).ToUpper();
-
-                if (string.IsNullOrWhiteSpace(key)) return Enctype.None;
-
-                if (key.Contains("application/x-www-form-urlencoded")) return Enctype.UrlEncoded;
-                if (key.Contains("multipart/form-data")) return Enctype.Multipart;
-                if (key.Contains("text/plain")) return Enctype.PlainText;
-
-                return Enctype.None;
+                // TODO: Implement GetEnctypeFromHeader
+               return Enctype.None;
             }
         }
     }
