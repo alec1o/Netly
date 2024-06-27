@@ -255,6 +255,12 @@ namespace Netly
                     }
                 }
 
+                if (response.IsOpened)
+                {
+                    // a middleware close connection or respond client
+                    return;
+                }
+
                 // SEARCH ROUTE
                 var map = _server.MyMap.m_mapList.FirstOrDefault(x =>
                 {
