@@ -122,8 +122,18 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        // TODO: Handle it
-                        Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
+                        try
+                        {
+                            _response.Close();
+                        }
+                        catch (Exception exception)
+                        {
+                            Console.WriteLine($"[#1] {nameof(ServerRequest)} -> {nameof(Send)}: {exception}");
+                        }
+                        finally
+                        {
+                            Console.WriteLine($"[#2] {nameof(ServerRequest)} -> {nameof(Send)}: {e}");
+                        }
                     }
                 });
             }
