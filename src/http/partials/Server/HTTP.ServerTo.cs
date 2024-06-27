@@ -10,275 +10,200 @@ namespace Netly
 {
     public partial class HTTP
     {
-        public partial class Server
+        internal class ServerTo : IHTTP.ServerTo
         {
-            internal class ServerTo : IHTTP.ServerTo
+            private readonly Server _server;
+            private readonly List<WebSocket> _websocketList = new List<WebSocket>();
+            private readonly object _websocketListLock = new object();
+            private HttpListener _listener;
+            private bool _tryOpen, _tryClose;
+
+            public ServerTo(Server server)
             {
-                private readonly Server _server;
-                private readonly List<WebSocket> _websocketList = new List<WebSocket>();
-                private readonly object _websocketListLock = new object();
-                private HttpListener _listener;
-                private bool _tryOpen, _tryClose;
+                _server = server;
+            }
 
-                public ServerTo(Server server)
+            public bool IsOpened => _listener != null && _listener.IsListening;
+            public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
+
+            public Task Open(Uri host)
+            {
+                if (IsOpened || _tryClose || _tryOpen) return Task.CompletedTask;
+                _tryOpen = true;
+
+                return Task.Run(() =>
                 {
-                    _server = server;
-                }
-
-                public bool IsOpened => _listener != null && _listener.IsListening;
-                public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
-
-                public Task Open(Uri host)
-                {
-                    if (IsOpened || _tryClose || _tryOpen) return Task.CompletedTask;
-                    _tryOpen = true;
-
-                    return Task.Run(() =>
+                    try
                     {
-                        try
-                        {
-                            var server = new HttpListener();
+                        var server = new HttpListener();
 
-                            var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
+                        var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
 
-                            server.Prefixes.Add(httpUrl);
+                        server.Prefixes.Add(httpUrl);
 
-                            _server._serverOn.OnModify?.Invoke(null, server);
+                        _server.MyServerOn.OnModify?.Invoke(null, server);
 
-                            server.Start();
+                        server.Start();
 
-                            Host = host;
+                        Host = host;
 
-                            _listener = server;
+                        _listener = server;
 
-                            _server._serverOn.OnOpen?.Invoke(null, null);
+                        _server.MyServerOn.OnOpen?.Invoke(null, null);
 
-                            InitAccept();
-                        }
-                        catch (Exception e)
-                        {
-                            _server._serverOn.OnError?.Invoke(null, e);
-                        }
-                        finally
-                        {
-                            _tryOpen = false;
-                        }
-                    });
-                }
-
-                public Task Close()
-                {
-                    if (_tryOpen || _tryClose || _listener == null) return Task.CompletedTask;
-
-                    _tryClose = true;
-
-                    return Task.Run(() =>
+                        InitAccept();
+                    }
+                    catch (Exception e)
                     {
-                        try
+                        _server.MyServerOn.OnError?.Invoke(null, e);
+                    }
+                    finally
+                    {
+                        _tryOpen = false;
+                    }
+                });
+            }
+
+            public Task Close()
+            {
+                if (_tryOpen || _tryClose || _listener == null) return Task.CompletedTask;
+
+                _tryClose = true;
+
+                return Task.Run(() =>
+                {
+                    try
+                    {
+                        if (_listener != null)
                         {
-                            if (_listener != null)
+                            _listener.Stop();
+                            _listener.Abort();
+                            _listener.Close();
+                        }
+
+                        lock (_websocketListLock)
+                        {
+                            foreach (var socket in _websocketList) socket.To.Close();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignored
+                    }
+                    finally
+                    {
+                        _tryClose = false;
+                        _listener = null;
+                        _server.MyServerOn.OnClose?.Invoke(null, null);
+                    }
+                });
+            }
+
+            public void WebsocketDataBroadcast(byte[] data, bool isText)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Data(data, isText);
+                }
+            }
+
+            public void WebsocketDataBroadcast(string data, bool isText)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Data(data, isText);
+                }
+            }
+
+            public void WebsocketDataBroadcast(string data, bool isText, Encoding encoding)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Data(data, isText, encoding);
+                }
+            }
+
+            public void WebsocketEventBroadcast(string name, byte[] data)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Event(name, data);
+                }
+            }
+
+            public void WebsocketEventBroadcast(string name, string data)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Event(name, data);
+                }
+            }
+
+            public void WebsocketEventBroadcast(string name, string data, Encoding encoding)
+            {
+                lock (_websocketListLock)
+                {
+                    foreach (var ws in _websocketList) ws.To.Event(name, data, encoding);
+                }
+            }
+
+            private void InitAccept()
+            {
+                _listener.BeginGetContext(AcceptCallback, null);
+
+                void AcceptCallback(IAsyncResult result)
+                {
+                    if (IsOpened)
+                    {
+                        HttpListenerContext context = _listener.EndGetContext(result);
+
+                        Task.Run(async () =>
+                        {
+                            try
                             {
-                                _listener.Stop();
-                                _listener.Abort();
-                                _listener.Close();
+                                await HandleConnection(context);
                             }
-
-                            lock (_websocketListLock)
+                            catch (Exception e)
                             {
-                                foreach (var socket in _websocketList) socket.To.Close();
+                                NetlyEnvironment.Logger.Create($"{this}: {e}");
                             }
-                        }
-                        catch
-                        {
-                            // Ignored
-                        }
-                        finally
-                        {
-                            _tryClose = false;
-                            _listener = null;
-                            _server._serverOn.OnClose?.Invoke(null, null);
-                        }
-                    });
-                }
+                        });
 
-                public void WebsocketDataBroadcast(byte[] data, bool isText)
-                {
-                    lock (_websocketListLock)
+                        InitAccept();
+                    }
+                    else
                     {
-                        foreach (var ws in _websocketList) ws.To.Data(data, isText);
+                        Close();
                     }
                 }
-
-                public void WebsocketDataBroadcast(string data, bool isText)
-                {
-                    lock (_websocketListLock)
-                    {
-                        foreach (var ws in _websocketList) ws.To.Data(data, isText);
-                    }
-                }
-
-                public void WebsocketDataBroadcast(string data, bool isText, Encoding encoding)
-                {
-                    lock (_websocketListLock)
-                    {
-                        foreach (var ws in _websocketList) ws.To.Data(data, isText, encoding);
-                    }
-                }
-
-                public void WebsocketEventBroadcast(string name, byte[] data)
-                {
-                    lock (_websocketListLock)
-                    {
-                        foreach (var ws in _websocketList) ws.To.Event(name, data);
-                    }
-                }
-
-                public void WebsocketEventBroadcast(string name, string data)
-                {
-                    lock (_websocketListLock)
-                    {
-                        foreach (var ws in _websocketList) ws.To.Event(name, data);
-                    }
-                }
-
-                public void WebsocketEventBroadcast(string name, string data, Encoding encoding)
-                {
-                    lock (_websocketListLock)
-                    {
-                        foreach (var ws in _websocketList) ws.To.Event(name, data, encoding);
-                    }
-                }
-
-                private void InitAccept()
-                {
-                    _listener.BeginGetContext(AcceptCallback, null);
-
-                    void AcceptCallback(IAsyncResult result)
-                    {
-                        if (IsOpened)
-                        {
-                            HttpListenerContext context = _listener.EndGetContext(result);
-
-                            Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    await HandleConnection(context);
-                                }
-                                catch (Exception e)
-                                {
-                                    NetlyEnvironment.Logger.Create($"{this}: {e}");
-                                }
-                            });
-
-                            InitAccept();
-                        }
-                        else
-                        {
-                            Close();
-                        }
-                    }
-                }
+            }
 
 
-                private static string DefaultHtmlBody(string content)
-                {
-                    var html =
-                        $@"<body style='background-color: #0a0f19'>
+            private static string DefaultHtmlBody(string content)
+            {
+                var html =
+                    $@"<body style='background-color: #0a0f19'>
                             <p style='font-size: 12px; color: #fff; letter-spacing: 2.5px; font-family: monospace, cursive'>{content}</p>
                         </body>";
 
-                    return html;
-                }
+                return html;
+            }
 
-                private async Task HandleConnection(HttpListenerContext context)
+            private async Task HandleConnection(HttpListenerContext context)
+            {
+                var request = new ServerRequest(context.Request);
+                var response = new ServerResponse(context.Response);
+                var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
+
+                var middlewares = _server.MyMiddleware.Middlewares.ToList();
+                Console.WriteLine("Middleware found: " + middlewares.Count);
+                if (middlewares.Count > 0)
                 {
-                    var request = new ServerRequest(context.Request);
-                    var response = new ServerResponse(context.Response);
-                    var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
-
-                    var middlewares = _server.Middleware.Middlewares.ToList();
-                    Console.WriteLine("Middleware found: " + middlewares.Count);
-                    if (middlewares.Count > 0)
+                    var descriptors = middlewares.FindAll(x =>
                     {
-                        var descriptors = middlewares.FindAll(x =>
-                        {
-                            // allow global middleware
-                            if (x.Path == HTTP.Middleware.GlobalPath) return true;
+                        // allow global middleware
+                        if (x.Path == HTTP.Middleware.GlobalPath) return true;
 
-                            if (!x.UseParams)
-                                // simple path compare
-                                return Path.ComparePath(request.Path, x.Path);
-
-                            // compare custom path
-                            var result = Path.ParseParam(x.Path, request.Path);
-
-                            // custom path is valid.
-                            if (result.Valid)
-                            {
-                                // set values in request object
-                                foreach (var myParam in result.Params)
-                                {
-                                    // only add value if not exist for prevent exception "Key in use!"
-                                    // optimization: if key exist it mean that it was added before with other callback
-                                    if (request.Params.ContainsKey(myParam.Key)) break;
-                                    // save params on object
-                                    request.Params.Add(myParam.Key, myParam.Value);
-                                }
-
-                                return true;
-                            }
-
-                            return false;
-                        }).Select(x => (MiddlewareDescriptor)x).ToList();
-
-                        if (descriptors.Count > 0)
-                        {
-                            Console.WriteLine("Middleware des found: " + descriptors.Count);
-
-                            int count = descriptors.Count;
-
-                            for (int i = 0; i < count; i++)
-                            {
-                                var descriptor = descriptors[i];
-
-                                try
-                                {
-                                    descriptor.Next = descriptors[i + 1];
-                                }
-                                catch
-                                {
-                                    descriptor.Next = null;
-                                }
-                            }
-
-                            descriptors[0].Callback(request, response,
-                                () => descriptors[0].Next.Execute(request, response));
-                        }
-                    }
-
-                    // SEARCH ROUTE
-                    var myPaths = _server._map.m_mapList.FindAll(x =>
-                    {
-                        // websocket connection
-                        if (request.IsWebSocket)
-                        {
-                            if (!x.IsWebsocket) return false;
-                        }
-                        // http connection
-                        else
-                        {
-                            // handle all method
-                            var handleMethod =
-                                string.Equals(x.Method, HTTP.Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
-                                ||
-                                string.Equals(request.Method.Method, x.Method,
-                                    StringComparison.CurrentCultureIgnoreCase);
-
-                            if (!handleMethod) return false;
-                        }
-
-                        // compare regular path
                         if (!x.UseParams)
                             // simple path compare
                             return Path.ComparePath(request.Path, x.Path);
@@ -303,59 +228,131 @@ namespace Netly
                         }
 
                         return false;
-                    });
+                    }).Select(x => (MiddlewareDescriptor)x).ToList();
 
-
-                    // HANDLE HTTP REQUEST
-                    if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                    if (descriptors.Count > 0)
                     {
-                        if (myPaths.Count <= 0)
+                        Console.WriteLine("Middleware des found: " + descriptors.Count);
+
+                        int count = descriptors.Count;
+
+                        for (int i = 0; i < count; i++)
                         {
-                            response.Send(404, notFoundMessage);
-                            return;
+                            var descriptor = descriptors[i];
+
+                            try
+                            {
+                                descriptor.Next = descriptors[i + 1];
+                            }
+                            catch
+                            {
+                                descriptor.Next = null;
+                            }
                         }
 
-                        myPaths.ForEach(x =>
-                        {
-                            x.HttpCallback?.Invoke(request, response);
-
-                            if (response.IsOpened)
-                            {
-                                response.Send(508, $"Loop Detected {x.Path}");
-                                throw new NotImplementedException($"NULL response detected on [path='{x.Path}']");
-                            }
-                        });
+                        descriptors[0].Callback(request, response,
+                            () => descriptors[0].Next.Execute(request, response));
                     }
-                    // IS WEBSOCKET CONNECTION
+                }
+
+                // SEARCH ROUTE
+                var myPaths = _server.MyMap.m_mapList.FindAll(x =>
+                {
+                    // websocket connection
+                    if (request.IsWebSocket)
+                    {
+                        if (!x.IsWebsocket) return false;
+                    }
+                    // http connection
                     else
                     {
-                        if (myPaths.Count <= 0)
+                        // handle all method
+                        var handleMethod =
+                            string.Equals(x.Method, HTTP.Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                            ||
+                            string.Equals(request.Method.Method, x.Method,
+                                StringComparison.CurrentCultureIgnoreCase);
+
+                        if (!handleMethod) return false;
+                    }
+
+                    // compare regular path
+                    if (!x.UseParams)
+                        // simple path compare
+                        return Path.ComparePath(request.Path, x.Path);
+
+                    // compare custom path
+                    var result = Path.ParseParam(x.Path, request.Path);
+
+                    // custom path is valid.
+                    if (result.Valid)
+                    {
+                        // set values in request object
+                        foreach (var myParam in result.Params)
                         {
-                            response.Send(404, notFoundMessage);
-                            return;
+                            // only add value if not exist for prevent exception "Key in use!"
+                            // optimization: if key exist it mean that it was added before with other callback
+                            if (request.Params.ContainsKey(myParam.Key)) break;
+                            // save params on object
+                            request.Params.Add(myParam.Key, myParam.Value);
                         }
 
-                        var ws = await context.AcceptWebSocketAsync(null);
+                        return true;
+                    }
 
-                        var websocket = new WebSocket(ws.WebSocket, request);
+                    return false;
+                });
 
+
+                // HANDLE HTTP REQUEST
+                if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                {
+                    if (myPaths.Count <= 0)
+                    {
+                        response.Send(404, notFoundMessage);
+                        return;
+                    }
+
+                    myPaths.ForEach(x =>
+                    {
+                        x.HttpCallback?.Invoke(request, response);
+
+                        if (response.IsOpened)
+                        {
+                            response.Send(508, $"Loop Detected {x.Path}");
+                            throw new NotImplementedException($"NULL response detected on [path='{x.Path}']");
+                        }
+                    });
+                }
+                // IS WEBSOCKET CONNECTION
+                else
+                {
+                    if (myPaths.Count <= 0)
+                    {
+                        response.Send(404, notFoundMessage);
+                        return;
+                    }
+
+                    var ws = await context.AcceptWebSocketAsync(null);
+
+                    var websocket = new WebSocket(ws.WebSocket, request);
+
+                    lock (_websocketListLock)
+                    {
+                        _websocketList.Add(websocket);
+                    }
+
+                    websocket.On.Close(() =>
+                    {
                         lock (_websocketListLock)
                         {
                             _websocketList.Add(websocket);
                         }
+                    });
 
-                        websocket.On.Close(() =>
-                        {
-                            lock (_websocketListLock)
-                            {
-                                _websocketList.Add(websocket);
-                            }
-                        });
+                    myPaths.ForEach(x => x.WebsocketCallback?.Invoke(request, websocket));
 
-                        myPaths.ForEach(x => x.WebsocketCallback?.Invoke(request, websocket));
-
-                        websocket.InitWebSocketServerSide();
-                    }
+                    websocket.InitWebSocketServerSide();
                 }
             }
         }
