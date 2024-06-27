@@ -256,7 +256,7 @@ namespace Netly
                 }
 
                 // SEARCH ROUTE
-                var myPaths = _server.MyMap.m_mapList.FindAll(x =>
+                var map = _server.MyMap.m_mapList.FindAll(x =>
                 {
                     // websocket connection
                     if (request.IsWebSocket)
@@ -301,38 +301,22 @@ namespace Netly
                     }
 
                     return false;
-                });
+                }).FirstOrDefault();
 
-
-                // HANDLE HTTP REQUEST
-                if (request.IsWebSocket == false) // IS HTTP CONNECTION
+                if (map == null)
                 {
-                    if (myPaths.Count <= 0)
-                    {
-                        response.Send(404, notFoundMessage);
-                        return;
-                    }
-
-                    myPaths.ForEach(x =>
-                    {
-                        x.HttpCallback?.Invoke(request, response);
-
-                        if (response.IsOpened)
-                        {
-                            response.Send(508, $"Loop Detected {x.Path}");
-                            throw new NotImplementedException($"NULL response detected on [path='{x.Path}']");
-                        }
-                    });
+                    response.Send(404, notFoundMessage);
+                    return;
                 }
-                // IS WEBSOCKET CONNECTION
-                else
-                {
-                    if (myPaths.Count <= 0)
-                    {
-                        response.Send(404, notFoundMessage);
-                        return;
-                    }
 
+                #region HANDLE HTTP REQUEST
+
+                if (!request.IsWebSocket) // IS HTTP CONNECTION
+                {
+                    map.HttpCallback(request, response);
+                }
+                else // IS WEBSOCKET CONNECTION
+                {
                     var ws = await context.AcceptWebSocketAsync(null);
 
                     var websocket = new WebSocket(ws.WebSocket, request);
@@ -350,10 +334,12 @@ namespace Netly
                         }
                     });
 
-                    myPaths.ForEach(x => x.WebsocketCallback?.Invoke(request, websocket));
+                    map.WebsocketCallback?.Invoke(request, websocket);
 
                     websocket.InitWebSocketServerSide();
                 }
+
+                #endregion
             }
         }
     }
