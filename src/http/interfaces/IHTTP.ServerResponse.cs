@@ -9,6 +9,11 @@ namespace Netly.Interfaces
         public interface ServerResponse
         {
             /// <summary>
+            ///     Native Response Object
+            /// </summary>
+            HttpListenerResponse NativeResponse { get; }
+
+            /// <summary>
             ///     Response Headers
             /// </summary>
             Dictionary<string, string> Headers { get; }
