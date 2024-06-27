@@ -11,22 +11,22 @@ namespace Netly
             public const string GlobalPath = "*";
 
             private readonly List<IHTTP.MiddlewareDescriptor> _middlewares;
-            public readonly Server Server;
+            public readonly Server _server;
 
             public Middleware(Server server)
             {
-                Server = server;
+                _server = server;
                 _middlewares = new List<IHTTP.MiddlewareDescriptor>();
             }
 
             public IHTTP.MiddlewareDescriptor[] Middlewares => _middlewares.ToArray();
 
-            public bool Add(Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> middleware)
+            public bool Add(Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> middleware)
             {
                 return Add(GlobalPath, middleware);
             }
 
-            public bool Add(string path, Func<IHTTP.ServerRequest, IHTTP.ServerResponse, bool> middleware)
+            public bool Add(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> middleware)
             {
                 if (middleware == null) return false;
 
