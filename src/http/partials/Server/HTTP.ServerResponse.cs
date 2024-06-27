@@ -16,6 +16,7 @@ namespace Netly
 
             public ServerResponse(HttpListenerResponse response)
             {
+                NativeResponse = response;
                 IsOpened = true;
                 Encoding = Encoding.UTF8;
                 Headers = new Dictionary<string, string>
@@ -28,6 +29,7 @@ namespace Netly
                 _response = response;
             }
 
+            public HttpListenerResponse NativeResponse { get; }
             public Dictionary<string, string> Headers { get; }
             public Cookie[] Cookies { get; set; }
             public Encoding Encoding { get; set; }
