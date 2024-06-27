@@ -13,6 +13,7 @@ namespace Netly
         internal class ServerResponse : IHTTP.ServerResponse
         {
             private readonly HttpListenerResponse _response;
+            private readonly List<byte> _bytes = new List<byte>();
 
             public ServerResponse(HttpListenerResponse response)
             {
@@ -35,6 +36,21 @@ namespace Netly
             public Encoding Encoding { get; set; }
             public bool IsOpened { get; private set; }
 
+            public void Send(int statusCode)
+            {
+                WriteAndSend(statusCode);
+            }
+
+            public void Write(byte[] byteBuffer)
+            {
+                _bytes.AddRange(byteBuffer);
+            }
+
+            public void Write(string textBuffer)
+            {
+                _bytes.AddRange(textBuffer.GetBytes(Encoding));
+            }
+
             public void Send(int statusCode, string textBuffer)
             {
                 Send(statusCode, textBuffer.GetBytes(Encoding));
@@ -43,9 +59,8 @@ namespace Netly
             public void Send(int statusCode, byte[] byteBuffer)
             {
                 if (!IsOpened) return;
-                IsOpened = false;
-
-                Write(statusCode, byteBuffer, Encoding);
+                _bytes.AddRange(byteBuffer);
+                WriteAndSend(statusCode);
             }
 
             public void Redirect(string url)
@@ -57,10 +72,8 @@ namespace Netly
             public void Redirect(int redirectCode, string url)
             {
                 if (!IsOpened) return;
-                IsOpened = false;
-
                 Headers.Add("Location", url);
-                Write(redirectCode, Array.Empty<byte>(), Encoding.UTF8);
+                WriteAndSend(redirectCode);
             }
 
             public void Close()
@@ -87,8 +100,11 @@ namespace Netly
                 foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
             }
 
-            private void Write(int statusCode, byte[] buffer, Encoding encoding)
+            private void WriteAndSend(int statusCode)
             {
+                if (!IsOpened) return;
+                IsOpened = false;
+
                 Task.Run(() =>
                 {
                     try
@@ -96,8 +112,10 @@ namespace Netly
                         WriteHeaders();
                         WriteCookies();
 
+                        var buffer = _bytes.ToArray();
+                        _bytes.Clear();
                         _response.StatusCode = statusCode;
-                        _response.ContentEncoding = encoding;
+                        _response.ContentEncoding = Encoding;
                         _response.ContentLength64 = buffer.Length;
                         _response.OutputStream.Write(buffer, 0, buffer.Length);
                         _response.Close();
