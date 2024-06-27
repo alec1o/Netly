@@ -11,14 +11,14 @@ namespace Netly
         {
             internal const string ALL_MEHOD = "*";
 
-            public readonly List<MapContainer> m_mapList;
+            public readonly List<MapDescriptor> m_mapList;
 
             public readonly Server m_server;
 
             public Map(Server server)
             {
                 m_server = server;
-                m_mapList = new List<MapContainer>();
+                m_mapList = new List<MapDescriptor>();
             }
 
             public void WebSocket(string path, Action<IHTTP.ServerRequest, IHTTP.WebSocket> callback)
@@ -159,7 +159,7 @@ namespace Netly
 
                 if (Path.IsValid(path))
                 {
-                    var map = new MapContainer
+                    var map = new MapDescriptor
                     (
                         path,
                         Path.IsParamPath(path),
@@ -169,34 +169,6 @@ namespace Netly
                         websocketCallback
                     );
                     m_mapList.Add(map);
-                }
-            }
-
-            internal struct MapContainer
-            {
-                public bool UseParams { get; }
-                public string Path { get; }
-                public string Method { get; }
-                public bool IsWebsocket { get; }
-                public Action<IHTTP.ServerRequest, IHTTP.ServerResponse> HttpCallback { get; }
-                public Action<IHTTP.ServerRequest, WebSocket> WebsocketCallback { get; }
-
-                public MapContainer
-                (
-                    string path,
-                    bool useParams,
-                    string method,
-                    bool isWebsocket,
-                    Action<IHTTP.ServerRequest, IHTTP.ServerResponse> httpCallback,
-                    Action<IHTTP.ServerRequest, WebSocket> websocketCallback
-                )
-                {
-                    Path = path;
-                    UseParams = useParams;
-                    Method = method;
-                    IsWebsocket = isWebsocket;
-                    HttpCallback = httpCallback;
-                    WebsocketCallback = websocketCallback;
                 }
             }
         }
