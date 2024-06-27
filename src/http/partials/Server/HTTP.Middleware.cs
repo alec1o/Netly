@@ -30,15 +30,17 @@ namespace Netly
             {
                 if (middleware == null) return false;
 
-                path = (path ?? string.Empty).Trim();
-
-                Path.AddEndOfPath(ref path);
-
-                if (string.IsNullOrWhiteSpace(path)) return false;
+                if (!GlobalPath.Equals(path))
+                {
+                    path = (path ?? string.Empty).Trim();
+                    Path.AddEndOfPath(ref path);
+                    if (string.IsNullOrWhiteSpace(path)) return false;
+                }
 
                 if (GlobalPath.Equals(path) || Path.IsValid(path))
                 {
-                    _middlewares.Add(new MiddlewareDescriptor(path, Path.IsParamPath(path), middleware));
+                    var descriptor = new MiddlewareDescriptor(path, Path.IsParamPath(path), middleware);
+                    _middlewares.Add(descriptor);
                     return true;
                 }
 
