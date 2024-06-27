@@ -12,13 +12,12 @@ namespace Netly
             public string Path { get; }
             public MiddlewareDescriptor Next { get; set; }
 
-            public Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action>
-                Callback { get; internal set; }
+            public Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> Callback { get; }
 
             public bool UseParams { get; }
 
-            public MiddlewareDescriptor(string path, bool useParams,
-                Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> callback)
+            public MiddlewareDescriptor
+                (string path, bool useParams, Action<IHTTP.ServerRequest, IHTTP.ServerResponse, Action> callback)
             {
                 Path = path;
                 UseParams = useParams;
@@ -28,8 +27,7 @@ namespace Netly
 
             public void Execute(IHTTP.ServerRequest request, IHTTP.ServerResponse response)
             {
-                if (Next == null) return;
-                Next?.Callback(request, response, () => Next?.Execute(request, response));
+                if (Next != null) Next.Callback(request, response, () => Next?.Execute(request, response));
             }
         }
     }

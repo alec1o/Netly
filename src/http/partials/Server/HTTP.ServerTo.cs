@@ -250,8 +250,8 @@ namespace Netly
                             }
                         }
 
-                        descriptors[0].Callback(request, response,
-                            () => descriptors[0].Next.Execute(request, response));
+                        var mainDescriptor = descriptors[0];
+                        mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
                     }
                 }
 
