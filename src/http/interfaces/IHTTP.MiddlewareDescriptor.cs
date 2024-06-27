@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Netly.Interfaces
 {
@@ -22,7 +23,7 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Handler callback
             /// </summary>
-            Func<ServerRequest, ServerResponse, bool> Callback { get; }
+            Action<ServerRequest, ServerResponse, Action> Callback { get; }
         }
     }
 }
