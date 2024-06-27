@@ -37,9 +37,6 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
     <td><sub><i>TCP.Server</i></sub></td>
     <td><sub><i>UDP.Client</i></sub></td> 
     <td><sub><i>UDP.Server</i></sub></td>
-  </tr>
-  <tr>
-    <th align="left" valign="center">🔧 <i>Experimental</i></th>
     <td><sub><i>HTTP.Client</i></sub></td>
     <td><sub><i>HTTP.Server</i></sub></td>
     <td><sub><i>HTTP.Websocket </i></sub></td>   
@@ -52,6 +49,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   <tr>
     <th align="left" valign="center">🔩 <i>Initialized</i></th>
     <td><sub><i><sup>V4</sup> Documentation</i></sub></td>
+    <td><sub><i>HTTP.Body (Enctype detector and parser)</i></sub></td>
   </tr>
 </table>
 
