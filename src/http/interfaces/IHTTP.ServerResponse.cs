@@ -34,6 +34,24 @@ namespace Netly.Interfaces
             bool IsOpened { get; }
 
             /// <summary>
+            ///     Send response data (empty)
+            /// </summary>
+            /// <param name="statusCode">http status code</param>
+            void Send(int statusCode);
+
+            /// <summary>
+            ///     Write data on final buffer
+            /// </summary>
+            /// <param name="byteBuffer">data</param>
+            void Write(byte[] byteBuffer);
+
+            /// <summary>
+            ///     Write data on final buffer
+            /// </summary>
+            /// <param name="textBuffer">data</param>
+            void Write(string textBuffer);
+
+            /// <summary>
             ///     Send response data (string)
             /// </summary>
             /// <param name="statusCode">http status code</param>
