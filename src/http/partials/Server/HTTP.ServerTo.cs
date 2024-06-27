@@ -155,7 +155,7 @@ namespace Netly
                 {
                     if (IsOpened)
                     {
-                        HttpListenerContext context = _listener.EndGetContext(result);
+                        var context = _listener.EndGetContext(result);
 
                         Task.Run(async () =>
                         {
@@ -192,17 +192,19 @@ namespace Netly
             private async Task HandleConnection(HttpListenerContext context)
             {
                 var request = new ServerRequest(context.Request);
+
                 var response = new ServerResponse(context.Response);
+
                 var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
 
                 var middlewares = _server.MyMiddleware.Middlewares.ToList();
-                Console.WriteLine("Middleware found: " + middlewares.Count);
+
                 if (middlewares.Count > 0)
                 {
                     var descriptors = middlewares.FindAll(x =>
                     {
                         // allow global middleware
-                        if (x.Path == HTTP.Middleware.GlobalPath) return true;
+                        if (x.Path == Middleware.GlobalPath) return true;
 
                         if (!x.UseParams)
                             // simple path compare
@@ -232,11 +234,9 @@ namespace Netly
 
                     if (descriptors.Count > 0)
                     {
-                        Console.WriteLine("Middleware des found: " + descriptors.Count);
+                        var count = descriptors.Count;
 
-                        int count = descriptors.Count;
-
-                        for (int i = 0; i < count; i++)
+                        for (var i = 0; i < count; i++)
                         {
                             var descriptor = descriptors[i];
 
@@ -268,7 +268,7 @@ namespace Netly
                     {
                         // handle all method
                         var handleMethod =
-                            string.Equals(x.Method, HTTP.Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                            string.Equals(x.Method, Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
                             ||
                             string.Equals(request.Method.Method, x.Method,
                                 StringComparison.CurrentCultureIgnoreCase);

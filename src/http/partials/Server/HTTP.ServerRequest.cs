@@ -189,7 +189,7 @@ namespace Netly
                     Encoding = GetEncodingFromHeader();
 
                     var buffer = message.Content.ReadAsByteArrayAsync().Result;
-                    
+
                     Body = new Body(buffer, Encoding, Headers);
                 }
             }
@@ -221,7 +221,7 @@ namespace Netly
 
                 foreach (var queryName in queryBuilder.AllKeys) Queries.Add(queryName, queryBuilder[queryName]);
             }
-            
+
             private Encoding GetEncodingFromHeader()
             {
                 var comparisonType = StringComparison.InvariantCultureIgnoreCase;
