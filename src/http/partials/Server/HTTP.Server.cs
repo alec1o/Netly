@@ -7,25 +7,25 @@ namespace Netly
     {
         public partial class Server : IHTTP.Server
         {
-            private readonly Map _map;
-            private readonly Middleware _middleware;
-            private readonly ServerOn _serverOn;
-            private readonly ServerTo _serverTo;
+            internal readonly Map MyMap;
+            internal readonly Middleware MyMiddleware;
+            internal readonly ServerOn MyServerOn;
+            internal readonly ServerTo MyServerTo;
 
             public Server()
             {
-                _serverOn = new ServerOn();
-                _map = new Map(this);
-                _middleware = new Middleware(this);
-                _serverTo = new ServerTo(this);
+                MyServerOn = new ServerOn();
+                MyMap = new Map(this);
+                MyMiddleware = new Middleware(this);
+                MyServerTo = new ServerTo(this);
             }
 
-            public bool IsOpened => _serverTo.IsOpened;
-            public Uri Host => _serverTo.Host;
-            public IHTTP.Map Map => _map;
-            public IHTTP.Middleware Middleware => _middleware;
-            public IHTTP.ServerOn On => _serverOn;
-            public IHTTP.ServerTo To => _serverTo;
+            public bool IsOpened => MyServerTo.IsOpened;
+            public Uri Host => MyServerTo.Host;
+            public IHTTP.Map Map => MyMap;
+            public IHTTP.Middleware Middleware => MyMiddleware;
+            public IHTTP.ServerOn On => MyServerOn;
+            public IHTTP.ServerTo To => MyServerTo;
         }
     }
 }
