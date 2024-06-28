@@ -195,9 +195,19 @@ namespace Netly
 
                 var response = new ServerResponse(context.Response);
 
-                var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
-
                 var middlewares = _server.MyMiddleware.Middlewares.ToList();
+
+                // adding map middleware
+                middlewares.Add
+                (
+                    new MiddlewareDescriptor
+                    (
+                        path: Middleware.GlobalPath,
+                        useParams: false,
+                        callback: (myRequest, myResponse, next) =>
+                            MapMiddlewareCallback(context, request, response, next)
+                    )
+                );
 
                 if (middlewares.Count > 0)
                 {
@@ -254,10 +264,17 @@ namespace Netly
                         mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
                     }
                 }
+            }
 
-                if (response.IsOpened)
+            private async void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
+                ServerResponse response, Action next)
+            {
+                var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
+
+                if (!response.IsOpened)
                 {
-                    // a middleware close connection or respond client
+                    // request is already response by another middleware
+                    next();
                     return;
                 }
 
@@ -312,6 +329,7 @@ namespace Netly
                 if (map == null)
                 {
                     response.Send(404, notFoundMessage);
+                    next();
                     return;
                 }
 
@@ -346,6 +364,8 @@ namespace Netly
                 }
 
                 #endregion
+
+                next();
             }
         }
     }
