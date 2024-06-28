@@ -38,21 +38,25 @@ namespace Netly
 
             public void Send(int statusCode)
             {
+                if (!IsOpened) return;
                 WriteAndSend(statusCode);
             }
 
             public void Write(byte[] byteBuffer)
             {
+                if (!IsOpened) return;
                 _bytes.AddRange(byteBuffer);
             }
 
             public void Write(string textBuffer)
             {
+                if (!IsOpened) return;
                 _bytes.AddRange(textBuffer.GetBytes(Encoding));
             }
 
             public void Send(int statusCode, string textBuffer)
             {
+                if (!IsOpened) return;
                 Send(statusCode, textBuffer.GetBytes(Encoding));
             }
 
@@ -65,6 +69,7 @@ namespace Netly
 
             public void Redirect(string url)
             {
+                if (!IsOpened) return;
                 const int redirectCode = 307; // Temporary Redirect
                 Redirect(redirectCode, url);
             }
