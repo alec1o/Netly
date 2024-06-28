@@ -711,55 +711,41 @@ You can map:
 ##### Middleware
 
 ```csharp
-/* Note: Callback return
-    true: next callback can be executed
-    false: next or others callback can't executed
-
+/*
     Note: Middlewares is executed in added order
-    Global middleware have more priority than Local middleware
 */
 
-server.Middleware.Add(async (req, res) => {
-    // e.g Verify user location
-    
-    // success, execute next callback
-    return true;
+// Global Middleware (*don't have workflow path)
+server.Middleware.Add(async (req, res, next) => {
+    // verify request timer
+    Stopwatch watch = new Stopwatch(); // init timer
+
+    next(); // call another middleware.
+
+    watch.Stop(); // stop timer
+
+    res.Header.Add("Request-Timer", watch.ElapsedMilliseconds.ToString());
 });
 
-// Global middleware
-server.Middleware.Add(async (req, res) => {
-    // e.g verify banned IP
-    
-    // success, execute next callback
-    return true;
-});
 
-// Local middleware
-server.Middleware.Add("/admin", async (req, res) => {
-    // e.g Detect if the ip is allowed to access
-     
-    if(Foo.Bar(req) == false)
-    {
-        if (Foo.Bar() == true)
-        {
-            await res.Redirect("https://www.example.com");
-        }
-        else
-        {
-            res.Header.Add("Content-Type", "application/json;charset=UTF-8");
-            await res.Send(404, "Response Content Here");   
-        }            
+// Local middleware (have workflow path)
+server.Middleware.Add("/admin", async (req, res, next) => {
+
+    if (MyApp.CheckAdminByHeader(req.Header))
+    {       
+        res.Header.Add("Admin-Token", MyApp.RefreshAdminHeaderToken(req));
+        // call next middleware
+        next();
+        // now. all middleware is executed. (because this is two way middleware)
+        res.Header.Add("Request-Delay", (DateTime.UtcNow - timer)());
     }
-          
-    // fail, stop and close connection if is opened
-    return false;
-});
-
-// Local Middleware
-server.Middleware.Add("/dashboard", async (req, res) =>
-{
-    // e.g Check session from cookies.
-    return Foo.Bar(req.Cookies);
+    else
+    {
+        res.Header.Add("Content-Type", "application/json;charset=UTF-8");
+        await res.Send(404, "{ 'error': 'invalid request.' }");
+        // skip other middlewares:
+        // next();
+    }
 });
 ```
 
