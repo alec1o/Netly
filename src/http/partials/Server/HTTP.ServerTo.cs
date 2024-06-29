@@ -123,27 +123,27 @@ namespace Netly
                 }
             }
 
-            public void WebsocketEventBroadcast(string name, byte[] data)
+            public void WebsocketEventBroadcast(string name, byte[] data, HTTP.MessageType messageType)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Event(name, data);
+                    foreach (var ws in _websocketList) ws.To.Event(name, data, messageType);
                 }
             }
 
-            public void WebsocketEventBroadcast(string name, string data)
+            public void WebsocketEventBroadcast(string name, string data, HTTP.MessageType messageType)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Event(name, data);
+                    foreach (var ws in _websocketList) ws.To.Event(name, data, messageType);
                 }
             }
 
-            public void WebsocketEventBroadcast(string name, string data, Encoding encoding)
+            public void WebsocketEventBroadcast(string name, string data, MessageType messageType, Encoding encoding)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Event(name, data, encoding);
+                    foreach (var ws in _websocketList) ws.To.Event(name, data, messageType, encoding);
                 }
             }
 

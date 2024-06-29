@@ -27,9 +27,9 @@ namespace Netly.Interfaces
             void WebsocketDataBroadcast(string data, HTTP.MessageType messageType);
             void WebsocketDataBroadcast(string data, HTTP.MessageType messageType, Encoding encoding);
 
-            void WebsocketEventBroadcast(string name, byte[] data);
-            void WebsocketEventBroadcast(string name, string data);
-            void WebsocketEventBroadcast(string name, string data, Encoding encoding);
+            void WebsocketEventBroadcast(string name, byte[] data, HTTP.MessageType messageType);
+            void WebsocketEventBroadcast(string name, string data, HTTP.MessageType messageType);
+            void WebsocketEventBroadcast(string name, string data, HTTP.MessageType messageType, Encoding encoding);
         }
     }
 }

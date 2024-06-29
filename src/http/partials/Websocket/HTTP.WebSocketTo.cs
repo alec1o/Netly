@@ -178,19 +178,19 @@ namespace Netly
                 Send(buffer.GetBytes(encoding), messageType);
             }
 
-            public void Event(string name, byte[] buffer)
+            public void Event(string name, byte[] buffer, HTTP.MessageType messageType)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer), MessageType.Binary);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer), messageType);
             }
 
-            public void Event(string name, string buffer)
+            public void Event(string name, string buffer, HTTP.MessageType messageType)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), MessageType.Binary);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), messageType);
             }
 
-            public void Event(string name, string buffer, Encoding encoding)
+            public void Event(string name, string buffer, HTTP.MessageType messageType, Encoding encoding)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), MessageType.Binary);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), messageType);
             }
 
             private void Send(byte[] buffer, HTTP.MessageType type)
@@ -264,7 +264,7 @@ namespace Netly
 
                         if (eventData.data != null && eventData.name != null)
                             // Is Netly Event
-                            _socket._on.OnEvent?.Invoke(null, (eventData.name, eventData.data));
+                            _socket._on.OnEvent?.Invoke(null, (eventData.name, eventData.data, messageType));
                         else
                             // Is Default buffer
                             _socket._on.OnData?.Invoke(null, (data, messageType));

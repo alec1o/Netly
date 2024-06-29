@@ -53,14 +53,14 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="buffer">Event buffer</param>
-            void Event(string name, byte[] buffer);
+            void Event(string name, byte[] buffer, HTTP.MessageType messageType);
 
             /// <summary>
             ///     Send Netly event for server (string)
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="buffer">Event buffer</param>
-            void Event(string name, string buffer);
+            void Event(string name, string buffer, HTTP.MessageType messageType);
 
             /// <summary>
             ///     Send Netly event for server (string)
@@ -68,7 +68,7 @@ namespace Netly.Interfaces
             /// <param name="name">Event name</param>
             /// <param name="buffer">Event buffer</param>
             /// <param name="encoding">String encoding</param>
-            void Event(string name, string buffer, Encoding encoding);
+            void Event(string name, string buffer, HTTP.MessageType messageType, Encoding encoding);
         }
     }
 }
