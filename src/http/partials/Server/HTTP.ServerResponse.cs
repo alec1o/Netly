@@ -118,7 +118,6 @@ namespace Netly
                         WriteCookies();
 
                         var buffer = _bytes.ToArray();
-                        _bytes.Clear();
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = Encoding;
                         _response.ContentLength64 = buffer.Length;
@@ -130,15 +129,16 @@ namespace Netly
                         try
                         {
                             _response.Close();
+                            Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
                         }
                         catch (Exception exception)
                         {
-                            Console.WriteLine($"[#1] {nameof(ServerRequest)} -> {nameof(Send)}: {exception}");
+                            Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
                         }
-                        finally
-                        {
-                            Console.WriteLine($"[#2] {nameof(ServerRequest)} -> {nameof(Send)}: {e}");
-                        }
+                    }
+                    finally
+                    {
+                        _bytes.Clear();
                     }
                 });
             }
