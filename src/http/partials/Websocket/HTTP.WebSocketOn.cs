@@ -12,7 +12,7 @@ namespace Netly
             public EventHandler<WebSocketCloseStatus> OnClose { get; private set; }
             public EventHandler<(byte[] buffer, HTTP.MessageType messageType)> OnData { get; private set; }
             public EventHandler<Exception> OnError { get; private set; }
-            public EventHandler<(string name, byte[] buffer)> OnEvent { get; private set; }
+            public EventHandler<(string name, byte[] buffer, HTTP.MessageType messageType)> OnEvent { get; private set; }
             public EventHandler<ClientWebSocket> OnModify { get; private set; }
             public EventHandler OnOpen { get; private set; }
 
@@ -42,10 +42,10 @@ namespace Netly
                     Env.MainThread.Add(() => callback?.Invoke(@event.buffer, @event.messageType));
             }
 
-            public void Event(Action<string, byte[]> callback)
+            public void Event(Action<string, byte[], MessageType> callback)
             {
                 OnEvent += (@object, @event) =>
-                    Env.MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer));
+                    Env.MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer, @event.messageType));
             }
 
             public void Close(Action<WebSocketCloseStatus> callback)
