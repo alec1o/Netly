@@ -157,11 +157,11 @@ namespace Netly
                     {
                         var context = _listener.EndGetContext(result);
 
-                        Task.Run(async () =>
+                        Task.Run(() =>
                         {
                             try
                             {
-                                await HandleConnection(context);
+                                HandleConnection(context);
                             }
                             catch (Exception e)
                             {
@@ -189,7 +189,7 @@ namespace Netly
                 return html;
             }
 
-            private async Task HandleConnection(HttpListenerContext context)
+            private void HandleConnection(HttpListenerContext context)
             {
                 var request = new ServerRequest(context.Request);
 
@@ -240,19 +240,19 @@ namespace Netly
                         }
 
                         return false;
-                    }).Select(x => (MiddlewareDescriptor)x).ToList();
+                    }).ToArray();
 
-                    if (descriptors.Count > 0)
+                    if (descriptors.Length > 0)
                     {
-                        var count = descriptors.Count;
+                        var count = descriptors.Length;
 
                         for (var i = 0; i < count; i++)
                         {
-                            var descriptor = descriptors[i];
+                            var descriptor = (MiddlewareDescriptor)descriptors[i];
 
                             try
                             {
-                                descriptor.Next = descriptors[i + 1];
+                                descriptor.Next = (MiddlewareDescriptor)descriptors[i + 1];
                             }
                             catch
                             {
@@ -260,17 +260,15 @@ namespace Netly
                             }
                         }
 
-                        var mainDescriptor = descriptors[0];
+                        var mainDescriptor = (MiddlewareDescriptor)descriptors[0];
                         mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
                     }
                 }
             }
 
-            private async void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
+            private void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
                 ServerResponse response, Action next)
             {
-                var notFoundMessage = DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}");
-
                 if (!response.IsOpened)
                 {
                     // request is already response by another middleware
@@ -279,7 +277,8 @@ namespace Netly
                 }
 
                 // SEARCH ROUTE
-                var map = _server.MyMap.m_mapList.FirstOrDefault(x =>
+
+                var map = _server.MyMap.MapList.FirstOrDefault(x =>
                 {
                     // websocket connection
                     if (request.IsWebSocket)
@@ -291,7 +290,7 @@ namespace Netly
                     {
                         // handle all method
                         var handleMethod =
-                            string.Equals(x.Method, Map.ALL_MEHOD, StringComparison.CurrentCultureIgnoreCase)
+                            string.Equals(x.Method, Map.AllMethod, StringComparison.CurrentCultureIgnoreCase)
                             ||
                             string.Equals(request.Method.Method, x.Method,
                                 StringComparison.CurrentCultureIgnoreCase);
@@ -328,7 +327,7 @@ namespace Netly
 
                 if (map == null)
                 {
-                    response.Send(404, notFoundMessage);
+                    response.Send(404, DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}"));
                     next();
                     return;
                 }
@@ -341,7 +340,7 @@ namespace Netly
                 }
                 else // IS WEBSOCKET CONNECTION
                 {
-                    var ws = await context.AcceptWebSocketAsync(null);
+                    var ws = context.AcceptWebSocketAsync(null).Result;
 
                     var websocket = new WebSocket(ws.WebSocket, request);
 

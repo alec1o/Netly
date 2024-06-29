@@ -9,16 +9,16 @@ namespace Netly
     {
         internal class Map : IHTTP.Map
         {
-            internal const string ALL_MEHOD = "*";
+            internal const string AllMethod = "*";
 
-            public readonly List<MapDescriptor> m_mapList;
+            public readonly List<MapDescriptor> MapList;
 
-            public readonly Server m_server;
+            public readonly Server Server;
 
             public Map(Server server)
             {
-                m_server = server;
-                m_mapList = new List<MapDescriptor>();
+                Server = server;
+                MapList = new List<MapDescriptor>();
             }
 
             public void WebSocket(string path, Action<IHTTP.ServerRequest, IHTTP.WebSocket> callback)
@@ -38,7 +38,7 @@ namespace Netly
                 Add
                 (
                     path,
-                    ALL_MEHOD,
+                    AllMethod,
                     false,
                     callback,
                     null
@@ -168,7 +168,7 @@ namespace Netly
                         httpCallback,
                         websocketCallback
                     );
-                    m_mapList.Add(map);
+                    MapList.Add(map);
                 }
             }
         }
