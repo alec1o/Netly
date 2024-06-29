@@ -240,7 +240,7 @@ namespace Netly
                         }
 
                         return false;
-                    }).ToArray();
+                    }).Select(x => (MiddlewareDescriptor)x).ToArray();
 
                     if (descriptors.Length > 0)
                     {
@@ -248,11 +248,11 @@ namespace Netly
 
                         for (var i = 0; i < count; i++)
                         {
-                            var descriptor = (MiddlewareDescriptor)descriptors[i];
+                            var descriptor = descriptors[i];
 
                             try
                             {
-                                descriptor.Next = (MiddlewareDescriptor)descriptors[i + 1];
+                                descriptor.Next = descriptors[i + 1];
                             }
                             catch
                             {
@@ -260,7 +260,7 @@ namespace Netly
                             }
                         }
 
-                        var mainDescriptor = (MiddlewareDescriptor)descriptors[0];
+                        var mainDescriptor = descriptors[0];
                         mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
                     }
                 }
