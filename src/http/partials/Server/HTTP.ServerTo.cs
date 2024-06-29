@@ -99,27 +99,27 @@ namespace Netly
                 });
             }
 
-            public void WebsocketDataBroadcast(byte[] data, bool isText)
+            public void WebsocketDataBroadcast(byte[] data, HTTP.MessageType messageType)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Data(data, isText);
+                    foreach (var ws in _websocketList) ws.To.Data(data, messageType);
                 }
             }
 
-            public void WebsocketDataBroadcast(string data, bool isText)
+            public void WebsocketDataBroadcast(string data, HTTP.MessageType messageType)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Data(data, isText);
+                    foreach (var ws in _websocketList) ws.To.Data(data, messageType);
                 }
             }
 
-            public void WebsocketDataBroadcast(string data, bool isText, Encoding encoding)
+            public void WebsocketDataBroadcast(string data, HTTP.MessageType messageType, Encoding encoding)
             {
                 lock (_websocketListLock)
                 {
-                    foreach (var ws in _websocketList) ws.To.Data(data, isText, encoding);
+                    foreach (var ws in _websocketList) ws.To.Data(data, messageType, encoding);
                 }
             }
 

@@ -30,23 +30,23 @@ namespace Netly.Interfaces
             ///     Send data for server (bytes)
             /// </summary>
             /// <param name="buffer">Data buffer</param>
-            /// <param name="isText">"True" meaning is Text format</param>
-            void Data(byte[] buffer, bool isText);
+            /// <param name="messageType">Message Type (Binary|Text)</param>
+            void Data(byte[] buffer, HTTP.MessageType messageType);
 
             /// <summary>
             ///     Send data for server (string)
             /// </summary>
             /// <param name="buffer">Data buffer</param>
-            /// <param name="isText">"True" meaning is Text format</param>
-            void Data(string buffer, bool isText);
+            /// <param name="messageType">Message Type (Binary|Text)</param>
+            void Data(string buffer, HTTP.MessageType messageType);
 
             /// <summary>
             ///     Send data for server (string)
             /// </summary>
             /// <param name="buffer">Data buffer</param>
-            /// <param name="isText">"True" meaning is Text format</param>
+            /// <param name="messageType">Message Type (Binary|Text)</param>
             /// <param name="encoding">String encoding</param>
-            void Data(string buffer, bool isText, Encoding encoding);
+            void Data(string buffer, HTTP.MessageType messageType, Encoding encoding);
 
             /// <summary>
             ///     Send Netly event for server (bytes)

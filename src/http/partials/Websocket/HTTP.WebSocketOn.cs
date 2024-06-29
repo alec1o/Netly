@@ -10,7 +10,7 @@ namespace Netly
         internal class WebsocketOn : IHTTP.WebSocketOn
         {
             public EventHandler<WebSocketCloseStatus> OnClose { get; private set; }
-            public EventHandler<(byte[] buffer, bool isText)> OnData { get; private set; }
+            public EventHandler<(byte[] buffer, HTTP.MessageType messageType)> OnData { get; private set; }
             public EventHandler<Exception> OnError { get; private set; }
             public EventHandler<(string name, byte[] buffer)> OnEvent { get; private set; }
             public EventHandler<ClientWebSocket> OnModify { get; private set; }
@@ -36,10 +36,10 @@ namespace Netly
                 OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
             }
 
-            public void Data(Action<byte[], bool> callback)
+            public void Data(Action<byte[], MessageType> callback)
             {
                 OnData += (@object, @event) =>
-                    Env.MainThread.Add(() => callback?.Invoke(@event.buffer, @event.isText));
+                    Env.MainThread.Add(() => callback?.Invoke(@event.buffer, @event.messageType));
             }
 
             public void Event(Action<string, byte[]> callback)

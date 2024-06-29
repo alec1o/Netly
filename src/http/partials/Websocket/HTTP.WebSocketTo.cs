@@ -30,7 +30,8 @@ namespace Netly
                 MyServerRequest = null;
             }
 
-            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket, IHTTP.ServerRequest myServerRequest)
+            public WebsocketTo(WebSocket socket, System.Net.WebSockets.WebSocket websocket,
+                IHTTP.ServerRequest myServerRequest)
             {
                 _socket = socket;
                 _isServerSide = true;
@@ -162,42 +163,42 @@ namespace Netly
                 });
             }
 
-            public void Data(byte[] buffer, bool isText)
+            public void Data(byte[] buffer, HTTP.MessageType messageType)
             {
-                Send(buffer, isText);
+                Send(buffer, messageType);
             }
 
-            public void Data(string buffer, bool isText)
+            public void Data(string buffer, HTTP.MessageType messageType)
             {
-                Send(buffer.GetBytes(), isText);
+                Send(buffer.GetBytes(), messageType);
             }
 
-            public void Data(string buffer, bool isText, Encoding encoding)
+            public void Data(string buffer, HTTP.MessageType messageType, Encoding encoding)
             {
-                Send(buffer.GetBytes(encoding), isText);
+                Send(buffer.GetBytes(encoding), messageType);
             }
 
             public void Event(string name, byte[] buffer)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer), false);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer), MessageType.Binary);
             }
 
             public void Event(string name, string buffer)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), false);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), MessageType.Binary);
             }
 
             public void Event(string name, string buffer, Encoding encoding)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), false);
+                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), MessageType.Binary);
             }
 
-            private void Send(byte[] buffer, bool isText)
+            private void Send(byte[] buffer, HTTP.MessageType type)
             {
                 if (IsConnected() is false || buffer == null || buffer.Length <= 0) return;
 
                 var messageContent = new ArraySegment<byte>(buffer);
-                var messageType = isText ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
+                var messageType = type == MessageType.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
                 // Is Always true because our send all buffer on same moment is internal
                 // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
                 const bool endOfMessage = true;
@@ -257,13 +258,16 @@ namespace Netly
 
                         var eventData = NetlyEnvironment.EventManager.Verify(data);
 
+                        var messageType = result.MessageType == WebSocketMessageType.Text
+                            ? MessageType.Text
+                            : MessageType.Binary;
+
                         if (eventData.data != null && eventData.name != null)
                             // Is Netly Event
                             _socket._on.OnEvent?.Invoke(null, (eventData.name, eventData.data));
                         else
                             // Is Default buffer
-                            _socket._on.OnData?.Invoke(null,
-                                (data, result.MessageType == WebSocketMessageType.Text));
+                            _socket._on.OnData?.Invoke(null, (data, messageType));
                     }
                 }
                 catch

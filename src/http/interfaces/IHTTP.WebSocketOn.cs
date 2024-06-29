@@ -11,7 +11,7 @@ namespace Netly.Interfaces
             ///     Handle data received
             /// </summary>
             /// <param name="callback">Callback</param>
-            void Data(Action<byte[], bool> callback);
+            void Data(Action<byte[], HTTP.MessageType> callback);
 
             /// <summary>
             ///     Handle (netly event) received
