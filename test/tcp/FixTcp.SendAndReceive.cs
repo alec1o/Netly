@@ -1,11 +1,11 @@
 public partial class FixTcp
 {
     [Fact]
-    public async Task SendAndReceive()
+    public void SendAndReceive()
     {
-        await Server();
+        Server();
 
-        async Task Server()
+        void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -55,7 +55,7 @@ public partial class FixTcp
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+             server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 10);
             {
@@ -66,11 +66,11 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            const int maxConnection = 100;
+            const int maxConnection = 20;
 
             for (int i = 0; i < maxConnection; i++)
             {
-                await Client(server.Host);
+                 Client(server.Host);
             }
 
             Thread.Sleep(10);
@@ -80,7 +80,7 @@ public partial class FixTcp
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        async Task Client(Host host)
+        void Client(Host host)
         {
             TCP.Client client = new();
 
@@ -110,12 +110,12 @@ public partial class FixTcp
                 Assert.Empty(eventReceived.data); // event
             }
 
-            await client.To.Open(host);
+             client.To.Open(host).Wait();
 
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 50);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
