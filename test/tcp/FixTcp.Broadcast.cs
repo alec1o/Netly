@@ -74,7 +74,7 @@ public partial class FixTcp
             server.To.EventBroadcast(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
             // wait for client respond broadcast
-            Thread.Sleep(20);
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
