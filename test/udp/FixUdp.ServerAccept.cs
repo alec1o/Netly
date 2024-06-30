@@ -5,8 +5,6 @@ public partial class FixUdp
     [Fact]
     public void ServerAccept()
     {
-        if (IsMac()) return;
-
         Server();
 
         async Task Client(Host host)

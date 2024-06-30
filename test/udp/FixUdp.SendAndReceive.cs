@@ -3,8 +3,6 @@ public partial class FixUdp
     [Fact]
     public async Task SendAndReceive()
     {
-        if (IsMac()) return;
-
         await Server();
 
         async Task Server()
