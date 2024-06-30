@@ -15,7 +15,6 @@ on:
 
 jobs:
   build:
-    needs: [ Dev ]
     # config strategy
     strategy:
       fail-fast: false
