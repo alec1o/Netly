@@ -8,7 +8,7 @@ public partial class FixUdp(ITestOutputHelper output)
         Client();
         Server();
 
-        async void Client()
+        void Client()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -29,7 +29,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isModify);
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
@@ -40,7 +40,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
 
             Thread.Sleep(millisecondsTimeout: 300);
             {
@@ -51,7 +51,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await client.To.Open(new Host(IPAddress.Any, 0));
+            client.To.Open(new Host(IPAddress.Any, 0)).Wait();
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -60,10 +60,10 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.True(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
         }
 
-        async void Server()
+        void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -88,7 +88,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
@@ -99,7 +99,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await server.To.Close();
+            server.To.Close().Wait();
 
             Thread.Sleep(millisecondsTimeout: 300);
             {
@@ -111,7 +111,7 @@ public partial class FixUdp(ITestOutputHelper output)
             }
 
             // Cannot assign requested address
-            await server.To.Open(new Host("1.1.1.1", 0));
+            server.To.Open(new Host("1.1.1.1", 0)).Wait();
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);
@@ -120,7 +120,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.True(isError);
             }
 
-            await server.To.Close();
+            server.To.Close().Wait();
         }
     }
 }
