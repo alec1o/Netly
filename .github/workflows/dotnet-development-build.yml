@@ -1,7 +1,7 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: Development
+name: DevBuild
 
 concurrency:
   group: "${{ github.workflow }}/${{ github.ref }}"
@@ -9,18 +9,25 @@ concurrency:
 
 on:
   push:
-    branches: [ "dev" ]
+    branches:
+      - "**"
   pull_request:
-    branches: [ "dev" ]
+    branches:
+      - "**"
 
 jobs:
-  build:
+  test:
     # config strategy
     strategy:
-      fail-fast: false
       max-parallel: 3
+      fail-fast: false
       matrix:
-        version: [ 6.0 ]
+        version: [ 8.0 ]
+        # temp: disable macos test
+        # os: [ ubuntu-latest, windows-latest ]
+        # temp: disable macos and linux test
+        # os: [ windows-latest ]
+        # note: test all os
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     # config os
     runs-on: ${{ matrix.os }}
@@ -34,9 +41,8 @@ jobs:
         with:
           dotnet-version: ${{ matrix.version }}
       # restore dependencies
-      - name: Netly Restore dependencies
+      - name: Restore Netly Project
         run: dotnet restore ./src/Netly.csproj
-      # build netly library
+      # run netly test
       - name: Build Netly Library
         run: dotnet build ./src/Netly.csproj -c Debug --no-restore
-          
