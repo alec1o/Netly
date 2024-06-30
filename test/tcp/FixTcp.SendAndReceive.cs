@@ -73,7 +73,7 @@ public partial class FixTcp
                  Client(server.Host);
             }
 
-            Thread.Sleep(2000);
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
@@ -115,7 +115,7 @@ public partial class FixTcp
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 100);
+            Thread.Sleep(millisecondsTimeout: 25);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
