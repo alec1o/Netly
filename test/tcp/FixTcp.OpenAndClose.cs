@@ -6,10 +6,10 @@ public partial class FixTcp(ITestOutputHelper output)
     public void OpenAndClose()
     {
         var host = HostManager.GenerateLocalHost();
-        
+
         Server();
 
-        async Task Client()
+        void Client()
         {
             TCP.Client client = new();
 
@@ -28,7 +28,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isModify);
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 30);
             {
@@ -39,7 +39,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
 
             Thread.Sleep(millisecondsTimeout: 30);
             {
@@ -50,7 +50,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await client.To.Open(new Host(IPAddress.Any, 0));
+            client.To.Open(new Host(IPAddress.Any, 0)).Wait();
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -59,10 +59,10 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.True(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
         }
 
-        async void Server()
+        void Server()
         {
             TCP.Server server = new();
 
@@ -85,9 +85,9 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 20);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -96,11 +96,11 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await Client();
+            Client();
 
-            await server.To.Close();
+            server.To.Close().Wait();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 20);
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);
@@ -110,7 +110,7 @@ public partial class FixTcp(ITestOutputHelper output)
             }
 
             // Cannot assign requested address
-            await server.To.Open(new Host("1.1.1.1", 0));
+            server.To.Open(new Host("1.1.1.1", 0)).Wait();
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);
@@ -119,7 +119,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.True(isError);
             }
 
-            await server.To.Close();
+            server.To.Close().Wait();
         }
     }
 }
