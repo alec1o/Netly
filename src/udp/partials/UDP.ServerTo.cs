@@ -235,38 +235,40 @@ namespace Netly
 
                 private void InitAccept()
                 {
-                    new Thread(AcceptJob)
-                    {
-                        IsBackground = true,
-                        Priority = ThreadPriority.Highest
-                    }.Start();
-                }
-
-                private void AcceptJob()
-                {
                     var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                    var buffer = new byte[length];
-                    var point = Host.EndPoint;
+                    var buffer = new byte[length > 0 ? length : 4096];
+                    var remoteEndPoint = Host.EndPoint;
 
-                    while (IsOpened)
+                    AcceptUpdate();
+
+                    void AcceptUpdate()
+                    {
+                        if (!IsOpened)
+                        {
+                            Close();
+                            return;
+                        }
+
+                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint, AcceptCallback, null);
+                    }
+
+                    void AcceptCallback(IAsyncResult result)
+                    {
                         try
                         {
-                            var size = _socket.ReceiveFrom
-                            (
-                                buffer,
-                                0,
-                                buffer.Length,
-                                SocketFlags.None,
-                                ref point
-                            );
+                            var size = _socket.EndReceiveFrom(result, ref remoteEndPoint);
 
-                            if (size <= 0) continue;
+                            if (size <= 0)
+                            {
+                                AcceptUpdate();
+                                return;
+                            }
 
                             var data = new byte[size];
 
                             Array.Copy(buffer, 0, data, 0, data.Length);
 
-                            var newHost = new Host(point);
+                            var newHost = new Host(remoteEndPoint);
 
                             // Find a client connected user by endpoint connection (IP, PORT)
                             var client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
@@ -289,11 +291,15 @@ namespace Netly
 
                             // publish data for a connected client
                             client.OnServerBuffer(ref data);
+
                         }
                         catch (Exception e)
                         {
                             NetlyEnvironment.Logger.Create(e);
                         }
+
+                        AcceptUpdate();
+                    }
                 }
             }
         }
