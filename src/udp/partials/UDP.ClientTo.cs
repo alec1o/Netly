@@ -229,6 +229,7 @@ namespace Netly
 
                     try
                     {
+#if false // work on windows and linux, except macOs (maybe iOs)
                         _socket?.BeginSendTo
                         (
                             bytes,
@@ -239,6 +240,17 @@ namespace Netly
                             null,
                             null
                         );
+#else // work on windows and linux, include macOs and iOs
+                        _socket?.BeginSend
+                        (
+                            bytes,
+                            0,
+                            bytes.Length,
+                            SocketFlags.None,
+                            null,
+                            null
+                        );
+#endif
                     }
                     catch (Exception e)
                     {
@@ -248,7 +260,7 @@ namespace Netly
 
                 private void InitReceiver()
                 {
-                    var endpoint = Host.Default.EndPoint;
+                    var endpoint = Host.EndPoint;
 
                     var buffer = new byte
                     [
@@ -260,6 +272,12 @@ namespace Netly
 
                     void ReceiverUpdate()
                     {
+                        if (!IsOpened)
+                        {
+                            Close();
+                            return;
+                        }
+
                         _socket.BeginReceiveFrom
                         (
                             buffer,
