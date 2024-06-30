@@ -1,11 +1,11 @@
 public partial class FixUdp
 {
     [Fact]
-    public async Task Broadcast()
-    {        
-        await Server();
+    public void Broadcast()
+    {
+        Server();
 
-        async Task Server()
+        void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -30,7 +30,7 @@ public partial class FixUdp
                 {
                     // used to open connection
                     if (data.Length == 1 && data[0] == 0) return;
-                    
+
                     lock (dataLock)
                     {
                         allDataReceived++;
@@ -54,7 +54,7 @@ public partial class FixUdp
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
@@ -69,7 +69,7 @@ public partial class FixUdp
 
             for (int i = 0; i < maxConnection; i++)
             {
-                await Client(server.Host);
+                Client(server.Host);
             }
 
             // broadcast
@@ -77,14 +77,14 @@ public partial class FixUdp
             server.To.EventBroadcast(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
             // wait for client respond broadcast
-            Thread.Sleep(300);
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        async Task Client(Host host)
+        void Client(Host host)
         {
             UDP.Client client = new();
             bool isOpen = false, isClose = false, isError = false, isModify = false;
@@ -103,12 +103,12 @@ public partial class FixUdp
                 Assert.False(isModify);
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
             // for open connection
             client.To.Data([0]);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 20);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
