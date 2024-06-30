@@ -1,11 +1,11 @@
 public partial class FixTcp
 {
     [Fact]
-    public async Task Broadcast()
+    public void Broadcast()
     {
-        await Server();
+        Server();
 
-        async Task Server()
+        void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -51,7 +51,7 @@ public partial class FixTcp
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 10);
             {
@@ -66,22 +66,22 @@ public partial class FixTcp
 
             for (int i = 0; i < maxConnection; i++)
             {
-                await Client(server.Host);
+                Client(server.Host);
             }
-            
+
             // broadcast
             server.To.DataBroadcast(Guid.NewGuid().ToString());
             server.To.EventBroadcast(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
-            
+
             // wait for client respond broadcast
-            Thread.Sleep(10);
+            Thread.Sleep(20);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        async Task Client(Host host)
+        void Client(Host host)
         {
             TCP.Client client = new();
             bool isOpen = false, isClose = false, isError = false, isModify = false;
@@ -100,9 +100,9 @@ public partial class FixTcp
                 Assert.False(isModify);
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 20);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
