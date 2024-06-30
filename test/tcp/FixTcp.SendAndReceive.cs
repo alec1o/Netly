@@ -55,7 +55,7 @@ public partial class FixTcp
                 Assert.False(isModify);
             }
 
-             server.To.Open(host).Wait();
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 20);
             {
@@ -67,10 +67,12 @@ public partial class FixTcp
             }
 
             const int maxConnection = 20;
+            List<Action> actions = new();
 
             for (int i = 0; i < maxConnection; i++)
             {
-                 Client(server.Host);
+                Client(server.Host, out Action action);
+                actions.Add(action);
             }
 
             Thread.Sleep(1000);
@@ -78,9 +80,14 @@ public partial class FixTcp
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
+
+            foreach (var action in actions)
+            {
+                action();
+            }
         }
 
-        void Client(Host host)
+        void Client(Host host, out Action check)
         {
             TCP.Client client = new();
 
@@ -110,12 +117,12 @@ public partial class FixTcp
                 Assert.Empty(eventReceived.data); // event
             }
 
-             client.To.Open(host).Wait();
-
+            client.To.Open(host).Wait();
+            Thread.Sleep(10);
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 25);
+            check = () =>
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -131,7 +138,7 @@ public partial class FixTcp
                 Assert.Equal(dataSent, dataReceived); // data
                 Assert.Equal(eventSent.name, eventReceived.name); // event
                 Assert.Equal(eventSent.data, eventReceived.data); // event
-            }
+            };
         }
     }
 }
