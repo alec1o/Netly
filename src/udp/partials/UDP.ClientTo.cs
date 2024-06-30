@@ -229,28 +229,34 @@ namespace Netly
 
                     try
                     {
-#if false // work on windows and linux, except macOs (maybe iOs)
-                        _socket?.BeginSendTo
-                        (
-                            bytes,
-                            0,
-                            bytes.Length,
-                            SocketFlags.None,
-                            host.EndPoint,
-                            null,
-                            null
-                        );
-#else // work on windows and linux, include macOs and iOs
-                        _socket?.BeginSend
-                        (
-                            bytes,
-                            0,
-                            bytes.Length,
-                            SocketFlags.None,
-                            null,
-                            null
-                        );
-#endif
+                        if (_isServer)
+                        {
+
+                            // this way of send just work on windows and linux, except macOs (maybe iOs)
+                            _socket?.BeginSendTo
+                            (
+                                bytes,
+                                0,
+                                bytes.Length,
+                                SocketFlags.None,
+                                host.EndPoint,
+                                null,
+                                null
+                            );
+                        }
+                        else
+                        {
+                            // this way of send just work on windows and linux, include macOs and iOs
+                            _socket?.BeginSend
+                            (
+                                bytes,
+                                0,
+                                bytes.Length,
+                                SocketFlags.None,
+                                null,
+                                null
+                            );
+                        }
                     }
                     catch (Exception e)
                     {
