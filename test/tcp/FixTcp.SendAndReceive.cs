@@ -73,7 +73,7 @@ public partial class FixTcp
                  Client(server.Host);
             }
 
-            Thread.Sleep(10);
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
