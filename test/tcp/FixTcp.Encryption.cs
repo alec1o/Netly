@@ -1,5 +1,4 @@
 using System.Net;
-using System.Reflection;
 using System.Security.Authentication;
 
 public partial class FixTcp
@@ -11,7 +10,7 @@ public partial class FixTcp
 
         Server();
 
-        async Task Client(bool useEncryption)
+        void Client(bool useEncryption)
         {
             TCP.Client client = new();
 
@@ -19,7 +18,11 @@ public partial class FixTcp
 
             client.On.Open(() => isOpen = true);
             client.On.Close(() => isClose = true);
-            client.On.Error(_ => isError = true);
+            client.On.Error(e =>
+            {
+                output.WriteLine(e.ToString());
+                isError = true;
+            });
             client.On.Modify(_ => isModify = true);
 
             {
@@ -40,21 +43,15 @@ public partial class FixTcp
                     const bool isValid = true;
                     return isValid;
                 });
+
+                Thread.Sleep(millisecondsTimeout: 1000);
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
-                if (useEncryption)
-                {
-                    Assert.True(client.IsEncrypted);
-                }
-                else
-                {
-                    Assert.False(client.IsEncrypted);
-                }
-
+                Assert.Equal(useEncryption, client.IsEncrypted);
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
                 Assert.True(isOpen);
@@ -62,7 +59,7 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
@@ -73,7 +70,7 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            await client.To.Open(new Host(IPAddress.Any, 0));
+            client.To.Open(new Host(IPAddress.Any, 0)).Wait();
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -82,10 +79,10 @@ public partial class FixTcp
                 Assert.True(isError);
             }
 
-            await client.To.Close();
+            client.To.Close().Wait();
         }
 
-        async void Server()
+        void Server()
         {
             TCP.Server server = new();
 
@@ -111,12 +108,13 @@ public partial class FixTcp
 
 
             {
-                byte[] pfxCertificate = await File.ReadAllBytesAsync("certificate.p12");
+                byte[] pfxCertificate = File.ReadAllBytes("certificate.p12");
                 const string pfxPassword = "alecio";
-                server.To.Encryption(true, pfxCertificate, pfxPassword, SslProtocols.Tls13);
+                output.WriteLine($"pfxCertificate: {pfxCertificate.Length}");
+                server.To.Encryption(true, pfxCertificate, pfxPassword, SslProtocols.Tls12);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 10);
             {
@@ -128,10 +126,10 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            await Client(true);
-            await Client(false);
+            Client(true);
+            Client(false);
 
-            await server.To.Close();
+            server.To.Close().Wait();
 
             Thread.Sleep(millisecondsTimeout: 10);
             {
@@ -143,7 +141,7 @@ public partial class FixTcp
             }
 
             // Cannot assign requested address
-            await server.To.Open(new Host("1.1.1.1", 0));
+            server.To.Open(new Host("1.1.1.1", 0)).Wait();
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);
@@ -152,7 +150,7 @@ public partial class FixTcp
                 Assert.True(isError);
             }
 
-            await server.To.Close();
+            server.To.Close().Wait();
         }
     }
 }
