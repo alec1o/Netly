@@ -1,11 +1,11 @@
 public partial class FixUdp
 {
     [Fact]
-    public async Task SendAndReceive()
+    public void SendAndReceive()
     {
-        await Server();
+        Server();
 
-        async Task Server()
+        void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -55,7 +55,7 @@ public partial class FixUdp
                 Assert.False(isModify);
             }
 
-            await server.To.Open(host);
+            server.To.Open(host).Wait();
 
             Thread.Sleep(millisecondsTimeout: 100);
             {
@@ -70,17 +70,17 @@ public partial class FixUdp
 
             for (int i = 0; i < maxConnection; i++)
             {
-                await Client(server.Host);
+                Client(server.Host);
             }
 
-            Thread.Sleep(300);
+            Thread.Sleep(1000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        async Task Client(Host host)
+        void Client(Host host)
         {
             UDP.Client client = new();
 
@@ -110,7 +110,7 @@ public partial class FixUdp
                 Assert.Empty(eventReceived.data); // event
             }
 
-            await client.To.Open(host);
+            client.To.Open(host).Wait();
 
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
