@@ -208,8 +208,7 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
     - <sub>Windows</sub>
     - <sub>Android</sub>
     - <sub>iOS</sub>
-    - <sub>macOS <a href="https://github.com/dotnet/runtime/issues/97718#issuecomment-1923700076"><sup><i><strong>(may
-      need to customize firewall for udp and rudp)</strong><i></sup></sub></a><br><br>
+    - <sub>macOS</sub><br><br>
     - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
       should be considered a bug and reported.<i><sub>
 
