@@ -128,32 +128,11 @@ namespace Netly
                     Send(data.GetBytes());
                 }
 
-                public void Data(Host targetHost, byte[] data)
-                {
-                    if (!IsOpened || targetHost == null || data == null) return;
-
-                    Send(targetHost, data);
-                }
-
-                public void Data(Host targetHost, string data)
-                {
-                    if (!IsOpened || targetHost == null || data == null) return;
-
-                    Send(targetHost, data.GetBytes());
-                }
-
                 public void Data(string data, Encoding encoding)
                 {
                     if (!IsOpened || data == null) return;
 
                     Send(data.GetBytes(encoding));
-                }
-
-                public void Data(Host targetHost, string data, Encoding encoding)
-                {
-                    if (!IsOpened || targetHost == null || data == null) return;
-
-                    Send(targetHost, data.GetBytes(encoding));
                 }
 
                 public void Event(string name, byte[] data)
@@ -170,32 +149,11 @@ namespace Netly
                     Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
-                public void Event(Host targetHost, string name, byte[] data)
-                {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
-
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data));
-                }
-
-                public void Event(Host targetHost, string name, string data)
-                {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
-
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
-                }
-
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || name == null || data == null) return;
 
                     Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
-                }
-
-                public void Event(Host targetHost, string name, string data, Encoding encoding)
-                {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
-
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 public void InitServerSide()
