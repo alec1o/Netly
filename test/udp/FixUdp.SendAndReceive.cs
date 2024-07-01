@@ -68,9 +68,12 @@ public partial class FixUdp
 
             const int maxConnection = 100;
 
+            var actions = new List<Action>();
+
             for (int i = 0; i < maxConnection; i++)
             {
-                Client(server.Host);
+                Client(server.Host, out var action);
+                actions.Add(action);
             }
 
             Thread.Sleep(1000);
@@ -78,9 +81,14 @@ public partial class FixUdp
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
+
+            foreach (var action in actions)
+            {
+                action();
+            }
         }
 
-        void Client(Host host)
+        void Client(Host host, out Action action)
         {
             UDP.Client client = new();
 
@@ -115,7 +123,7 @@ public partial class FixUdp
             client.To.Data(dataSent);
             client.To.Event(eventSent.name, eventSent.data);
 
-            Thread.Sleep(millisecondsTimeout: 100);
+            action = () =>
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -131,7 +139,7 @@ public partial class FixUdp
                 Assert.Equal(dataSent, dataReceived); // data
                 Assert.Equal(eventSent.name, eventReceived.name); // event
                 Assert.Equal(eventSent.data, eventReceived.data); // event
-            }
+            };
         }
     }
 }
