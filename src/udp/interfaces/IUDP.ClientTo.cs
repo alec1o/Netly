@@ -43,28 +43,6 @@ namespace Netly.Interfaces
             void Data(string data, Encoding encoding);
 
             /// <summary>
-            ///     Send raw data for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="data">data - bytes </param>
-            void Data(Host targetHost, byte[] data);
-
-            /// <summary>
-            ///     Send raw data for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="data">Data - string</param>
-            void Data(Host targetHost, string data);
-
-            /// <summary>
-            ///     Send raw data for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="data">Data - string</param>
-            /// <param name="encoding">Data encoding method</param>
-            void Data(Host targetHost, string data, Encoding encoding);
-
-            /// <summary>
             ///     Send event (netly event)
             /// </summary>
             /// <param name="name">Event name</param>
@@ -85,31 +63,6 @@ namespace Netly.Interfaces
             /// <param name="data">Event data - string</param>
             /// <param name="encoding">Event data encoding method</param>
             void Event(string name, string data, Encoding encoding);
-
-            /// <summary>
-            ///     Send event (netly event) for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="name">Event name</param>
-            /// <param name="data">Event data - bytes</param>
-            void Event(Host targetHost, string name, byte[] data);
-
-            /// <summary>
-            ///     Send event (netly event) for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="name">Event name</param>
-            /// <param name="data">Event data - string</param>
-            void Event(Host targetHost, string name, string data);
-
-            /// <summary>
-            ///     Send event (netly event) for custom host
-            /// </summary>
-            /// <param name="targetHost">Target host</param>
-            /// <param name="name">Event name</param>
-            /// <param name="data">Event data - string</param>
-            /// <param name="encoding">Event data encoding method</param>
-            void Event(Host targetHost, string name, string data, Encoding encoding);
         }
     }
 }
