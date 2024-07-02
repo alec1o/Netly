@@ -69,6 +69,12 @@ namespace Netly
                 {
                     throw new NotImplementedException();
                 }
+
+                private bool IsConnected()
+                {
+                    if (_socket == null || _isClosed) return false;
+                    return true;
+                }
             }
         }
     }
