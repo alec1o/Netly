@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -20,6 +22,7 @@ namespace Netly
                 private Socket _socket;
                 private bool _isOpeningOrClosing, _isClosed;
                 private readonly bool _isServer;
+                private int _connectTimeout;
 
                 private struct Config
                 {
@@ -38,6 +41,7 @@ namespace Netly
                     _socket = null;
                     _client = null;
                     _isServer = false;
+                    _connectTimeout = 3000;
                     Host = Host.Default;
                 }
 
@@ -45,10 +49,101 @@ namespace Netly
                 {
                     _client = client;
                 }
-                
+
                 public Task Open(Host host)
                 {
-                    throw new NotImplementedException();
+                    if (!IsOpened || _isOpeningOrClosing || _isServer) return Task.CompletedTask;
+                    _isOpeningOrClosing = true;
+
+                    return Task.Run(() =>
+                    {
+                        try
+                        {
+                            _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+
+                            On.OnModify?.Invoke(null, _socket);
+
+                            _socket.Connect(host.Address, host.Port);
+
+                            // create connection data
+                            var data = new byte[] { Config.OpenBuffer };
+
+                            // send connected data
+                            for (int i = 0; i < Config.OpenRepeat; i++)
+                            {
+                                SendRaw(null, ref data);
+                            }
+
+                            // waiting for connection data response
+                            List<byte> ackList = new List<byte>();
+
+                            try
+                            {
+                                Task.Run(() =>
+                                {
+                                    while (ackList.Count < Config.OpenRepeat)
+                                    {
+                                        var buffer = new byte[1024];
+                                        var endpoint = Host.EndPoint;
+
+                                        var size = _socket.ReceiveFrom
+                                        (
+                                            buffer,
+                                            0,
+                                            buffer.Length,
+                                            SocketFlags.None,
+                                            ref endpoint
+                                        );
+
+                                        if (size == 1)
+                                        {
+                                            ackList.Add(buffer[0]);
+                                        }
+                                    }
+                                }).Wait(_connectTimeout);
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
+
+                            // check if connection already opened
+                            int feeds = 0;
+
+                            foreach (var ack in ackList)
+                            {
+                                if (ack == Config.OpenBuffer)
+                                {
+                                    feeds++;
+                                }
+                            }
+
+                            if (feeds <= 0)
+                            {
+                                throw new Exception
+                                (
+                                    $"A connection attempt failed because the connected party did not properly respond after a period of time ({_connectTimeout}ms), or established connection failed because connected host has failed to respond"
+                                );
+                            }
+
+                            // connected successful
+                            Host = new Host(_socket.RemoteEndPoint);
+
+                            _isClosed = false;
+                            
+                            On.OnOpen?.Invoke(null, null);
+                        }
+                        catch (Exception e)
+                        {
+                            _isClosed = true;
+                            _socket = null;
+                            On.OnError?.Invoke(null, e);
+                        }
+                        finally
+                        {
+                            _isOpeningOrClosing = false;
+                        }
+                    });
                 }
 
                 public Task Close()
