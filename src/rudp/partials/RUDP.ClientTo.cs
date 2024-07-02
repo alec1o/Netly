@@ -59,6 +59,13 @@ namespace Netly
                 {
                     Send(null, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)), messageType);
                 }
+
+                private void Send(Host host, byte[] data, MessageType messageType)
+                {
+                    throw new NotImplementedException();
+                }
+
+                private void SendRaw(Host host, ref byte[] data)
                 {
                     throw new NotImplementedException();
                 }
