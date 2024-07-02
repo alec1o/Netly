@@ -38,24 +38,6 @@ namespace Netly
         public static readonly IMainThread MainThread;
 
         /// <summary>
-        ///     Message Type
-        /// </summary>
-        public class MessageType
-        {
-            internal MessageType()
-            {
-            }
-
-            internal static Exception InvalidRudpException = new Exception($"The {nameof(MessageType)} isn't RUDP type");
-
-            internal static bool IsRudp(MessageType content)
-            {
-                return content == RUDP.Reliable || content == RUDP.Unreliable;
-            }
-        }
-
-
-        /// <summary>
         ///     Init Netly
         /// </summary>
         static NetlyEnvironment()
