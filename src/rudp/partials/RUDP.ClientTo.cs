@@ -14,6 +14,14 @@ namespace Netly
                 public Host Host { get; private set; }
                 public bool IsOpened { get; private set; }
                 private readonly Client _client;
+                private struct Config
+                {
+                    public const byte PingBuffer = 0;
+                    public const byte OpenBuffer = 128;
+                    public const byte CloseBuffer = 255;
+                    public const byte OpenRepeat = 32;
+                    public const byte CloseRepeat = 32;
+                }
 
                 public ClientTo(Client client)
                 {
