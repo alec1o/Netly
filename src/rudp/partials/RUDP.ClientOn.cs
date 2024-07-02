@@ -12,9 +12,9 @@ namespace Netly
             private class ClientOn : IRUDP.ClientOn
             {
                 public EventHandler OnClose;
-                public EventHandler<byte[]> OnData;
+                public EventHandler<(byte[] data, MessageType messageType)> OnData;
                 public EventHandler<Exception> OnError;
-                public EventHandler<(string name, byte[] buffer)> OnEvent;
+                public EventHandler<(string name, byte[] buffer, MessageType messageType)> OnEvent;
                 public EventHandler<Socket> OnModify;
                 public EventHandler OnOpen;
 
@@ -38,14 +38,14 @@ namespace Netly
                     OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
                 }
 
-                public void Data(Action<byte[]> callback)
+                public void Data(Action<byte[], MessageType> callback) 
                 {
-                    OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+                    OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.data, e.messageType));
                 }
 
-                public void Event(Action<string, byte[]> callback)
+                public void Event(Action<string, byte[], MessageType> callback)
                 {
-                    OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
+                    OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer, e.messageType));
                 }
             }
         }

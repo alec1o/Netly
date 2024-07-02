@@ -23,7 +23,7 @@ namespace Netly
             public bool IsOpened => _to.IsOpened;
             public IRUDP.ServerTo To => _to;
             public IRUDP.ServerOn On => _on;
-            public IRUDP.Client[] Clients => _to.Clients.Select(x => (IRUDP.Client)x).ToArray();
+            public IRUDP.Client[] Clients => _to.GetClients();
         }
     }
 }
