@@ -23,6 +23,17 @@ namespace Netly
                     public const byte CloseRepeat = 32;
                 }
 
+
+                private ClientTo()
+                {
+                    _isOpeningOrClosing = false;
+                    _isClosed = true;
+                    _socket = null;
+                    _client = null;
+                    _isServer = false;
+                    Host = Host.Default;
+                }
+
                 public ClientTo(Client client)
                 {
                     _client = client;
