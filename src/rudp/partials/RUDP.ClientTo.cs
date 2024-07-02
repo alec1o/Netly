@@ -33,6 +33,13 @@ namespace Netly
                     public const byte CloseRepeat = 32;
                 }
 
+                private class Package
+                {
+                    public uint Id { get; set; }
+                    public byte[] Data { get; set; }
+                    public sbyte Type { get; set; }
+                }
+
 
                 private ClientTo()
                 {
