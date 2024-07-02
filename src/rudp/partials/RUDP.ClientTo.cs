@@ -23,6 +23,8 @@ namespace Netly
                 private bool _isOpeningOrClosing, _isClosed;
                 private readonly bool _isServer;
                 private int _openTimeout;
+                private MessageId _messageId;
+                private readonly object _nextIdLock = new object();
 
                 private struct Config
                 {
@@ -38,6 +40,14 @@ namespace Netly
                     public uint Id { get; set; }
                     public byte[] Data { get; set; }
                     public sbyte Type { get; set; }
+                }
+
+                private class MessageId
+                {
+                    public uint Reliable { get; set; }
+                    public uint ReliableUnordered { get; set; }
+                    public uint Unreliable { get; }
+                    public uint UnreliableOrdered { get; set; }
                 }
 
 
@@ -136,8 +146,10 @@ namespace Netly
                             // connected successful
                             Host = new Host(_socket.RemoteEndPoint);
 
+                            _messageId = new MessageId();
+
                             _isClosed = false;
-                            
+
                             On.OnOpen?.Invoke(null, null);
                         }
                         catch (Exception e)
@@ -168,7 +180,7 @@ namespace Netly
 
                                 for (var i = 0; i < Config.CloseRepeat; i++)
                                 {
-                                    SendRaw(_isServer ? Host : null, ref data);
+                                    SendRaw(Host, ref data);
                                 }
                             }
                             catch (Exception e)
@@ -202,42 +214,104 @@ namespace Netly
 
                 public void Data(byte[] data, MessageType messageType)
                 {
-                    Send(null, data, messageType);
+                    if (data == null || data.Length <= 0) return;
+
+                    Send(data, messageType);
                 }
 
                 public void Data(string data, MessageType messageType)
                 {
-                    Send(null, data.GetBytes(), messageType);
+                    if (data == null || data.Length <= 0) return;
+
+                    Send(data.GetBytes(), messageType);
                 }
 
                 public void Data(string data, MessageType messageType, Encoding encoding)
                 {
-                    Send(null, data.GetBytes(encoding), messageType);
+                    if (data == null || data.Length <= 0) return;
+
+                    Send(data.GetBytes(encoding), messageType);
                 }
 
                 public void Event(string name, byte[] data, MessageType messageType)
                 {
-                    Send(null, NetlyEnvironment.EventManager.Create(name, data), messageType);
+                    if (data == null || data.Length <= 0) return;
+
+                    Send(NetlyEnvironment.EventManager.Create(name, data), messageType);
                 }
 
                 public void Event(string name, string data, MessageType messageType)
                 {
-                    Send(null, NetlyEnvironment.EventManager.Create(name, data.GetBytes()), messageType);
+                    if (data == null || data.Length <= 0 || name == null || name.Length <= 0) return;
+
+                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()), messageType);
                 }
 
                 public void Event(string name, string data, MessageType messageType, Encoding encoding)
                 {
-                    Send(null, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)), messageType);
+                    if (data == null || data.Length <= 0 || name == null || name.Length <= 0) return;
+
+                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)), messageType);
                 }
 
-                private void Send(Host host, byte[] data, MessageType messageType)
+
+                private void Send(byte[] bytes, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    Send(Host, ref bytes, messageType);
                 }
 
-                private void SendRaw(Host host, ref byte[] data)
+                private void Send(Host host, ref byte[] bytes, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    var package = new Package
+                    {
+                        Type = (sbyte)messageType,
+                        Data = bytes,
+                        Id = GetNextId(messageType)
+                    };
+
+                    GetBufferFromPackage(ref package, out var buffer);
+
+                    SendRaw(host, ref buffer);
+                }
+
+                private void SendRaw(Host host, ref byte[] bytes)
+                {
+                    if (!IsOpened) return;
+
+                    try
+                    {
+                        if (_isServer)
+                        {
+                            // this way of send just work on windows and linux, except macOS (maybe iOs)
+                            _socket?.BeginSendTo
+                            (
+                                bytes,
+                                0,
+                                bytes.Length,
+                                SocketFlags.None,
+                                host.EndPoint,
+                                null,
+                                null
+                            );
+                        }
+                        else
+                        {
+                            // this way of send just work on windows and linux, include macOS and iOs
+                            _socket?.BeginSend
+                            (
+                                bytes,
+                                0,
+                                bytes.Length,
+                                SocketFlags.None,
+                                null,
+                                null
+                            );
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                    }
                 }
 
                 private bool IsConnected()
@@ -266,6 +340,50 @@ namespace Netly
                 public int GetOpenTimeout()
                 {
                     return _openTimeout;
+                }
+
+                private uint GetNextId(MessageType messageType)
+                {
+                    lock (_nextIdLock)
+                    {
+                        switch (messageType)
+                        {
+                            case MessageType.Reliable:
+                            {
+                                _messageId.Reliable++;
+                                return _messageId.Reliable;
+                            }
+                            case MessageType.ReliableUnordered:
+                            {
+                                _messageId.ReliableUnordered++;
+                                return _messageId.ReliableUnordered;
+                            }
+                            case MessageType.Unreliable:
+                            {
+                                return _messageId.Unreliable;
+                            }
+                            case MessageType.UnreliableOrdered:
+                            {
+                                _messageId.UnreliableOrdered++;
+                                return _messageId.UnreliableOrdered;
+                            }
+                            default:
+                            {
+                                throw new InvalidOperationException(messageType.ToString());
+                            }
+                        }
+                    }
+                }
+
+                private void GetBufferFromPackage(ref Package package, out byte[] buffer)
+                {
+                    var primitive = new Primitive();
+
+                    primitive.Add.Class(package);
+
+                    buffer = primitive.GetBytes();
+
+                    primitive.Reset();
                 }
             }
         }
