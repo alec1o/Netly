@@ -12,8 +12,13 @@ namespace Netly
             private class ClientTo : IRUDP.ClientTo
             {
                 public Host Host { get; private set; }
-                public bool IsOpened { get; private set; }
+                public bool IsOpened => IsConnected();
+                private ClientOn On => _client._on;
                 private readonly Client _client;
+                private Socket _socket;
+                private bool _isOpeningOrClosing, _isClosed;
+                private readonly bool _isServer;
+
                 private struct Config
                 {
                     public const byte PingBuffer = 0;
