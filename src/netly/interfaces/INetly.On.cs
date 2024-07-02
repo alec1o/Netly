@@ -2,7 +2,7 @@
 
 namespace Netly.Interfaces
 {
-    public interface IOn<out TModifyType>
+    public interface IOn<out T>
     {
         /// <summary>
         ///     Use to handle connection open event
@@ -26,6 +26,6 @@ namespace Netly.Interfaces
         ///     Use to handle socket modification event
         /// </summary>
         /// <param name="callback">Callback</param>
-        void Modify(Action<TModifyType> callback);
+        void Modify(Action<T> callback);
     }
 }
