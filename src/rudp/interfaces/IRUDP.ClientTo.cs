@@ -27,20 +27,23 @@ namespace Netly.Interfaces
             ///     Send raw data
             /// </summary>
             /// <param name="data">data - bytes</param>
-            void Data(byte[] data);
+            /// <param name="messageType">message type</param>
+            void Data(byte[] data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Send raw data
             /// </summary>
             /// <param name="data">Data - string</param>
-            void Data(string data);
+            /// <param name="messageType">message type</param>
+            void Data(string data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Send raw data
             /// </summary>
             /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
-            void Data(string data, Encoding encoding);
+            /// <param name="messageType">message type</param>
+            void Data(string data, RUDP.MessageType messageType, Encoding encoding);
 
 
             /// <summary>
@@ -48,14 +51,16 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - bytes</param>
-            void Event(string name, byte[] data);
+            /// <param name="messageType">message type</param>
+            void Event(string name, byte[] data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Send event (netly event)
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
-            void Event(string name, string data);
+            /// <param name="messageType">message type</param>
+            void Event(string name, string data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Send event (netly event)
@@ -63,7 +68,8 @@ namespace Netly.Interfaces
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
             /// <param name="encoding">Event data encoding method</param>
-            void Event(string name, string data, Encoding encoding);
+            /// <param name="messageType">message type</param>
+            void Event(string name, string data, RUDP.MessageType messageType, Encoding encoding);
         }
     }
 }

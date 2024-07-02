@@ -27,34 +27,39 @@ namespace Netly.Interfaces
             ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">data - bytes</param>
-            void DataBroadcast(byte[] data);
+            /// <param name="messageType">message type</param>
+            void DataBroadcast(byte[] data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">Data - string</param>
-            void DataBroadcast(string data);
+            /// <param name="messageType">message type</param>
+            void DataBroadcast(string data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Use to send raw data to all connected clients
             /// </summary>
             /// <param name="data">Data - string</param>
             /// <param name="encoding">Data encoding method</param>
-            void DataBroadcast(string data, Encoding encoding);
+            /// <param name="messageType">message type</param>
+            void DataBroadcast(string data, RUDP.MessageType messageType, Encoding encoding);
 
             /// <summary>
             ///     Use to send event (netly event) to all connected clients
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - bytes</param>
-            void EventBroadcast(string name, byte[] data);
+            /// <param name="messageType">message type</param>
+            void EventBroadcast(string name, byte[] data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Use to send event (netly event) to all connected clients
             /// </summary>
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
-            void EventBroadcast(string name, string data);
+            /// <param name="messageType">message type</param>
+            void EventBroadcast(string name, string data, RUDP.MessageType messageType);
 
             /// <summary>
             ///     Use to send event (netly event) to all connected clients
@@ -62,7 +67,8 @@ namespace Netly.Interfaces
             /// <param name="name">Event name</param>
             /// <param name="data">Event data - string</param>
             /// <param name="encoding">Event data encoding method</param>
-            void EventBroadcast(string name, string data, Encoding encoding);
+            /// <param name="messageType">message type</param>
+            void EventBroadcast(string name, string data, RUDP.MessageType messageType, Encoding encoding);
         }
     }
 }
