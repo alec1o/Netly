@@ -49,11 +49,12 @@ namespace Netly
 
                 private struct Config
                 {
-                    public const byte PingBuffer = 0;
-                    public const byte OpenBuffer = 128;
-                    public const byte CloseBuffer = 255;
+                    public const byte Ping = 0;
+                    public const byte Syn = 1;
+                    public const byte Ack = 2;
+                    public const byte Fin = 4;
                     public const byte OpenRepeat = 32;
-                    public const byte CloseRepeat = 32;
+                    public const byte CloseRepeat = 8;
                 }
 
                 private class Package
@@ -110,7 +111,7 @@ namespace Netly
                             _socket.Connect(host.Address, host.Port);
 
                             // create connection data
-                            var data = new byte[] { Config.OpenBuffer };
+                            var data = new byte[] { Config.Syn };
 
                             // send connected data
                             for (int i = 0; i < Config.OpenRepeat; i++)
@@ -156,7 +157,7 @@ namespace Netly
 
                             foreach (var ack in ackList)
                             {
-                                if (ack == Config.OpenBuffer)
+                                if (ack == Config.Syn)
                                 {
                                     feeds++;
                                 }
@@ -213,7 +214,7 @@ namespace Netly
                         {
                             try
                             {
-                                var data = new[] { Config.CloseBuffer };
+                                var data = new[] { Config.Fin };
 
                                 for (var i = 0; i < Config.CloseRepeat; i++)
                                 {
@@ -495,7 +496,7 @@ namespace Netly
 
                     Task.Run(() =>
                     {
-                        byte[] pingData = { Config.PingBuffer };
+                        byte[] pingData = { Config.Ping };
 
                         UpdateTimeoutTimer();
 
@@ -597,20 +598,20 @@ namespace Netly
                     {
                         byte key = data[0];
 
-                        if (key == Config.CloseBuffer)
+                        if (key == Config.Fin)
                         {
                             Close();
                             return;
                         }
 
-                        if (key == Config.OpenBuffer)
+                        if (key == Config.Syn)
                         {
-                            byte[] bytes = { Config.OpenBuffer };
+                            byte[] bytes = { Config.Ack };
                             SendRaw(Host, ref bytes);
                             return;
                         }
 
-                        if (key == Config.PingBuffer)
+                        if (key == Config.Ping)
                         {
                             UpdateTimeoutTimer();
                             return;
