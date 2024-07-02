@@ -30,20 +30,11 @@ namespace Netly
         /// <summary>
         ///     Netly logger hub
         /// </summary>
-        public static readonly ILogger Logger;
+        public static readonly ILogger Logger = new MyLogger();
 
         /// <summary>
         ///     Netly main thread
         /// </summary>
-        public static readonly IMainThread MainThread;
-
-        /// <summary>
-        ///     Init Netly
-        /// </summary>
-        static NetlyEnvironment()
-        {
-            Logger = new MyLogger();
-            MainThread = new MyMainThread();
-        }
+        public static readonly IMainThread MainThread = new MyMainThread();
     }
 }
