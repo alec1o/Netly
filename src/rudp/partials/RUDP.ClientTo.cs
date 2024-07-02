@@ -18,16 +18,34 @@ namespace Netly
                 public Host Host { get; private set; }
                 public bool IsOpened => IsConnected();
                 private ClientOn On => _client._on;
-                private readonly Client _client;
+
                 private Socket _socket;
-                private bool _isOpeningOrClosing, _isClosed;
+                private DateTime _timeoutTimer;
+
+                private bool
+                    _isOpeningOrClosing,
+                    _isClosed;
+
+                private int
+                    _openTimeout,
+                    _resendDelay,
+                    _pingDelay,
+                    _offlineTimeout;
+
+                private MessageId
+                    _sendMessageId,
+                    _receiveMessageId;
+
+                private readonly object
+                    _nextIdLock = new object(),
+                    _timerLock = new object(),
+                    _queueLock = new object();
+
+                private readonly Client _client;
                 private readonly bool _isServer;
-                private int _openTimeout, _resendDelay;
-                private MessageId _messageId;
-                private readonly object _nextIdLock = new object();
-                private readonly object _queueLock = new object();
                 private readonly List<(uint id, byte[] data)> _reliableQueueList;
                 private readonly List<(uint id, byte[] data)> _reliableOrderedQueueList;
+
 
                 private struct Config
                 {
@@ -61,10 +79,13 @@ namespace Netly
                     _socket = null;
                     _client = null;
                     _isServer = false;
-                    _resendDelay = 10;
-                    _openTimeout = 3000;
+                    _resendDelay = 10; // 10ms (0.01s)
+                    _pingDelay = 100; // 100ms (0.1s)
+                    _openTimeout = 5000; // 5000ms (5s)
+                    _offlineTimeout = 5000; // 9000ms (5s) 
                     _reliableQueueList = new List<(uint id, byte[] data)>();
                     _reliableOrderedQueueList = new List<(uint id, byte[] data)>();
+                    _timeoutTimer = DateTime.UtcNow;
                     Host = Host.Default;
                 }
 
@@ -156,7 +177,12 @@ namespace Netly
 
                             lock (_nextIdLock)
                             {
-                                _messageId = new MessageId();
+                                _sendMessageId = new MessageId();
+                            }
+
+                            lock (_queueLock)
+                            {
+                                _receiveMessageId = new MessageId();
                             }
 
                             _isClosed = false;
@@ -400,22 +426,22 @@ namespace Netly
                         {
                             case MessageType.Reliable:
                             {
-                                _messageId.Reliable++;
-                                return _messageId.Reliable;
+                                _sendMessageId.Reliable++;
+                                return _sendMessageId.Reliable;
                             }
                             case MessageType.ReliableUnordered:
                             {
-                                _messageId.ReliableUnordered++;
-                                return _messageId.ReliableUnordered;
+                                _sendMessageId.ReliableUnordered++;
+                                return _sendMessageId.ReliableUnordered;
                             }
                             case MessageType.Unreliable:
                             {
-                                return _messageId.Unreliable;
+                                return _sendMessageId.Unreliable;
                             }
                             case MessageType.UnreliableOrdered:
                             {
-                                _messageId.UnreliableOrdered++;
-                                return _messageId.UnreliableOrdered;
+                                _sendMessageId.UnreliableOrdered++;
+                                return _sendMessageId.UnreliableOrdered;
                             }
                             default:
                             {
@@ -464,6 +490,30 @@ namespace Netly
                         {
                             ReliableQueueTask();
                             Thread.Sleep(_resendDelay);
+                        }
+                    });
+
+                    Task.Run(() =>
+                    {
+                        byte[] pingData = { Config.PingBuffer };
+
+                        UpdateTimeoutTimer();
+
+                        while (IsOpened)
+                        {
+                            // send ping data to make connection active
+                            SendRaw(Host, ref pingData);
+
+                            lock (_timerLock)
+                            {
+                                if (_timeoutTimer <= DateTime.Now)
+                                {
+                                    // timeout
+                                    Close();
+                                }
+                            }
+
+                            Thread.Sleep(_pingDelay);
                         }
                     });
 
@@ -533,10 +583,40 @@ namespace Netly
                     }
                 }
 
+                private void UpdateTimeoutTimer()
+                {
+                    lock (_timerLock)
+                    {
+                        _timeoutTimer = DateTime.UtcNow.AddMilliseconds(_offlineTimeout);
+                    }
+                }
+
                 private void ProcessBuffer(ref byte[] data)
                 {
                     if (data.Length == 1)
                     {
+                        byte key = data[0];
+
+                        if (key == Config.CloseBuffer)
+                        {
+                            Close();
+                            return;
+                        }
+
+                        if (key == Config.OpenBuffer)
+                        {
+                            byte[] bytes = { Config.OpenBuffer };
+                            SendRaw(Host, ref bytes);
+                            return;
+                        }
+
+                        if (key == Config.PingBuffer)
+                        {
+                            UpdateTimeoutTimer();
+                            return;
+                        }
+
+                        // Unknown data 
                         return;
                     }
 
@@ -550,19 +630,29 @@ namespace Netly
                         return;
                     }
 
+                    var receivedBytes = package.Data;
                     MessageType messageType = (MessageType)package.Type;
 
                     switch (messageType)
                     {
                         case MessageType.Unreliable:
                         {
-                            var bytes = package.Data;
-                            PushResult(ref bytes, MessageType.Unreliable);
+                            PushResult(ref receivedBytes, MessageType.Unreliable);
                             break;
                         }
                         case MessageType.UnreliableOrdered:
                         {
-                            // TODO:
+                            if (_receiveMessageId.UnreliableOrdered >= package.Id)
+                            {
+                                // discard package
+                                // this also fix duplicable data
+                                break;
+                            }
+
+                            _receiveMessageId.UnreliableOrdered = package.Id;
+
+                            PushResult(ref receivedBytes, MessageType.UnreliableOrdered);
+
                             break;
                         }
                         case MessageType.Reliable:
