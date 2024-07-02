@@ -22,7 +22,7 @@ namespace Netly
                 private Socket _socket;
                 private bool _isOpeningOrClosing, _isClosed;
                 private readonly bool _isServer;
-                private int _connectTimeout;
+                private int _openTimeout;
 
                 private struct Config
                 {
@@ -41,7 +41,7 @@ namespace Netly
                     _socket = null;
                     _client = null;
                     _isServer = false;
-                    _connectTimeout = 3000;
+                    _openTimeout = 3000;
                     Host = Host.Default;
                 }
 
@@ -100,7 +100,7 @@ namespace Netly
                                             ackList.Add(buffer[0]);
                                         }
                                     }
-                                }).Wait(_connectTimeout);
+                                }).Wait(_openTimeout);
                             }
                             catch (Exception e)
                             {
@@ -122,7 +122,7 @@ namespace Netly
                             {
                                 throw new Exception
                                 (
-                                    $"A connection attempt failed because the connected party did not properly respond after a period of time ({_connectTimeout}ms), or established connection failed because connected host has failed to respond"
+                                    $"A connection attempt failed because the connected party did not properly respond after a period of time ({_openTimeout}ms), or established connection failed because connected host has failed to respond"
                                 );
                             }
 
@@ -237,6 +237,28 @@ namespace Netly
                 {
                     if (_socket == null || _isClosed) return false;
                     return true;
+                }
+
+                public void SetOpenTimeout(int value)
+                {
+                    if (IsOpened)
+                        throw new Exception
+                        (
+                            $"Isn't possible use `{nameof(SetOpenTimeout)}` while socket is already connected."
+                        );
+
+                    if (value <= 0)
+                        throw new Exception
+                        (
+                            $"Isn't possible use {nameof(SetOpenTimeout)} with a `0` or `negative` value"
+                        );
+
+                    _openTimeout = value;
+                }
+
+                public int GetOpenTimeout()
+                {
+                    return _openTimeout;
                 }
             }
         }

@@ -21,6 +21,12 @@
             ///     Is Opened? (return true if connected)
             /// </summary>
             bool IsOpened { get; }
+            
+            /// <summary>
+            ///     Connection opening timeout. is Milliseconds
+            /// <br/>(default value is 5000ms or 5s)
+            /// </summary>
+            int OpenTimeout { get; set; }
 
             /// <summary>
             ///     Actions container

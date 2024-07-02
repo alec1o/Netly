@@ -18,6 +18,13 @@ namespace Netly
             }
 
             public bool IsOpened => _to.IsOpened;
+
+            public int OpenTimeout
+            {
+                get => _to.GetOpenTimeout();
+                set => _to.SetOpenTimeout(value);
+            }
+
             public Host Host => _to.Host;
             public IRUDP.ClientTo To => _to;
             public IRUDP.ClientOn On => _on;
