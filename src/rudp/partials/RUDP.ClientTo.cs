@@ -35,7 +35,49 @@ namespace Netly
 
                 public Task Close()
                 {
-                    throw new NotImplementedException();
+                    if (IsOpened || _isOpeningOrClosing) return Task.CompletedTask;
+                    _isOpeningOrClosing = true;
+
+                    return Task.Run(() =>
+                    {
+                        if (IsOpened)
+                        {
+                            try
+                            {
+                                var data = new[] { Config.CloseBuffer };
+
+                                for (var i = 0; i < Config.CloseRepeat; i++)
+                                {
+                                    SendRaw(_isServer ? Host : null, ref data);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
+                        }
+
+                        if (!_isServer)
+                            try
+                            {
+                                _socket?.Shutdown(SocketShutdown.Both);
+                                _socket?.Close();
+                                _socket?.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
+                            finally
+                            {
+                                _socket = null;
+                            }
+
+                        _isOpeningOrClosing = false;
+                        _isClosed = true;
+
+                        On.OnClose?.Invoke(null, null);
+                    });
                 }
 
                 public void Data(byte[] data, MessageType messageType)
