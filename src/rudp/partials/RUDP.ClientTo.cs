@@ -47,15 +47,18 @@ namespace Netly
 
                 public void Event(string name, byte[] data, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    Send(null, NetlyEnvironment.EventManager.Create(name, data), messageType);
                 }
 
                 public void Event(string name, string data, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    Send(null, NetlyEnvironment.EventManager.Create(name, data.GetBytes()), messageType);
                 }
 
                 public void Event(string name, string data, MessageType messageType, Encoding encoding)
+                {
+                    Send(null, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)), messageType);
+                }
                 {
                     throw new NotImplementedException();
                 }
