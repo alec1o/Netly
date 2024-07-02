@@ -32,17 +32,17 @@ namespace Netly
 
                 public void Data(byte[] data, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    Send(null, data, messageType);
                 }
 
                 public void Data(string data, MessageType messageType)
                 {
-                    throw new NotImplementedException();
+                    Send(null, data.GetBytes(), messageType);
                 }
 
                 public void Data(string data, MessageType messageType, Encoding encoding)
                 {
-                    throw new NotImplementedException();
+                    Send(null, data.GetBytes(encoding), messageType);
                 }
 
                 public void Event(string name, byte[] data, MessageType messageType)
