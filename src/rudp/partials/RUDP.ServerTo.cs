@@ -41,7 +41,7 @@ namespace Netly
             {
                 lock (_clientsLocker)
                 {
-                    return _clients.Select(x => (IRUDP.Client)x).ToArray();
+                    return _clients.Where(x => x.IsOpened).Select(x => (IRUDP.Client)x).ToArray();
                 }
             }
 
@@ -268,6 +268,7 @@ namespace Netly
                     if (_contents.Count <= 0) continue;
 
                     (Host host, byte[] data) value;
+                    Client client;
 
                     lock (_contentsLooker)
                     {
@@ -283,8 +284,62 @@ namespace Netly
 
                     try
                     {
-                        // TODO: implement this
-                        _ = value;
+                        lock (_clientsLocker)
+                        {
+                            // find client
+                            client = _clients.FirstOrDefault(x => value.host.Equals(x.Host));
+                        }
+
+                        byte[] buffer = value.data;
+
+                        // use existent context
+                        if (client != null)
+                        {
+                            client.InjectBuffer(ref buffer);
+                            return;
+                        }
+
+                        // create new context
+                        client = new Client(value.host, _socket);
+                        // TODO: client.OpenTimeout = _acceptTimeout;
+
+                        // save context
+                        lock (_clientsLocker)
+                        {
+                            _clients.Add(client);
+                        }
+
+                        client.StartServerSideConnection(isError =>
+                        {
+                            if (isError)
+                            {
+                                // remove client from client list
+                                lock (_clientsLocker)
+                                {
+                                    _clients.Remove(client);
+                                }
+
+                                client = null;
+                            }
+                            else // connected successful
+                            {
+                                client.On.Close(() =>
+                                {
+                                    // connection closed
+                                    lock (_clientsLocker)
+                                    {
+                                        _clients.Remove(client);
+                                    }
+
+                                    client = null;
+                                });
+                                
+                                // invoke new client
+                                On.OnAccept?.Invoke(null, client);
+                            }
+                        });
+
+                        client.InjectBuffer(ref buffer);
                     }
                     catch (Exception e)
                     {

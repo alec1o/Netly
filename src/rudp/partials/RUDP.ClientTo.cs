@@ -21,7 +21,7 @@ namespace Netly
             private int _openTimeout;
             private ClientOn On => _client._on;
 
-            public ClientTo()
+            private ClientTo()
             {
                 Host = Host.Default;
                 _client = null;
@@ -37,8 +37,9 @@ namespace Netly
                 _isServer = false;
             }
 
-            public ClientTo(Host host, Socket socket) : this()
+            public ClientTo(Client client, Host host, Socket socket) : this()
             {
+                _client = client;
                 _socket = socket;
                 _isServer = true;
                 InitConnection(ref host);
@@ -230,7 +231,7 @@ namespace Netly
                         _connection = null;
                         On.OnClose?.Invoke(null, null);
                     },
-                    OnOpenFail = (message) =>
+                    OnOpenFail = message =>
                     {
                         // error on open connection
                         _connection = null;
@@ -249,9 +250,22 @@ namespace Netly
                 };
             }
 
-            public void StartConnection()
+            private void StartConnection()
             {
                 _connection.Open(_openTimeout).Wait();
+            }
+
+            public void InjectBuffer(ref byte[] bytes)
+            {
+                if (IsOpened)
+                {
+                    _connection?.InjectBuffer(bytes);
+                }
+            }
+
+            public void StartServerSideConnection(ref Action<bool> callback)
+            {
+                throw new NotImplementedException();
             }
         }
     }

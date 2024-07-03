@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using Netly.Interfaces;
 
 namespace Netly
@@ -10,6 +11,12 @@ namespace Netly
             internal readonly ClientOn _on;
             private readonly ClientTo _to;
 
+            public bool IsOpened => _to.IsOpened;
+            public Host Host => _to.Host;
+            public IRUDP.ClientTo To => _to;
+            public IRUDP.ClientOn On => _on;
+            public string Id { get; }
+
             public Client()
             {
                 Id = Guid.NewGuid().ToString();
@@ -17,7 +24,10 @@ namespace Netly
                 _to = new ClientTo(this);
             }
 
-            public bool IsOpened => _to.IsOpened;
+            public Client(Host host, Socket socket) : this()
+            {
+                _to = new ClientTo(this, host, socket);
+            }
 
             public int OpenTimeout
             {
@@ -25,10 +35,8 @@ namespace Netly
                 set => _to.SetOpenTimeout(value);
             }
 
-            public Host Host => _to.Host;
-            public IRUDP.ClientTo To => _to;
-            public IRUDP.ClientOn On => _on;
-            public string Id { get; }
+            internal void InjectBuffer(ref byte[] bytes) => _to.InjectBuffer(ref bytes);
+            internal void StartServerSideConnection(Action<bool> callback) => _to.StartServerSideConnection(ref callback);
         }
     }
 }

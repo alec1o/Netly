@@ -81,7 +81,7 @@ namespace Netly
             {
             }
 
-            public void Receive(byte[] buffer)
+            public void InjectBuffer(byte[] buffer)
             {
             }
 
