@@ -8,7 +8,7 @@ namespace Netly
     {
         public partial class Server : IRUDP.Server
         {
-            private readonly ServerOn _on;
+            internal readonly ServerOn _on;
             private readonly ServerTo _to;
 
             public Server()
