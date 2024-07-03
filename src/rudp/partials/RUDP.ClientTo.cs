@@ -16,7 +16,7 @@ namespace Netly
             private Client _client;
             private Socket _socket;
             private Connection _connection;
-            private bool _isOpeningOrClosing;
+            private bool _isOpeningOrClosing, _isConnecting;
             private readonly bool _isServer;
             private int _openTimeout;
             private ClientOn On => _client._on;
@@ -29,6 +29,7 @@ namespace Netly
                 _connection = null;
                 _isOpeningOrClosing = false;
                 _openTimeout = 5000;
+                _isConnecting = false;
             }
 
             public ClientTo(Client client) : this()
@@ -223,18 +224,21 @@ namespace Netly
                     {
                         // connection opened
                         Host = nextHost;
+                        _isConnecting = false;
                         On.OnOpen?.Invoke(null, null);
                     },
                     OnClose = () =>
                     {
                         // connection closed
                         _connection = null;
+                        _isConnecting = false;
                         On.OnClose?.Invoke(null, null);
                     },
                     OnOpenFail = message =>
                     {
                         // error on open connection
                         _connection = null;
+                        _isConnecting = false;
                         On.OnError?.Invoke(null, new Exception(message));
                     },
                     OnData = (data, type) =>
@@ -252,6 +256,12 @@ namespace Netly
 
             private void StartConnection()
             {
+                if (!_isServer)
+                {
+                    _isConnecting = true;
+                    InitReceiver();
+                }
+
                 _connection.Open(_openTimeout).Wait();
             }
 
@@ -266,6 +276,76 @@ namespace Netly
             public void StartServerSideConnection(ref Action<bool> callback)
             {
                 throw new NotImplementedException();
+            }
+
+            private void InitReceiver()
+            {
+                var endpoint = Host.EndPoint;
+
+                var buffer = new byte
+                [
+                    // Maximum/Default receive buffer length.
+                    (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
+                ];
+
+                ReceiverUpdate();
+
+                void ReceiverUpdate()
+                {
+                    if (!_isConnecting)
+                    {
+                        if (!IsOpened)
+                        {
+                            Close();
+                            return;
+                        }
+                    }
+
+                    _socket.BeginReceiveFrom
+                    (
+                        buffer,
+                        0,
+                        buffer.Length,
+                        SocketFlags.None,
+                        ref endpoint,
+                        ReceiveCallback,
+                        null
+                    );
+                }
+
+                void ReceiveCallback(IAsyncResult result)
+                {
+                    try
+                    {
+                        var size = _socket.EndReceiveFrom(result, ref endpoint);
+
+                        if (size <= 0)
+                        {
+                            if (IsOpened)
+                                ReceiverUpdate();
+                            else
+                                Close();
+
+                            return;
+                        }
+
+                        var data = new byte[size];
+
+                        Array.Copy(buffer, 0, data, 0, data.Length);
+
+                        ReceiverUpdate();
+
+                        InjectBuffer(ref data);
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                        if (!_isConnecting)
+                        {
+                            Close();
+                        }
+                    }
+                }
             }
         }
     }
