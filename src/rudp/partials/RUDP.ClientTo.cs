@@ -23,6 +23,7 @@ namespace Netly
 
             public ClientTo()
             {
+                Host = Host.Default;
                 _client = null;
                 _socket = null;
                 _connection = null;
@@ -213,11 +214,14 @@ namespace Netly
 
             private void InitConnection(ref Host host)
             {
+                var nextHost = host;
+
                 _connection = new Connection(host, _socket, _isServer)
                 {
                     OnOpen = () =>
                     {
                         // connection opened
+                        Host = nextHost;
                         On.OnOpen?.Invoke(null, null);
                     },
                     OnClose = () =>
