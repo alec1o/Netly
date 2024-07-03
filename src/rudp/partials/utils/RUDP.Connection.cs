@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Byter;
 
 namespace Netly
 {
@@ -24,7 +25,7 @@ namespace Netly
             public Action<byte[], MessageType> OnData;
             public Action<string, byte[], MessageType> OnEvent;
             private readonly object _sendIdLocker, _databaseLocker;
-            private const byte PingByte = 0, SynByte = 16, AckByte = 32, SynAck = 64, Fin = 128;
+            private const byte PingByte = 0, SynByte = 16, AckByte = 32, SynAckByte = 64, FinByte = 128;
 
             private class Package
             {
@@ -35,6 +36,9 @@ namespace Netly
 
             private Connection()
             {
+                var logger = NetlyEnvironment.Logger;
+                string @class = nameof(Connection);
+                
                 _isServer = false;
                 _database = new Dictionary<uint, bool>();
                 _receivedQueue = new Dictionary<uint, byte[]>();
@@ -42,13 +46,14 @@ namespace Netly
                 _sendId = 0;
                 _framing = new NetlyEnvironment.MessageFraming();
                 _isOpeningOrClosing = false;
-                OnOpen = () => { };
-                OnClose = () => { };
-                OnOpenFail = (_) => { };
-                OnData = (_, __) => { };
-                OnEvent = (_, __, ___) => { };
                 _sendIdLocker = new object();
                 _databaseLocker = new object();
+                
+                OnOpen = () => logger.Create($"{@class} -> {nameof(OnOpen)}");
+                OnClose = () => logger.Create($"{@class} -> {nameof(OnClose)}");
+                OnOpenFail = e => logger.Create($"{@class} -> {nameof(OnOpenFail)}: {e}");
+                OnData = (d, t) => logger.Create($"{@class} -> {nameof(OnData)}: {d.GetString()} ({t})");
+                OnEvent = (n, d, t) => logger.Create($"{@class} -> {nameof(OnData)} ({n}): {d.GetString()} ({t})");
             }
 
             public Connection(Host host, Socket socket, bool isServer) : this()
