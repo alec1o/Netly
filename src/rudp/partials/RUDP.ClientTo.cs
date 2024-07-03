@@ -275,7 +275,7 @@ namespace Netly
 
             public void StartServerSideConnection(ref Action<bool> callback)
             {
-                throw new NotImplementedException();
+                _connection.OnServer = callback;
             }
 
             private void InitReceiver()

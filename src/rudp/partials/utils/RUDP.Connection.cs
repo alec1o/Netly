@@ -20,6 +20,7 @@ namespace Netly
             private bool _isOpeningOrClosing;
             public Action OnOpen, OnClose;
             public Action<string> OnOpenFail;
+            public Action<bool> OnServer;
             public Action<byte[], MessageType> OnData;
             public Action<string, byte[], MessageType> OnEvent;
             private readonly object _sendIdLocker, _databaseLocker;
@@ -60,6 +61,7 @@ namespace Netly
             public Task Open(int timeout)
             {
                 if (_isOpeningOrClosing || IsOpened) return Task.CompletedTask;
+                _isOpeningOrClosing = true;
 
                 return Task.Run(() =>
                 {
@@ -70,6 +72,7 @@ namespace Netly
             public Task Close()
             {
                 if (_isOpeningOrClosing || !IsOpened) return Task.CompletedTask;
+                _isOpeningOrClosing = true;
 
                 return Task.Run(() =>
                 {
