@@ -21,12 +21,19 @@
             ///     Is Opened? (return true if connected)
             /// </summary>
             bool IsOpened { get; }
-            
+
             /// <summary>
-            ///     Connection opening timeout. is Milliseconds
-            /// <br/>(default value is 5000ms or 5s)
+            ///     Connection handshake timeout. [is milliseconds >= 1000]
+            /// <br/>NOTE: (default value is 5000ms or 5s; 
             /// </summary>
-            int OpenTimeout { get; set; }
+            int HandshakeTimeout { get; set; }
+
+            /// <summary>
+            ///     Timeout that a connection can remain unresponsive, after the timeout the connection will be closed. [is milliseconds >= 2000]
+            /// <br/>NOTE: (default value is 5000ms or 5s)
+            /// <br/>NOTE: Works after handshake successful
+            /// </summary>
+            int NoResponseTimeout { get; set; }
 
             /// <summary>
             ///     Actions container

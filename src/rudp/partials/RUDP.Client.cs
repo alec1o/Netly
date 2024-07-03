@@ -29,14 +29,22 @@ namespace Netly
                 _to = new ClientTo(this, host, socket);
             }
 
-            public int OpenTimeout
+            public int HandshakeTimeout
             {
-                get => _to.GetOpenTimeout();
-                set => _to.SetOpenTimeout(value);
+                get => _to.GetHandshakeTimeout();
+                set => _to.SetHandshakeTimeout(value);
+            }
+
+            public int NoResponseTimeout
+            {
+                get => _to.GetNoResponseTimeout();
+                set => _to.SetNoResponseTimeout(value);
             }
 
             internal void InjectBuffer(ref byte[] bytes) => _to.InjectBuffer(ref bytes);
-            internal void StartServerSideConnection(Action<bool> callback) => _to.StartServerSideConnection(ref callback);
+
+            internal void StartServerSideConnection(Action<bool> callback) =>
+                _to.StartServerSideConnection(ref callback);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Netly
             private Connection _connection;
             private bool _isOpeningOrClosing, _isConnecting;
             private readonly bool _isServer;
-            private int _openTimeout;
+            private int _handshakeTimeout, _noResponseTimeout;
             private ClientOn On => _client._on;
 
             private ClientTo()
@@ -28,7 +28,8 @@ namespace Netly
                 _socket = null;
                 _connection = null;
                 _isOpeningOrClosing = false;
-                _openTimeout = 5000;
+                _handshakeTimeout = 5000;
+                _noResponseTimeout = 5000;
                 _isConnecting = false;
             }
 
@@ -192,26 +193,48 @@ namespace Netly
                 }
             }
 
-            public int GetOpenTimeout()
+            public int GetHandshakeTimeout()
             {
-                return _openTimeout;
+                return _handshakeTimeout;
+            }
+            
+            public int GetNoResponseTimeout()
+            {
+                return _noResponseTimeout;
             }
 
-            public void SetOpenTimeout(int value)
+            public void SetHandshakeTimeout(int value)
             {
                 if (IsOpened)
                     throw new Exception
                     (
-                        $"Isn't possible use `{nameof(SetOpenTimeout)}` while socket is already connected."
+                        $"Isn't possible use `{nameof(SetHandshakeTimeout)}` while socket is already connected."
                     );
 
                 if (value < 1000)
                     throw new Exception
                     (
-                        $"Isn't possible use {nameof(SetOpenTimeout)} with value less than `1000`"
+                        $"Isn't possible use {nameof(SetHandshakeTimeout)} with value less than `1000`"
                     );
 
-                _openTimeout = value;
+                _handshakeTimeout = value;
+            }
+            
+            public void SetNoResponseTimeout(int value)
+            {
+                if (IsOpened)
+                    throw new Exception
+                    (
+                        $"Isn't possible use `{nameof(SetNoResponseTimeout)}` while socket is already connected."
+                    );
+
+                if (value < 1000)
+                    throw new Exception
+                    (
+                        $"Isn't possible use {nameof(SetNoResponseTimeout)} with value less than `2000`"
+                    );
+
+                _noResponseTimeout = value;
             }
 
             private void InitConnection(ref Host host)
@@ -252,6 +275,9 @@ namespace Netly
                         On.OnEvent?.Invoke(null, (name, data, type));
                     }
                 };
+
+                _connection.HandshakeTimeout = GetHandshakeTimeout();
+                _connection.NoResponseTimeout = GetNoResponseTimeout();
             }
 
             private void StartConnection()
@@ -262,7 +288,7 @@ namespace Netly
                     InitReceiver();
                 }
 
-                _connection.Open(_openTimeout).Wait();
+                _connection.Open().Wait();
             }
 
             public void InjectBuffer(ref byte[] bytes)

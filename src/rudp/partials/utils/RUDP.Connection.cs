@@ -25,6 +25,7 @@ namespace Netly
             public Action<byte[], MessageType> OnData;
             public Action<string, byte[], MessageType> OnEvent;
             private readonly object _sendIdLocker, _databaseLocker;
+            public int HandshakeTimeout, NoResponseTimeout;
             private const byte PingByte = 0, SynByte = 16, AckByte = 32, SynAckByte = 64, FinByte = 128;
 
             private class Package
@@ -38,7 +39,7 @@ namespace Netly
             {
                 var logger = NetlyEnvironment.Logger;
                 string @class = nameof(Connection);
-                
+
                 _isServer = false;
                 _database = new Dictionary<uint, bool>();
                 _receivedQueue = new Dictionary<uint, byte[]>();
@@ -48,7 +49,9 @@ namespace Netly
                 _isOpeningOrClosing = false;
                 _sendIdLocker = new object();
                 _databaseLocker = new object();
-                
+                HandshakeTimeout = 5000; // 5s
+                NoResponseTimeout = 10000; // 10s
+
                 OnOpen = () => logger.Create($"{@class} -> {nameof(OnOpen)}");
                 OnClose = () => logger.Create($"{@class} -> {nameof(OnClose)}");
                 OnOpenFail = e => logger.Create($"{@class} -> {nameof(OnOpenFail)}: {e}");
@@ -63,7 +66,7 @@ namespace Netly
                 _isServer = isServer;
             }
 
-            public Task Open(int timeout)
+            public Task Open()
             {
                 if (_isOpeningOrClosing || IsOpened) return Task.CompletedTask;
                 _isOpeningOrClosing = true;
