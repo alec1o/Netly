@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Byter;
@@ -12,46 +11,6 @@ namespace Netly
     {
         internal sealed class Connection
         {
-            public bool IsOpened { get; private set; }
-            public int HandshakeTimeout { get; set; }
-            public int NoResponseTimeout { get; set; }
-
-            private readonly bool _isServer;
-            private readonly Host _host;
-            private readonly Socket _socket;
-            private readonly List<byte[]> _injectQueue;
-            private readonly NetlyEnvironment.MessageFraming _framing;
-
-            private readonly Dictionary<uint, byte[]>
-                _localReliableQueue,
-                _remoteUnorderedReliableQueue;
-
-
-            private uint
-                _localReliableId,
-                _localSequencedId,
-                _remoteReliableId,
-                _remoteSequencedId;
-
-            private bool
-                _isOpeningOrClosing,
-                _isUpdating;
-
-            private readonly object
-                _injectQueueLocker,
-                _localReliableIdLocker,
-                _localSequencedIdLocker,
-                _localReliableQueueLocker;
-
-            public Action
-                OnOpen,
-                OnClose;
-
-            public Action<string> OnOpenFail;
-            public Action<bool> OnServer;
-            public Action<byte[], MessageType> OnData;
-            public Action<string, byte[], MessageType> OnEvent;
-
             private const byte
                 PingByte = 0,
                 SynByte = 16,
@@ -61,15 +20,56 @@ namespace Netly
                 DataAckByte = 255;
 
             /// <summary>
-            /// PI * 999<br/>
-            /// What is the meaning of Juice Wrld's hand sign? 999 represents taking any bad situation or struggle and turning it into something positive and using it to push yourself forward. Nine, nine, nine represents turning a bad situation or struggle into something positive and pushing yourself forward.
+            ///     PI * 999<br />
+            ///     What is the meaning of Juice Wrld's hand sign? 999 represents taking any bad situation or struggle and turning it
+            ///     into something positive and using it to push yourself forward. Nine, nine, nine represents turning a bad situation
+            ///     or struggle into something positive and pushing yourself forward.
             /// </summary>
             private const float InternalActionKey = (float)Math.PI * 999;
+
+            private readonly NetlyEnvironment.MessageFraming _framing;
+            private readonly Host _host;
+            private readonly List<byte[]> _injectQueue;
+
+            private readonly object
+                _injectQueueLocker,
+                _localReliableIdLocker,
+                _localSequencedIdLocker,
+                _localReliableQueueLocker;
+
+            private readonly bool _isServer;
+
+            private readonly Dictionary<uint, byte[]>
+                _localReliableQueue,
+                _remoteUnorderedReliableQueue;
+
+            private readonly Socket _socket;
+
+            private bool
+                _isOpeningOrClosing,
+                _isUpdating;
+
+
+            private uint
+                _localReliableId,
+                _localSequencedId,
+                _remoteReliableId,
+                _remoteSequencedId;
+
+            public Action<byte[], MessageType> OnData;
+            public Action<string, byte[], MessageType> OnEvent;
+
+            public Action
+                OnOpen,
+                OnClose;
+
+            public Action<string> OnOpenFail;
+            public Action<bool> OnServer;
 
             private Connection()
             {
                 var logger = NetlyEnvironment.Logger;
-                string @class = nameof(Connection);
+                var @class = nameof(Connection);
 
                 _isServer = false;
                 _isUpdating = false;
@@ -108,6 +108,10 @@ namespace Netly
                 _socket = socket ?? throw new NullReferenceException(nameof(socket));
                 _isServer = isServer;
             }
+
+            public bool IsOpened { get; }
+            public int HandshakeTimeout { get; set; }
+            public int NoResponseTimeout { get; set; }
 
             public Task Open()
             {
