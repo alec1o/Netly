@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -278,12 +279,43 @@ namespace Netly
                 if (_isUpdating) return;
                 _isUpdating = true;
 
+                var updateReliableStopwatch = new Stopwatch();
+                var sendPingStopwatch = new Stopwatch();
+
+                const int updateReliableTimerMs = 10;
+                const int sendPingTimerMs = 75;
+
                 while (_isUpdating)
                 {
                     try
                     {
                         UpdateInjection();
-                        UpdateReliable();
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                    }
+
+                    try
+                    {
+                        if (updateReliableStopwatch.ElapsedMilliseconds >= updateReliableTimerMs)
+                        {
+                            UpdateReliable();
+                            updateReliableStopwatch.Restart();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                    }
+
+                    try
+                    {
+                        if (sendPingStopwatch.ElapsedMilliseconds >= sendPingTimerMs)
+                        {
+                            SendPing();
+                            sendPingStopwatch.Restart();
+                        }
                     }
                     catch (Exception e)
                     {
@@ -291,7 +323,15 @@ namespace Netly
                     }
                 }
 
+                // LOOP END!
+
+                updateReliableStopwatch.Stop();
+                sendPingStopwatch.Stop();
                 _isUpdating = false;
+            }
+
+            private void SendPing()
+            {
             }
 
             private void UpdateInjection()
