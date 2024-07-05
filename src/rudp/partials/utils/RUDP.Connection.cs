@@ -14,17 +14,17 @@ namespace Netly
             private readonly Host _host;
             private readonly Socket _socket;
             public bool IsOpened { get; private set; }
-            private readonly Dictionary<uint, bool> _database;
+            private readonly Dictionary<uint, byte[]> _localReliableQueue;
             private readonly Dictionary<uint, byte[]> _receivedQueue;
             private readonly NetlyEnvironment.MessageFraming _framing;
-            private uint _receivedId, _sendId;
+            private uint _localReliableId, _localSequencedId;
             private bool _isOpeningOrClosing;
             public Action OnOpen, OnClose;
             public Action<string> OnOpenFail;
             public Action<bool> OnServer;
             public Action<byte[], MessageType> OnData;
             public Action<string, byte[], MessageType> OnEvent;
-            private readonly object _sendIdLocker, _databaseLocker;
+            private readonly object _localReliableIdLocker, _localSequencedIdLocker, _localReliableQueueLocker;
             public int HandshakeTimeout, NoResponseTimeout;
             private const byte PingByte = 0, SynByte = 16, AckByte = 32, SynAckByte = 64, FinByte = 128;
 
@@ -41,14 +41,20 @@ namespace Netly
                 string @class = nameof(Connection);
 
                 _isServer = false;
-                _database = new Dictionary<uint, bool>();
-                _receivedQueue = new Dictionary<uint, byte[]>();
-                _receivedId = 0;
-                _sendId = 0;
-                _framing = new NetlyEnvironment.MessageFraming();
                 _isOpeningOrClosing = false;
-                _sendIdLocker = new object();
-                _databaseLocker = new object();
+                _framing = new NetlyEnvironment.MessageFraming();
+
+                _localReliableQueue = new Dictionary<uint, byte[]>();
+                _localReliableQueueLocker = new object();
+
+                _localReliableId = 0;
+                _localReliableIdLocker = new object();
+
+                _localSequencedId = 0;
+                _localSequencedIdLocker = new object();
+
+                _receivedQueue = new Dictionary<uint, byte[]>();
+
                 HandshakeTimeout = 5000; // 5s
                 NoResponseTimeout = 10000; // 10s
 
@@ -73,7 +79,7 @@ namespace Netly
 
                 return Task.Run(() =>
                 {
-//
+                    //
                 });
             }
 
@@ -90,26 +96,113 @@ namespace Netly
 
             public void Send(ref byte[] bytes, MessageType messageType)
             {
+                if (bytes == null || bytes.Length <= 0) return;
+
+                try
+                {
+                    var primitive = new Primitive();
+
+                    switch (messageType)
+                    {
+                        case MessageType.Unreliable:
+                        {
+                            primitive.Add.Byte((byte)messageType);
+                            break;
+                        }
+                        case MessageType.Sequenced:
+                        {
+                            uint messageId = GetNewSequencedId();
+                            primitive.Add.Byte((byte)messageType);
+                            primitive.Add.UInt(messageId);
+                            break;
+                        }
+                        case MessageType.Reliable:
+                        {
+                            uint messageId = GetNewReliableId();
+                            primitive.Add.Byte((byte)messageType);
+                            primitive.Add.UInt(messageId);
+
+                            // this message just will be removed from _localReliableQueue when receive message Ack 
+                            lock (_localReliableQueueLocker)
+                            {
+                                _localReliableQueue.Add(messageId, bytes);
+                            }
+
+                            break;
+                        }
+                        default:
+                        {
+                            throw new InvalidOperationException($"{messageType} is not implemented.");
+                        }
+                    }
+
+                    primitive.Add.Bytes(bytes);
+
+                    var data = primitive.GetBytes();
+                    
+                    primitive.Reset();
+
+                    if (_isServer)
+                    {
+                        // this way of send just work on windows and linux, except macOS (maybe iOs)
+                        _socket?.BeginSendTo
+                        (
+                            data,
+                            0,
+                            data.Length,
+                            SocketFlags.None,
+                            _host.EndPoint,
+                            null,
+                            null
+                        );
+                    }
+                    else
+                    {
+                        // this way of send just work on windows and linux, include macOS and iOs
+                        _socket?.BeginSend
+                        (
+                            data,
+                            0,
+                            data.Length,
+                            SocketFlags.None,
+                            null,
+                            null
+                        );
+                    }
+                }
+                catch (Exception e)
+                {
+                    NetlyEnvironment.Logger.Create(e);
+                }
             }
 
             public void InjectBuffer(byte[] buffer)
             {
             }
 
-            private uint GetNextId()
+            private uint GetNewReliableId()
             {
-                lock (_sendIdLocker)
+                lock (_localReliableIdLocker)
                 {
-                    _sendId++;
-                    return _sendId;
+                    _localReliableId++;
+                    return _localReliableId;
+                }
+            }
+
+            private uint GetNewSequencedId()
+            {
+                lock (_localSequencedIdLocker)
+                {
+                    _localSequencedId++;
+                    return _localSequencedId;
                 }
             }
 
             private bool IsReceived(uint id)
             {
-                lock (_databaseLocker)
+                lock (_localReliableQueueLocker)
                 {
-                    return _database.ContainsKey(id);
+                    return _localReliableQueue.ContainsKey(id);
                 }
             }
         }
