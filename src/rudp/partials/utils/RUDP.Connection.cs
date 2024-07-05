@@ -332,6 +332,11 @@ namespace Netly
 
             private void SendPing()
             {
+                var primitive = new Primitive();
+                primitive.Add.Byte(PingByte);
+                primitive.Add.Float(InternalActionKey);
+                var bytes = primitive.GetBytes();
+                Send(ref bytes, MessageType.Unreliable);
             }
 
             private void UpdateInjection()
@@ -378,6 +383,21 @@ namespace Netly
                                     // check is the flag
                                     switch (tag)
                                     {
+                                        case PingByte:
+                                        {
+                                            var key = myPrimitive.Get.Float();
+
+                                            if (myPrimitive.IsValid && InternalActionKey.Equals(key))
+                                            {
+                                                isInternalAction = true;
+                                                
+                                                // update latest ping received timer
+                                                // TODO implement this.
+                                            }
+
+                                            break;
+                                        }
+                                        
                                         case DataAckByte:
                                         {
                                             uint dataAckId = myPrimitive.Get.UInt();
