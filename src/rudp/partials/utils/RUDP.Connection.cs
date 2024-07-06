@@ -12,12 +12,11 @@ namespace Netly
         internal sealed class Connection
         {
             private const byte
-                PingByte = 0,
-                SynByte = 16,
-                AckByte = 32,
-                SynAckByte = 64,
-                FinByte = 128,
-                DataAckByte = 255;
+                PingByte = 0, // ping message
+                ConnectionSynByte = 16, // open connection request
+                ConnectionAckByte = 64, // accept connection request
+                ConnectionFinByte = 128, // close connection request
+                DataAckByte = 255; // request and response ack, for data
 
             /// <summary>
             ///     PI * 999<br />
@@ -335,7 +334,7 @@ namespace Netly
 
                     lock (_pingDateTimeLocker)
                     {
-                        if (DateTime.UtcNow > _pingDateTime )
+                        if (DateTime.UtcNow > _pingDateTime)
                         {
                             Close();
                             NetlyEnvironment.Logger.Create("RUDP Connection closed by Timeout.");
@@ -378,189 +377,116 @@ namespace Netly
 
                     if (!primitive.IsValid) continue; // ignored data
 
-                    switch (messageType)
+                    if (messageType == MessageType.Unreliable)
                     {
-                        case MessageType.Unreliable:
-                        {
-                            byte[] data = primitive.GetBytes();
+                        byte[] data = primitive.GetBytes();
 
-                            if (!primitive.IsValid) break;
-                            bool isInternalAction = false;
+                        if (primitive.IsValid == false) break;
 
-                            // detect if this package is Ack, DataAck, Fin...
-                            /* tag (1+1) (2); ActionKey: 4+1 (5); = 7; */
-                            /* 5 is uint ack package data: 4+1 (5); = 7 + 5 (12); NOTE: (5) this is max overhead */
-                            if (data.Length >= 7 && data.Length <= 7 + 5)
-                            {
-                                var myPrimitive = new Primitive(data);
-
-                                // read rudp tag
-                                byte tag = myPrimitive.Get.Byte();
-
-                                // check if rudp tag exist
-                                if (myPrimitive.IsValid)
-                                {
-                                    // check is the flag
-                                    switch (tag)
-                                    {
-                                        case PingByte:
-                                        {
-                                            var key = myPrimitive.Get.Float();
-
-                                            if (myPrimitive.IsValid && InternalActionKey.Equals(key))
-                                            {
-                                                isInternalAction = true;
-                                                // update latest ping received timer
-                                                UpdatePing();
-                                            }
-
-                                            break;
-                                        }
-
-                                        case DataAckByte:
-                                        {
-                                            uint dataAckId = myPrimitive.Get.UInt();
-                                            var key = myPrimitive.Get.Float();
-
-                                            if (myPrimitive.IsValid && InternalActionKey.Equals(key))
-                                            {
-                                                isInternalAction = true;
-
-                                                // remove package from ack queue
-
-                                                lock (_localReliableQueueLocker)
-                                                {
-                                                    if (_localReliableQueue.ContainsKey(dataAckId))
-                                                    {
-                                                        // remove from local queue.
-                                                        // this mean the endpoint answered ack (received) to this package id
-                                                        _localReliableQueue.Remove(dataAckId);
-                                                    }
-                                                }
-                                            }
-
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                myPrimitive.Reset();
-                            }
-
-                            // dispatch
-                            if (!isInternalAction)
-                            {
+                        if (IsInternalUnreliablePackage(ref data) == false)
+                            if (IsOpened)
                                 OnData?.Invoke(data, MessageType.Unreliable);
-                            }
+                    }
+                    else if (messageType == MessageType.Sequenced)
+                    {
+                        uint id = primitive.Get.UInt();
 
+                        if (!primitive.IsValid) break;
+
+                        byte[] data = primitive.GetBytes();
+
+                        if (!primitive.IsValid) break;
+
+                        if (id > _remoteSequencedId) // check latest sequenced
+                        {
+                            _remoteSequencedId = id; // update latest sequenced
+                            if (IsOpened) OnData?.Invoke(data, MessageType.Sequenced); // dispatch
+                        }
+                    }
+                    else if (messageType == MessageType.Reliable)
+                    {
+                        uint id = primitive.Get.UInt();
+
+                        if (!primitive.IsValid) break;
+
+                        byte[] data = primitive.GetBytes();
+
+                        if (!primitive.IsValid) break;
+
+                        // detect if message already received and answer the ack
+                        if (id <= _remoteReliableId)
+                        {
+                            SendPackageAck(id);
                             break;
                         }
-                        case MessageType.Sequenced:
+
+                        void UpdateLatestReliableId(uint latestId) => _remoteReliableId = latestId;
+
+                        void DispatchLatestReliablePackage(ref byte[] latestPackage)
                         {
-                            uint id = primitive.Get.UInt();
-
-                            if (!primitive.IsValid) break;
-
-                            byte[] data = primitive.GetBytes();
-
-                            if (!primitive.IsValid) break;
-
-                            // check latest sequenced
-                            if (id > _remoteSequencedId)
-                            {
-                                // update latest sequenced
-                                _remoteSequencedId = id;
-                                // dispatch
-                                OnData?.Invoke(data, MessageType.Sequenced);
-                            }
-
-                            break;
+                            if (IsInternalReliablePackage(ref latestPackage) == false)
+                                if (IsOpened)
+                                    OnData?.Invoke(latestPackage, MessageType.Reliable);
                         }
-                        case MessageType.Reliable:
+
+                        // detect if the message is sequenced or save on unordered queue to be sequenced in future
+                        if (id == (_remoteReliableId + 1)) // is current
                         {
-                            uint id = primitive.Get.UInt();
+                            // dispatch
+                            DispatchLatestReliablePackage(ref data);
 
-                            if (!primitive.IsValid) break;
+                            // dispatch current package
+                            // update latest reliable ordered
+                            UpdateLatestReliableId(id);
 
-                            byte[] data = primitive.GetBytes();
-
-                            if (!primitive.IsValid) break;
-
-                            // detect if message already received and answer the ack
-                            if (id <= _remoteReliableId)
+                            // try dispatch unordered package
+                            if (_remoteUnorderedReliableQueue.Count > 0)
                             {
-                                SendPackageAck(id);
-                                break;
-                            }
-
-                            void UpdateLatestReliableId(uint latestId) => _remoteReliableId = latestId;
-
-                            void DispatchLatestReliablePackage(ref byte[] latestPackage) =>
-                                OnData?.Invoke(latestPackage, MessageType.Reliable);
-
-                            // detect if the message is sequenced or save on unordered queue to be sequenced in future
-                            if (id == (_remoteReliableId + 1)) // is current
-                            {
-                                // dispatch
-                                DispatchLatestReliablePackage(ref data);
-
-                                // dispatch current package
-                                // update latest reliable ordered
-                                UpdateLatestReliableId(id);
-
-                                // try dispatch unordered package
-                                if (_remoteUnorderedReliableQueue.Count > 0)
+                                uint GetNextId()
                                 {
-                                    uint GetNextId()
-                                    {
-                                        return _remoteReliableId + 1;
-                                    }
-
-                                    while (_remoteUnorderedReliableQueue.ContainsKey(GetNextId()))
-                                    {
-                                        var nextId = GetNextId();
-
-                                        // get current package from unordered queue
-                                        var unorderedData = _remoteUnorderedReliableQueue[nextId];
-
-                                        // dispatch
-                                        DispatchLatestReliablePackage(ref unorderedData);
-
-                                        // dispatch current package
-                                        // update latest reliable ordered
-                                        UpdateLatestReliableId(nextId);
-
-                                        // delete the unordered package because was ordered correctly
-                                        _remoteUnorderedReliableQueue.Remove(nextId);
-                                    }
+                                    return _remoteReliableId + 1;
                                 }
 
-                                // answer ack
+                                while (_remoteUnorderedReliableQueue.ContainsKey(GetNextId()))
+                                {
+                                    var nextId = GetNextId();
+
+                                    // get current package from unordered queue
+                                    var unorderedData = _remoteUnorderedReliableQueue[nextId];
+
+                                    // dispatch
+                                    DispatchLatestReliablePackage(ref unorderedData);
+
+                                    // dispatch current package
+                                    // update latest reliable ordered
+                                    UpdateLatestReliableId(nextId);
+
+                                    // delete the unordered package because was ordered correctly
+                                    _remoteUnorderedReliableQueue.Remove(nextId);
+                                }
+                            }
+
+                            // answer ack
+                            SendPackageAck(id);
+                        }
+                        else
+                        {
+                            // save this package to be dispatch on ordered way
+                            if (_remoteUnorderedReliableQueue.ContainsKey(id))
+                            {
+                                // package already received but not dispatched because is unordered, answer the ack
                                 SendPackageAck(id);
                             }
                             else
                             {
-                                // save this package to be dispatch on ordered way
-                                if (_remoteUnorderedReliableQueue.ContainsKey(id))
-                                {
-                                    // package already received but not dispatched because is unordered, answer the ack
-                                    SendPackageAck(id);
-                                }
-                                else
-                                {
-                                    // set received unordered data to queue
-                                    _remoteUnorderedReliableQueue.Add(id, data);
+                                // set received unordered data to queue
+                                _remoteUnorderedReliableQueue.Add(id, data);
 
-                                    // answer ack
-                                    SendPackageAck(id);
-                                }
+                                // answer ack
+                                SendPackageAck(id);
                             }
-
-                            break;
                         }
                     }
-
-                    primitive.Reset();
                 }
             }
 
@@ -596,6 +522,101 @@ namespace Netly
                 {
                     _pingDateTime = DateTime.UtcNow.AddMilliseconds(NoResponseTimeout);
                 }
+            }
+
+            private bool IsInternalUnreliablePackage(ref byte[] data)
+            {
+                if (data.Length >= 5 && data.Length <= 20)
+                {
+                    var primitive = new Primitive(data);
+
+                    byte tag = primitive.Get.Byte();
+
+                    if (primitive.IsValid == false) return false;
+
+                    if (tag == PingByte)
+                    {
+                        var key = primitive.Get.Float();
+
+                        if (primitive.IsValid && InternalActionKey.Equals(key))
+                        {
+                            UpdatePing();
+
+                            return true;
+                        }
+                    }
+                    else if (tag == DataAckByte)
+                    {
+                        var dataAckId = primitive.Get.UInt();
+                        var key = primitive.Get.Float();
+
+                        if (primitive.IsValid && InternalActionKey.Equals(key))
+                        {
+                            // remove package from ack queue
+                            // this mean the endpoint answered ack (received) to this package id
+                            lock (_localReliableQueueLocker)
+                            {
+                                if (_localReliableQueue.ContainsKey(dataAckId))
+                                {
+                                    _localReliableQueue.Remove(dataAckId);
+                                }
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            private bool IsInternalReliablePackage(ref byte[] data)
+            {
+                /*
+                |-------------------------------------------|
+                |   CLIENT --syn-------> SERVER             |
+                |   SERVER <--syn-ack--- SERVER             |
+                |   [CONNECTION OPENED.]                    |
+                |                                           |
+                |   CLIENT/SERVER ----fin---> CLIENT/SERVER |
+                |   [CONNECTION CLOSE.]                     |
+                |-------------------------------------------|
+                */
+
+                var primitive = new Primitive(data);
+
+                var tag = primitive.Get.Byte();
+
+                if (primitive.IsValid == false) return false;
+
+                if (tag == ConnectionFinByte)
+                {
+                    // implement disconnect
+                    var key = primitive.Get.Float();
+
+                    if (primitive.IsValid && InternalActionKey.Equals(key))
+                    {
+                        // update latest ping received timer
+                        Close(); // close connection by request 
+                        return true;
+                    }
+                }
+                else if (tag == ConnectionSynByte)
+                {
+                    if (!_isServer)
+                    {
+                        // TODO implement open
+                    }
+                }
+                else if (tag == ConnectionAckByte)
+                {
+                    if (_isServer)
+                    {
+                        // TODO implement open
+                    }
+                }
+
+                return false;
             }
         }
     }

@@ -5,10 +5,6 @@
     /// </summary>
     public static partial class RUDP
     {
-        private const byte ConstPingByte = 0;
-        private const uint ConstConnectionTimeout = 3000;
-        private const uint ConstPingMessagePerSecond = 10;
-
         /// <summary>
         ///     RUDP Server implementation
         /// </summary>
