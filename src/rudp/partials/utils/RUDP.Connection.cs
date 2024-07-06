@@ -30,12 +30,14 @@ namespace Netly
             private readonly NetlyEnvironment.MessageFraming _framing;
             private readonly Host _host;
             private readonly List<byte[]> _injectQueue;
+            private DateTime _pingDateTime;
 
             private readonly object
                 _injectQueueLocker,
                 _localReliableIdLocker,
                 _localSequencedIdLocker,
-                _localReliableQueueLocker;
+                _localReliableQueueLocker,
+                _pingDateTimeLocker;
 
             private readonly bool _isServer;
 
@@ -76,6 +78,7 @@ namespace Netly
                 _isOpeningOrClosing = false;
                 _framing = new NetlyEnvironment.MessageFraming();
                 _remoteUnorderedReliableQueue = new Dictionary<uint, byte[]>();
+                _pingDateTimeLocker = new object();
 
                 _injectQueue = new List<byte[]>();
                 _injectQueueLocker = new object();
@@ -94,6 +97,8 @@ namespace Netly
 
                 HandshakeTimeout = 5000; // 5s
                 NoResponseTimeout = 10000; // 10s
+
+                _pingDateTime = DateTime.UtcNow;
 
                 OnOpen = () => logger.Create($"{@class} -> {nameof(OnOpen)}");
                 OnClose = () => logger.Create($"{@class} -> {nameof(OnClose)}");
@@ -289,6 +294,8 @@ namespace Netly
                 const int updateReliableTimerMs = 10;
                 const int sendPingTimerMs = 75;
 
+                UpdatePing();
+
                 while (_isUpdating)
                 {
                     try
@@ -324,6 +331,15 @@ namespace Netly
                     catch (Exception e)
                     {
                         NetlyEnvironment.Logger.Create(e);
+                    }
+
+                    lock (_pingDateTimeLocker)
+                    {
+                        if (DateTime.UtcNow > _pingDateTime )
+                        {
+                            Close();
+                            NetlyEnvironment.Logger.Create("RUDP Connection closed by Timeout.");
+                        }
                     }
                 }
 
@@ -394,14 +410,13 @@ namespace Netly
                                             if (myPrimitive.IsValid && InternalActionKey.Equals(key))
                                             {
                                                 isInternalAction = true;
-                                                
                                                 // update latest ping received timer
-                                                // TODO implement this.
+                                                UpdatePing();
                                             }
 
                                             break;
                                         }
-                                        
+
                                         case DataAckByte:
                                         {
                                             uint dataAckId = myPrimitive.Get.UInt();
@@ -573,6 +588,14 @@ namespace Netly
                 primitive.Add.Float(InternalActionKey);
                 var bytes = primitive.GetBytes();
                 Send(ref bytes, MessageType.Unreliable);
+            }
+
+            private void UpdatePing()
+            {
+                lock (_pingDateTimeLocker)
+                {
+                    _pingDateTime = DateTime.UtcNow.AddMilliseconds(NoResponseTimeout);
+                }
             }
         }
     }
