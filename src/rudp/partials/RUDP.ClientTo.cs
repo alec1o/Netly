@@ -59,7 +59,8 @@ namespace Netly
                         if (host == null) throw new NullReferenceException(nameof(host));
 
                         _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-
+                        _socket.Connect(host.EndPoint);
+                        
                         InitConnection(ref host);
 
                         StartConnection();
@@ -197,7 +198,7 @@ namespace Netly
             {
                 return _handshakeTimeout;
             }
-            
+
             public int GetNoResponseTimeout()
             {
                 return _noResponseTimeout;
@@ -219,7 +220,7 @@ namespace Netly
 
                 _handshakeTimeout = value;
             }
-            
+
             public void SetNoResponseTimeout(int value)
             {
                 if (IsOpened)
