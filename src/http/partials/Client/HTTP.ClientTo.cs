@@ -87,8 +87,16 @@ namespace Netly
 
                         var message = new HttpRequestMessage(httpMethod, host);
 
-                        var buffer = body ?? Array.Empty<byte>();
-                        message.Content = new BodyContent(ref buffer);
+                        if
+                        (
+                            httpMethod != HttpMethod.Get &&
+                            httpMethod != HttpMethod.Head &&
+                            httpMethod != HttpMethod.Trace
+                        )
+                        {
+                            var buffer = body ?? Array.Empty<byte>();
+                            message.Content = new BodyContent(ref buffer);
+                        }
 
                         #region Set Headers On Request
 
@@ -157,7 +165,7 @@ namespace Netly
                 if (_timeout < -1)
                     throw new ArgumentOutOfRangeException
                     (
-                        $"({timeout}) is invalid timeout value. it must be posetive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
+                        $"({timeout}) is invalid timeout value. it must be positive value or (-1 or 0), (-1 or 0) means infinite timeout value (without timeout)."
                     );
 
                 // success, timeout changed!
