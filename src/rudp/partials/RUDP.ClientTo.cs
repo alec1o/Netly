@@ -11,15 +11,12 @@ namespace Netly
     {
         private class ClientTo : IRUDP.ClientTo
         {
-            public bool IsOpened => _connection != null && _connection.IsOpened;
-            public Host Host { get; private set; }
-            private Client _client;
-            private Socket _socket;
-            private Connection _connection;
-            private bool _isOpeningOrClosing, _isConnecting;
             private readonly bool _isServer;
+            private readonly Client _client;
+            private Connection _connection;
             private int _handshakeTimeout, _noResponseTimeout;
-            private ClientOn On => _client._on;
+            private bool _isOpeningOrClosing, _isConnecting;
+            private Socket _socket;
 
             private ClientTo()
             {
@@ -47,6 +44,10 @@ namespace Netly
                 InitConnection(ref host);
             }
 
+            public bool IsOpened => _connection != null && _connection.IsOpened;
+            public Host Host { get; private set; }
+            private ClientOn On => _client._on;
+
             public Task Open(Host host)
             {
                 if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
@@ -60,7 +61,7 @@ namespace Netly
 
                         _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                         _socket.Connect(host.EndPoint);
-                        
+
                         InitConnection(ref host);
 
                         StartConnection();
@@ -242,7 +243,7 @@ namespace Netly
             {
                 var nextHost = host;
 
-                _connection = new Connection(host, _socket, _isServer)
+                _connection = new Connection(host, _socket, _isServer, _client.Id)
                 {
                     OnOpen = () =>
                     {
@@ -294,10 +295,7 @@ namespace Netly
 
             public void InjectBuffer(ref byte[] bytes)
             {
-                if (IsOpened)
-                {
-                    _connection?.InjectBuffer(bytes);
-                }
+                if (IsOpened) _connection?.InjectBuffer(bytes);
             }
 
             public void StartServerSideConnection(ref Action<bool> callback)
@@ -320,13 +318,11 @@ namespace Netly
                 void ReceiverUpdate()
                 {
                     if (!_isConnecting)
-                    {
                         if (!IsOpened)
                         {
                             Close();
                             return;
                         }
-                    }
 
                     _socket.BeginReceiveFrom
                     (
@@ -367,10 +363,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         NetlyEnvironment.Logger.Create(e);
-                        if (!_isConnecting)
-                        {
-                            Close();
-                        }
+                        if (!_isConnecting) Close();
                     }
                 }
             }

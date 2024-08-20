@@ -2,10 +2,6 @@ namespace Netly
 {
     public static partial class RUDP
     {
-        public const MessageType Sequenced = MessageType.Sequenced;
-        public const MessageType Unreliable = MessageType.Unreliable;
-        public const MessageType Reliable = MessageType.Reliable;
-
         public enum MessageType : byte
         {
             /// <summary>
@@ -21,7 +17,11 @@ namespace Netly
             /// <summary>
             ///     Received Ordered and is reliable
             /// </summary>
-            Reliable = 222,
+            Reliable = 222
         }
+
+        public const MessageType Sequenced = MessageType.Sequenced;
+        public const MessageType Unreliable = MessageType.Unreliable;
+        public const MessageType Reliable = MessageType.Reliable;
     }
 }

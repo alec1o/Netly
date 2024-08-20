@@ -6,18 +6,17 @@ namespace Netly
     {
         private class DataContent
         {
-            public readonly uint Id;
             public readonly byte[] Data;
-            public readonly Host Host;
-            public DateTime TimeoutAt { get; private set; }
+            public readonly uint Id;
 
-            public DataContent(uint id, byte[] data, Host host)
+            public DataContent(uint id, byte[] data)
             {
                 Id = id;
                 Data = data;
-                Host = host;
                 UpdateTimeout();
             }
+
+            public DateTime TimeoutAt { get; private set; }
 
             public void UpdateTimeout()
             {

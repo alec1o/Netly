@@ -14,14 +14,11 @@ namespace Netly
     {
         private class ServerTo : IRUDP.ServerTo
         {
-            public Host Host { get; private set; }
-            public bool IsOpened => _socket != null && !_isClosed;
-            private readonly Server _server;
             private readonly List<Client> _clients;
             private readonly object _clientsLocker, _contentsLooker;
+            private readonly Server _server;
+            private readonly List<(Host host, byte[] data)> _contents;
             private bool _isOpeningOrClosing, _isClosed;
-            private List<(Host host, byte[] data)> _contents;
-            private ServerOn On => _server._on;
             private Socket _socket;
 
             public ServerTo(Server server)
@@ -37,13 +34,9 @@ namespace Netly
                 _isClosed = true;
             }
 
-            public IRUDP.Client[] GetClients()
-            {
-                lock (_clientsLocker)
-                {
-                    return _clients.Where(x => x.IsOpened).Select(x => (IRUDP.Client)x).ToArray();
-                }
-            }
+            public Host Host { get; private set; }
+            public bool IsOpened => _socket != null && !_isClosed;
+            private ServerOn On => _server._on;
 
             public Task Open(Host host)
             {
@@ -162,6 +155,14 @@ namespace Netly
                 if (!IsOpened || name == null || name.Length <= 0 || data == null || data.Length <= 0) return;
 
                 Broadcast(name, data.GetBytes(encoding), messageType);
+            }
+
+            public IRUDP.Client[] GetClients()
+            {
+                lock (_clientsLocker)
+                {
+                    return _clients.Where(x => x.IsOpened).Select(x => (IRUDP.Client)x).ToArray();
+                }
             }
 
             private void Broadcast(byte[] data, MessageType messageType)
@@ -290,7 +291,7 @@ namespace Netly
                             client = _clients.FirstOrDefault(x => value.host.Equals(x.Host));
                         }
 
-                        byte[] buffer = value.data;
+                        var buffer = value.data;
 
                         // use existent context
                         if (client != null)
@@ -333,7 +334,7 @@ namespace Netly
 
                                     client = null;
                                 });
-                                
+
                                 // invoke new client
                                 On.OnAccept?.Invoke(null, client);
                             }

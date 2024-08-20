@@ -11,12 +11,6 @@ namespace Netly
             internal readonly ClientOn _on;
             private readonly ClientTo _to;
 
-            public bool IsOpened => _to.IsOpened;
-            public Host Host => _to.Host;
-            public IRUDP.ClientTo To => _to;
-            public IRUDP.ClientOn On => _on;
-            public string Id { get; }
-
             public Client()
             {
                 Id = Guid.NewGuid().ToString();
@@ -28,6 +22,12 @@ namespace Netly
             {
                 _to = new ClientTo(this, host, socket);
             }
+
+            public bool IsOpened => _to.IsOpened;
+            public Host Host => _to.Host;
+            public IRUDP.ClientTo To => _to;
+            public IRUDP.ClientOn On => _on;
+            public string Id { get; }
 
             public int HandshakeTimeout
             {
@@ -41,10 +41,15 @@ namespace Netly
                 set => _to.SetNoResponseTimeout(value);
             }
 
-            internal void InjectBuffer(ref byte[] bytes) => _to.InjectBuffer(ref bytes);
+            internal void InjectBuffer(ref byte[] bytes)
+            {
+                _to.InjectBuffer(ref bytes);
+            }
 
-            internal void StartServerSideConnection(Action<bool> callback) =>
+            internal void StartServerSideConnection(Action<bool> callback)
+            {
                 _to.StartServerSideConnection(ref callback);
+            }
         }
     }
 }
