@@ -19,7 +19,7 @@ namespace Netly
             private uint _receivedSequencedId, _receivedReliableId;
             private uint _sequencedId, _reliableId;
 
-            public Channel(Host host)
+            public Channel(Host _)
             {
                 ReliablePackages = new Dictionary<uint, DataContent>();
                 _sequencedId = 0;
@@ -91,8 +91,6 @@ namespace Netly
 
             public void OnReceiveRaw(ref byte[] data, Host host)
             {
-                Console.WriteLine($"{host} OnReceiveRaw: {data.Length}");
-
                 // 7 bytes means.
                 // --------------
                 // 2 bytes for type: 1 byte overhead + 1 byte content
@@ -114,7 +112,6 @@ namespace Netly
                             // remove received package
                             lock (_locker)
                             {
-                                Console.WriteLine($"Reliable package already received remove from resent Queue, id: {receivedId}");
                                 if (ReliablePackages.ContainsKey(receivedId)) ReliablePackages.Remove(receivedId);
                             }
 
@@ -131,8 +128,6 @@ namespace Netly
                             {
                                 var buffer = primitive.Get.Bytes();
                                 if (primitive.IsValid) OnRawData?.Invoke(buffer, MessageType.Unreliable);
-                                Console.WriteLine(
-                                    $"Unreliable data received: size: {buffer.Length} valid: {primitive.IsValid}");
                                 return;
                             }
                             case (byte)MessageType.Reliable:
@@ -142,17 +137,14 @@ namespace Netly
                                     var receivedId = primitive.Get.UInt();
                                     var nextDataId = 1 + _receivedReliableId;
 
-                                    Console.WriteLine($"Reliable ID: {_receivedReliableId}, Package ID: {receivedId}");
                                     if (receivedId <= _receivedReliableId)
                                     {
                                         // answer ack: data received successful
                                         SendPackageAck(receivedId);
-                                        Console.WriteLine($"#1 Reliable data ACK package, id: {receivedId}");
                                         return;
                                     }
 
                                     var buffer = primitive.Get.Bytes();
-                                    Console.WriteLine($"NextID: {nextDataId} == Received: {receivedId} IsEqual: {nextDataId == receivedId}");
                                     if (nextDataId == receivedId)
                                     {
                                         _receivedReliableId = receivedId;
@@ -160,13 +152,10 @@ namespace Netly
                                         if (primitive.IsValid)
                                         {
                                             SendPackageAck(receivedId);
-                                            Console.WriteLine($"Answer ACK package, id: {receivedId}");
                                             OnRawData?.Invoke(buffer, MessageType.Reliable);
                                         }
                                     }
 
-                                    Console.WriteLine(
-                                        $"Reliable data received, id: {receivedId} data: {buffer.Length} valid: {primitive.IsValid}");
                                     // TODO: adding on queue and dispatch on order
                                 }
 
@@ -177,8 +166,6 @@ namespace Netly
                                 lock (_sequencedLocker)
                                 {
                                     var receivedId = primitive.Get.UInt();
-                                    Console.WriteLine(
-                                        $"Sequenced data received, id: {receivedId} discarded: {!(receivedId > _receivedSequencedId)}");
                                     if (receivedId > _receivedSequencedId)
                                     {
                                         _receivedSequencedId = receivedId;

@@ -293,7 +293,6 @@ namespace Netly
                         // use existent context
                         if (client != null)
                         {
-                            Console.WriteLine($"Client {client.Host} data injected: {client.Host}");
                             client.InjectBuffer(ref buffer);
                             continue;
                         }
@@ -306,13 +305,10 @@ namespace Netly
                         lock (_clientsLocker)
                         {
                             _clients.Add(client);
-                            Console.WriteLine($"Client created: {client.Host}");
                         }
 
                         client.StartServerSideConnection(isConnected =>
                         {
-                            Console.WriteLine($"StartServerSideConnection for ({client.Host}) is {isConnected}");
-
                             if (!isConnected)
                             {
                                 // remove client from client list
@@ -342,7 +338,6 @@ namespace Netly
                         });
 
                         client.InjectBuffer(ref buffer);
-                        Console.WriteLine($"Client {client.Host} data injected #: {client.Host}");
                     }
                     catch (Exception e)
                     {

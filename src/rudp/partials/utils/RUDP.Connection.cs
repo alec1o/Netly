@@ -81,9 +81,7 @@ namespace Netly
                             }
                         }
                     }
-
-                Console.WriteLine(
-                    $"+ Received Row: ({data.GetString()}), prefix: {prefix}, content: {content} type: {messageType}");
+                
             }
 
 
@@ -116,7 +114,7 @@ namespace Netly
                     }
                 });
 
-                var connect = new Task(() =>
+                return new Task(() =>
                 {
                     var timeoutAt = DateTime.UtcNow.AddMilliseconds(HandshakeTimeout);
                     var isConnected = false;
@@ -192,8 +190,6 @@ namespace Netly
                             }
                         }
                     }
-
-                    Console.WriteLine($"* Connection Result: IsConnected: {isConnected}, IsServer: {IsServer}, Handshake: {HandshakeDataQueue.Count}, Id: {Id}");
                     
                     if (isConnected)
                     {
@@ -213,8 +209,6 @@ namespace Netly
                         StartServerSideConnection(isConnected);
                     }
                 });
-
-                return Task.Run(() => connect.Start());
             }
 
             public Task Close()
@@ -222,7 +216,7 @@ namespace Netly
                 throw new NotImplementedException();
             }
 
-            public void InjectBuffer(byte[] bytes)
+            public void InjectBuffer(ref byte[] bytes)
             {
                 MyChannel.OnReceiveRaw(ref bytes, MyHost);
             }

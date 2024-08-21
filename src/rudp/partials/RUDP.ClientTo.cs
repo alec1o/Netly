@@ -65,8 +65,6 @@ namespace Netly
                         _socket.Connect(host.EndPoint);
 
                         InitConnection(ref host);
-
-                        StartConnection();
                     }
                     catch (Exception e)
                     {
@@ -283,10 +281,7 @@ namespace Netly
                 _connection.HandshakeTimeout = GetHandshakeTimeout();
                 _connection.NoResponseTimeout = GetNoResponseTimeout();
 
-                if (_isServer)
-                {
-                    _connection.Open();
-                }
+                StartConnection();
             }
 
             private void StartConnection()
@@ -297,12 +292,12 @@ namespace Netly
                     InitReceiver();
                 }
 
-                _connection.Open();
+                _connection.Open().Start();
             }
 
             public void InjectBuffer(ref byte[] bytes)
             {
-                _connection?.InjectBuffer(bytes);
+                _connection?.InjectBuffer(ref bytes);
             }
 
             public void StartServerSideConnection(ref Action<bool> callback)
