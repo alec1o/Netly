@@ -8,7 +8,7 @@ namespace Netly
     {
         internal sealed class Channel
         {
-            public const int ResentTimeout = 10;
+            public const int ResentTimeout = 500;
 
             private readonly object
                 _locker = new object(),
@@ -135,12 +135,12 @@ namespace Netly
                                     var receivedId = primitive.Get.UInt();
                                     var nextDataId = 1 + receivedId;
 
-                                    if (_receivedSequencedId <= receivedId)
+                                    if (_receivedReliableId <= receivedId)
                                     {
                                         // answer ack: data received successful
                                         SendPackageAck(receivedId);
                                     }
-                                    else if (nextDataId == _receivedSequencedId)
+                                    else if (nextDataId == _receivedReliableId)
                                     {
                                         _receivedReliableId = receivedId;
                                         var buffer = primitive.Get.Bytes();

@@ -39,6 +39,7 @@ namespace Netly
             public ClientTo(Client client, Host host, Socket socket) : this()
             {
                 _client = client;
+                Host = host;
                 _socket = socket;
                 _isServer = true;
                 InitConnection(ref host);
@@ -300,7 +301,7 @@ namespace Netly
 
             public void StartServerSideConnection(ref Action<bool> callback)
             {
-                _connection.OnServer = callback;
+                _connection.StartServerSideConnection = callback;
             }
 
             private void InitReceiver()

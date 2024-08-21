@@ -40,7 +40,7 @@ namespace Netly
 
             public Task Open(Host host)
             {
-                if (_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
+                if (!_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
 
                 _isOpeningOrClosing = true;
 
@@ -216,7 +216,7 @@ namespace Netly
 
                 AcceptUpdate();
 
-                new Thread(() => ContentUpdate()).Start();
+                new Thread(ContentUpdate) { IsBackground = true }.Start();
 
                 void AcceptUpdate()
                 {
@@ -237,19 +237,16 @@ namespace Netly
                     {
                         var size = _socket.EndReceiveFrom(result, ref remoteEndPoint);
 
-                        if (size <= 0)
+                        if (size > 0)
                         {
-                            AcceptUpdate();
-                            return;
-                        }
+                            var data = new byte[size];
 
-                        var data = new byte[size];
+                            Array.Copy(buffer, 0, data, 0, data.Length);
 
-                        Array.Copy(buffer, 0, data, 0, data.Length);
-
-                        lock (_contentsLooker)
-                        {
-                            _contents.Add((new Host(remoteEndPoint), data));
+                            lock (_contentsLooker)
+                            {
+                                _contents.Add((new Host(remoteEndPoint), data));
+                            }
                         }
                     }
                     catch (Exception e)
@@ -296,8 +293,9 @@ namespace Netly
                         // use existent context
                         if (client != null)
                         {
+                            Console.WriteLine($"Client {client.Host} data injected: {client.Host}");
                             client.InjectBuffer(ref buffer);
-                            return;
+                            continue;
                         }
 
                         // create new context
@@ -308,11 +306,14 @@ namespace Netly
                         lock (_clientsLocker)
                         {
                             _clients.Add(client);
+                            Console.WriteLine($"Client created: {client.Host}");
                         }
 
-                        client.StartServerSideConnection(isError =>
+                        client.StartServerSideConnection(isConnected =>
                         {
-                            if (isError)
+                            Console.WriteLine($"StartServerSideConnection for ({client.Host}) is {isConnected}");
+
+                            if (!isConnected)
                             {
                                 // remove client from client list
                                 lock (_clientsLocker)
@@ -341,6 +342,7 @@ namespace Netly
                         });
 
                         client.InjectBuffer(ref buffer);
+                        Console.WriteLine($"Client {client.Host} data injected #: {client.Host}");
                     }
                     catch (Exception e)
                     {

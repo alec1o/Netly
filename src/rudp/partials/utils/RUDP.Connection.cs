@@ -46,7 +46,7 @@ namespace Netly
             public Action<string, byte[], MessageType> OnEvent { private get; set; }
             public int HandshakeTimeout { get; set; }
             public int NoResponseTimeout { get; set; }
-            public Action<bool> OnServer { get; set; }
+            public Action<bool> StartServerSideConnection { get; set; }
 
             private void OnRawDataHandler(byte[] data, MessageType messageType)
             {
@@ -82,11 +82,11 @@ namespace Netly
 
                 _ = Task.Run(() =>
                 {
-                    if (IsOpened || IsConnecting)
+                    while (IsOpened || IsConnecting)
                     {
                         MyChannel.ToUpdateReliableQueue();
                         const float value = Channel.ResentTimeout;
-                        const float timeoutResult = value / 4F;
+                        const float timeoutResult = value / 2;
                         const int timeout = (int)timeoutResult;
                         Thread.Sleep(timeout);
                     }
@@ -95,7 +95,7 @@ namespace Netly
                 var connect = new Task(() =>
                 {
                     var timeoutAt = DateTime.UtcNow.AddMilliseconds(HandshakeTimeout);
-                    var success = false;
+                    var isConnected = false;
                     var failMessage = $"Connection closed, Handshake Timeout: {HandshakeTimeout}ms";
 
                     if (!IsServer)
@@ -129,13 +129,14 @@ namespace Netly
                         if (HandshakeDataQueue.Count == 2)
                         {
                             if (HandshakeDataQueue[0] == HandshakeData1 && HandshakeDataQueue[1] == HandshakeData2)
-                                success = true;
+                                isConnected = true;
 
                             failMessage = "Invalid Handshake Method";
                             break;
                         }
 
-                    if (success)
+
+                    if (isConnected)
                     {
                         IsOpened = true;
                         IsConnecting = false;
@@ -147,6 +148,11 @@ namespace Netly
                         IsOpened = false;
 
                         OnOpenFail(failMessage);
+                    }
+                    
+                    if (IsServer)
+                    {
+                        StartServerSideConnection(isConnected);
                     }
                 });
 
