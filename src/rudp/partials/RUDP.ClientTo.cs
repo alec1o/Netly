@@ -17,6 +17,7 @@ namespace Netly
             private int _handshakeTimeout, _noResponseTimeout;
             private bool _isOpeningOrClosing, _isConnecting;
             private Socket _socket;
+            public string Id => _connection == null ? string.Empty : _connection.Id;
 
             private ClientTo()
             {
@@ -244,7 +245,7 @@ namespace Netly
             {
                 var nextHost = host;
 
-                _connection = new Connection(host, _socket, _isServer, _client.Id)
+                _connection = new Connection(host, _socket, _isServer)
                 {
                     OnOpen = () =>
                     {
@@ -281,6 +282,11 @@ namespace Netly
 
                 _connection.HandshakeTimeout = GetHandshakeTimeout();
                 _connection.NoResponseTimeout = GetNoResponseTimeout();
+
+                if (_isServer)
+                {
+                    _connection.Open();
+                }
             }
 
             private void StartConnection()
@@ -291,12 +297,12 @@ namespace Netly
                     InitReceiver();
                 }
 
-                _connection.Open().Wait();
+                _connection.Open();
             }
 
             public void InjectBuffer(ref byte[] bytes)
             {
-                if (IsOpened) _connection?.InjectBuffer(bytes);
+                _connection?.InjectBuffer(bytes);
             }
 
             public void StartServerSideConnection(ref Action<bool> callback)

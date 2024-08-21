@@ -27,8 +27,7 @@ namespace Netly
                 SendRaw = null;
             }
 
-            public Action<byte[], MessageType> OnRawData { private get; set; }
-            public Action<string, byte[], MessageType> OnEvent { private get; set; }
+            public Action<byte[], MessageType> OnRawData { get; set; }
             public Action<byte[]> SendRaw { get; set; }
             private Dictionary<uint, DataContent> ReliablePackages { get; }
 
@@ -92,6 +91,8 @@ namespace Netly
 
             public void OnReceiveRaw(ref byte[] data, Host host)
             {
+                Console.WriteLine($"{host} OnReceiveRaw: {data.Length}");
+
                 // 7 bytes means.
                 // --------------
                 // 2 bytes for type: 1 byte overhead + 1 byte content
@@ -99,33 +100,39 @@ namespace Netly
                 // ---------------
                 // note: this result is based on <Byter.Primitive> package used to serialize and deserialize package
                 const int contentSize = 7;
+                var primitive = new Primitive(data);
+                var receivedType = primitive.Get.Byte();
 
+                // Remove data when RECEIVE ACK Package
                 if (data != null && data.Length == contentSize)
                 {
-                    var primitive = new Primitive(data);
-                    var receivedType = primitive.Get.Byte();
                     var receivedId = primitive.Get.UInt();
 
                     if (primitive.IsValid)
+                    {
                         if (receivedType == (byte)MessageType.Reliable)
                             // remove received package
                             lock (_locker)
                             {
+                                Console.WriteLine($"Reliable package already received remove from resent Queue, id: {receivedId}");
                                 if (ReliablePackages.ContainsKey(receivedId)) ReliablePackages.Remove(receivedId);
                             }
-                }
-                else
-                {
-                    var primitive = new Primitive(data);
-                    var receivedType = primitive.Get.Byte();
 
+                        return;
+                    }
+                }
+
+                // Isn't ACK Package handle the data
+                {
                     if (primitive.IsValid)
                         switch (receivedType)
                         {
                             case (byte)MessageType.Unreliable:
                             {
                                 var buffer = primitive.Get.Bytes();
-                                if (primitive.IsValid) OnRawData(buffer, MessageType.Unreliable);
+                                if (primitive.IsValid) OnRawData?.Invoke(buffer, MessageType.Unreliable);
+                                Console.WriteLine(
+                                    $"Unreliable data received: size: {buffer.Length} valid: {primitive.IsValid}");
                                 return;
                             }
                             case (byte)MessageType.Reliable:
@@ -133,24 +140,33 @@ namespace Netly
                                 lock (_reliableLocker)
                                 {
                                     var receivedId = primitive.Get.UInt();
-                                    var nextDataId = 1 + receivedId;
+                                    var nextDataId = 1 + _receivedReliableId;
 
-                                    if (_receivedReliableId <= receivedId)
+                                    Console.WriteLine($"Reliable ID: {_receivedReliableId}, Package ID: {receivedId}");
+                                    if (receivedId <= _receivedReliableId)
                                     {
                                         // answer ack: data received successful
                                         SendPackageAck(receivedId);
+                                        Console.WriteLine($"#1 Reliable data ACK package, id: {receivedId}");
+                                        return;
                                     }
-                                    else if (nextDataId == _receivedReliableId)
+
+                                    var buffer = primitive.Get.Bytes();
+                                    Console.WriteLine($"NextID: {nextDataId} == Received: {receivedId} IsEqual: {nextDataId == receivedId}");
+                                    if (nextDataId == receivedId)
                                     {
                                         _receivedReliableId = receivedId;
-                                        var buffer = primitive.Get.Bytes();
 
                                         if (primitive.IsValid)
                                         {
                                             SendPackageAck(receivedId);
-                                            OnRawData(buffer, MessageType.Reliable);
+                                            Console.WriteLine($"Answer ACK package, id: {receivedId}");
+                                            OnRawData?.Invoke(buffer, MessageType.Reliable);
                                         }
                                     }
+
+                                    Console.WriteLine(
+                                        $"Reliable data received, id: {receivedId} data: {buffer.Length} valid: {primitive.IsValid}");
                                     // TODO: adding on queue and dispatch on order
                                 }
 
@@ -161,12 +177,13 @@ namespace Netly
                                 lock (_sequencedLocker)
                                 {
                                     var receivedId = primitive.Get.UInt();
-
+                                    Console.WriteLine(
+                                        $"Sequenced data received, id: {receivedId} discarded: {!(receivedId > _receivedSequencedId)}");
                                     if (receivedId > _receivedSequencedId)
                                     {
                                         _receivedSequencedId = receivedId;
                                         var buffer = primitive.Get.Bytes();
-                                        if (primitive.IsValid) OnRawData(buffer, MessageType.Sequenced);
+                                        if (primitive.IsValid) OnRawData?.Invoke(buffer, MessageType.Sequenced);
                                     }
                                 }
 

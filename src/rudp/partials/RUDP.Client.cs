@@ -13,7 +13,6 @@ namespace Netly
 
             public Client()
             {
-                Id = Guid.NewGuid().ToString();
                 _on = new ClientOn();
                 _to = new ClientTo(this);
             }
@@ -27,7 +26,7 @@ namespace Netly
             public Host Host => _to.Host;
             public IRUDP.ClientTo To => _to;
             public IRUDP.ClientOn On => _on;
-            public string Id { get; }
+            public string Id => _to.Id;
 
             public int HandshakeTimeout
             {

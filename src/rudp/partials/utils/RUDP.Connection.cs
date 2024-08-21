@@ -14,19 +14,19 @@ namespace Netly
             private const int
                 HandshakeDataPrefix = -1024 * (int)Math.PI * 2, //# -6144
                 HandshakeData1 /**/ = -2048 * (int)Math.PI * 4, //# -24576
-                HandshakeData2 /**/ = -4096 * (int)Math.PI * 8; //# -98304
+                HandshakeData2 /**/ = -4096 * (int)Math.PI * 8, //# -98304
+                HandshakeData3 /**/ = -8192 * (int)Math.PI * 16; //# -393216
 
             public readonly List<int> HandshakeDataQueue = new List<int>();
-            public readonly string Id;
+            public string Id = string.Empty;
             public readonly bool IsServer;
             public readonly Channel MyChannel;
             public readonly Host MyHost;
             public readonly Socket MySocket;
 
 
-            public Connection(Host host, Socket socket, bool isServer, string id)
+            public Connection(Host host, Socket socket, bool isServer)
             {
-                Id = id;
                 MyHost = host;
                 MySocket = socket;
                 IsServer = isServer;
@@ -47,6 +47,7 @@ namespace Netly
             public int HandshakeTimeout { get; set; }
             public int NoResponseTimeout { get; set; }
             public Action<bool> StartServerSideConnection { get; set; }
+            private string _receivedClientId = String.Empty;
 
             private void OnRawDataHandler(byte[] data, MessageType messageType)
             {
@@ -55,9 +56,34 @@ namespace Netly
                 var prefix = primitive.Get.Int();
                 var content = primitive.Get.Int();
 
+
                 if (primitive.IsValid)
                     if (prefix == HandshakeDataPrefix && IsConnecting)
-                        HandshakeDataQueue.Add(content);
+                    {
+                        if (IsServer)
+                        {
+                            if (content == HandshakeData1 || content == HandshakeData2)
+                            {
+                                HandshakeDataQueue.Add(content);
+                            }
+                        }
+                        else
+                        {
+                            if (content == HandshakeData3)
+                            {
+                                var id = primitive.Get.String();
+
+                                if (primitive.IsValid)
+                                {
+                                    HandshakeDataQueue.Add(content);
+                                    _receivedClientId = id;
+                                }
+                            }
+                        }
+                    }
+
+                Console.WriteLine(
+                    $"+ Received Row: ({data.GetString()}), prefix: {prefix}, content: {content} type: {messageType}");
             }
 
 
@@ -79,16 +105,14 @@ namespace Netly
                 IsOpened = false;
                 IsConnecting = true;
                 HandshakeDataQueue.Clear();
+                _receivedClientId = string.Empty;
 
                 _ = Task.Run(() =>
                 {
                     while (IsOpened || IsConnecting)
                     {
                         MyChannel.ToUpdateReliableQueue();
-                        const float value = Channel.ResentTimeout;
-                        const float timeoutResult = value / 2;
-                        const int timeout = (int)timeoutResult;
-                        Thread.Sleep(timeout);
+                        Thread.Sleep(5);
                     }
                 });
 
@@ -126,16 +150,51 @@ namespace Netly
                     }
 
                     while (timeoutAt > DateTime.UtcNow)
-                        if (HandshakeDataQueue.Count == 2)
+                    {
+                        if (IsServer)
                         {
-                            if (HandshakeDataQueue[0] == HandshakeData1 && HandshakeDataQueue[1] == HandshakeData2)
-                                isConnected = true;
+                            if (HandshakeDataQueue.Count == 2)
+                            {
+                                if (HandshakeDataQueue[0] == HandshakeData1 && HandshakeDataQueue[1] == HandshakeData2)
+                                {
+                                    isConnected = true;
 
-                            failMessage = "Invalid Handshake Method";
-                            break;
+                                    // generate client id
+                                    Id = Guid.NewGuid().ToString();
+
+                                    // prepare client data
+                                    var primitive = new Primitive();
+                                    primitive.Add.Int(HandshakeDataPrefix);
+                                    primitive.Add.Int(HandshakeData3);
+                                    primitive.Add.String(Id);
+                                    byte[] data = primitive.GetBytes();
+
+                                    // send ack data to client
+                                    Send(ref data, MessageType.Reliable);
+                                    break;
+                                }
+
+                                failMessage = "Invalid Handshake Method";
+                                break;
+                            }
                         }
+                        else
+                        {
+                            if (HandshakeDataQueue.Count == 1)
+                            {
+                                if (HandshakeDataQueue[0] == HandshakeData3 &&
+                                    !string.IsNullOrWhiteSpace(_receivedClientId))
+                                {
+                                    isConnected = true;
+                                    Id = _receivedClientId;
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
-
+                    Console.WriteLine($"* Connection Result: IsConnected: {isConnected}, IsServer: {IsServer}, Handshake: {HandshakeDataQueue.Count}, Id: {Id}");
+                    
                     if (isConnected)
                     {
                         IsOpened = true;
@@ -146,10 +205,9 @@ namespace Netly
                     {
                         IsConnecting = false;
                         IsOpened = false;
-
                         OnOpenFail(failMessage);
                     }
-                    
+
                     if (IsServer)
                     {
                         StartServerSideConnection(isConnected);
