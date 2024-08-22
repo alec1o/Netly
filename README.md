@@ -1,4 +1,5 @@
-> ###### The active development branch is [_'dev'_](https://github.com/alec1o/Netly/tree/dev), while the production branch is [_'main'_](https://github.com/alec1o/Netly/tree/main).
+> ###### Active development occurs on the [_'dev'_](https://github.com/alec1o/Netly/tree/dev) branch. For the stable release, refer to the [_'main'_](https://github.com/alec1o/Netly/tree/main) branch.
+
 
 > <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
 more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
@@ -7,7 +8,8 @@ more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
   <table>
     <td align="left">
       <p>
-        <sup>⭐ Your star is the light at the end of our tunnel.<br> Lead us out of the darkness by starring <a href="https://github.com/alec1o/Netly">Netly on GitHub</a>.<br> Star me please, I beg you! 💙</sup>
+        <sup>⭐ Your star on <a href="https://github.com/alec1o/Netly">Netly</a> brightens our journey and makes a real impact!<br> ✨ Every like/star is a powerful boost that drives us forward.<br> 💙 Thank you for your incredible support!
+</sup>
       </p>
     </td>
   </table>
@@ -31,27 +33,24 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 <table>
   <tr>
-    <th align="left" valign="center">👌 <i>Perfect</i></th>
-    <td><a href="https://github.com/alec1o/Byter"><sub><i>Byter 3</i></sub></a></td>
-    <td><sub><i>TCP.Client</i></sub></td>
-    <td><sub><i>TCP.Server</i></sub></td>
-    <td><sub><i>UDP.Client</i></sub></td> 
-    <td><sub><i>UDP.Server</i></sub></td>
-    <td><sub><i>HTTP.Client</i></sub></td>
-    <td><sub><i>HTTP.Server</i></sub></td>
-    <td><sub><i>HTTP.Websocket </i></sub></td>   
+    <th align="left" valign="center">🚀 <sub>Fully Implemented</sub></th>
+    <td>
+      <sub><strong>Byter 3</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i></sub>
+    </td>
   </tr>
   <tr>
-    <th align="left" valign="center">🚫 <i>Not Implemented</i></th>
-    <td><sub><i>RUDP.Client</i></sub></td> 
-    <td><sub><i>RUDP.Server</i></sub></td>
+    <th align="left" valign="center">🔧 <sub>Work in Progress</sub></th>
+    <td>
+      <sub><strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i> • <strong>Documentation <sup>v4</sup></strong> • <strong>HTTP</strong> <i>Body (Enctype Detector and Parser)</i></sub> 
+    </td>
   </tr>
   <tr>
-    <th align="left" valign="center">🔩 <i>Initialized</i></th>
-    <td><sub><i><sup>V4</sup> Documentation</i></sub></td>
-    <td><sub><i>HTTP.Body (Enctype detector and parser)</i></sub></td>
+    <th align="left" valign="center">🔜 <sub>Pending Features</sub></th>
+    <td>-</td>
   </tr>
 </table>
+
+
 
 <br>
 
@@ -64,9 +63,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
       <th align="center" valign="center"><sub><strong>Overview</strong></sub></th>
 <td>
 <br>
-<sub>Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP,
-Reliable UDP (RUDP)
-and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
+<sub>Netly is a robust C# socket library designed to streamline network communication. It offers comprehensive support for multiple protocols, including HTTP, TCP, SSL/TLS, UDP, Reliable UDP (RUDP), and WebSocket. This versatility makes Netly an excellent choice for developing a wide range of applications, from multiplayer games and chat systems to real-time data exchanges.</sub>
 <br>
 <br>
 </td>
@@ -97,20 +94,14 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
     <tr>
         <th align="center" valign="center"><sup><strong>Supporter</strong></sup></th>
 <td>
-<h6>Why Contribute to Netly</h6>
+<h6>Why Contribute to Netly?</h6>
 
-> <sub>Solve Real-World Challenges: Netly simplifies socket programming, making it accessible for developers. By
-> contributing, you’ll directly impact how games, chat applications, and real-time systems communicate.</sub>
+- <sub><strong>Transform Network Communication:</strong> <br>Join us in revolutionizing how software communicates. Your contributions will help build a library that sets new standards for efficiency and reliability.</sub>
+- <sub><strong>Advance Your Career:</strong> <br>Engage with innovative projects, solve complex problems, and collaborate with experts. Your involvement will sharpen your skills and expand your professional network.</sub>
+- <sub><strong>Share Your Ideas:</strong> <br>Whether you're a seasoned developer or just starting out, your ideas are valuable. Contribute thoughts and suggestions to shape the future of Netly and drive innovation.</sub>
 
-> <sub>Learn and Grow: Dive into the world of networking, encryption, and protocols. Gain practical experience by
-> working on a versatile library used across platforms.</sub>
-
-> <sub>Be Part of Something Bigger: Netly is open source, and your contributions will benefit the entire community. Join
-> a passionate group of developers who believe in collaboration and knowledge sharing.</sub>
-
-> <sub>Code, Ideas, and Feedback: Whether you’re a seasoned developer or just starting out, your code, ideas, and
-> feedback matter. Every line of code, every suggestion, and every bug report contributes to Netly’s growth.</sub>
 <br>
+
 </td>
     </tr>
 </table>
@@ -209,7 +200,7 @@ and WebSocket protocols, making it ideal for building multiplayer games, chat ap
     - <sub>Android</sub>
     - <sub>iOS</sub>
     - <sub>macOS</sub><br><br>
-    - <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
+<sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
       should be considered a bug and reported.<i><sub>
 
 <br>
@@ -1516,27 +1507,22 @@ public class Example : MonoBehaviour
 </tr>
 
 <tr><th></th></tr>
-
+<tr>
 <tr>
 <th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
 <td>
 
 <sub>
-<strong>You should never initialize events in an uncontrolled loop</strong>, (**.On) stores functions that will be
-called when something happens and these functions only need to be initialized once. <i>Understand,
-It doesn't mean that every event will only have one callback attached to it,
-but it means not to keep calling (**.On) frequently like in Loops</i>.
-See examples below of good and bad use.
+<strong>Initialize event handlers once, not in loops</strong>. Set up handlers with `<protocol>.<client|server>.On.<event>` methods in initialization methods like `Awake()` or `Start()`. Avoid repeatedly setting these up in update loops to maintain performance.
 </sub>
 <br>
 <br>
 <sub>
-For methods (**.To) there is an internal barrier that limits things like
-(<i>trying to open or close connections several times, sending data with a disconnected socket, ...</i>) 
-<strong>although these methods do not cause problems when called in a loop</strong>, <i>it is always good have the action and
-state in sync</i>, for example <i>only</i> sending data when confirming that the <i>connection is open</i>.
+<strong>Handle protocol actions wisely</strong>. Use `<protocol>.<client|server>.To.<action>` methods, such as `<protocol>.<client|server>.To.Open()`, `<protocol>.<client|server>.To.Data()`, and `<protocol>.<client|server>.To.Close()`, with careful management. Ensure you only open a connection when it's not already open and send data only when the connection is confirmed as active. Avoid calling these methods in tight loops.
 </sub>
 <br>
+</td>
+</tr>
 <br>
 
 <details><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
