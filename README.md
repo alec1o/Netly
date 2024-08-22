@@ -1520,68 +1520,42 @@ public class Example : MonoBehaviour
 <sub>
 <strong>Handle protocol actions wisely</strong>. Use `<protocol>.<client|server>.To.<action>` methods, such as `<protocol>.<client|server>.To.Open()`, `<protocol>.<client|server>.To.Data()`, and `<protocol>.<client|server>.To.Close()`, with careful management. Ensure you only open a connection when it's not already open and send data only when the connection is confirmed as active. Avoid calling these methods in tight loops.
 </sub>
-<br>
-</td>
-</tr>
-<br>
 
-<details><summary>📄 <strong><sup><sub>Code</sub></sup></strong></summary>
-
+<br><br>
+  
 ```csharp
-using System;
-using Netly;
+// OK 100% Recommended 
+private void Start()
+{
+    var client = ...;
 
+    client.On.Open(() => ...); // e.g generic handler
+    client.On.Open(() => ...); // e.g only to send "Hi"
+    client.On.Event((name, bytes, ?) => ...); // e.g generic event handler
+    client.On.Event((name, bytes, ?) => ...); // e.g only to handle A event
+    client.On.Event((name, bytes, ?) => ...); // e.g only to handle B event
 
-private HTTP.WebSocket ws;
-```
-
-```csharp
-// OK
-private void Init()
-{    
-    ws.On.Open(() => { ... });
-    
-    ws.On.Event((name, bytes) => { ... });
-
-    ws.On.Event((name, bytes) =>
-    {
-        if (name == "foo") { ... }
-    });
-
-    ws.On.Event((name, bytes) =>
-    {
-        if (name == "bar") { ... }
-    });
+    client.To.Open(...);
 }
 ```
 
 ```csharp
-// BAD
-public void Loop()
-{    
+public void Update()
+{
+    client.To.Open(...);                 // [OK? - May Not In Loop?]
+    client.To.Data(...);                 // [OK? - May Not In Loop?]
+    client.To.Event(...);                // [OK? - May Not In Loop?]
+    client.To.Close(...);                // [OK? - May Not In Loop?]   
     
-    client.To.Open(...);    // [OK]
-    
-    client.To.Data(...);    // [OK]
-    
-    client.To.Event(...);   // [OK]
-    
-    client.To.Close(...);   // [OK]   
-    
-    
-    ws.On.Open(() => { ... });       // [NEVER IN LOOP]
-    
-    ws.On.Close(() => { ... });      // [NEVER IN LOOP]
-    
-    ws.On.Data((bytes) => { ... });  // [NEVER IN LOOP]    
-    
-    ws.On.Error((exception) => { ... });    // [NEVER IN LOOP]
-    
-    ws.On.Event((name, bytes) => { ... });  // [NEVER IN LOOP]    
+    ws.On.Open(() => ...);               // [BAD - Never In Loop]
+    ws.On.Close(() => ... );             // [BAD - Never In Loop]
+    ws.On.Data((bytes) => ... );         // [BAD - Never In Loop]
+    ws.On.Error((exception) => ... );    // [BAD - Never In Loop]
+    ws.On.Event((name, bytes) =>  ... ); // [BAD - Never In Loop]
 }
 ```
 
-</details>
+<br>
 </td>
 </tr>
 </table>
