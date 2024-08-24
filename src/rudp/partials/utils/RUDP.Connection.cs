@@ -18,11 +18,12 @@ namespace Netly
                 HandshakeData3 /**/ = -8192 * (int)Math.PI * 16; //# -393216
 
             public readonly List<int> HandshakeDataQueue = new List<int>();
-            public string Id = string.Empty;
             public readonly bool IsServer;
             public readonly Channel MyChannel;
             public readonly Host MyHost;
             public readonly Socket MySocket;
+            private string _receivedClientId = string.Empty;
+            public string Id = string.Empty;
 
 
             public Connection(Host host, Socket socket, bool isServer)
@@ -47,43 +48,65 @@ namespace Netly
             public int HandshakeTimeout { get; set; }
             public int NoResponseTimeout { get; set; }
             public Action<bool> StartServerSideConnection { get; set; }
-            private string _receivedClientId = String.Empty;
 
             private void OnRawDataHandler(byte[] data, MessageType messageType)
             {
-                var primitive = new Primitive(data);
+                if (!IsOpened && IsConnecting)
+                {
+                    var primitive = new Primitive(data);
 
-                var prefix = primitive.Get.Int();
-                var content = primitive.Get.Int();
+                    var prefix = primitive.Get.Int();
+                    var content = primitive.Get.Int();
 
-
-                if (primitive.IsValid)
-                    if (prefix == HandshakeDataPrefix && IsConnecting)
+                    if (primitive.IsValid)
                     {
-                        if (IsServer)
+                        if (prefix == HandshakeDataPrefix && IsConnecting)
                         {
-                            if (content == HandshakeData1 || content == HandshakeData2)
+                            if (IsServer)
                             {
-                                HandshakeDataQueue.Add(content);
-                            }
-                        }
-                        else
-                        {
-                            if (content == HandshakeData3)
-                            {
-                                var id = primitive.Get.String();
-
-                                if (primitive.IsValid)
-                                {
+                                if (content == HandshakeData1 || content == HandshakeData2)
                                     HandshakeDataQueue.Add(content);
-                                    _receivedClientId = id;
+                            }
+                            else
+                            {
+                                if (content == HandshakeData3)
+                                {
+                                    var id = primitive.Get.String();
+
+                                    if (primitive.IsValid)
+                                    {
+                                        HandshakeDataQueue.Add(content);
+                                        _receivedClientId = id;
+                                    }
                                 }
                             }
                         }
-                    }
-                
-            }
 
+                        return;
+                    }
+                }
+
+                if (IsOpened)
+                {
+                    var eventObject = NetlyEnvironment.EventManager.Verify(data);
+
+                    if (eventObject.data == null || string.IsNullOrEmpty(eventObject.name))
+                        OnData?.Invoke(data, messageType);
+                    else
+                        OnEvent?.Invoke(eventObject.name, eventObject.data, messageType);
+                }
+                else
+                {
+                    NetlyEnvironment.Logger.Create
+                    (
+                        "[RUDP.Connection] Received data while connection is not opened, " +
+                        $"IsOpened: {IsOpened}, " +
+                        $"IsConnecting: {IsConnecting}, " +
+                        $"IsServer: {IsServer}, " +
+                        $"DataSize: {data.Length}"
+                    );
+                }
+            }
 
             private void SendRaw(byte[] bytes)
             {
@@ -148,7 +171,6 @@ namespace Netly
                     }
 
                     while (timeoutAt > DateTime.UtcNow)
-                    {
                         if (IsServer)
                         {
                             if (HandshakeDataQueue.Count == 2)
@@ -165,7 +187,7 @@ namespace Netly
                                     primitive.Add.Int(HandshakeDataPrefix);
                                     primitive.Add.Int(HandshakeData3);
                                     primitive.Add.String(Id);
-                                    byte[] data = primitive.GetBytes();
+                                    var data = primitive.GetBytes();
 
                                     // send ack data to client
                                     Send(ref data, MessageType.Reliable);
@@ -179,7 +201,6 @@ namespace Netly
                         else
                         {
                             if (HandshakeDataQueue.Count == 1)
-                            {
                                 if (HandshakeDataQueue[0] == HandshakeData3 &&
                                     !string.IsNullOrWhiteSpace(_receivedClientId))
                                 {
@@ -187,10 +208,8 @@ namespace Netly
                                     Id = _receivedClientId;
                                     break;
                                 }
-                            }
                         }
-                    }
-                    
+
                     if (isConnected)
                     {
                         IsOpened = true;
@@ -204,16 +223,14 @@ namespace Netly
                         OnOpenFail(failMessage);
                     }
 
-                    if (IsServer)
-                    {
-                        StartServerSideConnection(isConnected);
-                    }
+                    if (IsServer) StartServerSideConnection(isConnected);
                 });
             }
 
             public Task Close()
             {
-                throw new NotImplementedException();
+                // TODO: Maybe send data to close connection
+                return Task.CompletedTask;
             }
 
             public void InjectBuffer(ref byte[] bytes)

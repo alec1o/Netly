@@ -16,8 +16,8 @@ namespace Netly
         {
             private readonly List<Client> _clients;
             private readonly object _clientsLocker, _contentsLooker;
-            private readonly Server _server;
             private readonly List<(Host host, byte[] data)> _contents;
+            private readonly Server _server;
             private bool _isOpeningOrClosing, _isClosed;
             private Socket _socket;
 

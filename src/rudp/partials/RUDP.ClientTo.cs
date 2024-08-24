@@ -11,13 +11,12 @@ namespace Netly
     {
         private class ClientTo : IRUDP.ClientTo
         {
-            private readonly bool _isServer;
             private readonly Client _client;
+            private readonly bool _isServer;
             private Connection _connection;
             private int _handshakeTimeout, _noResponseTimeout;
             private bool _isOpeningOrClosing, _isConnecting;
             private Socket _socket;
-            public string Id => _connection == null ? string.Empty : _connection.Id;
 
             private ClientTo()
             {
@@ -45,6 +44,8 @@ namespace Netly
                 _isServer = true;
                 InitConnection(ref host);
             }
+
+            public string Id => _connection == null ? string.Empty : _connection.Id;
 
             public bool IsOpened => _connection != null && _connection.IsOpened;
             public Host Host { get; private set; }
@@ -83,15 +84,19 @@ namespace Netly
 
             public Task Close()
             {
-                if (_isOpeningOrClosing || !IsOpened) return Task.CompletedTask;
+                if (_isOpeningOrClosing || !IsOpened || _isConnecting) return Task.CompletedTask;
                 _isOpeningOrClosing = true;
 
-                return Task.Run(() =>
+                return Task.Run(async () =>
                 {
                     try
                     {
-                        _connection?.Close().Wait();
-                        _socket?.Dispose();
+                        if (!_isServer)
+                        {
+                            if (_connection != null) await _connection.Close();
+                            _socket?.Close();
+                            _socket?.Dispose();
+                        }
                     }
                     catch (Exception e)
                     {
@@ -99,9 +104,12 @@ namespace Netly
                     }
                     finally
                     {
+                        if (!_isServer) _socket = null;
+
                         _connection = null;
-                        _socket = null;
+                        _isConnecting = false;
                         _isOpeningOrClosing = false;
+                        On?.OnClose(null, null);
                     }
                 });
             }
@@ -241,14 +249,16 @@ namespace Netly
 
             private void InitConnection(ref Host host)
             {
-                var nextHost = host;
+                Event(null, string.Empty, MessageType.Reliable);
+
+                var myHost = new Host(host.IPEndPoint);
 
                 _connection = new Connection(host, _socket, _isServer)
                 {
                     OnOpen = () =>
                     {
                         // connection opened
-                        Host = nextHost;
+                        Host = myHost;
                         _isConnecting = false;
                         On.OnOpen?.Invoke(null, null);
                     },
