@@ -11,19 +11,23 @@ namespace Netly
     {
         internal sealed class Connection
         {
-            private const int
+            private readonly object _locker = new object();
+            private const uint ExtraTimeoutTime = 1000; // 1s
+
+            public const int
                 HandshakeDataPrefix = -1024 * (int)Math.PI * 2, //# -6144
                 HandshakeData1 /**/ = -2048 * (int)Math.PI * 4, //# -24576
                 HandshakeData2 /**/ = -4096 * (int)Math.PI * 8, //# -98304
                 HandshakeData3 /**/ = -8192 * (int)Math.PI * 16; //# -393216
 
-            public readonly List<int> HandshakeDataQueue = new List<int>();
-            public readonly bool IsServer;
-            public readonly Channel MyChannel;
-            public readonly Host MyHost;
-            public readonly Socket MySocket;
+            private readonly List<int> HandshakeDataQueue = new List<int>();
+            private readonly bool IsServer;
+            private readonly Channel MyChannel;
+            private readonly Host MyHost;
+            private readonly Socket MySocket;
             private string _receivedClientId = string.Empty;
             public string Id = string.Empty;
+            private DateTime ConnectionTimeoutAt;
 
 
             public Connection(Host host, Socket socket, bool isServer)
@@ -34,8 +38,11 @@ namespace Netly
                 MyChannel = new Channel(host)
                 {
                     SendRaw = SendRaw,
-                    OnRawData = OnRawDataHandler
+                    OnRawData = OnRawDataHandler,
                 };
+
+
+                UpdateTimeout(ExtraTimeoutTime);
             }
 
             public bool IsOpened { get; private set; }
@@ -110,10 +117,26 @@ namespace Netly
 
             private void SendRaw(byte[] bytes)
             {
-                if (IsServer)
-                    MySocket.BeginSendTo(bytes, 0, bytes.Length, SocketFlags.None, MyHost.EndPoint, null, null);
-                else
-                    MySocket.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, null, null);
+                if (IsOpened || IsConnecting)
+                {
+                    lock (_locker)
+                    {
+                        if (IsServer)
+                            MySocket.BeginSendTo(bytes, 0, bytes.Length, SocketFlags.None, MyHost.EndPoint, null, null);
+                        else
+                            MySocket.BeginSend(bytes, 0, bytes.Length, SocketFlags.None, null, null);
+                    }
+                }
+            }
+
+            private void UpdateTimeout(uint extraTime = 0)
+            {
+                ConnectionTimeoutAt = DateTime.UtcNow.AddMilliseconds(NoResponseTimeout + extraTime);
+            }
+
+            private bool GotTimeout()
+            {
+                return DateTime.UtcNow >= ConnectionTimeoutAt;
             }
 
             public void Send(ref byte[] data, MessageType messageType)
@@ -123,17 +146,32 @@ namespace Netly
 
             public Task Open()
             {
-                IsOpened = false;
-                IsConnecting = true;
-                HandshakeDataQueue.Clear();
-                _receivedClientId = string.Empty;
+                lock (_locker)
+                {
+                    IsOpened = false;
+                    IsConnecting = true;
+                    HandshakeDataQueue.Clear();
+                    _receivedClientId = string.Empty;
+                }
 
                 _ = Task.Run(() =>
                 {
                     while (IsOpened || IsConnecting)
                     {
+                        if (!IsConnecting)
+                        {
+                            if (GotTimeout())
+                            {
+                                OnClose?.Invoke();
+                                NetlyEnvironment.Logger.Create(
+                                    $"UDP Connection Close by Timeout (No Response), Id: {Id}");
+                                OnClose?.Invoke();
+                                break;
+                            }
+                        }
+
                         MyChannel.ToUpdateReliableQueue();
-                        Thread.Sleep(5);
+                        Thread.Sleep(Channel.UpdateDelay);
                     }
                 });
 
@@ -210,32 +248,47 @@ namespace Netly
                                 }
                         }
 
+                    lock (_locker)
+                    {
+                        IsOpened = isConnected;
+                        IsConnecting = false;
+                    }
+
                     if (isConnected)
                     {
-                        IsOpened = true;
-                        IsConnecting = false;
                         OnOpen();
                     }
                     else
                     {
-                        IsConnecting = false;
-                        IsOpened = false;
                         OnOpenFail(failMessage);
+                        NetlyEnvironment.Logger.Create(
+                            $"UDP Connection Fail by Timeout (Handshake Timeout), Id: {Id}");
                     }
 
                     if (IsServer) StartServerSideConnection(isConnected);
                 });
             }
 
-            public Task Close()
+            public void Close()
             {
-                // TODO: Maybe send data to close connection
-                return Task.CompletedTask;
+                lock (_locker)
+                {
+                    IsOpened = false;
+                    IsConnecting = false;
+                    MyChannel.Close();
+                }
             }
 
             public void InjectBuffer(ref byte[] bytes)
             {
-                MyChannel.OnReceiveRaw(ref bytes, MyHost);
+                lock (_locker)
+                {
+                    if (IsOpened || IsConnecting)
+                    {
+                        UpdateTimeout(ExtraTimeoutTime);
+                        MyChannel.OnReceiveRaw(ref bytes, MyHost);
+                    }
+                }
             }
         }
     }

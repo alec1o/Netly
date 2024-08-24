@@ -20,7 +20,7 @@ namespace Netly
 
             public void UpdateTimeout()
             {
-                TimeoutAt = DateTime.UtcNow.AddMilliseconds(Channel.ResentTimeout);
+                TimeoutAt = DateTime.UtcNow.AddMilliseconds(Channel.ResendReliablePackageDelay);
             }
         }
     }

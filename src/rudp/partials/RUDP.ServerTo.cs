@@ -20,6 +20,9 @@ namespace Netly
             private readonly Server _server;
             private bool _isOpeningOrClosing, _isClosed;
             private Socket _socket;
+            private int _handshakeTimeout;
+            private int _noResponseTimeout;
+            private const bool UseConnectionSecurity = true;
 
             public ServerTo(Server server)
             {
@@ -32,6 +35,8 @@ namespace Netly
                 _socket = null;
                 _isOpeningOrClosing = false;
                 _isClosed = true;
+                _handshakeTimeout = 5000; // 5s 
+                _noResponseTimeout = 5000; // 5s
             }
 
             public Host Host { get; private set; }
@@ -297,9 +302,43 @@ namespace Netly
                             continue;
                         }
 
+                        #region Prevent Invalid Data
+
+                        if (UseConnectionSecurity)
+                        {
+                            // detect expired data
+                            if (value.data.Length == 1)
+                            {
+                                if (value.data[0] == Channel.PingPackageBytes[0])
+                                {
+                                    // this client already disconnected, can't receive ping
+                                    continue;
+                                }
+
+                                if (value.data[0] == Channel.ClosePackageBytes[0])
+                                {
+                                    // this client already disconnected, ignore this package
+                                    continue;
+                                }
+                            }
+
+                            // detect if is connection package
+                            /*
+                            if (!Channel.IsValidEntryPoint(value.data))
+                            {
+                                continue;
+                            }
+                            */
+                        }
+
+                        #endregion
+
                         // create new context
-                        client = new Client(value.host, _socket);
-                        // TODO: client.OpenTimeout = _acceptTimeout;
+                        client = new Client(value.host, _socket)
+                        {
+                            HandshakeTimeout = GetHandshakeTimeout(),
+                            NoResponseTimeout = GetNoResponseTimeout()
+                        };
 
                         // save context
                         lock (_clientsLocker)
@@ -317,7 +356,7 @@ namespace Netly
                                     _clients.Remove(client);
                                 }
 
-                                client = null;
+                                client.To.Close();
                             }
                             else // connected successful
                             {
@@ -337,13 +376,60 @@ namespace Netly
                             }
                         });
 
-                        client.InjectBuffer(ref buffer);
+                        if (client.IsOpened)
+                        {
+                            client.InjectBuffer(ref buffer);
+                        }
                     }
                     catch (Exception e)
                     {
                         NetlyEnvironment.Logger.Create(e);
                     }
                 }
+            }
+
+            public int GetHandshakeTimeout()
+            {
+                return _handshakeTimeout;
+            }
+
+            public int GetNoResponseTimeout()
+            {
+                return _noResponseTimeout;
+            }
+
+            public void SetHandshakeTimeout(int value)
+            {
+                if (IsOpened)
+                    throw new Exception
+                    (
+                        $"Isn't possible use `{nameof(SetHandshakeTimeout)}` while socket is already connected."
+                    );
+
+                if (value < 1000)
+                    throw new Exception
+                    (
+                        $"Isn't possible use {nameof(SetHandshakeTimeout)} with value less than `1000`"
+                    );
+
+                _handshakeTimeout = value;
+            }
+
+            public void SetNoResponseTimeout(int value)
+            {
+                if (IsOpened)
+                    throw new Exception
+                    (
+                        $"Isn't possible use `{nameof(SetNoResponseTimeout)}` while socket is already connected."
+                    );
+
+                if (value < 1000)
+                    throw new Exception
+                    (
+                        $"Isn't possible use {nameof(SetNoResponseTimeout)} with value less than `2000`"
+                    );
+
+                _noResponseTimeout = value;
             }
         }
     }

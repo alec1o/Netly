@@ -13,10 +13,11 @@ namespace Netly
         {
             private readonly Client _client;
             private readonly bool _isServer;
-            private Connection _connection;
+            private Connection _connection { get; set; }
             private int _handshakeTimeout, _noResponseTimeout;
-            private bool _isOpeningOrClosing, _isConnecting;
+            private bool _isOpeningOrClosing, _isConnecting, _isClosed;
             private Socket _socket;
+            private readonly object _locker = new object();
 
             private ClientTo()
             {
@@ -28,6 +29,7 @@ namespace Netly
                 _handshakeTimeout = 5000;
                 _noResponseTimeout = 5000;
                 _isConnecting = false;
+                _isClosed = true;
             }
 
             public ClientTo(Client client) : this()
@@ -47,7 +49,15 @@ namespace Netly
 
             public string Id => _connection == null ? string.Empty : _connection.Id;
 
-            public bool IsOpened => _connection != null && _connection.IsOpened;
+            public bool IsOpened => GetConnection();
+
+            private bool GetConnection()
+            {
+                if (_connection == null) return false;
+                if (_isServer && _isConnecting) return true;
+                return _connection.IsOpened;
+            }
+
             public Host Host { get; private set; }
             private ClientOn On => _client._on;
 
@@ -84,16 +94,15 @@ namespace Netly
 
             public Task Close()
             {
-                if (_isOpeningOrClosing || !IsOpened || _isConnecting) return Task.CompletedTask;
+                if (_isOpeningOrClosing || _isClosed) return Task.CompletedTask;
                 _isOpeningOrClosing = true;
 
-                return Task.Run(async () =>
+                return Task.Run(() =>
                 {
                     try
                     {
                         if (!_isServer)
                         {
-                            if (_connection != null) await _connection.Close();
                             _socket?.Close();
                             _socket?.Dispose();
                         }
@@ -104,12 +113,17 @@ namespace Netly
                     }
                     finally
                     {
-                        if (!_isServer) _socket = null;
-
-                        _connection = null;
-                        _isConnecting = false;
-                        _isOpeningOrClosing = false;
-                        On?.OnClose(null, null);
+                        _isClosed = true;
+                        
+                        lock (_locker)
+                        {
+                            if (!_isServer) _socket = null;
+                            _connection?.Close();
+                            _isConnecting = false;
+                            _isOpeningOrClosing = false;
+                        }
+                        
+                        On.OnClose?.Invoke(null, null);
                     }
                 });
             }
@@ -249,8 +263,6 @@ namespace Netly
 
             private void InitConnection(ref Host host)
             {
-                Event(null, string.Empty, MessageType.Reliable);
-
                 var myHost = new Host(host.IPEndPoint);
 
                 _connection = new Connection(host, _socket, _isServer)
@@ -258,23 +270,33 @@ namespace Netly
                     OnOpen = () =>
                     {
                         // connection opened
-                        Host = myHost;
-                        _isConnecting = false;
-                        On.OnOpen?.Invoke(null, null);
+                        lock (_locker)
+                        {
+                            Host = myHost;
+                            _isClosed = false;
+                            _isConnecting = false;
+                            On.OnOpen?.Invoke(null, null);
+                        }
                     },
                     OnClose = () =>
                     {
-                        // connection closed
-                        _connection = null;
-                        _isConnecting = false;
-                        On.OnClose?.Invoke(null, null);
+                        lock (_locker)
+                        {
+                            _isConnecting = false;
+                            _connection.Close();
+                            Close();
+                        }
                     },
                     OnOpenFail = message =>
                     {
                         // error on open connection
-                        _connection = null;
-                        _isConnecting = false;
-                        On.OnError?.Invoke(null, new Exception(message));
+                        lock (_locker)
+                        {
+                            _isClosed = true;
+                            _isConnecting = false;
+                            _connection.Close();
+                            On.OnError?.Invoke(null, new Exception(message));
+                        }
                     },
                     OnData = (data, type) =>
                     {
@@ -285,11 +307,10 @@ namespace Netly
                     {
                         // event received
                         On.OnEvent?.Invoke(null, (name, data, type));
-                    }
+                    },
+                    HandshakeTimeout = GetHandshakeTimeout(),
+                    NoResponseTimeout = GetNoResponseTimeout()
                 };
-
-                _connection.HandshakeTimeout = GetHandshakeTimeout();
-                _connection.NoResponseTimeout = GetNoResponseTimeout();
 
                 StartConnection();
             }

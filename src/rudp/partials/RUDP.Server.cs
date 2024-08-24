@@ -18,6 +18,17 @@ namespace Netly
             }
 
             public string Id { get; }
+            public int HandshakeTimeout
+            {
+                get => _to.GetHandshakeTimeout();
+                set => _to.SetHandshakeTimeout(value);
+            }
+
+            public int NoResponseTimeout
+            {
+                get => _to.GetNoResponseTimeout();
+                set => _to.SetNoResponseTimeout(value);
+            }
             public Host Host => _to.Host;
             public bool IsOpened => _to.IsOpened;
             public IRUDP.ServerTo To => _to;
