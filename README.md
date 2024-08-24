@@ -35,13 +35,13 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   <tr>
     <th align="left" valign="center">🚀 <sub>Fully Implemented</sub></th>
     <td>
-      <sub><strong>Byter 3</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i></sub>
+      <sub><strong>Byter 3</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i> • <strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i></sub>
     </td>
   </tr>
   <tr>
     <th align="left" valign="center">🔧 <sub>Work in Progress</sub></th>
     <td>
-      <sub><strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i> • <strong>Documentation <sup>v4</sup></strong> • <strong>HTTP</strong> <i>Body (Enctype Detector and Parser)</i></sub> 
+      <sub><strong>Documentation <sup>v4</sup></strong> • <strong>HTTP</strong> <i>Body (Enctype Detector and Parser)</i></sub> 
     </td>
   </tr>
   <tr>
