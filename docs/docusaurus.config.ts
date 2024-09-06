@@ -96,8 +96,32 @@ const config: Config = {
                     title: "Docs",
                     items: [
                         {
-                            label: "Tutorial",
-                            to: "/docs/intro",
+                            label: "API",
+                            to: "/docs/overview",
+                        },
+                        {
+                            label: "Tutorials",
+                            to: "/docs/category/examples",
+                        },
+                        {
+                            label: " </>  Websocket",
+                            to: "/docs/category/websocket-examples",
+                        },
+                        {
+                            label: " </>  RUDP",
+                            to: "/docs/category/rudp-examples",
+                        },
+                        {
+                            label: " </>  HTTP",
+                            to: "/docs/category/http-examples",
+                        },
+                        {
+                            label: " </>  TCP",
+                            to: "/docs/category/tcp-examples",
+                        },
+                        {
+                            label: " </>  UDP",
+                            to: "/docs/category/udp-examples",
                         },
                     ],
                 },
