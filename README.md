@@ -847,7 +847,8 @@ server.On.Accept((client) =>
     {
         if (type == RUDP.Reliable) { ... }
         else if (type == RUDP.Unreliable) { ... }
-        else { /* NOTE: it's imposible */ }
+        else {  ... } /* type == RUDP.Sequenced */
+
         
         printf("client received a raw data");
     });
@@ -856,7 +857,7 @@ server.On.Accept((client) =>
     
         if (type == RUDP.Reliable) { ... }
         else if (type == RUDP.Unreliable) { ... }
-        else { /* NOTE: it's imposible */ }
+        else {  ... } /* type == RUDP.Sequenced */
         
         printf("client received a event");
     });    
@@ -873,10 +874,12 @@ server.To.Close();
 // broadcast raw data for all connected client
 server.To.DataBroadcast("text buffer", RUDP.Unreliable);
 server.To.DataBroadcast(new byte[] { 1, 2, 3 }, RUDP.Reliable);
+server.To.DataBroadcast(new byte[] { 3, 2, 1 }, RUDP.Sequenced);
 
 // broadcast event (netly event) for all connected client
 server.To.EventBroadcast("event name", "text buffer", RUDP.Unreliable);
 server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 }, RUDP.Reliable);
+server.To.EventBroadcast("event name", new byte[] { 3, 2, 1 }, RUDP.Sequenced);
 ```
 
 </details>
