@@ -163,7 +163,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td valign="top" align="left"></td>
 <td valign="top" align="left"></td>
 <td valign="top" align="left"><sub><a href="https://github.com/docsifyjs/docsify">Docsify</a> as documentation framework</sub></td>
-<td valign="top" align="left"><sub>Documentation improvement by <a href="https://github.com/dotnet/docfx">DocFx</a></sub></td>
+<td valign="top" align="left"><sub>Documentation improvement by <a href="https://github.com/facebook/docusaurus">Docusaurus</a> and <a href="https://github.com/Jan0660/DocFxMarkdownGen">DocFxMarkdownGen</a></sub></td>
 </tr>
 <tr> <!-- row #5 -->
 <td valign="top" align="left"></td>
