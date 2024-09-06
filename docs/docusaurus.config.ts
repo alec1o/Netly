@@ -82,6 +82,16 @@ const config: Config = {
                     label: "GitHub",
                     position: "right",
                 },
+                {
+                    href: "https://www.nuget.org/packages/Netly",
+                    label: "Nuget",
+                    position: "right",
+                },
+                {
+                    href: "https://assetstore.unity.com/packages/tools/network/225473",
+                    label: "Unity Asset Store",
+                    position: "right",
+                },
                 /* 
                 {
                     type: "docsVersionDropdown",
@@ -160,7 +170,7 @@ const config: Config = {
                     ],
                 },
             ],
-            copyright: `Copyright © ${new Date().getFullYear()} Netly, All rights reserved and Powered by. <a href="https://www.alecio.me">Alecio Furanze (@alec1o)</a>.`,
+            copyright: `Copyright © ${new Date().getFullYear()} Netly, All rights reserved and Powered by. <a target="_blank" href="https://www.alecio.me">Alecio Furanze (@alec1o)</a>.`,
         },
         prism: {
             theme: prismThemes.github,
