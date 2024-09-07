@@ -111,9 +111,11 @@ namespace Netly
 
                             _isClosed = false;
 
-                            On.OnOpen?.Invoke(null, null);
-
                             InitReceiver();
+
+                            _isOpening = false; // allow client send data on OnOpen callback.
+
+                            On.OnOpen?.Invoke(null, null);
                         }
                         catch (Exception e)
                         {
