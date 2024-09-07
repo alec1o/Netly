@@ -68,6 +68,7 @@ namespace Netly
                     _isServer = true;
                     _isClosed = false;
                     IsEncrypted = _server.IsEncrypted;
+                    Host = new Host(socket.RemoteEndPoint);
                     _serverValidatorCallback = validatorAction;
                 }
 
