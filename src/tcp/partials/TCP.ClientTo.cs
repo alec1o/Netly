@@ -169,7 +169,7 @@ namespace Netly
 
                 public void Data(byte[] data)
                 {
-                    if (CanSend == false || data == null) return;
+                    if (CanSend == false || data == null || data.Length <= 0) return;
 
                     SendDispatch(data);
                 }
@@ -193,35 +193,35 @@ namespace Netly
 
                 public void Data(string data)
                 {
-                    if (CanSend == false || data == null) return;
+                    if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
                     SendDispatch(data.GetBytes());
                 }
 
                 public void Data(string data, Encoding encoding)
                 {
-                    if (CanSend == false || data == null) return;
+                    if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
                     SendDispatch(data.GetBytes(encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
-                    if (CanSend == false || data == null || name == null) return;
+                    if (CanSend == false || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
                     SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data)
                 {
-                    if (CanSend == false || data == null || name == null) return;
+                    if (CanSend == false || string.IsNullOrEmpty(data) || string.IsNullOrEmpty(name)) return;
 
                     SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
-                    if (CanSend == false || data == null || name == null) return;
+                    if (CanSend == false || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data))return;
 
                     SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
