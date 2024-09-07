@@ -61,6 +61,13 @@ const config: Config = {
     ],
 
     themeConfig: {
+        markdown: {
+            mermaid: true,
+        },
+        colorMode: {
+            defaultMode: "dark",
+        },
+        themes: ["@docusaurus/theme-mermaid"],
         // Replace with your project's social card
         image: "img/docusaurus-social-card.jpg",
         navbar: {
