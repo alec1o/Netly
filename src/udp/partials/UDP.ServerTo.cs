@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -17,6 +16,7 @@ namespace Netly
             private class ServerTo : IUDP.ServerTo
             {
                 private readonly Server _server;
+                private readonly object _clientsLocker = new object();
 
                 private bool _isClosed, _isOpeningOrClosing;
 
@@ -39,7 +39,7 @@ namespace Netly
 
                 private ServerOn On => _server._on;
                 public bool IsOpened => !_isClosed && _socket != null;
-                public Host Host { get; set; }
+                public Host Host { get; private set; }
                 public List<Client> Clients { get; }
 
                 public Task Open(Host host)
@@ -90,9 +90,22 @@ namespace Netly
                         {
                             _socket?.Shutdown(SocketShutdown.Both);
 
-                            foreach (var client in Clients) await client.To.Close();
+                            Client[] clients;
 
-                            Clients.Clear();
+                            lock (_clientsLocker)
+                            {
+                                clients = Clients.ToArray();
+                            }
+
+                            foreach (var client in clients)
+                            {
+                                await client.To.Close();
+                            }
+
+                            lock (_clientsLocker)
+                            {
+                                Clients.Clear();
+                            }
 
                             _socket?.Close();
                             _socket?.Dispose();
@@ -108,6 +121,8 @@ namespace Netly
                             _isOpeningOrClosing = false;
                             On.OnClose?.Invoke(null, null);
                         }
+
+                        return Task.CompletedTask;
                     });
                 }
 
@@ -176,7 +191,8 @@ namespace Netly
 
                 public void Event(Host targetHost, string name, byte[] data)
                 {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+                    if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) || data == null ||
+                        data.Length <= 0) return;
 
                     Send(targetHost, NetlyEnvironment.EventManager.Create(name, data));
                 }
@@ -203,9 +219,16 @@ namespace Netly
 
                     try
                     {
-                        if (Clients.Count > 0)
-                            foreach (var client in Clients)
-                                client?.To.Data(data);
+                        Client[] clients;
+
+                        lock (_clientsLocker)
+                        {
+                            if (Clients.Count <= 0) return;
+                            clients = Clients.ToArray();
+                        }
+
+                        foreach (var client in clients)
+                            client?.To.Data(data);
                     }
                     catch (Exception e)
                     {
@@ -253,7 +276,8 @@ namespace Netly
                             return;
                         }
 
-                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint, AcceptCallback, null);
+                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint,
+                            AcceptCallback, null);
                     }
 
                     void AcceptCallback(IAsyncResult result)
@@ -275,16 +299,32 @@ namespace Netly
                             var newHost = new Host(remoteEndPoint);
 
                             // Find a client connected user by endpoint connection (IP, PORT)
-                            var client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
+
+                            Client client;
+
+                            lock (_clientsLocker)
+                            {
+                                client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
+                            }
 
                             if (client == null)
                             {
                                 // Create new client
                                 client = new Client(ref newHost, ref _socket);
-                                client.On.Close(() => Clients.Remove(client));
+                                client.On.Close(() =>
+                                {
+                                    lock (_clientsLocker)
+                                    {
+                                        Clients.Remove(client);
+                                        client = null;
+                                    }
+                                });
 
                                 // save client on list of connected client
-                                Clients.Add(client);
+                                lock (_clientsLocker)
+                                {
+                                    Clients.Add(client);
+                                }
 
                                 // invoke accept event
                                 On.OnAccept?.Invoke(null, client);
@@ -295,7 +335,6 @@ namespace Netly
 
                             // publish data for a connected client
                             client.OnServerBuffer(ref data);
-
                         }
                         catch (Exception e)
                         {
