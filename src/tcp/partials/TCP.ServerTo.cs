@@ -20,11 +20,15 @@ namespace Netly
                 private readonly object _lockAccept, _lockClient;
                 private readonly Server _server;
                 private readonly List<Socket> _socketList;
+                private byte[] _pfxCertificate;
+                private string _pfxPassword;
+                private SslProtocols _pfxCertificateProtocol;
 
                 private bool
                     _isOpening,
                     _isClosing,
-                    _isClosed;
+                    _isClosed,
+                    _enableEncryption;
 
 
                 private Socket _socket;
@@ -75,6 +79,13 @@ namespace Netly
                             var socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
                             On.OnModify?.Invoke(null, socket);
+
+                            if (_enableEncryption)
+                            {
+                                Certificate = new X509Certificate(_pfxCertificate, _pfxPassword);
+                                EncryptionProtocol = _pfxCertificateProtocol;
+                                IsEncrypted = _enableEncryption;
+                            }
 
                             socket.Bind(host.EndPoint);
 
@@ -169,14 +180,10 @@ namespace Netly
                             $"You must not update {nameof(Encryption)} while {nameof(IsOpened)} is {IsOpened}"
                         );
 
-
-                    if (enableEncryption)
-                    {
-                        Certificate = new X509Certificate(pfxCertificate, pfxPassword);
-                        EncryptionProtocol = protocols;
-                    }
-
-                    IsEncrypted = enableEncryption;
+                    _enableEncryption = enableEncryption;
+                    _pfxCertificate = pfxCertificate;
+                    _pfxPassword = pfxPassword;
+                    _pfxCertificateProtocol = protocols;
                 }
 
                 // ---
