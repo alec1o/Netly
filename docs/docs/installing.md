@@ -26,11 +26,11 @@ On this session we will learn how to install Netly in your project.
 
 ### Build Netly from source code (dll's)
 
-    - Dependencies
+    - #### Dependencies
         - [Git](https://git-scm.com)
         - [.NET](https://dotnet.microsoft.com)
 
-    - Build Steps
+    - #### Build Steps
         ```bash
         # clone Netly repo or download
         git clone https://github.com/Netly/Netly Netly
