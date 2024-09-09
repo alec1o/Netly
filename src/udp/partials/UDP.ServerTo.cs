@@ -113,63 +113,63 @@ namespace Netly
 
                 public void DataBroadcast(byte[] data)
                 {
-                    if (!IsOpened || data == null) return;
+                    if (!IsOpened || data == null || data.Length <= 0) return;
 
                     Broadcast(data);
                 }
 
                 public void DataBroadcast(string data)
                 {
-                    if (!IsOpened || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(data)) return;
 
                     Broadcast(data.GetBytes());
                 }
 
                 public void DataBroadcast(string data, Encoding encoding)
                 {
-                    if (!IsOpened || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(data)) return;
 
                     Broadcast(data.GetBytes(encoding));
                 }
 
                 public void EventBroadcast(string name, byte[] data)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
                     Broadcast(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void EventBroadcast(string name, string data)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 public void Data(Host targetHost, byte[] data)
                 {
-                    if (!IsOpened || targetHost == null || data == null) return;
+                    if (!IsOpened || targetHost == null || data == null || data.Length <= 0) return;
 
                     Send(targetHost, data);
                 }
 
                 public void Data(Host targetHost, string data)
                 {
-                    if (!IsOpened || targetHost == null || data == null) return;
+                    if (!IsOpened || targetHost == null || string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, data.GetBytes());
                 }
 
                 public void Data(Host targetHost, string data, Encoding encoding)
                 {
-                    if (!IsOpened || targetHost == null || data == null) return;
+                    if (!IsOpened || targetHost == null || string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, data.GetBytes(encoding));
                 }
@@ -183,20 +183,24 @@ namespace Netly
 
                 public void Event(Host targetHost, string name, string data)
                 {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+                    if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
+                        string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(Host targetHost, string name, string data, Encoding encoding)
                 {
-                    if (!IsOpened || targetHost == null || name == null || data == null) return;
+                    if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
+                        string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
                 private void Broadcast(byte[] data)
                 {
+                    if (data == null || data.Length <= 0) return;
+
                     try
                     {
                         if (Clients.Count > 0)
