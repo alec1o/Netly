@@ -123,35 +123,35 @@ namespace Netly
 
                 public void Data(string data)
                 {
-                    if (!IsOpened || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(data)) return;
 
                     Send(data.GetBytes());
                 }
 
                 public void Data(string data, Encoding encoding)
                 {
-                    if (!IsOpened || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(data)) return;
 
                     Send(data.GetBytes(encoding));
                 }
 
                 public void Event(string name, byte[] data)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
                     Send(NetlyEnvironment.EventManager.Create(name, data));
                 }
 
                 public void Event(string name, string data)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
-                    if (!IsOpened || name == null || data == null) return;
+                    if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
@@ -178,6 +178,8 @@ namespace Netly
 
                 private void Send(byte[] bytes)
                 {
+                    if (bytes == null || bytes.Length <= 0) return;
+
                     Send(Host, bytes);
                 }
 
@@ -189,7 +191,6 @@ namespace Netly
                     {
                         if (_isServer)
                         {
-
                             // this way of send just work on windows and linux, except macOs (maybe iOs)
                             _socket?.BeginSendTo
                             (
