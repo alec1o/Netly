@@ -83,7 +83,7 @@ const config: Config = {
                     position: "left",
                     label: "Docs",
                 },
-                { to: "/api", label: "API", position: "left" },
+                { to: "/docs/category/-api-reference", label: "API", position: "left" },
                 { to: "/blog", label: "Blog", position: "left" },
                 {
                     href: "https://github.com/alec1o/Netly",
