@@ -34,6 +34,13 @@ const config: Config = {
             "classic",
             {
                 docs: {
+                    lastVersion: "current",
+                    versions: {
+                        current: {
+                            label: "4.0.0",
+                            path: "/",
+                        },
+                    },
                     sidebarPath: "./sidebars.ts",
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
@@ -100,11 +107,9 @@ const config: Config = {
                     label: "Unity Asset Store",
                     position: "right",
                 },
-                /* 
                 {
                     type: "docsVersionDropdown",
                 },
-                */
             ],
         },
         footer: {

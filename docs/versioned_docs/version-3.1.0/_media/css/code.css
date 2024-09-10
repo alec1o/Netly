@@ -1,0 +1,51 @@
+/* Code space */
+.markdown-section pre {
+	padding: 8px !important;
+}
+
+	.markdown-section pre > code {
+		font-size: 13px !important;
+		padding: 8px !important;
+	}
+
+li > p {
+	margin: 2px !important;
+}
+
+li > h5 {
+	margin: 0 !important;
+	margin-top: 16px !important;
+}
+
+.markdown-section code {
+	color: #42b983;
+	font-size: 10px !important;
+}
+
+
+/* code highlight */
+.token {
+	color: whitesmoke !important;
+}
+
+	.token.namespace {
+		color: #2050ce !important;
+	}
+
+.markdown-section code,
+.markdown-section pre {
+	background-color: rgb(40, 45, 55) !important;
+}
+
+.token.punctuation,
+.lang-cs {
+	color: #fff !important;
+}
+
+.token.class-name,
+.token.function,
+.token.keyword {
+	color: rgb(255, 123, 114) !important;
+	color: dodgerblue !important;
+	color: aquamarine !important;
+}

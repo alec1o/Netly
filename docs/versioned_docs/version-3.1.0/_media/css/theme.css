@@ -1,0 +1,178 @@
+body,
+.sidebar {
+    background: rgb(20, 30, 40) !important;
+}
+
+    .sidebar a {
+        color: rgb(220, 220, 230) !important;
+    }
+
+    .sidebar li {
+        cursor: progress;
+        color: #42b983;
+        font-weight: bold;
+        text-transform: capitalize;
+    }
+
+* {
+    letter-spacing: 1px;
+}
+
+code * {
+    letter-spacing: normal !important;
+}
+
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    border-color: rgb(220, 220, 230) !important;
+    color: rgb(220, 220, 230) !important;
+}
+
+.github-corner svg {
+    fill: #2050ce;
+}
+
+section.cover.show {
+    background: none !important;
+    background-color: transparent !important;
+}
+
+.cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cover-main {
+    max-width: 75%;
+    margin: 0 auto;
+}
+
+    .cover-main ul {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        justify-content: start;
+        max-width: 100% !important;
+        border: 2px solid #2050ce;
+        padding: 12px 32px !important;
+        border-radius: 10px;
+    }
+
+    .cover-main li {
+        list-style: circle;
+        color: #42b983;
+        color: rgb(220, 220, 230);
+    }
+
+.sidebar .app-name .app-name-link {
+    color: #2050ce !important;
+    font-weight: bold;
+    font-size: 26px;
+}
+
+.sidebar-nav {
+    margin-top: 50px !important;
+}
+
+.alert {
+    border-width: 2px !important;
+}
+
+ul > li {
+    color: rgb(220, 220, 230) !important;
+}
+
+.icon.icon-note {
+    background-color: #42b983 !important;
+    border-radius: 50%;
+    box-shadow: 0 0 5px 1px #42b983;
+}
+
+.note > .title {
+    color: #42b983 !important;
+}
+
+.alert.note {
+    border-radius: 0 !important;
+    border-color: #42b983 !important;
+    background-color: rgba(66, 185, 131, .05) !important;
+}
+
+.sidebar-toggle {
+    border: 2px solid #2050ce;
+    background-color: rgb(30, 40, 50, .95);
+    border-right: none;
+    border-bottom: none;
+    width: 100px !important;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: start;
+    align-items: center;
+}
+
+    .sidebar-toggle::before {
+        margin-left: 5px;
+        font-size: 9px;
+        text-transform: uppercase;
+        font-weight: bold;
+        color: rgb(220, 220, 230);
+        font-family: Arial;
+        content: "show & hide";
+        white-space: nowrap !important;
+        letter-spacing: normal !important;
+    }
+
+.sidebar-toggle-button span {
+    background-color: white !important;
+}
+
+hr {
+    color: #42b983 !important;
+    border-color: #2050ce !important;
+}
+
+.app-name-link::after,
+.app-name-link::before {
+    white-space: nowrap;
+    position: absolute;
+    font-size: 12px;
+    content: "Powered by";
+    transform: translate(-32px, 32px);
+}
+
+.app-name-link::before {
+    content: "@alec1o";
+    transform: translate(105px, 32px);
+    color: #42b983;
+}
+
+.search {
+    padding: 20px !important;
+    border: none !important;
+}
+
+    .search input {
+        background-color: transparent;
+        border: 2px solid #2050ce !important;
+        border-radius: 15px;
+        color: rgb(220, 220, 230);
+        text-decoration: none;
+        text-transform: none;
+        box-shadow: none !important;
+        transition: 0.3s ease-in;
+    }
+
+        .search input::placeholder {
+            color: rgb(220, 220, 230);
+        }
+
+        .search input:focus {
+            border-radius: 5px;
+        }
