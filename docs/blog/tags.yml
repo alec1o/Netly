@@ -1,19 +1,49 @@
-facebook:
-  label: Facebook
-  permalink: /facebook
-  description: Facebook tag description
+netly:
+  label: Netly
+  permalink: /netly
+  description: Netly Socket C# Socket Library tag description
 
-hello:
-  label: Hello
-  permalink: /hello
-  description: Hello tag description
+netly-csharp:
+  label: Netly C#
+  permalink: /netly-csharp
+  description: Netly C# Socket Library tag description
 
-docusaurus:
-  label: Docusaurus
-  permalink: /docusaurus
-  description: Docusaurus tag description
+release:
+  label: Release
+  permalink: /release
+  description: Release tag description
 
-hola:
-  label: Hola
-  permalink: /hola
-  description: Hola tag description
+socket:
+  label: Socket
+  permalink: /socket
+  description: Socket tag description
+
+tutorial:
+  label: Tutorial
+  permalink: /tutorial
+  description: Tutorial tag description
+
+tcp:
+  label: tcp
+  permalink: /tcp
+  description: TCP tag description
+  
+udp:
+  label: udp
+  permalink: udp
+  description: UDP tag description
+
+http:
+  label: http
+  permalink: /http
+  description: HTTP tag description
+
+websocket:
+  label: websocket
+  permalink: /websocket
+  description: Websocket tag description
+
+rudp:
+  label: rudp
+  permalink: /rudp
+  description: RUDP tag description
