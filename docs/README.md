@@ -9,7 +9,7 @@
 
     dotnet tool install -g docfx
 
-    dotnet tool install -g dfmg
+    dotnet tool install -g DocFxMarkdownGen
     ```
 
 -   ##### Start the development server:
