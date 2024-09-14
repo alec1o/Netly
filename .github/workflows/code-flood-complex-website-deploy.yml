@@ -49,14 +49,12 @@ jobs:
 
     - uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        # Optional. Commit message for the created commit.
-        # Defaults to "Apply automatic changes"
         commit_message: "[``Auto``] build docs update"
-    
-        # Optional. Local and remote branch name where commit is going to be pushed
-        #  to. Defaults to the current branch.
-        #  You might need to set `create_branch: true` if the branch does not exist.
         branch: docs
+        create_branch: true
+        commit_user_name: "Alecio Furanze"
+        commit_user_email: "i@alecio.me"
+        commit_author: "Alecio Furanze"
 
     # - name: Force push documentation to `docs` branch of netly-docs repository
     #   working-directory: docs/
