@@ -56,6 +56,7 @@ jobs:
         commit_user_name: "Alecio Furanze"
         commit_user_email: "i@alecio.me"
         commit_author: "Alecio Furanze"
+        push_options: '--force' # rewrite docs branch with new content
 
     # - name: Force push documentation to `docs` branch of netly-docs repository
     #   working-directory: docs/
