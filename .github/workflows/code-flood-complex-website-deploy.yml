@@ -44,6 +44,7 @@ jobs:
       run: |
         docfx
         dfmg
+        rm docs/.gitignore
         rm docs/api/index.md
         cp docs.api._category_.json docs/api/_category_.json
 

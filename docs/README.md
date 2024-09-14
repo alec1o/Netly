@@ -19,17 +19,19 @@
 
 ### Generate API
 
-    ```sh
-    # DocFx
-    docfx
+```bash
+# DocFx
+docfx
 
-    # FxMarkdownGen
-    dfmg
+# FxMarkdownGen
+dfmg
 
-    # config
-    rm docs/api/index.md
-    cp docs.api._category_.json docs/api/_category_.json
-    ```
+# config
+rm docs/api/index.md
+cp docs.api._category_.json docs/api/_category_.json
+    # in workflow
+    rm docs/.gitignore
+```
 
 -   ##### Dependencies
     -   [Docusaurus](https://github.com/facebook/docusaurus)
