@@ -39,10 +39,6 @@ jobs:
       working-directory: docs/
       run: dotnet tool install -g DocFxMarkdownGen
 
-    - name: Start development server
-      working-directory: docs/
-      run: pnpm start
-
     - name: Generate API documentation
       working-directory: docs/
       run: |
