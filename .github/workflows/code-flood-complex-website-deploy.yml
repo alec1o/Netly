@@ -56,7 +56,7 @@ jobs:
         git checkout docs
         git add .
         git commit -m "[AUTO] update docs"
-        git remote add automatic https://github.com/aleciofuranze/netly-docs
+        git remote add automatic https://${{ secrets.GITHUB_TOKEN }}@github.com/aleciofuranze/netly-docs
         git push --force automatic docs
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
