@@ -1,0 +1,66 @@
+name: Build Website
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.15.0' # specify the node version you're using
+
+    - name: Install Node.js dependencies (PNPM)
+      working-directory: docs/
+      run: |
+        corepack enable
+        corepack prepare pnpm@latest --activate
+        pnpm install
+
+    - name: Set up .NET 6 SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.x'
+
+    - name: Install DocFx
+      working-directory: docs/
+      run: dotnet tool install -g docfx
+
+    - name: Install FxMarkdownGen (dfmg)
+      working-directory: docs/
+      run: dotnet tool install -g dfmg
+
+    - name: Start development server
+      working-directory: docs/
+      run: pnpm start
+
+    - name: Generate API documentation
+      working-directory: docs/
+      run: |
+        docfx
+        dfmg
+        rm docs/api/index.md
+        cp docs.api._category_.json docs/api/_category_.json
+
+    - name: Force push documentation to `docs` branch of netly-docs repository
+      working-directory: docs/
+      run: |
+        git config --global user.name 'Alecio Furanze (CODE FLOOD)'
+        git config --global user.email 'i@alecio.me'
+        git branch docs
+        git checkout docs
+        git add .
+        git commit -m "[AUTO] update docs"
+        git remote add automatic https://github.com/aleciofuranze/netly-docs
+        git push --force automatic docs
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
