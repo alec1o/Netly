@@ -1,4 +1,4 @@
-FROM node:20.17.0-alpine
+FROM node:20
 
 RUN npm install -g pnpm
 
