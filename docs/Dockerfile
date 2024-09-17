@@ -13,4 +13,6 @@ COPY . .
 
 EXPOSE 3000/tcp
 
-CMD ["pnpm", "serve", "--port", "3000", "--host", "0.0.0.0"]
+ENV PORT=3000
+
+CMD ["pnpm", "serve", "--port", "${PORT}", "--host", "0.0.0.0"]
