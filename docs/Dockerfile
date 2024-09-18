@@ -9,9 +9,9 @@ COPY pnpm-lock.yaml ./
 
 RUN pnpm install
 
-RUN pnpm build
-
 COPY . .
+
+RUN pnpm build
 
 EXPOSE 3000/tcp
 
