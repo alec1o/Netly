@@ -136,7 +136,7 @@ const config: Config = {
                         },
                         {
                             label: "☄️ RUDPㅤㅤ˗ˏˋ ᴍᴠᴘ ˎˊ˗",
-                            to: "/docs/category/-rudp-examples",
+                            to: "/docs/category/%EF%B8%8F-rudp-examples",
                         },
                         {
                             label: "🍷 HTTP",
@@ -144,7 +144,7 @@ const config: Config = {
                         },
                         {
                             label: "❤️‍🔥 Websocketㅤㅤ˗ˏˋ ♡︎ ˎˊ˗",
-                            to: "/docs/category/-websocket-examples",
+                            to: "/docs/category/%EF%B8%8F-websocket-examples",
                         },
                     ],
                 },
