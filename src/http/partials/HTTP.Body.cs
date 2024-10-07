@@ -16,8 +16,7 @@ namespace Netly
                 Binary = buffer;
                 Text = buffer.GetString(encoding);
                 Enctype = GetEnctypeFromHeader(ref header);
-                BinaryForm = new Dictionary<string, byte[]>();
-                _encoding = encoding;
+                Encoding = encoding;
 
                 switch (Enctype)
                 {
@@ -33,21 +32,16 @@ namespace Netly
                 }
             }
 
+
             public Enctype Enctype { get; }
             public string Text { get; }
             public byte[] Binary { get; }
-            public Dictionary<string, byte[]> BinaryForm { get; }
-            public Dictionary<string, string> TextForm => GetTextQueries();
-            private readonly Encoding _encoding;
-
-            private Dictionary<string, string> GetTextQueries()
-            {
-                return BinaryForm.ToDictionary(x => x.Key, x => x.Value.GetString(_encoding));
-            }
-
+            public IHTTP.EnctypeParser Parser { get; }
+            public Encoding Encoding { get; }
+            
             private void ParseForm(Enctype enctype)
             {
-                throw new NotImplementedException(nameof(ParseForm));
+                
             }
 
             private static Enctype GetEnctypeFromHeader(ref Dictionary<string, string> headers)

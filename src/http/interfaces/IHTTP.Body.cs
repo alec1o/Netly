@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Text;
 
 namespace Netly.Interfaces
 {
@@ -6,6 +6,12 @@ namespace Netly.Interfaces
     {
         public interface Body
         {
+            /// <summary>
+            /// Body Encoding
+            /// <br/> <i>If not found in HTTP header UTF-8 is used by Default</i>
+            /// </summary>
+            Encoding Encoding { get; }
+            
             /// <summary>
             ///     Enctype type
             /// </summary>
@@ -22,14 +28,9 @@ namespace Netly.Interfaces
             byte[] Binary { get; }
 
             /// <summary>
-            ///     Get value from Enctype content (return string)
+            /// Enctype Parser: Make easy and seamless parse JSON, YML, UrlEncoded, and more!
             /// </summary>
-            Dictionary<string, string> TextForm { get; }
-
-            /// <summary>
-            ///     Get value from Enctype content (return bytes)
-            /// </summary>
-            Dictionary<string, byte[]> BinaryForm { get; }
+            EnctypeParser Parser { get; }
         }
     }
 }
