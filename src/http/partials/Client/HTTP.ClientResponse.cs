@@ -58,7 +58,8 @@ namespace Netly
                     response.RequestMessage.RequestUri.Scheme.Equals("HTTPS", StringComparison.OrdinalIgnoreCase);
 
                 // body
-                Body = new Body(response.Content.ReadAsByteArrayAsync().Result, Encoding, Headers);
+                var buffer = response.Content.ReadAsByteArrayAsync().Result;
+                Body = new Body(ref buffer, Encoding, Headers);
 
                 // status
                 Status = (int)response.StatusCode;

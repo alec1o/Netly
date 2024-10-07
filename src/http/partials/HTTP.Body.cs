@@ -11,38 +11,20 @@ namespace Netly
     {
         internal class Body : IHTTP.Body
         {
-            public Body(byte[] buffer, Encoding encoding, Dictionary<string, string> header)
+            public Body(ref byte[] buffer, Encoding encoding, Dictionary<string, string> header)
             {
                 Binary = buffer;
+                Encoding = encoding;
                 Text = buffer.GetString(encoding);
                 Enctype = GetEnctypeFromHeader(ref header);
-                Encoding = encoding;
-
-                switch (Enctype)
-                {
-                    case Enctype.UrlEncoded:
-                    case Enctype.Multipart:
-                    case Enctype.Json:
-                    case Enctype.Yaml:
-                    case Enctype.MultipartRelated:
-                    {
-                        ParseForm(Enctype);
-                        break;
-                    }
-                }
+                Parser = new EnctypeParser(Enctype, ref buffer);
             }
-
 
             public Enctype Enctype { get; }
             public string Text { get; }
             public byte[] Binary { get; }
             public IHTTP.EnctypeParser Parser { get; }
             public Encoding Encoding { get; }
-            
-            private void ParseForm(Enctype enctype)
-            {
-                
-            }
 
             private static Enctype GetEnctypeFromHeader(ref Dictionary<string, string> headers)
             {
