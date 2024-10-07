@@ -24,12 +24,12 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Get value from Enctype content (return string)
             /// </summary>
-            Dictionary<string, string> TextQueries { get; }
+            Dictionary<string, string> TextForm { get; }
 
             /// <summary>
             ///     Get value from Enctype content (return bytes)
             /// </summary>
-            Dictionary<string, byte[]> BinaryQueries { get; }
+            Dictionary<string, byte[]> BinaryForm { get; }
         }
     }
 }
