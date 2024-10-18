@@ -1,0 +1,8 @@
+{
+    "label": "🔍 API Reference",
+    "position": 1000,
+    "link": {
+        "type": "generated-index",
+        "description": "The Netly API Reference is organized by namespaces. Each namespace includes all the classes and methods available in the Netly API. If you encounter any incorrect types or undocumented sections, you can click on `View Source` to add or improve descriptions. Your contributions help make Netly even better 💎!"
+    }
+}
