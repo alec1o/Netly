@@ -41,7 +41,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   <tr>
     <th align="left" valign="center">🔧 <sub>Work in Progress</sub></th>
     <td>
-      <sub><strong>Documentation <sup>v4</sup></strong> • <strong>HTTP</strong> <i>Body (Enctype Detector and Parser)</i></sub> 
+      <sub><strong>Documentation <sup>v4</sup></strong> <i><a href="https://github.com/alec1o/Netly/issues/63">#63 (New docs website)</a></i> <br> <strong>HTTP</strong> <i>Body (Enctype Detector and Parser) <a href="https://github.com/alec1o/Netly/issues/67">#67 (Body Parser as Middleware)</a></i></sub> 
     </td>
   </tr>
   <tr>
