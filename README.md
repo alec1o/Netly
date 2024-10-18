@@ -29,7 +29,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   </a>
 </div>
 
-> ###### Version 4 Development Status
+> ###### Version 4 Development Roadmap
 
 <table>
   <tr>
@@ -46,7 +46,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   </tr>
   <tr>
     <th align="left" valign="center">🔜 <sub>Pending Features</sub></th>
-    <td>-</td>
+    <td><sub>Adding <a href="https://github.com/alec1o/Byter">Byter</a> v4 <sup>*In development</sup> <br> Adding RUDP tests <br> Adding HTTP tests <br> Adding Websocket tests</sub></td>
   </tr>
 </table>
 
