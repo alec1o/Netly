@@ -11,19 +11,52 @@ namespace Netly
     {
         internal class Body : IHTTP.Body
         {
+            private readonly byte[] _binary;
+
+            private readonly Dictionary<Enctype, Func<Type, object>> _handlers;
+            private readonly object _parseLock = new object();
+            private string _text;
+
             public Body(ref byte[] buffer, Encoding encoding, Dictionary<string, string> header)
             {
-                Binary = buffer;
+                _binary = buffer;
                 Encoding = encoding;
-                Text = buffer.GetString(encoding);
+                _handlers = new Dictionary<Enctype, Func<Type, object>>();
                 Enctype = GetEnctypeFromHeader(ref header);
-                Parser = new EnctypeParser(Enctype, ref buffer);
             }
 
             public Enctype Enctype { get; }
-            public string Text { get; }
-            public byte[] Binary { get; }
-            public IHTTP.EnctypeParser Parser { get; }
+            byte[] IHTTP.Body.Binary => _binary;
+            string IHTTP.Body.Text => _text ?? (_text = _binary.GetString(Encoding));
+
+            public T Parse<T>()
+            {
+                return Parse<T>(Enctype);
+            }
+
+            public T Parse<T>(Enctype enctype)
+            {
+                lock (_parseLock)
+                {
+                    if (_handlers.TryGetValue(enctype, out var handler))
+                        if (handler != null)
+                            return (T)handler(typeof(T));
+
+                    return default;
+                }
+            }
+
+            public void OnParse(Enctype enctype, bool replaceOnMatch, Func<Type, object> handler)
+            {
+                lock (_parseLock)
+                {
+                    if (!_handlers.ContainsKey(enctype))
+                        _handlers.Add(enctype, handler);
+                    else if (replaceOnMatch)
+                        _handlers[enctype] = handler;
+                }
+            }
+
             public Encoding Encoding { get; }
 
             private static Enctype GetEnctypeFromHeader(ref Dictionary<string, string> headers)

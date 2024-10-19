@@ -2,7 +2,7 @@ namespace Netly.Interfaces
 {
     public static partial class IHTTP
     {
-        public interface EnctypeObject
+        internal interface EnctypeObject
         {
             bool IsNull { get; }
             string String { get; }

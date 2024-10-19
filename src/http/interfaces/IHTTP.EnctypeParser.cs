@@ -2,7 +2,7 @@ namespace Netly.Interfaces
 {
     public static partial class IHTTP
     {
-        public interface EnctypeParser
+        internal interface EnctypeParser
         {
             bool IsValid { get; }
             string[] Keys { get; }
