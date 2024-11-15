@@ -73,6 +73,9 @@ namespace Netly
                         if (host == null) throw new NullReferenceException(nameof(host));
 
                         _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                        
+                        On.OnModify?.Invoke(null, _socket);
+                        
                         _socket.Connect(host.EndPoint);
 
                         InitConnection(ref host);
