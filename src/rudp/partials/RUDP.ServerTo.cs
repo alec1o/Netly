@@ -373,6 +373,10 @@ namespace Netly
 
                                 // invoke new client
                                 On.OnAccept?.Invoke(null, client);
+                                
+                                // start client connection callback
+                                client._on?.OnModify(null, _socket);
+                                client._on?.OnOpen(null, null);
                             }
                         });
 
