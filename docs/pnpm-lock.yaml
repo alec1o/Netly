@@ -1803,8 +1803,8 @@ packages:
       typescript:
         optional: true
 
-  cross-spawn@7.0.3:
-    resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
+  cross-spawn@7.0.6:
+    resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
   crypto-random-string@4.0.0:
@@ -2706,8 +2706,8 @@ packages:
   http-parser-js@0.5.8:
     resolution: {integrity: sha512-SGeBX54F94Wgu5RH3X5jsDtf4eHyRogWX1XGT3b4HuW3tQPM4AaBzoUji/4AAJNXCEOWZ5O0DgZmJw1947gD5Q==}
 
-  http-proxy-middleware@2.0.6:
-    resolution: {integrity: sha512-ya/UeJ6HVBYxrgYotAZo1KvPWlgB48kUJLDePFeneHsVujFaW5WNj2NgWCAE//B1Dl02BIfYlpNgBy8Kf8Rjmw==}
+  http-proxy-middleware@2.0.7:
+    resolution: {integrity: sha512-fgVY8AV7qU7z/MmXJ/rxwbrtQH4jBQ9m7kp3llF0liB7glmFeVZFBepQb32T3y8n8k2+AEYuMPCpinYW+/CuRA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@types/express': ^4.17.13
@@ -3194,8 +3194,8 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
-  mermaid@10.9.1:
-    resolution: {integrity: sha512-Mx45Obds5W1UkW1nv/7dHRsbfMM1aOKA2+Pxs/IGHNonygDHwmng8xTHyS9z4KWVi0rbko8gjiBmuwwXQ7tiNA==}
+  mermaid@10.9.3:
+    resolution: {integrity: sha512-V80X1isSEvAewIL3xhmz/rVmc27CVljcsbWxkxlWJWY/1kQa4XOABqpDl2qQLGKzpKm6WbTfUEKImBlUfFYArw==}
 
   methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}
@@ -6368,7 +6368,7 @@ snapshots:
       '@docusaurus/theme-common': 3.5.2(@docusaurus/plugin-content-docs@3.5.2(@mdx-js/react@3.0.1(@types/react@18.3.5)(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4))(@docusaurus/types@3.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.5.4)
       '@docusaurus/types': 3.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@docusaurus/utils-validation': 3.5.2(@docusaurus/types@3.5.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.5.4)
-      mermaid: 10.9.1
+      mermaid: 10.9.3
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       tslib: 2.7.0
@@ -6885,7 +6885,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 22.5.4
 
   '@types/send@0.17.4':
     dependencies:
@@ -7490,7 +7490,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.5.4
 
-  cross-spawn@7.0.3:
+  cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
       shebang-command: 2.0.0
@@ -8066,7 +8066,7 @@ snapshots:
 
   execa@5.1.1:
     dependencies:
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       get-stream: 6.0.1
       human-signals: 2.1.0
       is-stream: 2.0.1
@@ -8559,7 +8559,7 @@ snapshots:
 
   http-parser-js@0.5.8: {}
 
-  http-proxy-middleware@2.0.6(@types/express@4.17.21):
+  http-proxy-middleware@2.0.7(@types/express@4.17.21):
     dependencies:
       '@types/http-proxy': 1.17.15
       http-proxy: 1.18.1
@@ -9110,7 +9110,7 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  mermaid@10.9.1:
+  mermaid@10.9.3:
     dependencies:
       '@braintree/sanitize-url': 6.0.4
       '@types/d3-scale': 4.0.8
@@ -10116,7 +10116,7 @@ snapshots:
       address: 1.2.2
       browserslist: 4.23.3
       chalk: 4.1.2
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       detect-port-alt: 1.1.6
       escape-string-regexp: 4.0.0
       filesize: 8.0.7
@@ -10990,7 +10990,7 @@ snapshots:
       express: 4.21.0
       graceful-fs: 4.2.11
       html-entities: 2.5.2
-      http-proxy-middleware: 2.0.6(@types/express@4.17.21)
+      http-proxy-middleware: 2.0.7(@types/express@4.17.21)
       ipaddr.js: 2.2.0
       launch-editor: 2.9.1
       open: 8.4.2
