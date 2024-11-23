@@ -37,7 +37,20 @@ namespace Netly
                     {
                         var server = new HttpListener();
 
-                        var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{host.Host}:{host.Port}/";
+                        var hostScheme = host.Host.ToLower();
+
+                        switch (hostScheme)
+                        {
+                            case "0.0.0.0":
+                            case "localhost":
+                            case "::":
+                            case "*":
+                            case ".":
+                                hostScheme = "*";
+                                break;
+                        }
+
+                        var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{hostScheme}:{host.Port}/";
 
                         server.Prefixes.Add(httpUrl);
 
