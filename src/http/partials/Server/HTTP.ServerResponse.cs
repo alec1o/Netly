@@ -20,12 +20,7 @@ namespace Netly
                 NativeResponse = response;
                 IsOpened = true;
                 Encoding = Encoding.UTF8;
-                Headers = new Dictionary<string, string>
-                {
-                    { "Server", "NETLY HTTP/S" },
-                    { "Content-Type", "text/html; charset=utf-8" },
-                    { "X-XSS-Protection", "1; mode=block" }
-                };
+                Headers = new Dictionary<string, string>();
                 Cookies = Array.Empty<Cookie>();
                 _response = response;
             }

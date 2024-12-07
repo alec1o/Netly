@@ -340,7 +340,12 @@ namespace Netly
 
                 if (map == null)
                 {
+                    response.Headers["X-XSS-Protection"] = "1; mode=block";
+                    response.Headers["Content-Type"] = "text/html; charset=utf-8";
+                    response.Headers["Server"] = "NETLY HTTP/S";
+
                     response.Send(404, DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}"));
+
                     next();
                     return;
                 }
