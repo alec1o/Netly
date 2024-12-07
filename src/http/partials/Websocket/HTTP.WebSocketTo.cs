@@ -292,6 +292,9 @@ namespace Netly
                 if (_initServerSide) return;
                 _ReceiveData();
                 _initServerSide = true;
+
+                _socket._on.OnModify?.Invoke(null, _websocket);
+                _socket._on.OnOpen?.Invoke(null, null);
             }
         }
     }
