@@ -19,7 +19,7 @@ namespace Netly
             private bool _tryConnecting, _tryClosing, _initServerSide;
             private ClientWebSocket _websocket;
             private System.Net.WebSockets.WebSocket _websocketServerSide;
-            public Uri MyUri = new Uri("https://www.example.com");
+            public Uri MyUri = new Uri("wss://www.example.com");
 
             public WebsocketTo(WebSocket socket)
             {
