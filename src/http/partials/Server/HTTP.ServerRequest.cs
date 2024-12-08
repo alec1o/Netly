@@ -25,7 +25,11 @@ namespace Netly
                 {
                     Queries = new Dictionary<string, string>();
                     foreach (var queryKey in request.QueryString.AllKeys)
+                    {
+                        if (string.IsNullOrWhiteSpace(queryKey)) continue;
+
                         Queries.Add(queryKey, request.QueryString[queryKey] ?? string.Empty);
+                    }
                 }
 
                 {
