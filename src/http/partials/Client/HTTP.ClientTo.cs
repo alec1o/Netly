@@ -119,7 +119,7 @@ namespace Netly
                     }
                     catch (Exception ex)
                     {
-                        NetlyEnvironment.Logger.Create(ex);
+                        NetlyEnvironment.Logger.Create(ex.Message);
                         On.OnError?.Invoke(null, ex);
                     }
                     finally

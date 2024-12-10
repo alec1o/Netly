@@ -124,11 +124,12 @@ namespace Netly
                         try
                         {
                             _response.Close();
-                            Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
+                            NetlyEnvironment.Logger.Create($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
                         }
                         catch (Exception exception)
                         {
-                            Console.WriteLine($"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
+                            NetlyEnvironment.Logger.Create(
+                                $"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
                         }
                     }
                     finally
