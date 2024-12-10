@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Netly.Interfaces;
 
@@ -164,30 +166,47 @@ namespace Netly
             {
                 _listener.BeginGetContext(AcceptCallback, null);
 
+                return;
+
                 void AcceptCallback(IAsyncResult result)
                 {
                     if (IsOpened)
                     {
-                        var context = _listener.EndGetContext(result);
-
-                        Task.Run(() =>
-                        {
-                            try
-                            {
-                                HandleConnection(context);
-                            }
-                            catch (Exception e)
-                            {
-                                NetlyEnvironment.Logger.Create($"{this}: {e}");
-                            }
-                        });
-
+                        HandleContext(_listener.EndGetContext(result));
                         InitAccept();
                     }
                     else
                     {
                         Close();
                     }
+                }
+
+                void HandleContext(HttpListenerContext context)
+                {
+                    Task.Run(async () =>
+                    {
+                        HttpListenerWebSocketContext socket = null;
+
+                        try
+                        {
+                            if (context.Request.IsWebSocketRequest)
+                                socket = await context.AcceptWebSocketAsync(null);
+
+                            HandleConnection(context, socket);
+                        }
+                        catch (Exception e)
+                        {
+                            if (socket?.WebSocket != null)
+                                await socket.WebSocket.CloseAsync
+                                (
+                                    WebSocketCloseStatus.InternalServerError,
+                                    string.Empty,
+                                    CancellationToken.None
+                                );
+
+                            NetlyEnvironment.Logger.Create($"{this}: {e}");
+                        }
+                    });
                 }
             }
 
@@ -202,27 +221,15 @@ namespace Netly
                 return html;
             }
 
-            private void HandleConnection(HttpListenerContext context)
+            private void HandleConnection(HttpListenerContext context, HttpListenerWebSocketContext socketContext)
             {
                 var request = new ServerRequest(context.Request);
 
-                var response = new ServerResponse(context.Response, request.IsWebSocket);
+                var response = new ServerResponse(context.Response, socketContext);
 
                 var middlewares = _server.MyMiddleware.Middlewares.Length <= byte.MinValue
                     ? new List<IHTTP.MiddlewareDescriptor>()
                     : _server.MyMiddleware.Middlewares.ToList();
-
-
-                // adding map middleware
-                middlewares.Add
-                (
-                    new MiddlewareDescriptor
-                    (
-                        path: Middleware.GlobalPath,
-                        useParams: false,
-                        callback: (_, __, next) => MapMiddlewareCallback(context, request, response, next)
-                    )
-                );
 
                 var descriptors = middlewares.Where(x =>
                 {
@@ -250,15 +257,18 @@ namespace Netly
                     }
 
                     return true;
-                }).Select(x => (MiddlewareDescriptor)x).ToArray();
+                }).Select(x => (MiddlewareDescriptor)x).ToList();
 
-                if (descriptors.Length <= 0)
-                {
-                    response.Close();
-                    return;
-                }
+                descriptors.Add
+                (
+                    new MiddlewareDescriptor
+                    (
+                        path: Middleware.GlobalPath,
+                        useParams: false,
+                        callback: (_, __, next) => MapMiddlewareCallback(context, request, response, next))
+                );
 
-                for (var i = 0; i < descriptors.Length; i++)
+                for (var i = 0; i < descriptors.Count; i++)
                 {
                     var descriptor = descriptors[i];
 
@@ -271,15 +281,14 @@ namespace Netly
                         descriptor.Next = null;
                     }
                 }
-
-                var mainDescriptor = descriptors[0];
-                mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
+                
+                descriptors[0].Callback(request, response, () => descriptors[0].Execute(request, response));
             }
 
-            private void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
+            private async void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
                 ServerResponse response, Action next)
             {
-                if (!response.IsOpened || !context.Response.OutputStream.CanWrite)
+                if (!response.IsOpened)
                 {
                     // request is already response by another middleware
                     next();
@@ -337,11 +346,23 @@ namespace Netly
 
                 if (map == null)
                 {
-                    response.Headers["X-XSS-Protection"] = "1; mode=block";
-                    response.Headers["Content-Type"] = "text/html; charset=utf-8";
-                    response.Headers["Server"] = "NETLY HTTP/S";
+                    if (request.IsWebSocket)
+                    {
+                        await response.WebSocketContext.WebSocket.CloseAsync
+                        (
+                            WebSocketCloseStatus.EndpointUnavailable,
+                            string.Empty,
+                            CancellationToken.None
+                        );
+                    }
 
-                    response.Send(404, DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}"));
+                    if (context.Response.OutputStream.CanWrite)
+                    {
+                        response.Headers["X-XSS-Protection"] = "1; mode=block";
+                        response.Headers["Content-Type"] = "text/html; charset=utf-8";
+                        response.Headers["Server"] = "NETLY HTTP/S";
+                        response.Send(404, DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}"));
+                    }
 
                     next();
                     return;
@@ -355,9 +376,7 @@ namespace Netly
                 }
                 else // IS WEBSOCKET CONNECTION
                 {
-                    var ws = context.AcceptWebSocketAsync(null).Result;
-
-                    var websocket = new WebSocket(ws.WebSocket, request);
+                    var websocket = new WebSocket(response.WebSocketContext.WebSocket, request);
 
                     websocket.On.Open(() =>
                     {

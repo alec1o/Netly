@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Net.WebSockets;
 using System.Text;
 
 namespace Netly.Interfaces
@@ -12,6 +13,11 @@ namespace Netly.Interfaces
             ///     Native Response Object
             /// </summary>
             HttpListenerResponse NativeResponse { get; }
+            
+            /// <summary>
+            ///     WebSocket Context Object (valid only when 'ServerRequest.IsWebSocket is <i>true</i>', otherwise is 'null')
+            /// </summary>
+            HttpListenerWebSocketContext WebSocketContext { get; }
 
             /// <summary>
             ///     Response Headers

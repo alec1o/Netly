@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.WebSockets;
 using System.Text;
 
 namespace Netly.Interfaces
@@ -70,7 +71,7 @@ namespace Netly.Interfaces
             bool IsLocalRequest { get; }
 
             /// <summary>
-            ///     Return true if connection is encrypted e.g SSL or TLS protocol
+            ///     Return true if connection is encrypted e.g. SSL or TLS protocol
             /// </summary>
             bool IsEncrypted { get; }
 
@@ -79,6 +80,7 @@ namespace Netly.Interfaces
             /// </summary>
             Body Body { get; }
             
+
             /// <summary>
             ///     Request Enctype
             /// </summary>
