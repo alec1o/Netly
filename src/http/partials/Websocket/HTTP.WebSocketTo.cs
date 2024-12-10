@@ -14,6 +14,11 @@ namespace Netly
     {
         internal class WebsocketTo : IHTTP.WebSocketTo
         {
+            /// <summary>
+            ///     Prevents port collision during rapid WebSocket client initialization
+            /// </summary>
+            private static readonly object CONNECT_LOCKER = new object();
+
             private readonly bool _isServerSide;
             private readonly WebSocket _socket;
             public readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
@@ -56,10 +61,26 @@ namespace Netly
 
                 return Task.Run(async () =>
                 {
+                    Thread.Sleep(500);
+
                     try
                     {
-                        var ws = new ClientWebSocket();
+                        ClientWebSocket ws;
 
+                        lock (CONNECT_LOCKER)
+                        {
+                            // Why is this lock necessary?
+                            // When creating multiple WebSocket clients in quick succession, the operating system may reuse the same 
+                            // local port for different connections before fully releasing the previous ones. This happens because 
+                            // ephemeral port allocation is fast but not always synchronized optimally for high-concurrency scenarios.
+                            //
+                            // By using this global lock (via CONNECT_LOCKER) and introducing a small delay, we allow the OS enough 
+                            // time to properly assign unique local ports for each connection. This effectively prevents port reuse 
+                            // issues and connection instability under heavy load.
+                            Thread.Sleep(TimeSpan.FromMilliseconds(byte.MaxValue)); // (Only client side)
+                            ws = new ClientWebSocket();
+                        }
+                        
                         foreach (var header in Headers) ws.Options.SetRequestHeader(header.Key, header.Value);
 
                         _socket._on.OnModify?.Invoke(null, ws);
