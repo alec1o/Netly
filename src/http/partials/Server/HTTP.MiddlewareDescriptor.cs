@@ -27,9 +27,7 @@ namespace Netly
 
             public void Execute(IHTTP.ServerRequest request, IHTTP.ServerResponse response)
             {
-                if (Next == null || Next.Callback == null) return;
-                
-                Next.Callback(request, response, () => Next.Execute(request, response));
+                Next?.Callback(request, response, () => Next?.Execute(request, response));
             }
         }
     }
