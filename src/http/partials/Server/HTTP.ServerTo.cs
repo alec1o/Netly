@@ -208,7 +208,10 @@ namespace Netly
 
                 var response = new ServerResponse(context.Response);
 
-                var middlewares = _server.MyMiddleware.Middlewares.ToList();
+                var middlewares = _server.MyMiddleware.Middlewares.Length <= byte.MinValue
+                    ? new List<IHTTP.MiddlewareDescriptor>()
+                    : _server.MyMiddleware.Middlewares.ToList();
+
 
                 // adding map middleware
                 middlewares.Add
@@ -217,72 +220,66 @@ namespace Netly
                     (
                         path: Middleware.GlobalPath,
                         useParams: false,
-                        callback: (myRequest, myResponse, next) =>
-                            MapMiddlewareCallback(context, request, response, next)
+                        callback: (_, __, next) => MapMiddlewareCallback(context, request, response, next)
                     )
                 );
 
-                if (middlewares.Count > 0)
+                var descriptors = middlewares.Where(x =>
                 {
-                    var descriptors = middlewares.Where(x =>
+                    // allow global middleware
+                    if (x.Path == Middleware.GlobalPath) return true;
+
+                    if (!x.UseParams)
+                        // simple path compare
+                        return Path.ComparePath(request.Path, x.Path);
+
+                    // compare custom path
+                    var result = Path.ParseParam(x.Path, request.Path);
+
+                    // is custom path invalid?
+                    if (!result.Valid) return false;
+
+                    // set values in request object
+                    foreach (var myParam in result.Params)
                     {
-                        // allow global middleware
-                        if (x.Path == Middleware.GlobalPath) return true;
+                        // only add value if not exist for prevent exception "Key in use!"
+                        // optimization: if key exist it mean that it was added before with other callback
+                        if (request.Params.ContainsKey(myParam.Key)) break;
+                        // save params on object
+                        request.Params.Add(myParam.Key, myParam.Value);
+                    }
 
-                        if (!x.UseParams)
-                            // simple path compare
-                            return Path.ComparePath(request.Path, x.Path);
+                    return true;
+                }).Select(x => (MiddlewareDescriptor)x).ToArray();
 
-                        // compare custom path
-                        var result = Path.ParseParam(x.Path, request.Path);
+                if (descriptors.Length <= 0)
+                {
+                    response.Close();
+                    return;
+                }
 
-                        // custom path is valid.
-                        if (result.Valid)
-                        {
-                            // set values in request object
-                            foreach (var myParam in result.Params)
-                            {
-                                // only add value if not exist for prevent exception "Key in use!"
-                                // optimization: if key exist it mean that it was added before with other callback
-                                if (request.Params.ContainsKey(myParam.Key)) break;
-                                // save params on object
-                                request.Params.Add(myParam.Key, myParam.Value);
-                            }
+                for (var i = 0; i < descriptors.Length; i++)
+                {
+                    var descriptor = descriptors[i];
 
-                            return true;
-                        }
-
-                        return false;
-                    }).Select(x => (MiddlewareDescriptor)x).ToArray();
-
-                    if (descriptors.Length > 0)
+                    try
                     {
-                        var count = descriptors.Length;
-
-                        for (var i = 0; i < count; i++)
-                        {
-                            var descriptor = descriptors[i];
-
-                            try
-                            {
-                                descriptor.Next = descriptors[i + 1];
-                            }
-                            catch
-                            {
-                                descriptor.Next = null;
-                            }
-                        }
-
-                        var mainDescriptor = descriptors[0];
-                        mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
+                        descriptor.Next = descriptors[i + 1];
+                    }
+                    catch
+                    {
+                        descriptor.Next = null;
                     }
                 }
+
+                var mainDescriptor = descriptors[0];
+                mainDescriptor.Callback(request, response, () => mainDescriptor.Execute(request, response));
             }
 
             private void MapMiddlewareCallback(HttpListenerContext context, ServerRequest request,
                 ServerResponse response, Action next)
             {
-                if (!response.IsOpened)
+                if (!response.IsOpened || !context.Response.OutputStream.CanWrite)
                 {
                     // request is already response by another middleware
                     next();
