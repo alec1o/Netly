@@ -112,11 +112,12 @@ namespace Netly
                         WriteHeaders();
                         WriteCookies();
 
-                        var buffer = _bytes.ToArray();
+                        var buffer = _bytes.Count <= byte.MinValue ? new byte[sizeof(int)] : _bytes.ToArray();
+
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = Encoding;
                         _response.ContentLength64 = buffer.Length;
-                        _response.OutputStream.Write(buffer, 0, buffer.Length);
+                        _response.OutputStream.Write(buffer, byte.MinValue, buffer.Length);
                         _response.Close();
                     }
                     catch (Exception e)
