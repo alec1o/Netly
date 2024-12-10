@@ -206,7 +206,7 @@ namespace Netly
             {
                 var request = new ServerRequest(context.Request);
 
-                var response = new ServerResponse(context.Response);
+                var response = new ServerResponse(context.Response, request.IsWebSocket);
 
                 var middlewares = _server.MyMiddleware.Middlewares.Length <= byte.MinValue
                     ? new List<IHTTP.MiddlewareDescriptor>()
@@ -359,16 +359,19 @@ namespace Netly
 
                     var websocket = new WebSocket(ws.WebSocket, request);
 
-                    lock (_websocketListLock)
+                    websocket.On.Open(() =>
                     {
-                        _websocketList.Add(websocket);
-                    }
+                        lock (_websocketListLock)
+                        {
+                            _websocketList.Add(websocket);
+                        }
+                    });
 
                     websocket.On.Close(() =>
                     {
                         lock (_websocketListLock)
                         {
-                            _websocketList.Add(websocket);
+                            _websocketList.Remove(websocket);
                         }
                     });
 

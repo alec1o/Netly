@@ -18,7 +18,7 @@ namespace Netly
             {
                 {
                     Headers = new Dictionary<string, string>();
-                    foreach (var headerKey in request.Headers.AllKeys)
+                    foreach (var headerKey in request.Headers.AllKeys.Where(x => !string.IsNullOrWhiteSpace(x)))
                         Headers.Add(headerKey, request.Headers[headerKey] ?? string.Empty);
                 }
 

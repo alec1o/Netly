@@ -14,8 +14,9 @@ namespace Netly
         {
             private readonly HttpListenerResponse _response;
             private readonly List<byte> _bytes = new List<byte>();
+            private readonly bool _isWebsocketRequest;
 
-            public ServerResponse(HttpListenerResponse response)
+            public ServerResponse(HttpListenerResponse response, bool isWebsocketRequest)
             {
                 NativeResponse = response;
                 IsOpened = true;
@@ -23,6 +24,7 @@ namespace Netly
                 Headers = new Dictionary<string, string>();
                 Cookies = Array.Empty<Cookie>();
                 _response = response;
+                _isWebsocketRequest = isWebsocketRequest;
             }
 
             public HttpListenerResponse NativeResponse { get; }
@@ -92,11 +94,15 @@ namespace Netly
 
             private void WriteHeaders()
             {
-                foreach (var header in Headers) _response.AddHeader(header.Key, header.Value);
+                if (Headers.Count <= 0 || _isWebsocketRequest) return;
+
+                foreach (var header in Headers) _response.Headers[header.Key] = header.Value;
             }
 
             private void WriteCookies()
             {
+                if (Cookies.Length <= 0 || _isWebsocketRequest) return;
+
                 foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
             }
 
