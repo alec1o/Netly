@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -19,7 +20,9 @@ namespace Netly
             private bool _tryConnecting, _tryClosing, _initServerSide;
             private ClientWebSocket _websocket;
             private System.Net.WebSockets.WebSocket _websocketServerSide;
-            public Uri MyUri = new Uri("wss://www.example.com");
+            private const string ENCRYPTED_SCHEME = "wss";
+            private const string UNENCRYPTED_SCHEME = "ws";
+            public Uri MyUri = new Uri($"{ENCRYPTED_SCHEME}://{IPAddress.Any}");
 
             public WebsocketTo(WebSocket socket)
             {
@@ -37,6 +40,10 @@ namespace Netly
                 _isServerSide = true;
                 _websocketServerSide = websocket;
                 MyServerRequest = myServerRequest;
+                MyUri = new Uri
+                (
+                    $"{(myServerRequest.IsEncrypted ? ENCRYPTED_SCHEME : UNENCRYPTED_SCHEME)}://{myServerRequest.RemoteEndPoint.Address}:{myServerRequest.RemoteEndPoint.Port}"
+                );
             }
 
             public IHTTP.ServerRequest MyServerRequest { get; private set; }
