@@ -43,25 +43,32 @@ namespace Netly
             public void Write(byte[] byteBuffer)
             {
                 if (!IsOpened) return;
-                _bytes.AddRange(byteBuffer);
+
+                if (byteBuffer != null && byteBuffer.Length > 0) _bytes.AddRange(byteBuffer);
             }
 
             public void Write(string textBuffer)
             {
                 if (!IsOpened) return;
-                _bytes.AddRange(textBuffer.GetBytes(Encoding));
+
+                if (!string.IsNullOrEmpty(textBuffer)) _bytes.AddRange(textBuffer.GetBytes(Encoding));
             }
 
             public void Send(int statusCode, string textBuffer)
             {
                 if (!IsOpened) return;
-                Send(statusCode, textBuffer.GetBytes(Encoding));
+
+                if (!string.IsNullOrEmpty(textBuffer)) _bytes.AddRange(textBuffer.GetBytes(Encoding));
+
+                WriteAndSend(statusCode);
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
             {
                 if (!IsOpened) return;
-                _bytes.AddRange(byteBuffer);
+
+                if (byteBuffer != null && byteBuffer.Length > 0) _bytes.AddRange(byteBuffer);
+
                 WriteAndSend(statusCode);
             }
 
@@ -119,12 +126,14 @@ namespace Netly
                         WriteHeaders();
                         WriteCookies();
 
-                        var buffer = _bytes.Count <= byte.MinValue ? new byte[sizeof(int)] : _bytes.ToArray();
+                        var buffer = new byte[8];
+
+                        if (_bytes.Count > 0) buffer = _bytes.ToArray();
 
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = Encoding;
                         _response.ContentLength64 = buffer.Length;
-                        _response.OutputStream.Write(buffer, byte.MinValue, buffer.Length);
+                        _response.OutputStream.Write(buffer, 0, buffer.Length);
                         _response.Close();
                     }
                     catch (Exception e)
