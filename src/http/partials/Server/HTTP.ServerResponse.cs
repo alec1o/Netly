@@ -143,10 +143,11 @@ namespace Netly
                         WriteHeaders();
                         WriteCookies();
 
-                        var buffer = new byte[8];
+                        var length = _bytes.Count <= 0 ? sizeof(int) : _bytes.Count;
 
-                        if (_bytes.Count == 1) buffer = new[] { _bytes[0] };
-                        else if (_bytes.Count > 1) buffer = _bytes.ToArray();
+                        var buffer = new byte[length];
+
+                        if (_bytes.Count > 0) _bytes.CopyTo(buffer);
 
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = Encoding;
@@ -157,7 +158,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         NetlyEnvironment.Logger.Create($"{nameof(ServerResponse)} -> {nameof(_bytes)}: {_bytes.Count}");
-                        
+
                         try
                         {
                             _response.Close();
