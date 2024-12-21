@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
@@ -61,7 +62,7 @@ namespace Netly
                 if (!string.IsNullOrEmpty(textBuffer))
                 {
                     byte[] buffer = null;
-                    
+
                     try
                     {
                         buffer = textBuffer.GetBytes(Encoding);
@@ -144,7 +145,8 @@ namespace Netly
 
                         var buffer = new byte[8];
 
-                        if (_bytes.Count > 0) buffer = _bytes.ToArray();
+                        if (_bytes.Count == 1) buffer = new[] { _bytes[0] };
+                        else if (_bytes.Count > 1) buffer = _bytes.ToArray();
 
                         _response.StatusCode = statusCode;
                         _response.ContentEncoding = Encoding;
@@ -154,6 +156,8 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
+                        NetlyEnvironment.Logger.Create($"{nameof(ServerResponse)} -> {nameof(_bytes)}: {_bytes.Count}");
+                        
                         try
                         {
                             _response.Close();
