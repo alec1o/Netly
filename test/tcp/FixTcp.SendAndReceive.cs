@@ -5,7 +5,7 @@ public partial class FixTcp
     {
         Server();
 
-        void Server()
+        async void Server()
         {
             var host = HostManager.GenerateLocalHost();
 
@@ -55,9 +55,9 @@ public partial class FixTcp
                 Assert.False(isModify);
             }
 
-            server.To.Open(host).Wait();
+            await server.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 20);
+            Thread.Sleep(millisecondsTimeout: 1000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
