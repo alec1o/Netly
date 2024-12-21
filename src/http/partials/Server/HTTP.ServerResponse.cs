@@ -58,7 +58,23 @@ namespace Netly
             {
                 if (!IsOpened) return;
 
-                if (!string.IsNullOrEmpty(textBuffer)) _bytes.AddRange(textBuffer.GetBytes(Encoding));
+                if (!string.IsNullOrEmpty(textBuffer))
+                {
+                    byte[] buffer = null;
+                    
+                    try
+                    {
+                        buffer = textBuffer.GetBytes(Encoding);
+                    }
+                    finally
+                    {
+                        if (buffer != null && buffer.Length > 0)
+                        {
+                            if (buffer.Length == 1) _bytes.Add(buffer[0]);
+                            else _bytes.AddRange(buffer);
+                        }
+                    }
+                }
 
                 WriteAndSend(statusCode);
             }
