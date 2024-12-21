@@ -37,134 +37,172 @@ namespace Netly
 
             public void Send(int statusCode)
             {
-                if (!IsOpened) return;
-                WriteAndSend(statusCode);
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
+                    WriteAndSend(statusCode);
+                }
             }
 
             public void Write(byte[] byteBuffer)
             {
-                if (!IsOpened) return;
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
 
-                if (byteBuffer != null && byteBuffer.Length > 0) _bytes.AddRange(byteBuffer);
+                    if (byteBuffer != null && byteBuffer.Length > 0)
+                        _bytes.AddRange(byteBuffer);
+                }
             }
 
             public void Write(string textBuffer)
             {
-                if (!IsOpened) return;
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
 
-                if (!string.IsNullOrEmpty(textBuffer)) _bytes.AddRange(textBuffer.GetBytes(Encoding));
+                    if (!string.IsNullOrEmpty(textBuffer)) _bytes.AddRange(textBuffer.GetBytes(Encoding));
+                }
             }
 
             public void Send(int statusCode, string textBuffer)
             {
-                if (!IsOpened) return;
-
-                if (!string.IsNullOrEmpty(textBuffer))
+                lock (_bytes)
                 {
-                    var buffer = textBuffer.GetBytes(Encoding);
+                    if (!IsOpened) return;
 
-                    if (buffer != null && buffer.Length > 0)
-                        _bytes.AddRange(buffer);
+                    if (!string.IsNullOrEmpty(textBuffer))
+                    {
+                        var buffer = textBuffer.GetBytes(Encoding);
+
+                        if (buffer != null && buffer.Length > 0)
+                            _bytes.AddRange(buffer);
+                    }
+
+                    WriteAndSend(statusCode);
                 }
-
-                WriteAndSend(statusCode);
             }
 
             public void Send(int statusCode, byte[] byteBuffer)
             {
-                if (!IsOpened) return;
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
 
-                if (byteBuffer != null && byteBuffer.Length > 0) _bytes.AddRange(byteBuffer);
+                    if (byteBuffer != null && byteBuffer.Length > 0) _bytes.AddRange(byteBuffer);
 
-                WriteAndSend(statusCode);
+                    WriteAndSend(statusCode);
+                }
             }
 
             public void Redirect(string url)
             {
-                if (!IsOpened) return;
-                const int redirectCode = 307; // Temporary Redirect
-                Redirect(redirectCode, url);
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
+                    const int redirectCode = 307; // Temporary Redirect
+                    Redirect(redirectCode, url);
+                }
             }
 
             public void Redirect(int redirectCode, string url)
             {
-                if (!IsOpened) return;
-                Headers.Add("Location", url);
-                WriteAndSend(redirectCode);
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
+                    Headers.Add("Location", url);
+                    WriteAndSend(redirectCode);
+                }
             }
 
             public void Close()
             {
-                if (!IsOpened) return;
-                IsOpened = false;
-
-                Task.Run(() =>
+                lock (_bytes)
                 {
-                    WriteHeaders();
-                    WriteCookies();
+                    if (!IsOpened) return;
+                    IsOpened = false;
 
-                    _response.Close();
-                });
-            }
-
-            private void WriteHeaders()
-            {
-                if (Headers.Count <= 0) return;
-
-                foreach (var header in Headers) _response.Headers[header.Key] = header.Value;
-            }
-
-            private void WriteCookies()
-            {
-                if (Cookies.Length <= 0) return;
-
-                foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
-            }
-
-            private void WriteAndSend(int statusCode)
-            {
-                if (!IsOpened) return;
-                IsOpened = false;
-
-                Task.Run(() =>
-                {
-                    try
+                    Task.Run(() =>
                     {
                         WriteHeaders();
                         WriteCookies();
 
-                        var length = _bytes.Count <= 0 ? sizeof(int) : _bytes.Count;
-
-                        var buffer = new byte[length];
-
-                        if (_bytes.Count > 0) _bytes.CopyTo(buffer);
-
-                        _response.StatusCode = statusCode;
-                        _response.ContentEncoding = Encoding;
-                        _response.ContentLength64 = buffer.Length;
-                        _response.OutputStream.Write(buffer, 0, buffer.Length);
                         _response.Close();
-                    }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create($"{nameof(ServerResponse)} -> {nameof(_bytes)}: {_bytes.Count}");
+                    });
+                }
+            }
 
-                        try
-                        {
-                            _response.Close();
-                            NetlyEnvironment.Logger.Create($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
-                        }
-                        catch (Exception exception)
-                        {
-                            NetlyEnvironment.Logger.Create(
-                                $"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
-                        }
-                    }
-                    finally
+            private void WriteHeaders()
+            {
+                lock (_bytes)
+                {
+                    if (Headers.Count <= 0) return;
+
+                    foreach (var header in Headers) _response.Headers[header.Key] = header.Value;
+                }
+            }
+
+            private void WriteCookies()
+            {
+                lock (_bytes)
+                {
+                    if (Cookies.Length <= 0) return;
+
+                    foreach (var cookie in Cookies) _response.Cookies.Add(cookie);
+                }
+            }
+
+            private void WriteAndSend(int statusCode)
+            {
+                lock (_bytes)
+                {
+                    if (!IsOpened) return;
+                    IsOpened = false;
+
+                    Task.Run(() =>
                     {
-                        _bytes.Clear();
-                    }
-                });
+                        lock (_bytes)
+                        {
+                            try
+                            {
+                                WriteHeaders();
+                                WriteCookies();
+
+                                var length = _bytes.Count <= 0 ? sizeof(int) : _bytes.Count;
+
+                                var buffer = new byte[length];
+
+                                if (_bytes.Count > 0) _bytes.CopyTo(buffer);
+
+                                _response.StatusCode = statusCode;
+                                _response.ContentEncoding = Encoding;
+                                _response.ContentLength64 = buffer.Length;
+                                _response.OutputStream.Write(buffer, 0, buffer.Length);
+                                _response.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(
+                                    $"{nameof(ServerResponse)} -> {nameof(_bytes)}: {_bytes.Count}");
+
+                                try
+                                {
+                                    _response.Close();
+                                    NetlyEnvironment.Logger.Create($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
+                                }
+                                catch (Exception exception)
+                                {
+                                    NetlyEnvironment.Logger.Create(
+                                        $"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
+                                }
+                            }
+                            finally
+                            {
+                                _bytes.Clear();
+                            }
+                        }
+                    });
+                }
             }
         }
     }
