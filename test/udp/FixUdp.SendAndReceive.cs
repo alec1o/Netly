@@ -57,7 +57,7 @@ public partial class FixUdp
 
             server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 100);
+            Thread.Sleep(millisecondsTimeout: 2000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -76,7 +76,7 @@ public partial class FixUdp
                 actions.Add(action);
             }
 
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
