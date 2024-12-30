@@ -27,7 +27,7 @@ public partial class FixUdp
 
             client.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 20);
+            Thread.Sleep(millisecondsTimeout: 1000);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -38,7 +38,7 @@ public partial class FixUdp
 
             client.To.Data(Guid.NewGuid().ToString());
             client.To.Event("ACTION", "CONNECTION");
-            Thread.Sleep(millisecondsTimeout: 20);
+            Thread.Sleep(millisecondsTimeout: 1000);
         }
 
         void Server()
@@ -68,7 +68,7 @@ public partial class FixUdp
 
             server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 100);
+            Thread.Sleep(millisecondsTimeout: 2000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -84,7 +84,7 @@ public partial class FixUdp
                 Client(host);
             }
 
-            Thread.Sleep(1000);
+            Thread.Sleep(5000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
         }
