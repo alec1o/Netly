@@ -157,7 +157,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td valign="top" align="left"></td>
 <td valign="top" align="left"></td>
 <td valign="top" align="left"><sub>Upgrade to <a href="https://github.com/alec1o/Byter">Byter 2.0</a></sub></td>
-<td valign="top" align="left"><sub>Upgrade to <a href="https://github.com/alec1o/Byter">Byter 3.0</a></sub></td>
+<td valign="top" align="left"><sub>Upgrade to <a href="https://github.com/alec1o/Byter">Byter 4.0</a></sub></td>
 </tr>
 <tr> <!-- row #4 -->
 <td valign="top" align="left"></td>
