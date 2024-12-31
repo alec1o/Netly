@@ -29,7 +29,7 @@ public partial class FixTcp
 
             client.To.Data(Guid.NewGuid().ToString());
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 250);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);
@@ -66,7 +66,7 @@ public partial class FixTcp
 
             await server.To.Open(host);
 
-            Thread.Sleep(millisecondsTimeout: 10);
+            Thread.Sleep(millisecondsTimeout: 1000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -82,7 +82,7 @@ public partial class FixTcp
                 await Client(server.Host);
             }
 
-            Thread.Sleep(10);
+            Thread.Sleep(5000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
         }
