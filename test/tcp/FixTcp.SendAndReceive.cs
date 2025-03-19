@@ -1,11 +1,11 @@
 public partial class FixTcp
 {
     [Fact]
-    public void SendAndReceive()
+    public async Task SendAndReceive()
     {
-        Server();
+        await Server();
 
-        async void Server()
+        async Task Server()
         {
             var host = HostManager.GenerateLocalHost();
 

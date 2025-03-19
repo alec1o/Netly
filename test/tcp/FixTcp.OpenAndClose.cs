@@ -3,13 +3,13 @@ using System.Net;
 public partial class FixTcp(ITestOutputHelper output)
 {
     [Fact]
-    public void OpenAndClose()
+    public async Task OpenAndClose()
     {
         var host = HostManager.GenerateLocalHost();
 
-        Server();
+        await Server();
 
-        async void Client()
+        async Task Client()
         {
             TCP.Client client = new();
 
@@ -62,7 +62,7 @@ public partial class FixTcp(ITestOutputHelper output)
             await client.To.Close();
         }
 
-        async void Server()
+        async Task Server()
         {
             TCP.Server server = new();
 
@@ -96,7 +96,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            Client();
+            await Client();
 
             await server.To.Close();
 

@@ -3,9 +3,9 @@ using System.Net;
 public partial class FixTcp
 {
     [Fact]
-    public void ServerAccept()
+    public async Task ServerAccept()
     {
-        Server();
+        await Server();
 
         async Task Client(Host host)
         {
@@ -39,7 +39,7 @@ public partial class FixTcp
             }
         }
 
-        async void Server()
+        async Task Server()
         {
             var host = HostManager.GenerateLocalHost();
 
