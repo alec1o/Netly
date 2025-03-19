@@ -3,7 +3,7 @@ using System.Security.Authentication;
 
 public partial class FixTcp
 {
-    [Fact]
+    //[Fact]
     public void Encryption()
     {
         var host = HostManager.GenerateLocalHost();

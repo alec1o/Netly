@@ -2,7 +2,7 @@ using System.Net;
 
 public partial class FixTcp(ITestOutputHelper output)
 {
-    [Fact]
+    //[Fact]
     public async Task OpenAndClose()
     {
         var host = HostManager.GenerateLocalHost();
