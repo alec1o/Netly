@@ -281,7 +281,7 @@ namespace Netly
                         descriptor.Next = null;
                     }
                 }
-                
+
                 descriptors[0].Callback(request, response, () => descriptors[0].Execute(request, response));
             }
 
@@ -348,12 +348,19 @@ namespace Netly
                 {
                     if (request.IsWebSocket)
                     {
-                        await response.WebSocketContext.WebSocket.CloseAsync
-                        (
-                            WebSocketCloseStatus.EndpointUnavailable,
-                            string.Empty,
-                            CancellationToken.None
-                        );
+                        try
+                        {
+                            await response.WebSocketContext.WebSocket.CloseAsync
+                            (
+                                WebSocketCloseStatus.EndpointUnavailable,
+                                string.Empty,
+                                CancellationToken.None
+                            );
+                        }
+                        catch (Exception e)
+                        {
+                            NetlyEnvironment.Logger.Create(e);
+                        }
                     }
 
                     if (context.Response.OutputStream.CanWrite)
