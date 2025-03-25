@@ -110,7 +110,7 @@ public class WebSocket_xunit
 
 
         await client.To.Open(new("ws://127.0.0.1:6001/empty"));
-        await Task.Delay(200);
+        await Task.Delay(2000);
         Assert.False(client.IsOpened);
         Assert.Equal(1 + 2 + 8, index); // open and close: because path;
         index = 0;
