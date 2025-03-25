@@ -59,6 +59,7 @@ public class WebSocket_xunit
 
         await client.To.Open(new("ws://127.0.0.1:6001/test"));
         Assert.True(client.IsOpened);
+        await Task.Delay(500);
         Assert.NotNull(session);
         Assert.NotNull(session.ServerRequest);
         Assert.Equal(3, index);
