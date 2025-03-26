@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -73,9 +74,9 @@ namespace Netly
                         if (host == null) throw new NullReferenceException(nameof(host));
 
                         _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                        
+
                         On.OnModify?.Invoke(null, _socket);
-                        
+
                         _socket.Connect(host.EndPoint);
 
                         InitConnection(ref host);
@@ -117,7 +118,7 @@ namespace Netly
                     finally
                     {
                         _isClosed = true;
-                        
+
                         lock (_locker)
                         {
                             if (!_isServer) _socket = null;
@@ -125,7 +126,7 @@ namespace Netly
                             _isConnecting = false;
                             _isOpeningOrClosing = false;
                         }
-                        
+
                         On.OnClose?.Invoke(null, null);
                     }
                 });
@@ -324,9 +325,14 @@ namespace Netly
                 {
                     _isConnecting = true;
                     InitReceiver();
+                    var task = _connection.Open();
+                    task.Start();
+                    task.GetAwaiter().GetResult();
                 }
-
-                _connection.Open().Start();
+                else
+                {
+                    _connection.Open().Start();
+                }
             }
 
             public void InjectBuffer(ref byte[] bytes)
