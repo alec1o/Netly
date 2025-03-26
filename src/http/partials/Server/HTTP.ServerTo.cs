@@ -350,7 +350,7 @@ namespace Netly
                     {
                         try
                         {
-                            await response.WebSocketContext.WebSocket.CloseAsync
+                            await response.WebSocketContext.WebSocket.CloseOutputAsync
                             (
                                 WebSocketCloseStatus.EndpointUnavailable,
                                 string.Empty,
@@ -361,6 +361,13 @@ namespace Netly
                         {
                             NetlyEnvironment.Logger.Create(e);
                         }
+                        finally
+                        {
+                            response.WebSocketContext.WebSocket.Dispose();
+                            context.Response.OutputStream.Close();
+                        }
+
+                        return;
                     }
 
                     if (context.Response.OutputStream.CanWrite)
