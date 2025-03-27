@@ -1,0 +1,8 @@
+{
+    "label": "Examples",
+    "position": 3,
+    "link": {
+        "type": "generated-index",
+        "description": "Examples, creating application using most of available features on Netly, also show you about all protocols and primary functionality, and development flow."
+    }
+}

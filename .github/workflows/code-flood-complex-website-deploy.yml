@@ -1,0 +1,73 @@
+# name: Build Website
+#
+# on:
+#   push:
+#     branches: [ main, dev ]
+#   pull_request:
+#     branches: [ main, dev ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.15.0' # specify the node version you're using
+
+    - name: Install Node.js dependencies (PNPM)
+      working-directory: docs/
+      run: |
+        corepack enable
+        corepack prepare pnpm@latest --activate
+        pnpm install
+
+    - name: Set up .NET 6 SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.x'
+
+    - name: Install DocFx
+      working-directory: docs/
+      run: dotnet tool install -g docfx
+
+    - name: Install FxMarkdownGen (dfmg)
+      working-directory: docs/
+      run: dotnet tool install -g DocFxMarkdownGen
+
+    - name: Generate API documentation
+      working-directory: docs/
+      run: |
+        docfx
+        dfmg
+        rm docs/.gitignore
+        rm docs/api/index.md
+        cp docs.api._category_.json docs/api/_category_.json
+
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "[``Auto``] build docs update"
+        branch: docs
+        create_branch: true
+        commit_user_name: "Alecio Furanze"
+        commit_user_email: "i@alecio.me"
+        commit_author: "Alecio Furanze"
+        push_options: '--force' # rewrite docs branch with new content
+
+    # - name: Force push documentation to `docs` branch of netly-docs repository
+    #   working-directory: docs/
+    #   run: |
+    #     git config --global user.name 'Alecio Furanze (CODE FLOOD)'
+    #     git config --global user.email 'i@alecio.me'
+    #     git branch docs
+    #     git checkout docs
+    #     git add .
+    #     git commit -m "[AUTO] update docs"
+    #     git remote add automatic https://${{ secrets.GITHUB_TOKEN }}@github.com/aleciofuranze/netly-docs
+    #     git push --force automatic docs
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
