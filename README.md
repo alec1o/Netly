@@ -1,6 +1,6 @@
 > ###### Active development occurs on the [_'dev'_](https://github.com/alec1o/Netly/tree/dev) branch. For the stable release, refer to the [_'main'_](https://github.com/alec1o/Netly/tree/main) branch.
 
-> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
+<sup>Netly version 4 is now available! Experience the new way of interacting with Netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <div align="right">
   <table>
@@ -108,7 +108,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td valign="center" align="center"><sup><sub><i>Legacy</i></sub></sup></td>
 <td valign="center" align="center"><sup><sub><i>Legacy</i></sub></sup></td>
 <td valign="center" align="center"><sup><sub><i>Stable</i></sub></sup></td>
-<td valign="center" align="center"><sup><sub><i>Development</i></sub></sup></td>
+<td valign="center" align="center"><sup><sub><i>Latest</i></sub></sup></td>
 </tr>
 <tr> <!-- row #1 -->
 <td valign="top" align="left"><sub>TCP Support</sub></td>
@@ -710,7 +710,7 @@ server.Middleware.Add("/admin", async (req, res, next) => {
 });
 ```
 
-#### Body Parser
+##### Body Parser
 
 ```cs
 // Register parse middleware

@@ -25,7 +25,8 @@
         <PackageId>Netly</PackageId>
         <Authors>alec1o</Authors>
         <Company>alec1o</Company>
-        <Copyright>Copyright © 2022-2024 Netly, by Alecio Furanze.</Copyright>
+        <Version>4.0.0</Version>
+        <Copyright>Copyright © 2022-2025 Netly, by Alecio Furanze.</Copyright>
         <RepositoryType>GitHub</RepositoryType>
         <PackageTags>
             <!-- protocols tags --> tcp, udp, ssl, tls, http, https, websocket, websockets, socket, sockets, proxy, proxies,
@@ -43,30 +44,23 @@
         <RootNamespace>Netly</RootNamespace>
         <AssemblyName>Netly</AssemblyName>
         <PackageReleaseNotes>
-            Note
-            [+] Added
-            [-] Removed
-            [!] Fixed
-            [>] Updated
-            3.0.0
-            [+] SSL/TLS protocol
-            [+] Include docs/sample (SSL/TLS)
-            [+] New docs (Gitbook -> Docsify)
-            [>] New MessageFraming protocol
-            [>] Message Framing memory and performance improve
-            [>] Udp set max buffer size
-            [>] Udp connection detection (timeout/ping-pong)
-            [!] MainThread null reference exception
-            [>] Byter 2.0
-
-            3.1.0
-            [!] Fix auto-disconnect because socket timeout. set -1 (infinite) as default timeout.
+            Version 4.0.0
+            --- HTTP client and server support
+            --- Reliable UDP (RUDP) client and server support
+            --- WebSocket client and server support
+            --- Upgrade to Byter 4.0
+            --- Documentation improvement by Docusaurus and DocFxMarkdownGen
+            --- Syntax and internal improvement
+            --- XML comments improvement
         </PackageReleaseNotes>
         <Description>
-            Netly is a socket library for c# (C-Sharp). It facilitates the use of socket (UDP and TCP, Client and Server).
-
-            Docs: https://netly.docs.kezero.com
-            Sample: https://netly.docs.kezero.com/overview/quick-start
+            Netly is a robust C# socket library designed to streamline network communication.
+            It offers comprehensive support for multiple protocols, including HTTP, TCP, SSL/TLS, UDP, Reliable UDP (RUDP),
+            and WebSocket. This versatility makes Netly an excellent choice for developing a wide range of applications,
+            from multiplayer games and chat systems to real-time data exchanges.
+                
+            Repository: https://github.com/alec1o/netly
+            Documentation: https://netly.docs.kezero.com
             Fork me: https://github.com/alec1o/Netly
         </Description>
         <TargetFramework>netstandard2.0</TargetFramework>
