@@ -35,18 +35,18 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   <tr>
     <th align="left" valign="center">🚀 <sub>Fully Implemented</sub></th>
     <td>
-      <sub><strong>Byter 3</strong> • <strong>Byter 4</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i> • <strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i></sub>
+      <sub><strong>Byter 3</strong> • <strong>Byter 4</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i> • <strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i>
+       • <strong>HTTP</strong> <i>Test</i> • <strong>RUDP</strong> <i>Tests</i> • <strong>WebSocket</strong> <i>Tests</i></sub>
     </td>
   </tr>
   <tr>
     <th align="left" valign="center">🔧 <sub>Work in Progress</sub></th>
     <td>
-      <sub><strong>Documentation <sup>v4</sup></strong> <i><a href="https://github.com/alec1o/Netly/issues/63">#63 (New docs website)</a></i> <br> <strong>HTTP</strong> <i>Body (Enctype Detector and Parser) <a href="https://github.com/alec1o/Netly/issues/67">#67 (Body Parser as Middleware)</a></i></sub> 
+      <sub><strong>Documentation <sup>v4</sup></strong> <i><a href="https://github.com/alec1o/Netly/issues/63">#63 (New docs website)</a></i></sub> 
     </td>
   </tr>
   <tr>
-    <th align="left" valign="center">🔜 <sub>Pending Features</sub></th>
-    <td><sub>Adding RUDP tests <br> Adding HTTP tests <br> Adding Websocket tests</sub></td>
+    <th align="left" valign="center">🔜 <sub>Pending Features</sub></td>
   </tr>
 </table>
 
