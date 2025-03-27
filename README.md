@@ -27,6 +27,10 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
   </a>
 </div>
 
+##### About
+
+> <sub> Netly is a powerful C# socket library that simplifies network communication. It supports HTTP, TCP, SSL/TLS, UDP, RUDP and WebSocket protocols, making it ideal for building multiplayer games, chat applications, and more.</sub>
+
 <br>
 
 ##### Project
