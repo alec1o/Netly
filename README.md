@@ -739,6 +739,35 @@ server.Middleware.Add("/admin", async (req, res, next) => {
 });
 ```
 
+#### Body Parser
+
+```cs
+// Register parse middleware
+server.Middleware.Add((request, response, next) =>
+{
+    if (request.Enctype == HTTP.Enctype.Json)
+    {
+        request.Body.RegisterParse(true, (Type type) =>
+        {
+            // e.g. using dotnet >= 6 @System.Text.Json
+            return JsonSerializer.Deserialize(request.Body.Text, type);
+        });
+    }
+    
+    ...
+
+    next();
+});
+
+// Usage of body parser.
+server.Map.Post("/register", (request, response) =>
+{
+    var data = request.Body.Parse<MyLoginInput>();
+    ...
+});
+
+```
+
 </details>
 </td>
 </tr>
