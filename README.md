@@ -1,8 +1,6 @@
 > ###### Active development occurs on the [_'dev'_](https://github.com/alec1o/Netly/tree/dev) branch. For the stable release, refer to the [_'main'_](https://github.com/alec1o/Netly/tree/main) branch.
 
-
-> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See
-more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
+> <sup>Netly version 4 will be released soon, help validating the new way of interacting with netly. [_See more_](https://github.com/alec1o/Netly/discussions/36#discussion-6204441)<sup>
 
 <div align="right">
   <table>
@@ -28,29 +26,6 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
     <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
   </a>
 </div>
-
-> ###### Version 4 Development Roadmap
-
-<table>
-  <tr>
-    <th align="left" valign="center">🚀 <sub>Fully Implemented</sub></th>
-    <td>
-      <sub><strong>Byter 3</strong> • <strong>Byter 4</strong> • <strong>TCP</strong> <i>Client</i> • <strong>TCP</strong> <i>Server</i> • <strong>UDP</strong> <i>Client</i> • <strong>UDP</strong> <i>Server</i> • <strong>HTTP</strong> <i>Client</i> • <strong>HTTP</strong> <i>Server</i> • <strong>HTTP</strong> <i>WebSocket</i> • <strong>RUDP</strong> <i>Client</i> • <strong>RUDP</strong> <i>Server</i>
-       • <strong>HTTP</strong> <i>Test</i> • <strong>RUDP</strong> <i>Tests</i> • <strong>WebSocket</strong> <i>Tests</i></sub>
-    </td>
-  </tr>
-  <tr>
-    <th align="left" valign="center">🔧 <sub>Work in Progress</sub></th>
-    <td>
-      <sub><strong>Documentation <sup>v4</sup></strong> <i><a href="https://github.com/alec1o/Netly/issues/63">#63 (New docs website)</a></i></sub> 
-    </td>
-  </tr>
-  <tr>
-    <th align="left" valign="center">🔜 <sub>Pending Features</sub></td>
-  </tr>
-</table>
-
-
 
 <br>
 
@@ -96,9 +71,9 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <h6>Why Contribute to Netly?</h6>
 
-- <sub><strong>Transform Network Communication:</strong> <br>Join us in revolutionizing how software communicates. Your contributions will help build a library that sets new standards for efficiency and reliability.</sub>
-- <sub><strong>Advance Your Career:</strong> <br>Engage with innovative projects, solve complex problems, and collaborate with experts. Your involvement will sharpen your skills and expand your professional network.</sub>
-- <sub><strong>Share Your Ideas:</strong> <br>Whether you're a seasoned developer or just starting out, your ideas are valuable. Contribute thoughts and suggestions to shape the future of Netly and drive innovation.</sub>
+-   <sub><strong>Transform Network Communication:</strong> <br>Join us in revolutionizing how software communicates. Your contributions will help build a library that sets new standards for efficiency and reliability.</sub>
+-   <sub><strong>Advance Your Career:</strong> <br>Engage with innovative projects, solve complex problems, and collaborate with experts. Your involvement will sharpen your skills and expand your professional network.</sub>
+-   <sub><strong>Share Your Ideas:</strong> <br>Whether you're a seasoned developer or just starting out, your ideas are valuable. Contribute thoughts and suggestions to shape the future of Netly and drive innovation.</sub>
 
 <br>
 
@@ -113,7 +88,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 > <sub>Official publisher</sub>
 
 | <sub>Nuget</sub>                                                    | <sub>Unity Asset Store</sub>                                                                     |
-|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | <sub>Install on [Nuget](https://www.nuget.org/packages/Netly)</sub> | <sub>Install on [Asset Store ](https://assetstore.unity.com/packages/tools/network/225473)</sub> |
 
 <br>
@@ -191,17 +166,12 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td valign="top" align="left">
 <br>
 
-- <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
-- <sub>[Mono](https://mono-project.com) (SDK)</sub>
-- <sub>[Unity](https://unity.com) (Engine)</sub>
-- <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
-    - <sub>Linux</sub>
-    - <sub>Windows</sub>
-    - <sub>Android</sub>
-    - <sub>iOS</sub>
-    - <sub>macOS</sub><br><br>
-<sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
-      should be considered a bug and reported.<i><sub>
+-   <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
+-   <sub>[Mono](https://mono-project.com) (SDK)</sub>
+-   <sub>[Unity](https://unity.com) (Engine)</sub>
+-   <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub> - <sub>Linux</sub> - <sub>Windows</sub> - <sub>Android</sub> - <sub>iOS</sub> - <sub>macOS</sub><br><br>
+    <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
+    should be considered a bug and reported.<i><sub>
 
 <br>
 </td>
@@ -222,14 +192,14 @@ Byter</strong></sup></a>
 
 > ###### Build dependencies
 
-- <sub>[Git](http://git-scm.com/)</sub>
-- <sub>[.NET](http://dot.net)</sub>
+-   <sub>[Git](http://git-scm.com/)</sub>
+-   <sub>[.NET](http://dot.net)</sub>
 
 > ###### Build step-by-step
 
 ```rb
 # 1. clone project
-$ git clone "https://github.com/alec1o/Netly" netly 
+$ git clone "https://github.com/alec1o/Netly" netly
 
 # 2. build project
 $ dotnet build "netly/" -c Release -o "netly/bin/"
@@ -249,7 +219,7 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 
 > <sub>Below are some missing features that are planned to be added in later versions.</sub><br>
 
-- <sub>``N/A``</sub>
+-   <sub>`N/A`</sub>
 
 <br>
 </td>
@@ -276,7 +246,7 @@ TCP.Client client = new TCP.Client(framing: true);
 
 ```csharp
 client.On.Open(() =>
-{   
+{
     printf("connection opened");
 });
 
@@ -327,10 +297,10 @@ client.To.Data("hello world", NE.Encoding.UTF8);
 
 // send event if connected
 client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8); 
+client.To.Event("name", "hello world", NE.Encoding.UTF8);
 
 // enable encryption (must call before client.To.Open)
-client.To.Encryption(true); 
+client.To.Encryption(true);
 ```
 
 </details>
@@ -344,7 +314,7 @@ TCP.Server server = new TCP.Server(framing: true);
 
 ```csharp
 server.On.Open(() =>
-{   
+{
     printf("connection opened");
 });
 
@@ -369,17 +339,17 @@ server.On.Accept((client) =>
     {
         printf("client connected");
     });
-    
+
     client.On.Data((bytes) =>
     {
         printf("client receive a raw data");
     });
-    
+
     client.On.Event((name, bytes) =>
     {
         printf("client receive a event");
     });
-    
+
     client.On.Close(() =>
     {
         printf("client disconnected");
@@ -394,7 +364,7 @@ server.On.Modify((socket) =>
 
 ```csharp
 // open connection
-server.To.Open(new Host("1.1.1.1", 1111)); 
+server.To.Open(new Host("1.1.1.1", 1111));
 
 // close connection
 server.To.Close();
@@ -460,7 +430,7 @@ client.On.Modify((socket) =>
 });
 ```
 
-```csharp 
+```csharp
 // open connection if closed
 client.To.Open(new Host("127.0.0.1", 8080));
 
@@ -473,7 +443,7 @@ client.To.Data("hello world", NE.Encoding.UTF8);
 
 // send event if connected
 client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8); 
+client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```
 
 </details>
@@ -507,18 +477,18 @@ server.On.Accept((client) =>
     {
         printf("client connected");
     });
-    
+
     client.On.Close(() =>
     {
         // Only if use connection is enabled.
         printf("client disconnected");
     });
-    
+
     client.On.Data((bytes) =>
     {
         printf("client received a raw data");
     });
-    
+
     client.On.Event((name, bytes) =>
     {
         printf("client received a event");
@@ -540,7 +510,7 @@ server.To.DataBroadcast(new byte[] { 1, 2, 3 });
 // broadcast event (netly event) for all connected client
 server.To.EventBroadcast("event name", "text buffer");
 server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
- 
+
 ```
 
 </details>
@@ -632,11 +602,11 @@ bool isServe = server.IsOpened;
 
 server.On.Open(() =>
 {
-    // http server opened 
+    // http server opened
 });
 server.On.Close(() =>
 {
-    // http server closed 
+    // http server closed
 });
 
 server.On.Error((exception) =>
@@ -646,7 +616,7 @@ server.On.Error((exception) =>
 
 server.On.Modify((httpListener) =>
 {
-    // HttpListener instance, called before try open connection.    
+    // HttpListener instance, called before try open connection.
 });
 
 // Open http server connection
@@ -669,12 +639,12 @@ server.Map.Post("/user", (req, res) => {
 });
 
 // map using dynamic URL
-server.Map.Delete("/post/{userId}/group/{groupId}", async (req, res)) => 
+server.Map.Delete("/post/{userId}/group/{groupId}", async (req, res)) =>
 {
     string userId = req.Param["userId"];
     string groupId = req.Param["groupId"];
-    
-    // Handle async: Delete from dynamic URL path 
+
+    // Handle async: Delete from dynamic URL path
 });
 
 server.Map.WebSocket("/echo", (req, ws) =>
@@ -683,7 +653,7 @@ server.Map.WebSocket("/echo", (req, ws) =>
 });
 
 /*
-You can map: 
+You can map:
  * Get     # get request
  * Post    # post request
  * Delete  # delete request
@@ -695,14 +665,15 @@ You can map:
  * All     # all http nethod request
  * WebSocket   # websocket request
 */
-    
+
 ```
 
 ##### Middleware
 
 ```csharp
 /*
-    Note: Middlewares is executed in added order
+    Note: Middlewares is executed in added order.
+    BUT, LOCAL MIDDLEWARE HAVE PRIORITY THAN GLOBAL MIDDLEWARE
 */
 
 // Global Middleware (*don't have workflow path)
@@ -722,7 +693,7 @@ server.Middleware.Add(async (req, res, next) => {
 server.Middleware.Add("/admin", async (req, res, next) => {
 
     if (MyApp.CheckAdminByHeader(req.Header))
-    {       
+    {
         res.Header.Add("Admin-Token", MyApp.RefreshAdminHeaderToken(req));
         // call next middleware
         next();
@@ -753,7 +724,7 @@ server.Middleware.Add((request, response, next) =>
             return JsonSerializer.Deserialize(request.Body.Text, type);
         });
     }
-    
+
     ...
 
     next();
@@ -771,7 +742,6 @@ server.Map.Post("/register", (request, response) =>
 </details>
 </td>
 </tr>
-
 
 <tr><th></th></tr>
 
@@ -865,31 +835,31 @@ server.On.Accept((client) =>
     {
         printf("client connected");
     });
-    
+
     client.On.Close(() =>
     {
         // Only if use connection is enabled.
         printf("client disconnected");
     });
-    
+
     client.On.Data((bytes, type) =>
     {
         if (type == RUDP.Reliable) { ... }
         else if (type == RUDP.Unreliable) { ... }
         else {  ... } /* type == RUDP.Sequenced */
 
-        
+
         printf("client received a raw data");
     });
-    
+
     client.On.Event((name, type) =>
-    
+
         if (type == RUDP.Reliable) { ... }
         else if (type == RUDP.Unreliable) { ... }
         else {  ... } /* type == RUDP.Sequenced */
-        
+
         printf("client received a event");
-    });    
+    });
 });
 ```
 
@@ -949,7 +919,7 @@ client.On.Data((bytes, type) =>
     if (type == HTTP.Binary) { ... }
     else if (type == HTTP.Text) { ... }
     else { /* NOTE: it's imposible */ }
-    
+
     // raw data received from server
 });
 
@@ -958,7 +928,7 @@ client.On.Event((name, bytes, type) =>
     if (type == HTTP.Binary) { ... }
     else if (type == HTTP.Text) { ... }
     else { /* NOTE: it's imposible */ }
-    
+
     // event received from server
 });
 
@@ -985,7 +955,7 @@ client.To.Data(NE.GetBytes("my buffer"), HTTP.Binary);
 //      text message
 client.To.Event("event name", "my message", HTTP.Text);
 //      binnary message
-client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary); 
+client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary);
 ```
 
 </details>
@@ -1005,13 +975,13 @@ server.Map.WebSocket("/chat/{token}", async (req, ws) =>
 {
     // Accept websocket from dynamic path
     string token = req.Params["token"];
-    
+
     // validate websocket connection from params
     if (Foo.Bar(token) == false)
     {
         ws.To.Close();
     }
-    
+
     ws.On.Modify(...);
     ws.On.Open(...);
     ws.On.Close(...);
@@ -1023,37 +993,37 @@ server.Map.WebSocket("/chat/{token}", async (req, ws) =>
 server.Map.Websocket("/echo", (req, ws) =>
 {
     // Handle websocket on /echo path
-    
+
     ws.On.Modify((wsSocket) =>
     {
         // modify server-side websocket ocket
     });
-    
+
     ws.On.Open(() =>
     {
         // server-side websocket connection opened
     });
-    
+
     ws.On.Close(() =>
     {
         // server-side websocket connection closed
     });
-    
+
     ws.On.Data((bytes, type) =>
     {
         if (type == HTTP.Binary) { ... }
         else if (type == HTTP.Text) { ... }
         else { /* NOTE: it's imposible */ }
-        
+
         // server-side websocket received raw data
     });
-    
+
     ws.On.Event((name, bytes, type) =>
     {
         if (type == HTTP.Binary) { ... }
         else if (type == HTTP.Text) { ... }
         else { /* NOTE: it's imposible */ }
-        
+
         // server-side websocket received event
     });
 });
@@ -1062,11 +1032,11 @@ server.Map.Websocket("/echo", (req, ws) =>
 ```csharp
 server.On.Open(() =>
 {
-    // http server opened 
+    // http server opened
 });
 server.On.Close(() =>
 {
-    // http server closed 
+    // http server closed
 });
 
 server.On.Error((exception) =>
@@ -1076,7 +1046,7 @@ server.On.Error((exception) =>
 
 server.On.Modify((httpListener) =>
 {
-    // HttpListener instance, called before try open connection.    
+    // HttpListener instance, called before try open connection.
 });
 
 // Open http server connection
@@ -1103,7 +1073,7 @@ server.To.WebsocketDataBroadcast(NE.GetBytes("my buffer"), HTTP.Binary);
 //      text message
 server.To.WebsocketEventBroadcast("event name", "my message", HTTP.Text);
 //      binnary message
-server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.Binary); 
+server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.Binary);
 ```
 
 </details>
@@ -1121,39 +1091,42 @@ server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.B
 ###### For more information and details see [Byter's](https://github.com/alec1o/Byter) official information
 
 > <sub>Byter documentation: [alec1o/Byter](https://github.com/alec1o/Byter)</sub>
+
 <details><summary>📄 <strong><sup><sub>Primitive</sub></sup></strong></summary>
 
 ```csharp
 using Byter;
 ```
 
-- <strong><sub>Serialize</sub></strong>  <sub>_(have +20 types of data supported, e.g. enum, bool, array, list, class,
-  struct,... [see official docs](https://github.com/alec1o/Byter)_</sub>
+-   <strong><sub>Serialize</sub></strong> <sub>_(have +20 types of data supported, e.g. enum, bool, array, list, class,
+    struct,... [see official docs](https://github.com/alec1o/Byter)_</sub>
+
     ```csharp
     Primitive primitive = new();
-    
+
     // add element
-    
+
     primitive.Add.ULong(1024);                 // e.g. Id
     primitive.Add.DateTime(DateTime.UtcNow);   // e.g. Sent Time
     primitive.Add.Struct(new Student() {...}); // e.g Student
     primitive.Add.Class(new Employee() {...}); // e.g Employee
     ...
-    
+
     // get buffer
     byte[] buffer = primitive.GetBytes();
     ```
 
-- <strong><sub>Deserialize</sub></strong>
+-   <strong><sub>Deserialize</sub></strong>
+
     ```csharp
     // WARNING: Need primitive buffer to deserialize
     Primitive primitive = new(...buffer);
-    
+
     ulong id = primitive.Get.ULong();
     DateTime sentTime = primitive.Get.DateTime();
     Student student = primitive.Get.Struct<Student>();
     Employee employee = primitive.Get.Class<Employee>();
-    
+
     /*
         * NOTE: Primitive don't make exception when diserialize error,
         * don't need try/catch block
@@ -1163,17 +1136,19 @@ using Byter;
         // discart this. +1/all failed on deserialize
         return;
     }
-    
+
     // deserialized sucessful
     ```
-- <strong><sub>*Dynamic Read Technical</sub></strong>
+
+-   <strong><sub>\*Dynamic Read Technical</sub></strong>
+
     ```csharp
     Primitive primitive = new(...buffer);
-    
+
     var topic = primitive.Get.Enum<Topic>();
-    
+
     if(!primitive.IsValid) return; // discart this, topic not found.
-    
+
     switch(topic)
     {
         case Topic.Student:
@@ -1183,7 +1158,7 @@ using Byter;
             ...
             return;
         }
-        
+
         case Topic.Employee:
         {
             // read employee info e.g.
@@ -1191,46 +1166,50 @@ using Byter;
             ...
             return;
         }
-        
+
         default:
-        {        
-            // discart this, topic not found. 
+        {
+            // discart this, topic not found.
             ...
             return;
         }
     }
     ```
 
-___
+---
 
 ###### Warning
+
 Primitive can serialize/deserialize complex data, e.g. (T[], List<T>, Class, Struct, Enum).<br>
 But when you want to deserialize your (Class, Structure, List<Class/Struct>, Class/Struct[]), It must have:
-- (generic and public constructor: is a public constructor with no arguments, e.g. which allows:
-  ```csharp
-  Human human = new Human();
-  ```
-- And the class/struct property must have public access and { get; set; } or not private
-for example. (In byter programming, _ONLY PROPERTIES THAT CAN BE READ AND WRITTEN WILL BE SERIALIZED AND DESERIALIZED)_
-  ```csharp
-  // valid
-  public string Name;
-  public string Name { get; set; }
-  internal string Name; // !!! if visible from Byter
-  internal string Name { get; set; }; // !!! if visible from Byter
-  
-  // invalid
-  private string Name;
-  private string Name { get; set; }
-  internal string Name; // !!! if unvisible from Byter
-  internal string Name { get; set; }; // !!! if unvisible from Byter
-  ```
 
-___
+-   (generic and public constructor: is a public constructor with no arguments, e.g. which allows:
+    ```csharp
+    Human human = new Human();
+    ```
+-   And the class/struct property must have public access and { get; set; } or not private
+    for example. (In byter programming, _ONLY PROPERTIES THAT CAN BE READ AND WRITTEN WILL BE SERIALIZED AND DESERIALIZED)_
+
+    ```csharp
+    // valid
+    public string Name;
+    public string Name { get; set; }
+    internal string Name; // !!! if visible from Byter
+    internal string Name { get; set; }; // !!! if visible from Byter
+
+    // invalid
+    private string Name;
+    private string Name { get; set; }
+    internal string Name; // !!! if unvisible from Byter
+    internal string Name { get; set; }; // !!! if unvisible from Byter
+    ```
+
+---
 
 ###### Example
 
-- <strong><sub>Sample of complex data</sub></strong>
+-   <strong><sub>Sample of complex data</sub></strong>
+
     ```cs
     public class Human
     {
@@ -1240,9 +1219,9 @@ ___
         public DateTime DateOfBirth { get; set; }
         public GenderType Gender { get; set; } // enum
         public byte[] Picture { get; set; }
-        
+
     }
-    
+
     public class Employee
     {
         public Human Human { get; set; }
@@ -1250,15 +1229,15 @@ ___
         public DateTime HireDate { get; set; }
         public int YearsOfService { get; set; }
     }
-    
-    public struct Student 
+
+    public struct Student
     {
         public string Major { get; set; }
         public DateTime EnrollmentDate { get; set; }
-        public List<Book> Books { get; set; }   
-        
+        public List<Book> Books { get; set; }
+
     }
-    
+
     public class Book
     {
         public string Title { get; set; }
@@ -1277,64 +1256,70 @@ ___
 using Byter;
 ```
 
-- <strong><sub>Global Default
-  Encoding</sub></strong> [<i><sub>(source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
-   ```csharp
-   // update global defaut encoding. Default is UTF8
-   StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
-   ```
+-   <strong><sub>Global Default
+    Encoding</sub></strong> [<i><sub>(source code spec)</sub></i>](https://github.com/alec1o/Byter/blob/main/src/src/extension/StringExtension.cs#L8)
 
-- <strong><sub>Convert string to byte[]</sub></strong>
+    ```csharp
+    // update global defaut encoding. Default is UTF8
+    StringExtension.Default = Encoding.Unicode; // Unicode is UTF16
+    ```
+
+-   <strong><sub>Convert string to byte[]</sub></strong>
+
     ```csharp
     // using global encoding (*UTF8)
-    byte[] username  = "@alec1o".GetBytes(); 
-    
+    byte[] username  = "@alec1o".GetBytes();
+
     // using UNICODE (*UTF16) encoding
-    byte[] message = "Hello 👋 World 🌎".GetBytes(Encoding.Unicode); 
-    
+    byte[] message = "Hello 👋 World 🌎".GetBytes(Encoding.Unicode);
+
     // using UTF32 encoding
     string secreatWord = "I'm not human, I'm  a concept.";
     byte[] secreat = secreatWord.GetBytes(Encoding.UTF32);
     ```
 
-- <strong><sub>Convert byte[] to string</sub></strong>
+-   <strong><sub>Convert byte[] to string</sub></strong>
+
     ```csharp
     // using global encoding (*UTF8)
-    string username  = new byte[] { ... }.GetString(); 
-    
+    string username  = new byte[] { ... }.GetString();
+
     // using UNICODE (*UTF16) encoding
-    string message = new byte[] { ... }.GetString(Encoding.Unicode); 
-    
+    string message = new byte[] { ... }.GetString(Encoding.Unicode);
+
     // using UTF32 encoding
     byte[] secreat = new byte[] { ... };
     string secreatWord = secreat.GetString(Encoding.UTF32);
     ```
 
-- <strong><sub>Capitalize string</sub></strong>
+-   <strong><sub>Capitalize string</sub></strong>
+
     ```rb
     string name = "alECio furanZE".ToCapitalize();
     # Alecio Furanze
-    
+
     string title = "i'M noT humAn";
     title = title.ToCapitalize();
     # I'm Not Human
     ```
 
-- <strong><sub>UpperCase string</sub></strong>
+-   <strong><sub>UpperCase string</sub></strong>
+
     ```rb
     string name = "alECio furanZE".ToUpperCase();
     # ALECIO FURANZE
-    
+
     string title = "i'M noT humAn";
     title = title.ToUpperCase();
     # I'M NOT HUMAN
     ```
 
-- <strong><sub>LowerCase string</sub></strong>
+-   <strong><sub>LowerCase string</sub></strong>
+
     ```rb
     string name = "ALEciO FUraNZE".ToLowerCase();
     # alecio furanze
-    
+
     string title = "i'M Not huMAN";
     title = title.ToLowerCase();
     # i'm not human
@@ -1355,7 +1340,6 @@ using Byter;
 
 > <sub>Integration and interaction example codes</sub>
 
-
 <table>
 
 <tr>
@@ -1372,22 +1356,22 @@ public class Program
     private static void Main(string[] args)
     {
         UDP.Client client = new UDP.Client();
-        
+
         client.On.Open(() =>
         {
             Console.WriteLine(<some-text-here>);
         };
-            
+
         client.On.Close(() =>
         {
             Console.WriteLine(<some-text-here>);
         };
-            
+
         client.On.Error((exception) =>
         {
             Console.WriteLine(<some-text-here>);
         };
-        
+
         while(true)
         {
             if(!client.IsOpened)
@@ -1424,34 +1408,34 @@ using Netly;
 public class Example : Script
 {
     public string message;
-    
+
     internal UDP.Client client;
-    
+
     public override void Awake()
     {
-        client = new UDP.Client();        
-        
+        client = new UDP.Client();
+
         client.On.Open(() =>
         {
             Debug.Log(<some-text-here>);
         };
-            
+
         client.On.Close(() =>
         {
             Debug.Log(<some-text-here>);
         };
-            
+
         client.On.Error((exception) =>
         {
             Debug.Log(<some-text-here>);
         };
     }
-    
+
     public override void Start()
     {
         client.To.Open(new Host("1.1.1.1", 1111));
     }
-    
+
     public override void Update()
     {
         if(!client.IsOpened)
@@ -1459,7 +1443,7 @@ public class Example : Script
              client.To.Open(new Host("1.1.1.1", 1111));
         }
         else
-        {            
+        {
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
@@ -1489,34 +1473,34 @@ using Netly;
 public class Example : MonoBehaviour
 {
     public string message;
-    
+
     internal UDP.Client client;
-    
+
     private void Awake()
     {
-        client = new UDP.Client();        
-        
+        client = new UDP.Client();
+
         client.On.Open(() =>
         {
             Debug.Log(<some-text-here>);
         };
-            
+
         client.On.Close(() =>
         {
             Debug.Log(<some-text-here>);
         };
-            
+
         client.On.Error((exception) =>
         {
             Debug.Log(<some-text-here>);
         };
     }
-    
+
     private void Start()
     {
         client.To.Open(new Host("1.1.1.1", 1111));
     }
-    
+
     private void Update()
     {
         if(!client.IsOpened)
@@ -1524,7 +1508,7 @@ public class Example : MonoBehaviour
              client.To.Open(new Host("1.1.1.1", 1111));
         }
         else
-        {            
+        {
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
@@ -1554,9 +1538,9 @@ public class Example : MonoBehaviour
 </sub>
 
 <br><br>
-  
+
 ```csharp
-// OK 100% Recommended 
+// OK 100% Recommended
 private void Start()
 {
     var client = ...;
@@ -1577,8 +1561,8 @@ public void Update()
     client.To.Open(...);                 // [OK? - May Not In Loop?]
     client.To.Data(...);                 // [OK? - May Not In Loop?]
     client.To.Event(...);                // [OK? - May Not In Loop?]
-    client.To.Close(...);                // [OK? - May Not In Loop?]   
-    
+    client.To.Close(...);                // [OK? - May Not In Loop?]
+
     ws.On.Open(() => ...);               // [BAD - Never In Loop]
     ws.On.Close(() => ... );             // [BAD - Never In Loop]
     ws.On.Data((bytes) => ... );         // [BAD - Never In Loop]
