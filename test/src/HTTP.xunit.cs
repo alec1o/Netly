@@ -90,10 +90,11 @@ public class HTTP_xunit
         Assert.Equal("hello world!", message);
         Assert.False(client.IsOpened);
         Assert.Equal(10, index);
+        index = 0;
 
         client.Timeout = 5000;
         await client.To.Open("GET", "http://127.0.0.1:2004/pong");
-        Assert.Equal(23, index);
+        Assert.Equal(1 + 4 + 8, index);
     }
 
     [Fact]
@@ -219,5 +220,61 @@ public class HTTP_xunit
         Assert.Equal(1, customCounter);
         Assert.Equal(2, globalCounter);
         Assert.True(globalTimer >= customTimer);
+    }
+
+    [Fact]
+    public async Task BodyParser()
+    {
+        var server = new HTTP.Server();
+
+        var data = "*";
+
+        server.Middleware.Add((req, res, next) =>
+        {
+            if (req.Enctype == HTTP.Enctype.Json)
+            {
+                req.Body.RegisterParser(true, (Type type) => "is json");
+            }
+            else if (req.Enctype == HTTP.Enctype.Xml)
+            {
+                req.Body.RegisterParser(true, (Type type) => "is xml");
+            }
+            else
+            {
+                req.Body.RegisterParser(true, (Type type) => "is empty");
+            }
+
+            next();
+        });
+
+        server.Map.Get("/demo", (req, res) =>
+        {
+            data = req.Body.Parse<string>();
+            res.Send(200);
+        });
+
+        var url = "http://127.0.0.1:4007/demo";
+        await server.To.Open(new(url));
+
+        Assert.True(server.IsOpened);
+
+        var client = new HTTP.Client();
+        client.Timeout = 2000;
+        client.On.Error(e => throw e);
+
+        client.Headers["content-type"] = "application/json";
+        await client.To.Open("GET", url);
+        await Task.Delay(1000);
+        Assert.Equal("is json", data);
+
+        client.Headers["content-type"] = "application/xml";
+        await client.To.Open("GET", url);
+        await Task.Delay(1000);
+        Assert.Equal("is xml", data);
+
+        client.Headers["content-type"] = "text/html";
+        await client.To.Open("GET", url);
+        await Task.Delay(1000);
+        Assert.Equal("is empty", data);
     }
 }
