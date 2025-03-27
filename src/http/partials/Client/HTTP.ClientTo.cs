@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,14 +98,21 @@ namespace Netly
                         )
                         {
                             var buffer = body ?? Array.Empty<byte>();
-                            message.Content = new BodyContent(ref buffer);
+                            message.Content = new ByteArrayContent(body);
+                        }
+                        else
+                        {
+                            message.Content = new StringContent(string.Empty);
                         }
 
                         #region Set Headers On Request
 
                         message.Headers.Clear();
+                        message.Content.Headers.Clear();
+                        http.DefaultRequestHeaders.Clear();
 
-                        foreach (var header in _client.Headers) message.Headers.Add(header.Key, header.Value);
+                        foreach (var header in _client.Headers)
+                            message.Content.Headers.Add(header.Key, header.Value);
 
                         #endregion
 
@@ -170,27 +180,6 @@ namespace Netly
 
                 // success, timeout changed!
                 _timeout = timeout;
-            }
-
-            private class BodyContent : HttpContent
-            {
-                private readonly byte[] _buffer;
-
-                public BodyContent(ref byte[] buffer)
-                {
-                    _buffer = buffer;
-                }
-
-                protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
-                {
-                    return stream.WriteAsync(_buffer, 0, _buffer.Length);
-                }
-
-                protected override bool TryComputeLength(out long length)
-                {
-                    length = _buffer.Length;
-                    return true;
-                }
             }
         }
     }
