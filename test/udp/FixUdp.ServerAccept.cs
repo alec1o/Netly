@@ -2,7 +2,7 @@ using System.Net;
 
 public partial class FixUdp
 {
-    //[Fact]
+    [Fact]
     public void ServerAccept()
     {
         Server();

@@ -2,7 +2,7 @@ using System.Net;
 
 public partial class FixTcp
 {
-    //[Fact]
+    [Fact]
     public async Task ServerAccept()
     {
         await Server();

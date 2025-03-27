@@ -2,7 +2,7 @@ using System.Net;
 
 public partial class FixUdp(ITestOutputHelper output)
 {
-    //[Fact]
+    [Fact]
     public void OpenAndClose()
     {
         Client();
