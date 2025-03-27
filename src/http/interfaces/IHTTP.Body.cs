@@ -29,28 +29,24 @@ namespace Netly.Interfaces
             byte[] Binary { get; }
 
             /// <summary>
-            /// Parse HTTP Body using Detected Enctype
+            ///     Parses the HTTP body into the specified type.
             /// </summary>
+            /// <typeparam name="T">The type to parse the body into.</typeparam>
+            /// <returns>An instance of <typeparamref name="T"/> containing the parsed data.</returns>
             T Parse<T>();
 
             /// <summary>
-            /// Parse HTTP Body using Custom Enctype
+            ///     Registers a parser for handling HTTP body content based on its request instance.
             /// </summary>
-            /// <param name="enctype">Enctype Target</param>
-            /// <typeparam name="T">Response Object</typeparam>
-            /// <returns></returns>
-            T Parse<T>(HTTP.Enctype enctype);
-
-            /// <summary>
-            /// Adding Enctype parser Method
-            /// </summary>
-            /// <param name="enctype">Enctype Target</param>
             /// <param name="replaceOnMatch">
-            ///     <i>true:</i> Replaces the existing <i>handler</i> with this one if both target the same <i>Enctype</i>.<br/>
-            ///     <i>false:</i> Uses this <i>handler</i> only if no handler for the same <i>Enctype</i> is set (does not replace an existing one).
+            ///     <c>true</c> to replace an existing parser if one is already registered for the same request instance;<br/>
+            ///     <c>false</c> to register the parser only if no existing parser is set for that request instance.
             /// </param>
-            /// <param name="handler">Target Enctype (Enctype that handler will solve)</param>
-            void OnParse(HTTP.Enctype enctype, bool replaceOnMatch, Func<Type, object> handler);
+            /// <param name="parser">
+            ///     A function that takes a <see cref="Type"/> and returns an <see cref="object"/> 
+            ///     representing the parsed content.
+            /// </param>
+            void RegisterParser(bool replaceOnMatch, Func<Type, object> parser);
         }
     }
 }

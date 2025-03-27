@@ -13,7 +13,7 @@ namespace Netly
         {
             private readonly byte[] _binary;
 
-            private readonly Dictionary<Enctype, Func<Type, object>> _handlers;
+            private Func<Type, object> _handler;
             private readonly object _parseLock = new object();
             private string _text;
 
@@ -21,7 +21,7 @@ namespace Netly
             {
                 _binary = buffer;
                 Encoding = encoding;
-                _handlers = new Dictionary<Enctype, Func<Type, object>>();
+                _handler = null;
                 Enctype = GetEnctypeFromHeader(ref header);
             }
 
@@ -31,30 +31,11 @@ namespace Netly
 
             public T Parse<T>()
             {
-                return Parse<T>(Enctype);
-            }
+                var value = _handler(typeof(T));
 
-            public T Parse<T>(Enctype enctype)
-            {
-                lock (_parseLock)
-                {
-                    if (_handlers.TryGetValue(enctype, out var handler))
-                        if (handler != null)
-                            return (T)handler(typeof(T));
+                if (value == default || value == null) return default;
 
-                    return default;
-                }
-            }
-
-            public void OnParse(Enctype enctype, bool replaceOnMatch, Func<Type, object> handler)
-            {
-                lock (_parseLock)
-                {
-                    if (!_handlers.ContainsKey(enctype))
-                        _handlers.Add(enctype, handler);
-                    else if (replaceOnMatch)
-                        _handlers[enctype] = handler;
-                }
+                return (T)value;
             }
 
             public Encoding Encoding { get; }
@@ -106,6 +87,14 @@ namespace Netly
                 if (content.Contains("text/markdown")) return Enctype.Markdown;
 
                 return Enctype.Unknown;
+            }
+
+            public void RegisterParser(bool replaceOnMatch, Func<Type, object> parser)
+            {
+                lock (_parseLock)
+                {
+                    if (_handler == null || replaceOnMatch) _handler = parser;
+                }
             }
         }
     }
