@@ -33,7 +33,7 @@ On this session we will learn how to install Netly in your project.
     - #### Build Steps
         ```bash
         # clone Netly repo or download
-        git clone https://github.com/Netly/Netly Netly
+        git clone https://github.com/alec1o/Netly Netly
 
         # enter in Netly folder
         cd Netly
