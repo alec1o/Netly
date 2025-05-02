@@ -169,7 +169,12 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 -   <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
 -   <sub>[Mono](https://mono-project.com) (SDK)</sub>
 -   <sub>[Unity](https://unity.com) (Engine)</sub>
--   <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub> - <sub>Linux</sub> - <sub>Windows</sub> - <sub>Android</sub> - <sub>iOS</sub> - <sub>macOS</sub><br><br>
+-   <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
+    - <sub>Android</sub>
+    - <sub>iOS</sub>
+    - <sub>Windows</sub>
+    - <sub>Linux</sub>
+    - <sub>macOS</sub><br><br>
     <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
     should be considered a bug and reported.<i><sub>
 
