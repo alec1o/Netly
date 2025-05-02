@@ -64,7 +64,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
       <sup>Keep Netly alive – sponsor it on Buy Me a Coffee.</sup>
     </a>
     <br><hr>
-    <a href="https://www.kezero.com/?invite=netly" justify="start" align="start">&nbsp;&nbsp;
+    <a href="https://www.kezero.com/?invite=netly" justify="start" align="start">
         <img src="https://raw.githubusercontent.com/kezerocom/BrandAsset/refs/heads/main/logo/v2/blue.png" alt="KeZero logo." height="45px">&nbsp;&nbsp;
         <sup>KeZero sponsor Netly with hosting infrastructure and website domain.</sup>
     </a><hr>
