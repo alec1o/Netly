@@ -59,9 +59,19 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td>
 <br>
 <div>
-    <a href="https://www.kezero.com/?invite_user='Netly'"><img alt="KeZero sponsor notice" src="/static/KeZero%20sponsor.png" height="35px" /></a>
-    <br>
-    <a href="https://www.jetbrains.com/community/opensource/"><img alt="JetBrains sponsor notice" src="/static/JetBrains%20sponsor.png" height="35px" /></a>
+    <a href="https://www.buymeacoffee.com/alec1o">
+      <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=alec1o&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" />&nbsp;&nbsp;
+      <sup>Keep Netly alive – sponsor it on Buy Me a Coffee.</sup>
+    </a>
+    <br><hr>
+    <a href="https://www.kezero.com/?invite=netly" justify="start" align="start">
+        <img src="https://raw.githubusercontent.com/kezerocom/BrandAsset/refs/heads/main/logo/v2/blue.png" alt="KeZero logo." height="45px">&nbsp;&nbsp;
+        <sup>KeZero sponsor Netly with hosting infrastructure and website domain.</sup>
+    </a><hr>
+    <a href="https://www.jetbrains.com/community/opensource/">
+        <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.png" alt="JetBrains logo." height="30px">&nbsp;&nbsp;
+        <sup>Netly receives JetBrains' IDE for free, Thanks to their generous  sponsorship.</sup>
+    </a><br>
 </div>
 <br>
 </td>
@@ -169,7 +179,12 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 -   <sub>[.NET](https://dotnet.microsoft.com) (SDK)</sub>
 -   <sub>[Mono](https://mono-project.com) (SDK)</sub>
 -   <sub>[Unity](https://unity.com) (Engine)</sub>
--   <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub> - <sub>Linux</sub> - <sub>Windows</sub> - <sub>Android</sub> - <sub>iOS</sub> - <sub>macOS</sub><br><br>
+-   <sub>[Operating system](https://en.wikipedia.org/wiki/Operating_system) (OS)</sub>
+    - <sub>Android</sub>
+    - <sub>iOS</sub>
+    - <sub>Windows</sub>
+    - <sub>Linux</sub>
+    - <sub>macOS</sub><br><br>
     <sub><strong>Notice</strong>: <i>This library might run on all devices. If it doesn't work on any device, it
     should be considered a bug and reported.<i><sub>
 
