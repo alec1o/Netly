@@ -80,7 +80,7 @@ namespace Netly
                             Thread.Sleep(TimeSpan.FromMilliseconds(byte.MaxValue)); // (Only client side)
                             ws = new ClientWebSocket();
                         }
-                        
+
                         foreach (var header in Headers) ws.Options.SetRequestHeader(header.Key, header.Value);
 
                         _socket._on.OnModify?.Invoke(null, ws);
@@ -99,14 +99,16 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
+                        NetlyEnvironment.Logger.Create(e);
+
                         try
                         {
                             await _websocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty,
                                 CancellationToken.None);
                         }
-                        catch
+                        catch(Exception e2)
                         {
-                            // ignored
+                            NetlyEnvironment.Logger.Create(e2);
                         }
                         finally
                         {
@@ -176,7 +178,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         // HACK: FIX IT
-                        Console.WriteLine(e);
+                        NetlyEnvironment.Logger.Create(e);
                     }
                     finally
                     {
@@ -298,8 +300,9 @@ namespace Netly
                             _socket._on.OnData?.Invoke(null, (data, messageType));
                     }
                 }
-                catch
+                catch(Exception e)
                 {
+                    NetlyEnvironment.Logger.Create(e);
                     closeStatus = WebSocketCloseStatus.EndpointUnavailable;
                 }
                 finally

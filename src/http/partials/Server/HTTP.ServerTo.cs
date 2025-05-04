@@ -70,6 +70,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
+                        NetlyEnvironment.Logger.Create(e);
                         _server.MyServerOn.OnError?.Invoke(null, e);
                     }
                     finally
@@ -101,9 +102,9 @@ namespace Netly
                             foreach (var socket in _websocketList) socket.To.Close();
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        // Ignored
+                        NetlyEnvironment.Logger.Create(e);
                     }
                     finally
                     {
@@ -203,6 +204,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
+                            NetlyEnvironment.Logger.Create($"{this}: {e}");
                             if (socket?.WebSocket != null)
                                 await socket.WebSocket.CloseAsync
                                 (
@@ -210,8 +212,6 @@ namespace Netly
                                     string.Empty,
                                     CancellationToken.None
                                 );
-
-                            NetlyEnvironment.Logger.Create($"{this}: {e}");
                         }
                     });
                 }
@@ -283,8 +283,9 @@ namespace Netly
                     {
                         descriptor.Next = descriptors[i + 1];
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        NetlyEnvironment.Logger.Create(e);
                         descriptor.Next = null;
                     }
                 }
