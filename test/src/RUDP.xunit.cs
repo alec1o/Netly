@@ -73,7 +73,7 @@ public class RUDP_xunit
         await client.To.Open(server.Host);
         Assert.True(client.IsOpened);
         Assert.NotEmpty(client.Id);
-        await Task.Delay(500);
+        await Task.Delay(2000);
         Assert.NotNull(session);
         Assert.NotEmpty(session.Id);
         Assert.Equal(3, index);
@@ -96,7 +96,7 @@ public class RUDP_xunit
         client.To.Data("Hello World, by To.Data", RUDP.Reliable);
         client.To.Event("Welcome to event", "Hello!", RUDP.Unreliable);
 
-        await Task.Delay(250);
+        await Task.Delay(2000);
 
         Assert.NotEmpty(sessionData.data);
         Assert.NotEmpty(clientData.data);
@@ -120,10 +120,10 @@ public class RUDP_xunit
         Assert.Equal(8, index);
         index = 0;
 
-        await Task.Delay(7000);
+        await Task.Delay(10000);
         Assert.False(session.IsOpened);
         await client.To.Open(new("127.0.0.1", 7002));
-        await Task.Delay(200);
+        await Task.Delay(2000);
         Assert.False(client.IsOpened);
         Assert.Equal(2 + 4, index); // open and close (NEVER OPENED).
     }

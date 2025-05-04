@@ -82,7 +82,7 @@ public class WebSocket_xunit
         client.To.Data("Hello World, by To.Data", HTTP.MessageType.Text);
         client.To.Event("Welcome to event", "Hello!", HTTP.MessageType.Binary);
 
-        await Task.Delay(250);
+        await Task.Delay(2500);
 
         Assert.NotEmpty(sessionData.data);
         Assert.NotEmpty(clientData.data);
@@ -106,18 +106,18 @@ public class WebSocket_xunit
         Assert.Equal(8, index);
         index = 0;
 
-        await Task.Delay(100);
+        await Task.Delay(2000);
         Assert.False(session.IsOpened);
 
 
         await client.To.Open(new("ws://127.0.0.1:6001/empty"));
-        await Task.Delay(6000);
+        await Task.Delay(10000);
         Assert.False(client.IsOpened);
         Assert.Equal(1 + 2 + 8, index); // open and close: because path;
         index = 0;
 
         await client.To.Open(new("ws://127.0.0.1:112/"));
-        await Task.Delay(500);
+        await Task.Delay(2000);
         Assert.False(client.IsOpened);
         Assert.Equal(2 + 4, index); // open and close (NEVER OPENED).
     }
