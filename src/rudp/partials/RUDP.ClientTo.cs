@@ -327,10 +327,13 @@ namespace Netly
                     InitReceiver();
                     var task = _connection.Open();
                     task.Start();
-                    task.GetAwaiter().GetResult();
+                    Task.WaitAll(task);
+                    Thread.Sleep(1); // thread synchronization: is local, don't worry about delay
                 }
                 else
                 {
+                    // is server side, need to wait for receive buffer and other stuffs.
+                    // must not block thread or wait for answer.
                     _connection.Open().Start();
                 }
             }
