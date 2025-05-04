@@ -358,10 +358,11 @@ namespace Netly
                     {
                         try
                         {
-                            await response.WebSocketContext.WebSocket.CloseOutputAsync
+                            // https://github.com/dotnet/runtime/issues/81762#issuecomment-1421047699
+                            await response.WebSocketContext.WebSocket.CloseAsync
                             (
                                 WebSocketCloseStatus.EndpointUnavailable,
-                                string.Empty,
+                                "Empty handler.",
                                 CancellationToken.None
                             );
                         }
@@ -371,8 +372,23 @@ namespace Netly
                         }
                         finally
                         {
-                            response.WebSocketContext.WebSocket.Dispose();
-                            context.Response.OutputStream.Close();
+                            try
+                            {
+                                response.WebSocketContext.WebSocket.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
+
+                            try
+                            {
+                                context.Response.OutputStream.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
                         }
 
                         return;
