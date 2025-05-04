@@ -72,8 +72,8 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            _isClosed = true;
                             NetlyEnvironment.Logger.Create(e);
+                            _isClosed = true;
                             On.OnError?.Invoke(null, e);
                         }
                         finally

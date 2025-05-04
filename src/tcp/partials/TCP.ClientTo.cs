@@ -119,6 +119,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
+                            NetlyEnvironment.Logger.Create(e);
                             On.OnError?.Invoke(null, e);
                         }
                         finally
@@ -221,7 +222,7 @@ namespace Netly
 
                 public void Event(string name, string data, Encoding encoding)
                 {
-                    if (CanSend == false || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data))return;
+                    if (CanSend == false || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
@@ -242,8 +243,9 @@ namespace Netly
                                 InitEncryption();
                                 _serverValidatorCallback?.Invoke(_client, true);
                             }
-                            catch
+                            catch (Exception e)
                             {
+                                NetlyEnvironment.Logger.Create(e);
                                 _serverValidatorCallback?.Invoke(_client, false);
                             }
                         }
@@ -386,9 +388,9 @@ namespace Netly
                         else
                             _netStream?.BeginWrite(bytes, 0, bytes.Length, null, null);
                     }
-                    catch
+                    catch(Exception e)
                     {
-                        // Ignored
+                        NetlyEnvironment.Logger.Create(e);
                     }
                 }
 

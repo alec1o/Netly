@@ -103,6 +103,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
+                            NetlyEnvironment.Logger.Create(e);
                             On.OnError?.Invoke(null, e);
                         }
 
@@ -126,9 +127,9 @@ namespace Netly
 
                             _socket.Dispose();
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            // Ignored
+                            NetlyEnvironment.Logger.Create(e);
                         }
                         finally
                         {

@@ -83,11 +83,11 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
+                        // logger
+                        NetlyEnvironment.Logger.Create(e);
                         // error on open connection
                         On.OnError?.Invoke(null, e);
                         _connection = null;
-                        // logger
-                        NetlyEnvironment.Logger.Create(e);
                     }
                     finally
                     {

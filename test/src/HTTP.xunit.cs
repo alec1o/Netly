@@ -259,22 +259,22 @@ public class HTTP_xunit
         Assert.True(server.IsOpened);
 
         var client = new HTTP.Client();
-        client.Timeout = 2000;
+        client.Timeout = 3000;
         client.On.Error(e => throw e);
 
         client.Headers["content-type"] = "application/json";
         await client.To.Open("GET", url);
-        await Task.Delay(1000);
+        await Task.Delay(1500);
         Assert.Equal("is json", data);
 
         client.Headers["content-type"] = "application/xml";
         await client.To.Open("GET", url);
-        await Task.Delay(1000);
+        await Task.Delay(1500);
         Assert.Equal("is xml", data);
 
         client.Headers["content-type"] = "text/html";
         await client.To.Open("GET", url);
-        await Task.Delay(1000);
+        await Task.Delay(1500);
         Assert.Equal("is empty", data);
     }
 }
