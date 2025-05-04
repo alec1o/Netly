@@ -374,16 +374,7 @@ namespace Netly
                         {
                             try
                             {
-                                response.WebSocketContext.WebSocket.Dispose();
-                            }
-                            catch (Exception e)
-                            {
-                                NetlyEnvironment.Logger.Create(e);
-                            }
-
-                            try
-                            {
-                                context.Response.OutputStream.Close();
+                                context.Response.Close();
                             }
                             catch (Exception e)
                             {
