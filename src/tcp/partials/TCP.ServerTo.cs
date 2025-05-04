@@ -198,7 +198,18 @@ namespace Netly
                 {
                     void UpdateAccept()
                     {
-                        if (IsOpened) _socket.BeginAccept(AcceptCallback, null);
+                        try
+                        {
+                            if (_socket != null && IsOpened)
+                                _socket.BeginAccept(AcceptCallback, null);
+                            else
+                                Close();
+                        }
+                        catch (Exception e)
+                        {
+                            NetlyEnvironment.Logger.Create(e);
+                            Close();
+                        }
                     }
 
                     void AcceptCallback(IAsyncResult result)

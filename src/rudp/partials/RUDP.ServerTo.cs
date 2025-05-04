@@ -226,15 +226,22 @@ namespace Netly
 
                 void AcceptUpdate()
                 {
-                    if (!IsOpened)
+                    try
                     {
-                        Close();
-                        return;
-                    }
+                        if (!IsOpened)
+                        {
+                            Close();
+                            return;
+                        }
 
-                    _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint,
-                        AcceptCallback,
-                        null);
+                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint,
+                            AcceptCallback, null);
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                        Close();
+                    }
                 }
 
                 void AcceptCallback(IAsyncResult result)
