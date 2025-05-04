@@ -170,14 +170,21 @@ namespace Netly
 
                 void AcceptCallback(IAsyncResult result)
                 {
-                    if (IsOpened)
+                    try
                     {
-                        HandleContext(_listener.EndGetContext(result));
-                        InitAccept();
+                        if (IsOpened)
+                        {
+                            HandleContext(_listener.EndGetContext(result));
+                            InitAccept();
+                        }
+                        else
+                        {
+                            Close();
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        Close();
+                        NetlyEnvironment.Logger.Create(e);
                     }
                 }
 
