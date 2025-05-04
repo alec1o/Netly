@@ -62,8 +62,9 @@ public class WebSocket_xunit
         await Task.Delay(500);
         Assert.NotNull(session);
         Assert.NotNull(session.ServerRequest);
-        Assert.Equal(3, index);
-
+        Assert.Equal(3, index); // open 1, modify 2
+        index = 0;
+        
         (string name, byte[] data, bool isBinary) sessionEvent = (null!, null!, false);
         session.On.Event((name, data, type) =>
         {
@@ -98,26 +99,27 @@ public class WebSocket_xunit
         Assert.Equal(sessionEvent.data, clientEvent.data);
         Assert.Equal(sessionEvent.isBinary, clientEvent.isBinary);
 
-        Assert.Equal(1 + 2 + 16 + 32, index);
+        Assert.Equal(16 + 32, index); //data 16, event 32
+        
         index = 0;
 
         await client.To.Close();
         Assert.False(client.IsOpened);
         Assert.Equal(8, index);
+        
         index = 0;
 
         await Task.Delay(2000);
         Assert.False(session.IsOpened);
 
-
         await client.To.Open(new("ws://127.0.0.1:6001/empty"));
-        await Task.Delay(10000);
+        await Task.Delay(5000);
         Assert.False(client.IsOpened);
         Assert.Equal(1 + 2 + 8, index); // open and close: because path;
         index = 0;
 
         await client.To.Open(new("ws://127.0.0.1:112/"));
-        await Task.Delay(2000);
+        await Task.Delay(5000);
         Assert.False(client.IsOpened);
         Assert.Equal(2 + 4, index); // open and close (NEVER OPENED).
     }
