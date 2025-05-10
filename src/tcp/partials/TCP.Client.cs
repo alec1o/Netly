@@ -8,7 +8,7 @@ namespace Netly
     {
         public partial class Client : ITCP.Client
         {
-            private readonly ClientOn _on;
+            internal readonly ClientOn _on;
             private readonly ClientTo _to;
 
 
