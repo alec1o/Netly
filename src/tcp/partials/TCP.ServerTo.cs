@@ -17,9 +17,8 @@ namespace Netly
             internal class ServerTo : ITCP.ServerTo
             {
                 private readonly int _defaultBacklog;
-                private readonly object _lockAccept, _lockClient;
+                private readonly object _lockClient = new object();
                 private readonly Server _server;
-                private readonly List<Socket> _socketList;
                 private byte[] _pfxCertificate;
                 private string _pfxPassword;
                 private SslProtocols _pfxCertificateProtocol;
@@ -35,16 +34,12 @@ namespace Netly
 
                 private ServerTo()
                 {
-                    Clients = new Dictionary<string, ITCP.Client>();
-                    _socketList = new List<Socket>();
                     _socket = null;
                     _isOpening = false;
                     _isClosing = false;
                     _isClosed = true;
                     Host = Host.Default;
                     IsEncrypted = false;
-                    _lockAccept = new object();
-                    _lockClient = new object();
                     _defaultBacklog = (int)SocketOptionName.MaxConnections;
                 }
 
@@ -59,7 +54,7 @@ namespace Netly
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
-                public Dictionary<string, ITCP.Client> Clients { get; }
+                public readonly List<ITCP.Client> Clients = new List<ITCP.Client>();
 
                 public Task Open(Host host)
                 {
@@ -123,9 +118,10 @@ namespace Netly
                         {
                             _socket.Close();
 
-                            foreach (var client in Clients.Values) client.To.Close();
-
-                            _socket.Dispose();
+                            lock (_lockClient)
+                            {
+                                Clients.ForEach(x => _ = x.To.Close());
+                            }
                         }
                         catch (Exception e)
                         {
@@ -144,32 +140,32 @@ namespace Netly
 
                 public void DataBroadcast(string data)
                 {
-                    foreach (var client in Clients) client.Value.To.Data(data);
+                    foreach (var client in Clients.ToArray()) client.To.Data(data);
                 }
 
                 public void DataBroadcast(string data, Encoding encoding)
                 {
-                    foreach (var client in Clients) client.Value.To.Data(data, encoding);
+                    foreach (var client in Clients.ToArray()) client.To.Data(data, encoding);
                 }
 
                 public void DataBroadcast(byte[] data)
                 {
-                    foreach (var client in Clients) client.Value.To.Data(data);
+                    foreach (var client in Clients.ToArray()) client.To.Data(data);
                 }
 
                 public void EventBroadcast(string name, string data)
                 {
-                    foreach (var client in Clients) client.Value.To.Event(name, data);
+                    foreach (var client in Clients.ToArray()) client.To.Event(name, data);
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
-                    foreach (var client in Clients) client.Value.To.Data(data, encoding);
+                    foreach (var client in Clients.ToArray()) client.To.Data(data, encoding);
                 }
 
                 public void EventBroadcast(string name, byte[] data)
                 {
-                    foreach (var client in Clients) client.Value.To.Event(name, data);
+                    foreach (var client in Clients.ToArray()) client.To.Event(name, data);
                 }
 
                 public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
@@ -196,102 +192,64 @@ namespace Netly
 
                 private void InitAccept()
                 {
-                    void UpdateAccept()
-                    {
-                        try
-                        {
-                            if (_socket != null && IsOpened)
-                                _socket.BeginAccept(AcceptCallback, null);
-                            else
-                                Close();
-                        }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                            Close();
-                        }
-                    }
-
-                    void AcceptCallback(IAsyncResult result)
-                    {
-                        try
-                        {
-                            var socket = _socket.EndAccept(result);
-
-                            lock (_lockAccept)
-                            {
-                                _socketList.Add(socket);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                        }
-                        finally
-                        {
-                            UpdateAccept();
-                        }
-                    }
-
-                    void AcceptValidation()
+                    new Thread(() =>
                     {
                         while (IsOpened)
                         {
-                            // it is just check.
-                            // it mustn't use lock for not use lock resources and decrees accept performance
-                            // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-                            // ReSharper disable once InconsistentlySynchronizedField
-                            // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-                            if (_socketList.Count <= 0) continue;
-
-                            Socket socket;
-
-                            lock (_lockAccept)
+                            try
                             {
-                                // FIFO: (First In First Out) strategy
-                                socket = _socketList[0];
-                                _socketList.RemoveAt(0);
-                            }
+                                var socket = _socket.Accept();
 
-                            new Client(socket, _server, (client, success) =>
-                            {
-                                if (success)
+                                var client = new Client(socket, _server, (x, connected) =>
                                 {
-                                    lock (_lockClient)
+                                    if (connected)
                                     {
-                                        client.On.Close(() => RemoveClient(client.Id));
+                                        x.On.Close(() =>
+                                        {
+                                            lock (_lockClient)
+                                            {
+                                                Clients.Remove(x);
+                                            }
+                                        });
 
-                                        Clients.Add(client.Id, client);
+                                        lock (_lockClient)
+                                        {
+                                            Clients.Add(x);
+                                        }
 
-                                        On.OnAccept?.Invoke(null, client);
+                                        On.OnAccept?.Invoke(null, x);
 
-                                        client.InitServerSide();
+                                        Task.Run(x.InitServerSide);
                                     }
-                                }
-                                else
-                                {
-                                    socket.Close();
-                                    socket.Dispose();
-                                }
-                            }).InitServerValidator();
+                                    else
+                                    {
+                                        try
+                                        {
+                                            socket.Close();
+                                            socket.Dispose();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            NetlyEnvironment.Logger.Create(e);
+                                        }
+                                    }
+                                });
+
+                                _ = Task.Run(client.InitServerValidator);
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
                         }
-                    }
 
-
-                    // Accept
-                    UpdateAccept();
-                    // true: thread is destroyed normally when program end (non-force required)
-                    // false: this thread will be persistent and will block the destruction of main process (force quit required)
-                    const bool isBackground = true;
-                    new Thread(AcceptValidation) { IsBackground = isBackground }.Start();
-                }
-
-                private void RemoveClient(string id)
-                {
-                    lock (_lockClient)
+                        _ = Close();
+                    })
                     {
-                        Clients.Remove(id);
-                    }
+                        IsBackground = true,
+                        Priority = ThreadPriority.Highest,
+                        Name = $"{GetType().Namespace}.{GetType().Name} #{_server.Id}"
+                    }.Start();
                 }
             }
         }

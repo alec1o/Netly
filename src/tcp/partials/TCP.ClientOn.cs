@@ -10,58 +10,52 @@ namespace Netly
 {
     public static partial class TCP
     {
-        public partial class Client
+        internal class ClientOn : ITCP.ClientOn
         {
-            internal class ClientOn : ITCP.ClientOn
+            public readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> OnEncryption =
+                new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
+
+            public EventHandler OnClose;
+            public EventHandler<byte[]> OnData;
+            public EventHandler<Exception> OnError;
+            public EventHandler<(string name, byte[] buffer)> OnEvent;
+            public EventHandler<Socket> OnModify;
+            public EventHandler OnOpen;
+
+
+            public void Open(Action callback)
             {
-                public readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> OnEncryption;
-                public EventHandler OnClose;
-                public EventHandler<byte[]> OnData;
-                public EventHandler<Exception> OnError;
-                public EventHandler<(string name, byte[] buffer)> OnEvent;
-                public EventHandler<Socket> OnModify;
-                public EventHandler OnOpen;
+                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+            }
 
-                public ClientOn()
-                {
-                    OnEncryption = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
-                }
+            public void Error(Action<Exception> callback)
+            {
+                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+            }
 
+            public void Close(Action callback)
+            {
+                OnClose += (@object, e) => Env.MainThread.Add(() => callback?.Invoke());
+            }
 
-                public void Open(Action callback)
-                {
-                    OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
-                }
+            public void Modify(Action<Socket> callback)
+            {
+                OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+            }
 
-                public void Error(Action<Exception> callback)
-                {
-                    OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
-                }
+            public void Data(Action<byte[]> callback)
+            {
+                OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+            }
 
-                public void Close(Action callback)
-                {
-                    OnClose += (@object, e) => Env.MainThread.Add(() => callback?.Invoke());
-                }
+            public void Event(Action<string, byte[]> callback)
+            {
+                OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
+            }
 
-                public void Modify(Action<Socket> callback)
-                {
-                    OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
-                }
-
-                public void Data(Action<byte[]> callback)
-                {
-                    OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
-                }
-
-                public void Event(Action<string, byte[]> callback)
-                {
-                    OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
-                }
-
-                public void Encryption(Func<X509Certificate, X509Chain, SslPolicyErrors, bool> callback)
-                {
-                    if (callback != null) OnEncryption.Add(callback);
-                }
+            public void Encryption(Func<X509Certificate, X509Chain, SslPolicyErrors, bool> callback)
+            {
+                if (callback != null) OnEncryption.Add(callback);
             }
         }
     }
