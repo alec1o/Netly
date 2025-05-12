@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -243,16 +245,7 @@ namespace Netly
 
                     try
                     {
-                        _socket?.BeginSendTo
-                        (
-                            bytes,
-                            0,
-                            bytes.Length,
-                            SocketFlags.None,
-                            host.EndPoint,
-                            null,
-                            null
-                        );
+                        _socket?.SendTo(bytes, 0, bytes.Length, SocketFlags.None, host.EndPoint);
                     }
                     catch (Exception e)
                     {
@@ -265,39 +258,44 @@ namespace Netly
                 {
                     var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
                     var buffer = new byte[length > 0 ? length : 4096];
-                    var remoteEndPoint = Host.EndPoint;
 
-                    AcceptUpdate();
+                    new Thread(Accept) { IsBackground = true }.Start();
 
-                    void AcceptUpdate()
+                    return;
+
+                    void Accept()
                     {
-                        if (!IsOpened)
+                        while (IsOpened)
                         {
-                            Close();
-                            return;
+                            try
+                            {
+                                var endpoint = Host.Default.EndPoint;
+
+                                var size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None,
+                                    ref endpoint);
+
+                                if (size <= 0) continue;
+
+                                var bytes = new byte[size];
+
+                                Array.Copy(buffer, 0, bytes, 0, bytes.Length);
+
+                                EndAccept(endpoint, bytes);
+                            }
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
                         }
 
-                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint,
-                            AcceptCallback, null);
+                        Close();
                     }
 
-                    void AcceptCallback(IAsyncResult result)
+                    void EndAccept(EndPoint endpoint, byte[] data)
                     {
                         try
                         {
-                            var size = _socket.EndReceiveFrom(result, ref remoteEndPoint);
-
-                            if (size <= 0)
-                            {
-                                AcceptUpdate();
-                                return;
-                            }
-
-                            var data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            var newHost = new Host(remoteEndPoint);
+                            var host = new Host(endpoint);
 
                             // Find a client connected user by endpoint connection (IP, PORT)
 
@@ -305,13 +303,14 @@ namespace Netly
 
                             lock (_clientsLocker)
                             {
-                                client = Clients.FirstOrDefault(x => Host.Equals(newHost, x.Host));
+                                client = Clients.FirstOrDefault(x => Host.Equals(host, x.Host));
                             }
 
+                            // new client
                             if (client == null)
                             {
                                 // Create new client
-                                client = new Client(ref newHost, ref _socket);
+                                client = new Client(ref host, ref _socket);
                                 client.On.Close(() =>
                                 {
                                     lock (_clientsLocker)
@@ -341,8 +340,6 @@ namespace Netly
                         {
                             NetlyEnvironment.Logger.Create(e);
                         }
-
-                        AcceptUpdate();
                     }
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -189,32 +190,16 @@ namespace Netly
 
                     try
                     {
+                        var data = new ArraySegment<byte>(bytes);
                         if (_isServer)
                         {
-                            // this way of send just work on windows and linux, except macOs (maybe iOs)
-                            _socket?.BeginSendTo
-                            (
-                                bytes,
-                                0,
-                                bytes.Length,
-                                SocketFlags.None,
-                                host.EndPoint,
-                                null,
-                                null
-                            );
+                            // this way of send just work on windows and linux, except macOS (maybe iOS)
+                            _socket?.SendToAsync(data, SocketFlags.None, host.EndPoint);
                         }
                         else
                         {
-                            // this way of send just work on windows and linux, include macOs and iOs
-                            _socket?.BeginSend
-                            (
-                                bytes,
-                                0,
-                                bytes.Length,
-                                SocketFlags.None,
-                                null,
-                                null
-                            );
+                            // this way of send just work on windows and linux, include macOS and iOS
+                            _socket?.SendAsync(data, SocketFlags.None);
                         }
                     }
                     catch (Exception e)
@@ -225,65 +210,42 @@ namespace Netly
 
                 private void InitReceiver()
                 {
-                    var endpoint = Host.EndPoint;
-
                     var buffer = new byte
                     [
                         // Maximum/Default receive buffer length.
                         (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                     ];
 
-                    ReceiverUpdate();
+                    new Thread(Receive) { IsBackground = true }.Start();
 
-                    void ReceiverUpdate()
+                    return;
+
+                    void Receive()
                     {
-                        if (!IsOpened)
+                        while (IsOpened)
                         {
-                            Close();
-                            return;
-                        }
-
-                        _socket.BeginReceiveFrom
-                        (
-                            buffer,
-                            0,
-                            buffer.Length,
-                            SocketFlags.None,
-                            ref endpoint,
-                            ReceiveCallback,
-                            null
-                        );
-                    }
-
-                    void ReceiveCallback(IAsyncResult result)
-                    {
-                        try
-                        {
-                            var size = _socket.EndReceiveFrom(result, ref endpoint);
-
-                            if (size <= 0)
+                            try
                             {
-                                if (IsOpened)
-                                    ReceiverUpdate();
-                                else
-                                    Close();
+                                var size = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
-                                return;
+                                if (size <= 0)
+                                {
+                                    if (IsOpened) continue;
+                                    else break;
+                                }
+
+                                var bytes = new byte[size];
+                                Array.Copy(buffer, 0, bytes, 0, bytes.Length);
+
+                                PushResult(ref bytes);
                             }
-
-                            var data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            PushResult(ref data);
-
-                            ReceiverUpdate();
+                            catch (Exception e)
+                            {
+                                NetlyEnvironment.Logger.Create(e);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                            Close();
-                        }
+
+                        Close();
                     }
                 }
 
