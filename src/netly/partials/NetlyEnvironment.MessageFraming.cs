@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Netly
@@ -20,8 +19,9 @@ namespace Netly
             private static int _maxSize = 1024 * 1024 * 8; // 8 MB
             private static int _udpBuffer = 1024 * 1024 * 1; // 1 MB
             private readonly object _lock = new object();
-
-            private List<byte> _buffer = new List<byte>();
+            private readonly List<byte> _stream = new List<byte>();
+            private string InstanceName => $"[{GetType().Namespace}.{GetType().Name}]";
+            private bool _isLocked;
 
             private Action<byte[]> _onData;
             private Action<Exception> _onError;
@@ -55,7 +55,7 @@ namespace Netly
             public static byte[] CreateMessage(byte[] value)
             {
                 var size = BitConverter.GetBytes(value.Length);
-                return new byte[3][] { Prefix, size, value }.SelectMany(x => x).ToArray();
+                return new[] { Prefix, size, value }.SelectMany(x => x).ToArray();
             }
 
             /// <summary>
@@ -83,20 +83,14 @@ namespace Netly
             {
                 lock (_lock)
                 {
-                    _buffer.Clear();
-                    _buffer = Array.Empty<byte>().ToList();
+                    _stream.Clear();
                 }
             }
 
-            private static bool IsPrefix(byte[] buffer)
+            private static bool IsPrefix(List<byte> buffer)
             {
-                if (buffer == null || !(buffer.Length >= Prefix.Length)) return false;
-
-                for (var i = 0; i < Prefix.Length; i++)
-                    if (buffer[i] != Prefix[i])
-                        return false;
-
-                return true;
+                if (buffer == null || buffer.Count != Prefix.Length) return false;
+                return !Prefix.Where((value, index) => buffer[index] != value).Any();
             }
 
             /// <summary>
@@ -107,47 +101,66 @@ namespace Netly
             {
                 lock (_lock)
                 {
-                    _buffer.AddRange(buffer);
+                    if (_isLocked) return;
 
-                    INIT:
-                    if (_size == 0 && _buffer.Count >= sizeof(int) + Prefix.Length)
+                    _stream.AddRange(buffer);
+
+                    while (true)
                     {
-                        var b = _buffer.GetRange(0, Prefix.Length).ToArray();
-                        _buffer.RemoveRange(0, Prefix.Length);
-
-                        if (!IsPrefix(b))
+                        if (_size == 0 && _stream.Count >= sizeof(int) + Prefix.Length)
                         {
-                            _onError?.Invoke(new InvalidDataException("Netly Message framing prefix not found"));
-                            return;
+                            // check is first bytes is equal to prefix
+                            var isPrefix = IsPrefix(_stream.GetRange(0, Prefix.Length));
+                            // remove prefix bytes from flow.
+                            _stream.RemoveRange(0, Prefix.Length);
+                            // close if prefix is invalid
+                            if (isPrefix is false)
+                            {
+                                ErrorClose($"{InstanceName} prefix not match.");
+                                return;
+                            }
+
+                            // get data size
+                            _size = BitConverter.ToInt32(_stream.GetRange(0, sizeof(int)).ToArray(), 0);
+                            // remove size bytes from flow.
+                            _stream.RemoveRange(0, sizeof(int));
+                            // close if data size is invalid
+                            if (_size <= 0 || _size > MaxSize)
+                            {
+                                ErrorClose($"{nameof(InstanceName)} invalid size: {_size}, min: {1}, max:{MaxSize}");
+                                return;
+                            }
                         }
 
-                        var len = BitConverter.ToInt32(_buffer.GetRange(0, sizeof(int)).ToArray(), 0);
-
-                        if (len > MaxSize || len <= 0)
+                        if (_size > 0 && _stream.Count >= _size)
                         {
-                            _onError?.Invoke(new ArgumentOutOfRangeException(
-                                "you haven't use MessageFraming protocol or you MessageFraming.MaxSize " +
-                                $"is low, (received value: {len}, max value: {MaxSize}"));
-                            return;
+                            var bytes = new byte[_size];
+                            _stream.CopyTo(0, bytes, 0, bytes.Length);
+                            _stream.RemoveRange(0, _size);
+
+                            // reset size
+                            _size = 0;
+
+                            // send receive bytes.
+                            _onData?.Invoke(bytes);
+
+                            // verify is still have data to process.
+                            if (_stream.Count > 0) continue;
                         }
 
-                        _size = len;
-                        _buffer.RemoveRange(0, sizeof(int));
+                        return;
                     }
+                }
+            }
 
-                    if (_size > 0 && _buffer.Count >= _size)
-                    {
-                        var data = _buffer.GetRange(0, _size).ToArray();
-                        _buffer.RemoveRange(0, _size);
-                        _size = 0;
+            private void ErrorClose(string message)
+            {
+                _onError?.Invoke(new Exception(message));
 
-                        var _temp = _buffer.GetRange(0, _buffer.Count).ToArray();
-                        _buffer = _temp.ToList();
-
-                        _onData?.Invoke(data);
-
-                        if (_buffer.Count > 0) goto INIT;
-                    }
+                lock (_lock)
+                {
+                    _isLocked = true;
+                    Clear();
                 }
             }
         }
