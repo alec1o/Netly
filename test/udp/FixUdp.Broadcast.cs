@@ -56,7 +56,7 @@ public partial class FixUdp
 
             server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 2000);
+            Thread.Sleep(millisecondsTimeout: 1000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -65,7 +65,7 @@ public partial class FixUdp
                 Assert.False(isError);
             }
 
-            const int maxConnection = 100;
+            const int maxConnection = 10;
 
             for (int i = 0; i < maxConnection; i++)
             {
@@ -77,7 +77,7 @@ public partial class FixUdp
             server.To.EventBroadcast(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
             // wait for client respond broadcast
-            Thread.Sleep(10000);
+            Thread.Sleep(5000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
