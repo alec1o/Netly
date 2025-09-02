@@ -76,7 +76,7 @@ public partial class FixTcp
             // wait for client respond broadcast
             Thread.Sleep(1000);
 
-            Assert.Equal(maxConnection, server.Clients.Length);
+            Assert.Equal(maxConnection, server.Clients.Count);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
         }

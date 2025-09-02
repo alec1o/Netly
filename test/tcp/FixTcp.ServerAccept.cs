@@ -84,7 +84,7 @@ public partial class FixTcp
 
             Thread.Sleep(5000);
 
-            Assert.Equal(maxConnection, server.Clients.Length);
+            Assert.Equal(maxConnection, server.Clients.Count);
         }
     }
 }
