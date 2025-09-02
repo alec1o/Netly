@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -14,14 +12,14 @@ namespace Netly
     {
         internal class ClientTo : ITCP.ClientTo
         {
-            private const int _64kb = 1024 * 64; // 65,536 (64kb)
-            private const int EncryptionTimeout = 1000 * 6; // 6 Seconds (6,000ms)
+            private const int EncryptionTimeout = 1000 * 6; // 6 seconds (6000ms)
 
             private readonly Client _client;
             private readonly bool _isServer;
             private readonly Server _server;
-            private readonly Action<Client, bool> _serverValidatorCallback;
-            private readonly List<byte[]> _queue = new List<byte[]>();
+            private readonly Action<Client> _serverValidatorCallback;
+            private byte[] _buffer;
+            private NetlyEnvironment.MessageFraming _framing;
 
             private bool
                 _isOpening,
@@ -57,13 +55,13 @@ namespace Netly
             }
 
             public ClientTo(Client client, Socket socket, Server server,
-                Action<Client, bool> validatorAction) : this()
+                Action<Client> validatorAction) : this()
             {
                 _client = client;
                 _server = server;
                 _socket = socket;
-                SetDefaultSocketOption(_socket);
                 _netStream = new NetworkStream(_socket);
+                _sslStream = new SslStream(_netStream);
                 _isServer = true;
                 _isClosed = false;
                 IsEncrypted = _server.IsEncrypted;
@@ -79,7 +77,6 @@ namespace Netly
 
             private bool CanSend => _isClosed is false && _isClosing is false && _isOpening is false;
 
-            private string Id => _client.Id;
 
             private ClientOn On => _client._on;
 
@@ -93,8 +90,6 @@ namespace Netly
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                    SetDefaultSocketOption(_socket);
-
                     On.OnModify?.Invoke(null, _socket);
 
                     await _socket.ConnectAsync(host.Address, host.Port);
@@ -103,7 +98,7 @@ namespace Netly
 
                     _netStream = new NetworkStream(_socket);
 
-                    if (IsEncrypted) await InitEncryption();
+                    if (IsEncrypted) InitEncryption();
 
                     _isClosed = false;
 
@@ -128,6 +123,7 @@ namespace Netly
                 if (_isOpening || _isClosing) return Task.CompletedTask;
 
                 _isClosing = true;
+                _buffer = null;
 
                 return Task.Run(() =>
                 {
@@ -230,38 +226,26 @@ namespace Netly
 
                 if (IsEncrypted)
                 {
-                    Task.Run(Callback);
-                }
-                else
-                {
-                    _serverValidatorCallback?.Invoke(_client, true);
-                }
-
-                return;
-
-                async Task Callback()
-                {
                     try
                     {
-                        await InitEncryption();
-                        _serverValidatorCallback?.Invoke(_client, true);
+                        InitEncryption();
+                        _serverValidatorCallback?.Invoke(_client);
                     }
                     catch (Exception e)
                     {
                         NetlyEnvironment.Logger.Create(e);
-                        _serverValidatorCallback?.Invoke(_client, false);
+                        NetlyEnvironment.Logger.Create(
+                            $"{GetType()}: {_client.Id}, Encryption error, use non encryption connection (fallback)");
+                        IsEncrypted = false;
+                        _serverValidatorCallback?.Invoke(_client);
                     }
+                }
+                else
+                {
+                    _serverValidatorCallback?.Invoke(_client);
                 }
             }
 
-            private static void SetDefaultSocketOption(Socket socket)
-            {
-                var socketLevel = SocketOptionLevel.Socket;
-
-                socket.SetSocketOption(socketLevel, SocketOptionName.SendBuffer, _64kb);
-
-                socket.SetSocketOption(socketLevel, SocketOptionName.ReceiveBuffer, _64kb);
-            }
 
             /* ---- INTERNAL --- */
 
@@ -290,76 +274,67 @@ namespace Netly
                 InitReceiver();
             }
 
-            private static void SetEncryptionTimeout(ref SslStream stream, bool reset)
-            {
-                var timeout = reset ? Timeout.Infinite : EncryptionTimeout;
-                stream.ReadTimeout = timeout;
-                stream.WriteTimeout = timeout;
-            }
 
-            private async Task InitEncryption()
+            private void InitEncryption()
             {
                 if (_socket is null) throw new NullReferenceException(nameof(_socket));
 
                 if (IsEncrypted is false) return;
 
-                if (_isServer)
+                Task.Run(async () =>
                 {
-                    _sslStream = new SslStream(_netStream, false);
+                    if (_isServer)
+                    {
+                        _sslStream = new SslStream(_netStream, false);
 
-                    SetEncryptionTimeout(ref _sslStream, false);
-
-                    await _sslStream.AuthenticateAsServerAsync
-                    (
-                        clientCertificateRequired: false,
-                        checkCertificateRevocation: true,
-                        serverCertificate: _server.Certificate,
-                        enabledSslProtocols: _server.EncryptionProtocol
-                    );
-                }
-                else
-                {
-                    _sslStream = new SslStream
-                    (
-                        _netStream,
-                        false,
-                        userCertificateSelectionCallback: null,
-                        userCertificateValidationCallback: (sender, certificate, chain, errors) =>
-                        {
-                            var encryptionCallbackList = On.OnEncryption;
-
-                            // callbacks not found.
-                            if (encryptionCallbackList.Count <= 0)
+                        await _sslStream.AuthenticateAsServerAsync
+                        (
+                            clientCertificateRequired: false, // TODO: clientCertificateRequired is optional
+                            checkCertificateRevocation: true,
+                            serverCertificate: _server.Certificate,
+                            enabledSslProtocols: _server.EncryptionProtocol
+                        );
+                    }
+                    else
+                    {
+                        _sslStream = new SslStream
+                        (
+                            innerStream: _netStream,
+                            leaveInnerStreamOpen: false,
+                            userCertificateSelectionCallback: null,
+                            userCertificateValidationCallback: (sender, certificate, chain, errors) =>
                             {
-                                NetlyEnvironment.Logger.Create(
-                                    $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
-                                return true;
+                                var encryptionCallbackList = On.OnEncryption;
+
+                                // callbacks not found.
+                                if (encryptionCallbackList.Count <= 0)
+                                {
+                                    NetlyEnvironment.Logger.Create(
+                                        $"[TCP] Encryption Callback Not Found. Client.Id: {_client.Id}");
+                                    return true;
+                                }
+
+                                var isValid = true;
+
+                                foreach (var callback in encryptionCallbackList)
+                                {
+                                    isValid = callback.Invoke(certificate, chain, errors);
+
+                                    // error on validate certificate
+                                    if (isValid is false) break;
+                                }
+
+                                // all callbacks are true.
+                                return isValid;
                             }
+                        );
 
-                            var isValid = true;
-
-                            foreach (var callback in encryptionCallbackList)
-                            {
-                                isValid = callback.Invoke(certificate, chain, errors);
-
-                                // error on validate certificate
-                                if (isValid is false) break;
-                            }
-
-                            // all callbacks are true.
-                            return isValid;
-                        }
-                    );
-
-                    SetEncryptionTimeout(ref _sslStream, false);
-
-                    await _sslStream.AuthenticateAsClientAsync(string.Empty);
-                }
-
-                SetEncryptionTimeout(ref _sslStream, true);
+                        await _sslStream.AuthenticateAsClientAsync(string.Empty);
+                    }
+                }).Wait(EncryptionTimeout);
             }
 
-            private void PushResult(ref byte[] bytes)
+            private void PublishData(ref byte[] bytes)
             {
                 (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
 
@@ -391,58 +366,99 @@ namespace Netly
 
             private void InitReceiver()
             {
-                var framing = new NetlyEnvironment.MessageFraming();
-
-                if (IsFraming)
+                try
                 {
-                    framing.OnData(data => PushResult(ref data));
+                    var uploadBytes =
+                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer);
 
-                    framing.OnError(exception =>
+                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, uploadBytes);
+
+                    var downloadBytes = _isServer
+                        ? (int)_server.Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
+                        : (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+
+                    _buffer = new byte[downloadBytes];
+
+                    _framing = new NetlyEnvironment.MessageFraming();
+
+                    if (IsFraming)
                     {
-                        NetlyEnvironment.Logger.Create(exception);
-                        _ = Close();
-                    });
-                }
+                        _framing.OnData(data => PublishData(ref data));
 
-                _client._parallelism.Register(Receive);
-
-                return;
-
-                async Task Receive()
-                {
-                    var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                    var buffer = new byte[length];
-                    
-                    var width = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer);
-                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, width);
-
-                    while (IsOpened)
-                    {
-                        try
+                        _framing.OnError(exception =>
                         {
-                            var size = IsEncrypted
-                                ? await _sslStream.ReadAsync(buffer, 0, buffer.Length)
-                                : await _netStream.ReadAsync(buffer, 0, buffer.Length);
-
-                            if (size <= 0) break;
-
-                            var bytes = new byte[size];
-
-                            Buffer.BlockCopy(buffer, 0, bytes, 0, bytes.Length);
-
-                            if (IsFraming)
-                                framing.Add(bytes);
-                            else
-                                PushResult(ref bytes);
-                        }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                        }
+                            NetlyEnvironment.Logger.Create(exception);
+                            _ = Close();
+                        });
                     }
 
-                    _ = Close();
+                    ReceiveTrigger();
                 }
+                catch (Exception e)
+                {
+                    NetlyEnvironment.Logger.Create(e);
+                    Close();
+                }
+            }
+
+            private void ReceiveTrigger()
+            {
+                try
+                {
+                    _ = IsEncrypted
+                        ? _sslStream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null)
+                        : _netStream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null);
+                }
+                catch (Exception e)
+                {
+                    NetlyEnvironment.Logger.Create(e);
+                    Close();
+                }
+            }
+
+            private void ReceiveHandler(IAsyncResult result)
+            {
+                try
+                {
+                    var size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
+
+                    if (size <= 0)
+                    {
+                        Close();
+                        return;
+                    }
+
+                    var bytes = new byte[size];
+
+                    Buffer.BlockCopy(_buffer, 0, bytes, 0, bytes.Length);
+
+                    if (IsFraming)
+                        _framing.Add(bytes);
+                    else
+                        PublishData(ref bytes);
+
+                    ReceiveTrigger();
+                }
+                catch (Exception e)
+                {
+                    NetlyEnvironment.Logger.Create(e);
+                    Close();
+                }
+            }
+
+            public Socket GetSocket()
+            {
+                return _socket;
+            }
+
+            public NetworkStream GetNetworkStream()
+            {
+                return _netStream;
+            }
+
+            public SslStream GetSslStream()
+            {
+                return _sslStream;
             }
         }
     }

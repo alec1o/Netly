@@ -4,7 +4,6 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Netly.Interfaces;
 
@@ -73,6 +72,12 @@ namespace Netly
                         {
                             var socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                            var bufferSize = (int)socket.GetSocketOption(SocketOptionLevel.Socket,
+                                SocketOptionName.ReceiveBuffer);
+
+                            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer,
+                            //    Math.Min(bufferSize, 1024 * 8));
+
                             On.OnModify?.Invoke(null, socket);
 
                             if (_enableEncryption)
@@ -85,6 +90,7 @@ namespace Netly
                             socket.Bind(host.EndPoint);
 
                             socket.Listen(ClampBacklog(backlog));
+
 
                             Host = new Host(socket.LocalEndPoint);
 
@@ -192,64 +198,64 @@ namespace Netly
 
                 private void InitAccept()
                 {
-                    new Thread(() =>
+                    AcceptTrigger();
+                }
+
+                private void AcceptTrigger()
+                {
+                    try
                     {
-                        while (IsOpened)
+                        _socket.BeginAccept(AcceptHandler, null);
+                    }
+                    catch (Exception e)
+                    {
+                        NetlyEnvironment.Logger.Create(e);
+                        Close();
+                    }
+                }
+
+                private void AcceptHandler(IAsyncResult result)
+                {
+                    try
+                    {
+                        var socket = _socket.EndAccept(result);
+
+                        var client = new Client(socket, _server, it =>
                         {
-                            try
+                            it.On.Close(() =>
                             {
-                                var socket = _socket.Accept();
-
-                                var client = new Client(socket, _server, (x, connected) =>
+                                lock (_lockClient)
                                 {
-                                    if (connected)
-                                    {
-                                        x.On.Close(() =>
-                                        {
-                                            lock (_lockClient)
-                                            {
-                                                Clients.Remove(x);
-                                            }
-                                        });
+                                    Clients.Remove(it);
+                                }
+                            });
 
-                                        lock (_lockClient)
-                                        {
-                                            Clients.Add(x);
-                                        }
-
-                                        On.OnAccept?.Invoke(null, x);
-
-                                        Task.Run(x.InitServerSide);
-                                    }
-                                    else
-                                    {
-                                        try
-                                        {
-                                            socket.Close();
-                                            socket.Dispose();
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            NetlyEnvironment.Logger.Create(e);
-                                        }
-                                    }
-                                });
-
-                                _ = Task.Run(client.InitServerValidator);
-                            }
-                            catch (Exception e)
+                            lock (_lockClient)
                             {
-                                NetlyEnvironment.Logger.Create(e);
+                                Clients.Add(it);
                             }
-                        }
 
-                        _ = Close();
-                    })
+                            On.OnAccept?.Invoke(null, it);
+
+                            it.InitServerSide();
+                        });
+
+                        Task.Run(client.InitServerValidator);
+                    }
+                    catch (Exception e)
                     {
-                        IsBackground = true,
-                        Priority = ThreadPriority.Highest,
-                        Name = $"{GetType().Namespace}.{GetType().Name} #{_server.Id}"
-                    }.Start();
+                        NetlyEnvironment.Logger.Create(e);
+                    }
+
+                    if (IsOpened)
+                        AcceptTrigger();
+                    else
+                        Close();
+                }
+
+                public Socket GetSocket()
+                {
+                    return _socket ?? new Socket(Host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 }
             }
         }
