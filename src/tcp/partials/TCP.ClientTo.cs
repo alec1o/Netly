@@ -350,6 +350,7 @@ namespace Netly
 
                 try
                 {
+                    
                     if (IsFraming) bytes = NetlyEnvironment.MessageFraming.CreateMessage(bytes);
                     if (bytes == null || bytes.Length <= 0) return;
 
@@ -368,16 +369,11 @@ namespace Netly
             {
                 try
                 {
-                    var uploadBytes =
-                        (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer);
-
-                    _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, uploadBytes);
-
-                    var downloadBytes = _isServer
+                    var bufferSize = _isServer
                         ? (int)_server.Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                         : (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
 
-                    _buffer = new byte[downloadBytes];
+                    _buffer = new byte[bufferSize];
 
                     _framing = new NetlyEnvironment.MessageFraming();
 

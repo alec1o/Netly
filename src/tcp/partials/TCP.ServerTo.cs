@@ -72,12 +72,6 @@ namespace Netly
                         {
                             var socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-                            var bufferSize = (int)socket.GetSocketOption(SocketOptionLevel.Socket,
-                                SocketOptionName.ReceiveBuffer);
-
-                            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer,
-                            //    Math.Min(bufferSize, 1024 * 8));
-
                             On.OnModify?.Invoke(null, socket);
 
                             if (_enableEncryption)
