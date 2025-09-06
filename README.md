@@ -1073,10 +1073,10 @@ server.To.Close();
 
 ```csharp
 // open websocket client connection
-server.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
+client.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
 
 // close websocket client connection
-server.To.Close();
+client.To.Close();
 
 // broadcast raw data for all connected websocket socket
 //      text message
