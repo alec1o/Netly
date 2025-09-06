@@ -12,6 +12,7 @@ namespace Netly.Interfaces
             Socket Socket { get; }
             NetworkStream NetworkStream { get; }
             SslStream SslStream { get; }
+            IFraming Framing { get; }
             bool IsOpened { get; }
             bool IsFraming { get; }
             bool IsEncrypted { get; }

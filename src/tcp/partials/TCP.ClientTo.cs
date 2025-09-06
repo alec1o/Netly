@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
@@ -334,30 +336,28 @@ namespace Netly
                 }).Wait(EncryptionTimeout);
             }
 
-            private void PublishData(ref byte[] bytes)
+            private void PublishData(List<byte> bytes)
             {
-                (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
-
-                if (content.buffer == null)
-                    On.OnData?.Invoke(null, bytes);
+                if (Package.ParseMessage(bytes, out var name, out var data))
+                    On.OnEvent?.Invoke(null, (name, data));
                 else
-                    On.OnEvent?.Invoke(null, (content.name, content.buffer));
+                    On.OnData?.Invoke(null, bytes);
             }
 
-            private void SendDispatch(byte[] bytes)
+            private void SendDispatch(Package package)
             {
-                if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null)) return;
+                if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null))
+                {
+                    package.Clear();
+                    return;
+                }
+
 
                 try
                 {
-                    
-                    if (IsFraming) bytes = NetlyEnvironment.MessageFraming.CreateMessage(bytes);
-                    if (bytes == null || bytes.Length <= 0) return;
-
-                    if (IsEncrypted)
-                        _sslStream.WriteAsync(bytes, 0, bytes.Length);
-                    else
-                        _netStream.WriteAsync(bytes, 0, bytes.Length);
+                    if (package == null || package.Count <= 0) return;
+                    var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
+                    foreach (var segment in package.Segments) stream.WriteAsync(segment, 0, segment.Length);
                 }
                 catch (Exception e)
                 {
@@ -379,7 +379,7 @@ namespace Netly
 
                     if (IsFraming)
                     {
-                        _framing.OnData(data => PublishData(ref data));
+                        _framing.OnData(data => PublishData(data));
 
                         _framing.OnError(exception =>
                         {
@@ -388,7 +388,7 @@ namespace Netly
                         });
                     }
 
-                    ReceiveTrigger();
+                    // ReceiveTrigger();
                 }
                 catch (Exception e)
                 {
@@ -401,9 +401,8 @@ namespace Netly
             {
                 try
                 {
-                    _ = IsEncrypted
-                        ? _sslStream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null)
-                        : _netStream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null);
+                    var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
+                    stream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null);
                 }
                 catch (Exception e)
                 {
@@ -424,14 +423,17 @@ namespace Netly
                         return;
                     }
 
-                    var bytes = new byte[size];
+                    var bytes = new List<byte>(size);
+                    bytes.Insert();
 
                     Buffer.BlockCopy(_buffer, 0, bytes, 0, bytes.Length);
 
                     if (IsFraming)
+                    {
                         _framing.Add(bytes);
+                    }
                     else
-                        PublishData(ref bytes);
+                        PublishData(Package.New(()bytes));
 
                     ReceiveTrigger();
                 }

@@ -18,6 +18,7 @@ namespace Netly
             {
                 Id = Guid.NewGuid().ToString();
                 IsFraming = isFraming;
+                Framing = new Framing(IsFraming);
                 _on = new ServerOn();
                 _to = new ServerTo(this);
             }
@@ -27,6 +28,7 @@ namespace Netly
             public bool IsOpened => _to.IsOpened;
             public bool IsFraming { get; }
 
+            public IFraming Framing { get; }
             public X509Certificate Certificate => _to.Certificate;
             public SslProtocols EncryptionProtocol => _to.EncryptionProtocol;
             public bool IsEncrypted => _to.IsEncrypted;

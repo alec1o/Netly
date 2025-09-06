@@ -18,14 +18,19 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Byter" Version="4.0.0"/>
+        <ProjectReference Include="..\..\Byter\src\Byter.csproj" />
+        <PackageReference1 Include="Byter" Version="4.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Memory" Version="4.6.3" />
     </ItemGroup>
 
     <PropertyGroup>
         <PackageId>Netly</PackageId>
         <Authors>alec1o</Authors>
         <Company>alec1o</Company>
-        <Version>4.0.0</Version>
+        <Version>4.0.1</Version>
         <Copyright>Copyright © 2022-2025 Netly, by Alecio Furanze.</Copyright>
         <RepositoryType>GitHub</RepositoryType>
         <PackageTags>
@@ -44,14 +49,13 @@
         <RootNamespace>Netly</RootNamespace>
         <AssemblyName>Netly</AssemblyName>
         <PackageReleaseNotes>
-            Version 4.0.0
-            --- HTTP client and server support
-            --- Reliable UDP (RUDP) client and server support
-            --- WebSocket client and server support
-            --- Upgrade to Byter 4.0
-            --- Documentation improvement by Docusaurus and DocFxMarkdownGen
-            --- Syntax and internal improvement
-            --- XML comments improvement
+            Version 4.0.1
+            --- Fix. HTTP.Server close exception.
+            --- Fix. WebSocket error on close connection, when path not match.
+            --- Fix. TCP thread problem.
+            --- Fix. UDP thread problem.
+            --- Fix. RUDP thread problem.
+            --- Improve. MessageFramming memory and performance.
         </PackageReleaseNotes>
         <Description>
             Netly is a robust C# socket library designed to streamline network communication.
@@ -64,6 +68,7 @@
             Fork me: https://github.com/alec1o/Netly
         </Description>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
 </Project>
