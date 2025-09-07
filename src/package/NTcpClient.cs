@@ -4,76 +4,83 @@ using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Netly.Packages.Interfaces;
+using Netly.Packages.Utils;
 
 namespace Netly.Packages
 {
-    public class NTcp : INTcp
+    public class NTcpClient : INTcpClient
     {
         private readonly object _locker = new object();
-        private Func<long, Stream> _onStream;
         private readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> _onSecure;
-        private byte[] _buffer;
-        private LinkedList<byte[]> _frameBuffer;
-        private long _frameSize, _maxFrameSize;
+        private readonly NTcpFraming _framing;
+        private byte[] _certificate;
+        private string _certificatePassword;
         private NetworkStream _networkStream;
+        private Action<bool> _onAccepted;
         private EventHandler _onConnect, _onDisconnect;
         private EventHandler<Socket> _onCreate;
-        private EventHandler<(string Name, byte[] Message)> _onEvent;
+        private EventHandler<(string Name, Stream Stream)> _onEvent;
         private EventHandler<Exception> _onFail;
-        private EventHandler<byte[]> _onMessage;
+        private EventHandler<Stream> _onMessage;
+        private Func<long, Stream> _onStream;
         private SslStream _secureStream;
+        private Func<long, Stream> StreamInstance => IsServer ? _server.OnStreamObject : _onStream;
 
-        private NTcp()
+        private NTcpClient()
         {
+            _framing = new NTcpFraming();
             _onSecure = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
-            _buffer = Array.Empty<byte>();
             _server = null;
-            _onStream = DefaultOnStream;
+            _onStream = NTcpFraming.DefaultOnStream;
+            Host = Host.Default;
             IsConnected = false;
-            IsServer = false;
-            IsFraming = false;
+            SecureProtocol = SslProtocols.Default;
+            SecureDomain = string.Empty;
             IsSecure = false;
-            MaxFrameSize = 1024 * 1024 * 20; // 20.00 MB
+            IsFraming = false;
+            IsServer = false;
+            FramingSize = NTcpFraming.DefaultSize;
+            Socket = null;
+            Certificate = new X509Certificate();
         }
 
-        private static Stream DefaultOnStream(long size)
-        {
-            if (size < 1024 * 1024 * 10) return new MemoryStream((int)size); // 10.00 MB
-            return new FileStream(Path.GetTempFileName(), FileMode.Open, FileAccess.ReadWrite);
-        }
-
-        public NTcp(bool isFraming) : this()
+        public NTcpClient(bool isFraming) : this()
         {
             IsFraming = isFraming;
         }
 
-        internal NTcp(TCP.Server server) : this()
+        internal NTcpClient(Socket socket, NTcpServer server) : this()
         {
             IsFraming = server.IsFraming;
-            IsSecure = server.IsEncrypted;
-            MaxFrameSize = server.Framing.MaxSize;
+            IsSecure = server.IsSecure;
             IsServer = true;
             IsConnected = true;
+            Socket = socket;
             _server = server;
         }
 
-        private TCP.Server _server { get; }
+        private NTcpServer _server { get; }
 
         public string Id { get; } = Guid.NewGuid().ToString();
         public bool IsConnected { get; private set; }
         public bool IsSecure { get; private set; }
         public bool IsFraming { get; }
         public bool IsServer { get; }
+        public SslProtocols SecureProtocol { get; private set; }
+        public string SecureDomain { get; private set; }
 
-        public long MaxFrameSize
+        public long FramingSize
         {
-            get => _maxFrameSize;
+            get => _framing.MaxSize;
             set
             {
-                if (value < 1024) throw new ArgumentOutOfRangeException($"Min {nameof(MaxFrameSize)} is 1024: {value}");
-                _maxFrameSize = value;
+                if (IsConnected)
+                    throw new InvalidOperationException($"Must not update {nameof(FramingSize)} while now");
+                _framing.MaxSize = Math.Max(1024, value);
             }
         }
 
@@ -87,12 +94,12 @@ namespace Netly.Packages
             _onFail += (sender, exception) => callback?.Invoke(exception);
         }
 
-        public void OnEvent(Action<string, byte[]> callback)
+        public void OnEvent(Action<string, Stream> callback)
         {
-            _onEvent += (sender, data) => callback?.Invoke(data.Name, data.Message);
+            _onEvent += (sender, data) => callback?.Invoke(data.Name, data.Stream);
         }
 
-        public void OnMessage(Action<byte[]> callback)
+        public void OnMessage(Action<Stream> callback)
         {
             _onMessage += (sender, message) => callback?.Invoke(message);
         }
@@ -126,21 +133,14 @@ namespace Netly.Packages
         {
             if (message == null || message.Length < 1) return;
 
-            var list = new LinkedList<byte[]>();
-            list.AddLast(message);
-
-            Send(list);
+            Send(message);
         }
 
         public void ToEvent(string name, byte[] message)
         {
             if (string.IsNullOrWhiteSpace(name) || message == null || message.Length < 1) return;
 
-            var list = new LinkedList<byte[]>();
-            list.AddLast(Framing.CreateMessage(name));
-            list.AddLast(message);
-
-            Send(list);
+            Send(NTcpMessage.Create(name, message.Length), message);
         }
 
         public void ToConnect(Host host)
@@ -168,13 +168,17 @@ namespace Netly.Packages
 
                         _networkStream = new NetworkStream(socket);
 
-                        if (IsSecure) InitializeSecurity();
+                        if (IsSecure)
+                        {
+                            Certificate = new X509Certificate(_certificate, _certificatePassword);
+                            InitializeSecureConnection();
+                        }
 
-                        InitReceiver();
-
-                        IsConnected = false;
+                        IsConnected = true;
 
                         _onConnect?.Invoke(null, null);
+
+                        InitReceiver();
                     }
                     catch (Exception e)
                     {
@@ -190,14 +194,23 @@ namespace Netly.Packages
             ToDisconnectAsync();
         }
 
-        public void ToSecure(bool enableSecureMode, X509Certificate certificate = null)
+        public void ToSecure(bool allowSecure, byte[] certificate = null, string password = null,
+            SslProtocols protocols = SslProtocols.Default, string secureDomain = null)
         {
-            IsSecure = enableSecureMode;
-            Certificate = certificate;
+            if (IsConnected)
+                throw new InvalidOperationException($"Can't call {nameof(ToConnect)}, {nameof(IsConnected)}");
+
+            IsSecure = allowSecure;
+            SecureProtocol = protocols;
+            SecureDomain = secureDomain;
+            _certificatePassword = password;
+            _certificate = certificate;
         }
 
         public Task ToDisconnectAsync()
         {
+            if (!IsConnected) return Task.CompletedTask;
+
             return Task.Run(() =>
             {
                 lock (_locker)
@@ -206,13 +219,10 @@ namespace Netly.Packages
 
                     try
                     {
-                        _frameBuffer?.Clear();
+                        _framing?.Close();
                         _networkStream?.Close();
                         _secureStream?.Close();
                         Socket?.Close();
-                        _networkStream?.Dispose();
-                        _secureStream?.Dispose();
-                        Socket?.Dispose();
                     }
                     catch (Exception e)
                     {
@@ -220,32 +230,37 @@ namespace Netly.Packages
                     }
                     finally
                     {
-                        _frameSize = 0;
-                        _buffer = null;
-                        _frameBuffer = null;
-                        Socket = null;
+                        IsConnected = false;
                         _networkStream = null;
                         _secureStream = null;
+                        Socket = null;
                         _onDisconnect?.Invoke(null, null);
                     }
                 }
             });
         }
 
-        private void Send(LinkedList<byte[]> list)
+        internal void OnAccepted(Action<bool> callback)
+        {
+            _onAccepted = callback;
+        }
+
+
+        private void Send(params byte[][] buffers)
         {
             try
             {
-                if (IsFraming) list.AddFirst(Framing.CreateFrame(list.Sum(x => x.LongLength)));
-                foreach (var bytes in list) Stream.WriteAsync(bytes, 0, bytes.Length);
+                if (IsFraming)
+                {
+                    var buffer = NTcpFraming.Create(buffers.Sum(x => x.LongLength));
+                    Stream.WriteAsync(buffer, 0, buffer.Length);
+                }
+
+                foreach (var buffer in buffers) Stream.WriteAsync(buffer, 0, buffer.Length);
             }
             catch (Exception e)
             {
                 NetlyEnvironment.Logger.Create(e);
-            }
-            finally
-            {
-                list.Clear();
             }
         }
 
@@ -258,18 +273,14 @@ namespace Netly.Packages
                 ? (int)_server.Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                 : (int)Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
 
-            _buffer = new byte[bufferSize];
-
-            if (IsFraming) _frameBuffer = new LinkedList<byte[]>();
-
-            ReceiveTrigger();
+            ReceiveTrigger(new byte[bufferSize]);
         }
 
-        private void ReceiveTrigger()
+        private void ReceiveTrigger(byte[] buffer)
         {
             try
             {
-                Stream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null);
+                Stream.BeginRead(buffer, 0, buffer.Length, ReceiveHandler, buffer);
             }
             catch (Exception e)
             {
@@ -283,6 +294,7 @@ namespace Netly.Packages
             try
             {
                 var size = Stream.EndRead(result);
+                var buffer = (byte[])result.AsyncState;
 
                 if (size <= 0)
                 {
@@ -290,28 +302,22 @@ namespace Netly.Packages
                     return;
                 }
 
-                _onStream();
-
-                var bytes = new byte[size];
-
-                Buffer.BlockCopy(_buffer, 0, bytes, 0, bytes.Length);
-
                 if (IsFraming)
                 {
-                    if (Framing.NextFrame(ref _frameSize, ref _frameBuffer, out var frameBuffer))
-                    {
-                        ReceiveRelease(_frameBuffer);
-                        _frameBuffer = frameBuffer;
-                    }
+                    var isMessage = _framing.Write(buffer, size, StreamInstance, out var stream, out var close);
+
+                    if (close) throw new OperationCanceledException($"{nameof(close)} about internal parsing error");
+
+                    if (isMessage) ReceiveRelease(stream);
                 }
                 else
                 {
-                    var list = new LinkedList<byte[]>();
-                    list.AddLast(bytes);
-                    ReceiveRelease(list);
+                    var stream = _onStream(size);
+                    stream.Write(buffer, 0, size);
+                    ReceiveRelease(stream);
                 }
 
-                ReceiveTrigger();
+                ReceiveTrigger(buffer);
             }
             catch (Exception e)
             {
@@ -324,13 +330,23 @@ namespace Netly.Packages
         {
             if (stream.Length < 1) throw new ArgumentOutOfRangeException(nameof(stream));
 
-            if (Framing.NextMessage(ref stream, out var name))
-                _onEvent?.Invoke(null, (name, null));
+            var isMessage = NTcpMessage.Parse(stream, StreamInstance, out var name, out var message, out var close);
+
+            if (close) throw new OperationCanceledException($"{nameof(close)} about internal parsing error");
+
+            if (isMessage)
+            {
+                stream?.Dispose();
+                _onEvent?.Invoke(null, (name, message));
+            }
             else
+            {
+                message?.Close();
                 _onMessage?.Invoke(null, stream);
+            }
         }
 
-        internal void InitializeSecurity()
+        private void InitializeSecureConnection()
         {
             if (Socket is null) throw new NullReferenceException(nameof(Socket));
 
@@ -347,10 +363,10 @@ namespace Netly.Packages
 
                     await _secureStream.AuthenticateAsServerAsync
                     (
-                        clientCertificateRequired: false, // TODO: clientCertificateRequired is optional
+                        clientCertificateRequired: !_server.AllowUnsecured,
                         checkCertificateRevocation: true,
                         serverCertificate: _server.Certificate,
-                        enabledSslProtocols: _server.EncryptionProtocol
+                        enabledSslProtocols: _server.SecureProtocol
                     );
                 }
                 else
@@ -361,8 +377,10 @@ namespace Netly.Packages
                         false,
                         (sender, certificate, chain, errors) =>
                         {
+                            var list = IsServer ? _server.OnSecureObject : _onSecure;
+
                             // callbacks not found.
-                            if (_onSecure.Count <= 0)
+                            if (list.Count <= 0)
                             {
                                 NetlyEnvironment.Logger.Create(
                                     $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
@@ -371,7 +389,7 @@ namespace Netly.Packages
 
                             var isValid = true;
 
-                            foreach (var callback in _onSecure)
+                            foreach (var callback in list)
                             {
                                 isValid = callback.Invoke(certificate, chain, errors);
 
@@ -384,9 +402,46 @@ namespace Netly.Packages
                         }
                     );
 
-                    await _secureStream.AuthenticateAsClientAsync(string.Empty);
+                    await (Certificate == null
+                        ? _secureStream.AuthenticateAsClientAsync(SecureDomain)
+                        : _secureStream.AuthenticateAsClientAsync
+                        (
+                            SecureDomain,
+                            new X509CertificateCollection(new[] { Certificate }),
+                            SecureProtocol,
+                            true
+                        ));
                 }
             }).Wait(TimeSpan.FromSeconds(7));
+        }
+
+        internal void ServerInitializer()
+        {
+            try
+            {
+                var success = true;
+
+                if (IsSecure)
+                    try
+                    {
+                        InitializeSecureConnection();
+                    }
+                    catch (Exception e)
+                    {
+                        success = _server.AllowUnsecured;
+                        if (success) IsSecure = false;
+                        NetlyEnvironment.Logger.Create(e);
+                    }
+
+                _onAccepted?.Invoke(success);
+
+                InitReceiver();
+            }
+            catch (Exception e)
+            {
+                NetlyEnvironment.Logger.Create(e);
+                _onAccepted?.Invoke(false);
+            }
         }
     }
 }
