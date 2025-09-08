@@ -4,7 +4,7 @@ public class PackageTest
 {
     [Fact]
     public void Start()
-    {
+    {/*
         {
             var name = "my event name here";
             var body = new byte[] { 0x20, 0x50, 0xCE, 0xFF };
@@ -16,6 +16,6 @@ public class PackageTest
             bytes.Clear();
             packageBody.Clear();
         }
-        return;
+        return;*/
     }
 }

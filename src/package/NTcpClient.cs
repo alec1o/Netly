@@ -16,7 +16,7 @@ namespace Netly.Packages
     {
         private readonly object _locker = new object();
         private readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> _onSecure;
-        private readonly NTcpFraming _framing;
+        private readonly NFraming _framing;
         private byte[] _certificate;
         private string _certificatePassword;
         private NetworkStream _networkStream;
@@ -28,14 +28,14 @@ namespace Netly.Packages
         private EventHandler<Stream> _onMessage;
         private Func<long, Stream> _onStream;
         private SslStream _secureStream;
-        private Func<long, Stream> StreamInstance => IsServer ? _server.OnStreamObject : _onStream;
+        private Func<long, Stream> NewStream => IsServer ? _server.OnStreamObject : _onStream;
 
         private NTcpClient()
         {
-            _framing = new NTcpFraming();
+            _framing = new NFraming();
             _onSecure = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
             _server = null;
-            _onStream = NTcpFraming.DefaultOnStream;
+            _onStream = NFraming.DefaultOnStream;
             Host = Host.Default;
             IsConnected = false;
             SecureProtocol = SslProtocols.Default;
@@ -43,7 +43,7 @@ namespace Netly.Packages
             IsSecure = false;
             IsFraming = false;
             IsServer = false;
-            FramingSize = NTcpFraming.DefaultSize;
+            FramingSize = NFraming.DefaultSize;
             Socket = null;
             Certificate = new X509Certificate();
         }
@@ -252,7 +252,7 @@ namespace Netly.Packages
             {
                 if (IsFraming)
                 {
-                    var buffer = NTcpFraming.Create(buffers.Sum(x => x.LongLength));
+                    var buffer = NFraming.Create(buffers.Sum(x => x.LongLength));
                     Stream.WriteAsync(buffer, 0, buffer.Length);
                 }
 
@@ -304,11 +304,14 @@ namespace Netly.Packages
 
                 if (IsFraming)
                 {
-                    var isMessage = _framing.Write(buffer, size, StreamInstance, out var stream, out var close);
+                    var recall = true;
 
-                    if (close) throw new OperationCanceledException($"{nameof(close)} about internal parsing error");
-
-                    if (isMessage) ReceiveRelease(stream);
+                    while (recall)
+                    {
+                        var got = _framing.Write(buffer, size, NewStream, out var stream, out var close, out recall);
+                        if (close) throw new Exception($"{nameof(close)} about internal parsing error");
+                        if (got) ReceiveRelease(stream);
+                    }
                 }
                 else
                 {
@@ -330,7 +333,7 @@ namespace Netly.Packages
         {
             if (stream.Length < 1) throw new ArgumentOutOfRangeException(nameof(stream));
 
-            var isMessage = NTcpMessage.Parse(stream, StreamInstance, out var name, out var message, out var close);
+            var isMessage = NTcpMessage.Parse(stream, NewStream, out var name, out var message, out var close);
 
             if (close) throw new OperationCanceledException($"{nameof(close)} about internal parsing error");
 

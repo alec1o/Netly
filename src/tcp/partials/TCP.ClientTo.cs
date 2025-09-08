@@ -164,7 +164,7 @@ namespace Netly
             {
                 if (CanSend == false || data == null || data.Length <= 0) return;
 
-                SendDispatch(data);
+                //SendDispatch(data);
             }
 
             public void Encryption(bool enable)
@@ -188,35 +188,35 @@ namespace Netly
             {
                 if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
-                SendDispatch(data.GetBytes());
+              //  SendDispatch(data.GetBytes());
             }
 
             public void Data(string data, Encoding encoding)
             {
                 if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
-                SendDispatch(data.GetBytes(encoding));
+                //SendDispatch(data.GetBytes(encoding));
             }
 
             public void Event(string name, byte[] data)
             {
                 if (CanSend == false || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
+               // SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
             }
 
             public void Event(string name, string data)
             {
                 if (CanSend == false || string.IsNullOrEmpty(data) || string.IsNullOrEmpty(name)) return;
 
-                SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                //SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
             }
 
             public void Event(string name, string data, Encoding encoding)
             {
                 if (CanSend == false || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                //SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
             }
 
             /* ---- INTERFACE --- */
@@ -338,10 +338,11 @@ namespace Netly
 
             private void PublishData(List<byte> bytes)
             {
+                /*
                 if (Package.ParseMessage(bytes, out var name, out var data))
                     On.OnEvent?.Invoke(null, (name, data));
                 else
-                    On.OnData?.Invoke(null, bytes);
+                    On.OnData?.Invoke(null, bytes);*/
             }
 
             private void SendDispatch(Package package)
@@ -352,7 +353,7 @@ namespace Netly
                     return;
                 }
 
-
+/*
                 try
                 {
                     if (package == null || package.Count <= 0) return;
@@ -362,7 +363,7 @@ namespace Netly
                 catch (Exception e)
                 {
                     NetlyEnvironment.Logger.Create(e);
-                }
+                }*/
             }
 
             private void InitReceiver()
@@ -379,7 +380,7 @@ namespace Netly
 
                     if (IsFraming)
                     {
-                        _framing.OnData(data => PublishData(data));
+                       // _framing.OnData(data => PublishData(data));
 
                         _framing.OnError(exception =>
                         {
@@ -413,6 +414,7 @@ namespace Netly
 
             private void ReceiveHandler(IAsyncResult result)
             {
+                /*
                 try
                 {
                     var size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
@@ -441,7 +443,7 @@ namespace Netly
                 {
                     NetlyEnvironment.Logger.Create(e);
                     Close();
-                }
+                }*/
             }
 
             public Socket GetSocket()
