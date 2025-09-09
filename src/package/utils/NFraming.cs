@@ -4,22 +4,56 @@ using System.IO;
 
 namespace Netly
 {
-    public class NFraming
+    public sealed class NFraming
     {
         private const long MinMessageSize = 1;
-        internal const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
-        private static readonly byte[] Prefix = { 8, 16, 32, 64, 128 };
+
+        /// <summary>
+        ///     Default <see cref="NFraming" /> Size: 20 MB or 2.097.1520
+        /// </summary>
+        public const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
+
+        /// <summary>
+        ///     The prefix used in <see cref="NFraming" /> is: [0x1, 0x9, 0x3, 0x3] in hexadecimal,
+        ///     which is [1, 9, 3, 3] in decimal. It serves as a “magic number”
+        ///     to identify the start of a message in a TCP stream.
+        ///     <br />
+        ///     Inspired by computing history: in 1936, Alan Turing created
+        ///     the Turing Machine, a theoretical model of computation. The main
+        ///     challenge was defining when the machine should halt, leading to
+        ///     the concept of the Halting Problem, establishing the limits of
+        ///     what is computable.
+        ///     See: https://en.wikipedia.org/wiki/Turing_machine
+        /// </summary>
+        public static readonly byte[] Prefix = { 0x01, 0x09, 0x03, 0x03 };
+
         private readonly byte[] _headerBuffer = new byte[Prefix.Length + sizeof(long)];
         private readonly object _locker = new object();
-
-
         private readonly LinkedList<Transaction> _transactions = new LinkedList<Transaction>();
+        
         private int _headerOffset;
         private long _size;
+
+        public NFraming()
+        {
+            Open();
+        }
+
+        /// <summary>
+        ///     Gets or sets the maximum allowed size for a message. Default is <see cref="DefaultSize" />
+        /// </summary>
         public long MaxSize { get; set; } = DefaultSize;
-        public bool IsOpened { get; set; } = true;
+
+        /// <summary>
+        ///     Gets whether the <see ref="NFraming" /> instance is opened for writing/reading.
+        /// </summary>
+        public bool IsOpened { get; private set; } = true;
 
 
+        /// <summary>
+        ///     Closes the <see ref="NFraming" /> instance, clearing all pending transactions and streams.
+        ///     After calling this, writing or reading is not allowed.
+        /// </summary>
         public void Close()
         {
             lock (_locker)
@@ -35,6 +69,26 @@ namespace Netly
             }
         }
 
+        /// <summary>
+        ///     Opens the <see cref="NFraming" /> instance for reading and writing.
+        ///     After calling this, the instance can accept new data via <see cref="Write" />
+        ///     and completed transactions can be read via <see cref="Read" />.
+        /// </summary>
+        public void Open()
+        {
+            lock (_locker)
+            {
+                Close();
+                IsOpened = true;
+            }
+        }
+
+        /// <summary>
+        ///     Reads the next completed transaction stream from the queue.
+        ///     Returns true if a completed stream was available; otherwise false.
+        /// </summary>
+        /// <param name="stream">The output stream containing the complete message.</param>
+        /// <returns>True if a stream was available; false otherwise.</returns>
         public bool Read(out Stream stream)
         {
             lock (_locker)
@@ -63,6 +117,18 @@ namespace Netly
                 throw new InvalidOperationException($"{GetType().FullName}.{nameof(IsOpened)} = {IsOpened}");
         }
 
+        /// <summary>
+        ///     Writes data from a segment into the <see ref="NFraming" /> system. Handles
+        ///     header processing, message framing, and transaction management.
+        /// </summary>
+        /// <param name="segment">The data segment to write.</param>
+        /// <param name="getStream">
+        ///     A function that creates a stream for a new message, given its size.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown if arguments are invalid.</exception>
+        /// <exception cref="InvalidDataException">Thrown if the prefix or size is invalid.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if trying to write to a completed stream.</exception>
+        /// <exception cref="InvalidOperationException">Context stream isn't available to write.</exception>
         public void Write(ArraySegment<byte> segment, Func<long, Stream> getStream)
         {
             if (segment == default || segment.Array == null || getStream == null)
@@ -108,8 +174,8 @@ namespace Netly
                     {
                         var transaction = _transactions.Last.Value;
 
-                        if (transaction.IsDone)
-                            throw new InvalidOperationException("Context stream isn't available to modify");
+                        if (transaction.IsDone || !transaction.Stream.CanWrite)
+                            throw new InvalidOperationException("Context stream isn't available to write");
 
                         var stream = transaction.Stream;
                         var next = transaction.Position + segment.Count;
@@ -183,12 +249,25 @@ namespace Netly
             return $"[{string.Join(",", bytes)}]";
         }
 
+        /// <summary>
+        ///     Creates a new MemoryStream with the requested size.
+        ///     Throws <see cref="InternalBufferOverflowException" /> if the size exceeds the default maximum.
+        /// </summary>
+        /// <param name="size">The desired size of the stream.</param>
+        /// <returns>A MemoryStream with the specified size.</returns>
         public static Stream NewStream(long size)
         {
             if (size <= DefaultSize) return new MemoryStream((int)size);
             throw new InternalBufferOverflowException($"{nameof(DefaultSize)}, {nameof(size)}: {size}");
         }
 
+        /// <summary>
+        ///     Creates a byte array representing a framed message header for a given size.
+        ///     The resulting array contains the prefix followed by the length in bytes.
+        /// </summary>
+        /// <param name="size">The size of the payload.</param>
+        /// <returns>A byte array containing the prefix and length.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if size is less than the minimum message size.</exception>
         public static byte[] Create(long size)
         {
             if (size < MinMessageSize) throw new IndexOutOfRangeException($"{nameof(size)}: {size}");

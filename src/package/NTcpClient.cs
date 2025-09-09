@@ -14,9 +14,11 @@ namespace Netly.Packages
 {
     public class NTcpClient : INTcpClient
     {
+        private readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> _onSecure =
+            new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
+
         private readonly object _locker = new object();
-        private readonly List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>> _onSecure;
-        private readonly NFraming _framing;
+        private readonly NFraming _framing = new NFraming();
         private byte[] _certificate;
         private string _certificatePassword;
         private NetworkStream _networkStream;
@@ -32,8 +34,6 @@ namespace Netly.Packages
 
         private NTcpClient()
         {
-            _framing = new NFraming();
-            _onSecure = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
             _server = null;
             _onStream = NFraming.NewStream;
             Host = Host.Default;
@@ -79,7 +79,7 @@ namespace Netly.Packages
             set
             {
                 if (IsConnected)
-                    throw new InvalidOperationException($"Must not update {nameof(FramingSize)} while now");
+                    throw new InvalidOperationException($"Must not update {nameof(FramingSize)} now");
                 _framing.MaxSize = Math.Max(1024, value);
             }
         }
@@ -219,7 +219,7 @@ namespace Netly.Packages
 
                     try
                     {
-                        _framing?.Close();
+                        _framing.Close();
                         _networkStream?.Close();
                         _secureStream?.Close();
                         Socket?.Close();
@@ -272,6 +272,8 @@ namespace Netly.Packages
             var bufferSize = IsServer
                 ? (int)_server.Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                 : (int)Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+            
+            _framing.Open();
 
             ReceiveTrigger(new byte[bufferSize]);
         }
@@ -333,7 +335,7 @@ namespace Netly.Packages
 
             if (isMessage)
             {
-                stream?.Dispose();
+                stream.Close();
                 _onEvent?.Invoke(null, (name, message));
             }
             else
