@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Netly
 {
     public class NFraming
     {
-        private const long MinMessageSize = 1;
+        private const long MinMessageSize = 1; // 20.00 MB
         internal const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
         private static readonly byte[] Prefix = { 8, 16, 32, 64, 128 };
+        private readonly byte[] _headerBuffer = new byte[Prefix.Length + sizeof(long)];
         private readonly object _locker = new object();
-        private long _size;
+
 
         private readonly LinkedList<Transaction> _transactions = new LinkedList<Transaction>();
-        private List<byte> _memory = new List<byte>();
+        private int _headerOffset;
+        private long _size;
         public long MaxSize { get; set; } = DefaultSize;
         public bool IsOpened { get; set; } = true;
 
@@ -26,10 +27,7 @@ namespace Netly
                 // reset proprieties
                 IsOpened = false;
                 _size = 0;
-
-                // clear memory
-                _memory.Clear();
-                _memory = new List<byte>();
+                _headerOffset = 0;
 
                 // clear streams
                 foreach (var transaction in _transactions) transaction.Stream.Close();
@@ -67,7 +65,7 @@ namespace Netly
 
         public void Write(ArraySegment<byte> segment, Func<long, Stream> getStream)
         {
-            if (segment == default || segment.Count < 1 || getStream == null)
+            if (segment == default || segment.Array == null || getStream == null)
                 throw new ArgumentException($"Invalid {GetType().FullName}.{nameof(Write)} [arguments]");
 
             lock (_locker)
@@ -76,43 +74,33 @@ namespace Netly
 
                 for (;;)
                 {
-                    if (_size == 0)
+                    if (_size == 0 && segment.Count > 0)
                     {
-                        var count = Prefix.Length + sizeof(long);
+                        var copied = Math.Min(segment.Count, _headerBuffer.Length - _headerOffset);
 
-                        if (segment.Count > 0)
-                            _memory.AddRange(segment);
+                        Buffer.BlockCopy(segment.Array ?? throw new ArgumentNullException(nameof(segment)),
+                            segment.Offset, _headerBuffer, _headerOffset, copied);
 
-                        if (_memory.Count >= count)
+                        _headerOffset += copied;
+
+                        if (_headerOffset == _headerBuffer.Length)
                         {
-                            // entry bytes
-                            var bytes = new byte[count];
-                            _memory.CopyTo(0, bytes, 0, bytes.Length);
-
                             // get and verify size
-                            var size = BitConverter.ToInt64(bytes, Prefix.Length);
+                            var size = BitConverter.ToInt64(_headerBuffer, Prefix.Length);
 
                             if (size < MinMessageSize)
-                                throw new IndexOutOfRangeException($"{nameof(size)}: {size}");
+                                throw new InvalidDataException($"{nameof(size)}: {size}");
 
                             // get and verify prefix
-                            if (CompareSequences(Prefix, bytes))
+                            if (CompareSequences(Prefix, _headerBuffer))
                                 _transactions.AddLast(new Transaction(getStream(size), false));
                             else
-                                throw new InvalidDataException($"{nameof(Prefix)}: {Format(Prefix)} - {Format(bytes)}");
+                                throw new InvalidDataException(
+                                    $"{nameof(Prefix)}: {Format(Prefix)} - {Format(_headerBuffer)}");
 
-                            // copy left buffer
-                            var left = new byte[_memory.Count - bytes.Length];
-
-                            if (left.Length > 0)
-                                _memory.CopyTo(bytes.Length, left, 0, left.Length);
-
-                            segment = new ArraySegment<byte>(left);
-
+                            segment = SegmentShift(segment, copied);
                             _size = size;
-
-                            _memory.Clear();
-                            _memory = new List<byte>();
+                            _headerOffset = 0;
                         }
                     }
 
@@ -216,15 +204,15 @@ namespace Netly
 
         private class Transaction
         {
-            public Stream Stream { get; }
-            public bool IsDone { get; set; }
-            public long Position { get; set; }
-
             public Transaction(Stream stream, bool isDone)
             {
                 Stream = stream;
                 IsDone = isDone;
             }
+
+            public Stream Stream { get; }
+            public bool IsDone { get; set; }
+            public long Position { get; set; }
         }
     }
 }
