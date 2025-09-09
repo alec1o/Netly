@@ -46,7 +46,7 @@ namespace Netly
                 _isClosed = true;
                 _initServerValidator = false;
                 _serverValidatorCallback = null;
-                Host = Host.Default;
+                Host = NHost.Default;
                 IsEncrypted = false;
             }
 
@@ -67,11 +67,11 @@ namespace Netly
                 _isServer = true;
                 _isClosed = false;
                 IsEncrypted = _server.IsEncrypted;
-                Host = new Host(socket.RemoteEndPoint);
+                Host = new NHost(socket.RemoteEndPoint);
                 _serverValidatorCallback = validatorAction;
             }
 
-            public Host Host { get; private set; }
+            public NHost Host { get; private set; }
             public bool IsEncrypted { get; private set; }
             public bool IsOpened => IsConnected();
 
@@ -82,7 +82,7 @@ namespace Netly
 
             private ClientOn On => _client._on;
 
-            public async Task Open(Host host)
+            public async Task Open(NHost host)
             {
                 if (_isOpening || _isClosing || IsOpened || _isServer) return;
 
@@ -96,7 +96,7 @@ namespace Netly
 
                     await _socket.ConnectAsync(host.Address, host.Port);
 
-                    Host = new Host(_socket.RemoteEndPoint);
+                    Host = new NHost(_socket.RemoteEndPoint);
 
                     _netStream = new NetworkStream(_socket);
 
@@ -345,15 +345,15 @@ namespace Netly
                     On.OnData?.Invoke(null, bytes);*/
             }
 
-            private void SendDispatch(Package package)
+            private void SendDispatch(object package)
             {
+/*
                 if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null))
                 {
                     package.Clear();
                     return;
                 }
 
-/*
                 try
                 {
                     if (package == null || package.Count <= 0) return;

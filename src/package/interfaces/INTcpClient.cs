@@ -23,7 +23,7 @@ namespace Netly.Packages.Interfaces
 
         Socket Socket { get; }
         Stream Stream { get; }
-        Host Host { get; }
+        NHost Host { get; }
         X509Certificate Certificate { get; }
 
         void OnCreate(Action<Socket> callback);
@@ -38,8 +38,8 @@ namespace Netly.Packages.Interfaces
 
         void ToMessage(byte[] message);
         void ToEvent(string name, byte[] message);
-        void ToConnect(Host host);
-        Task ToConnectAsync(Host host);
+        void ToConnect(NHost host);
+        Task ToConnectAsync(NHost host);
         void ToDisconnect();
         Task ToDisconnectAsync();
 

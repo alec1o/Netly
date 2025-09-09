@@ -84,7 +84,7 @@ public partial class FixUdp
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        void Client(Host host)
+        void Client(NHost host)
         {
             UDP.Client client = new();
             bool isOpen = false, isClose = false, isError = false, isModify = false;

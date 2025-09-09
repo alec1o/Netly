@@ -22,7 +22,7 @@ namespace Netly
 
             private ClientTo()
             {
-                Host = Host.Default;
+                Host = NHost.Default;
                 _client = null;
                 _socket = null;
                 _connection = null;
@@ -39,7 +39,7 @@ namespace Netly
                 _isServer = false;
             }
 
-            public ClientTo(Client client, Host host, Socket socket) : this()
+            public ClientTo(Client client, NHost host, Socket socket) : this()
             {
                 _client = client;
                 Host = host;
@@ -59,10 +59,10 @@ namespace Netly
                 return _connection.IsOpened;
             }
 
-            public Host Host { get; private set; }
+            public NHost Host { get; private set; }
             private ClientOn On => _client._on;
 
-            public Task Open(Host host)
+            public Task Open(NHost host)
             {
                 if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
                 _isOpeningOrClosing = true;
@@ -265,9 +265,9 @@ namespace Netly
                 _noResponseTimeout = value;
             }
 
-            private void InitConnection(ref Host host)
+            private void InitConnection(ref NHost host)
             {
-                var myHost = new Host(host.IPEndPoint);
+                var myHost = new NHost(host.IPEndPoint);
 
                 _connection = new Connection(host, _socket, _isServer)
                 {

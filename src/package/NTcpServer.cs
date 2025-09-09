@@ -27,7 +27,7 @@ namespace Netly.Packages
         private NTcpServer()
         {
             _clients = new List<NTcpClient>();
-            Host = Host.Default;
+            Host = NHost.Default;
             IsConnected = false;
             IsSecure = false;
             IsFraming = false;
@@ -65,7 +65,7 @@ namespace Netly.Packages
 
         public IList<NTcpClient> Clients => _clients;
         public Socket Socket { get; private set; }
-        public Host Host { get; private set; }
+        public NHost Host { get; private set; }
         public X509Certificate Certificate { get; private set; }
 
         public SslProtocols SecureProtocol { get; private set; }
@@ -122,22 +122,22 @@ namespace Netly.Packages
                 client.ToEvent(name, message);
         }
 
-        public void ToConnect(Host host)
+        public void ToConnect(NHost host)
         {
             ToConnectAsync(host);
         }
 
-        public Task ToConnectAsync(Host host)
+        public Task ToConnectAsync(NHost host)
         {
             return ToConnectAsync(host, (int)SocketOptionName.MaxConnections);
         }
 
-        public void ToConnect(Host host, int backlog)
+        public void ToConnect(NHost host, int backlog)
         {
             ToConnectAsync(host, backlog);
         }
 
-        public Task ToConnectAsync(Host host, int backlog)
+        public Task ToConnectAsync(NHost host, int backlog)
         {
             if (IsConnected) return Task.CompletedTask;
 
@@ -157,7 +157,7 @@ namespace Netly.Packages
 
                         socket.Listen(Math.Min(0, backlog));
 
-                        Host = new Host(socket.LocalEndPoint);
+                        Host = new NHost(socket.LocalEndPoint);
 
                         Socket = socket;
 

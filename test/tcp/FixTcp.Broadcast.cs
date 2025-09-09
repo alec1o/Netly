@@ -81,7 +81,7 @@ public partial class FixTcp
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        void Client(Host host)
+        void Client(NHost host)
         {
             TCP.Client client = new();
             bool isOpen = false, isClose = false, isError = false, isModify = false;

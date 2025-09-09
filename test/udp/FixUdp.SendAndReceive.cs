@@ -88,7 +88,7 @@ public partial class FixUdp
             }
         }
 
-        void Client(Host host, out Action action)
+        void Client(NHost host, out Action action)
         {
             UDP.Client client = new();
 

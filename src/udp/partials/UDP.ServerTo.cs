@@ -30,7 +30,7 @@ namespace Netly
                     _socket = null;
                     _isClosed = true;
                     _isOpeningOrClosing = false;
-                    Host = Host.Default;
+                    Host = NHost.Default;
                     Clients = new List<Client>();
                 }
 
@@ -41,10 +41,10 @@ namespace Netly
 
                 private ServerOn On => _server._on;
                 public bool IsOpened => !_isClosed && _socket != null;
-                public Host Host { get; private set; }
+                public NHost Host { get; private set; }
                 public List<Client> Clients { get; }
 
-                public Task Open(Host host)
+                public Task Open(NHost host)
                 {
                     if (_isOpeningOrClosing || !_isClosed) return Task.CompletedTask;
 
@@ -60,7 +60,7 @@ namespace Netly
 
                             _socket.Bind(host.EndPoint);
 
-                            Host = new Host(_socket.LocalEndPoint);
+                            Host = new NHost(_socket.LocalEndPoint);
 
                             _isClosed = false;
 
@@ -171,28 +171,28 @@ namespace Netly
                     Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
                 }
 
-                public void Data(Host targetHost, byte[] data)
+                public void Data(NHost targetHost, byte[] data)
                 {
                     if (!IsOpened || targetHost == null || data == null || data.Length <= 0) return;
 
                     Send(targetHost, data);
                 }
 
-                public void Data(Host targetHost, string data)
+                public void Data(NHost targetHost, string data)
                 {
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, data.GetBytes());
                 }
 
-                public void Data(Host targetHost, string data, Encoding encoding)
+                public void Data(NHost targetHost, string data, Encoding encoding)
                 {
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(data)) return;
 
                     Send(targetHost, data.GetBytes(encoding));
                 }
 
-                public void Event(Host targetHost, string name, byte[] data)
+                public void Event(NHost targetHost, string name, byte[] data)
                 {
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) || data == null ||
                         data.Length <= 0) return;
@@ -200,7 +200,7 @@ namespace Netly
                     Send(targetHost, NetlyEnvironment.EventManager.Create(name, data));
                 }
 
-                public void Event(Host targetHost, string name, string data)
+                public void Event(NHost targetHost, string name, string data)
                 {
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
                         string.IsNullOrEmpty(data)) return;
@@ -208,7 +208,7 @@ namespace Netly
                     Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
                 }
 
-                public void Event(Host targetHost, string name, string data, Encoding encoding)
+                public void Event(NHost targetHost, string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
                         string.IsNullOrEmpty(data)) return;
@@ -239,7 +239,7 @@ namespace Netly
                     }
                 }
 
-                private void Send(Host host, byte[] bytes)
+                private void Send(NHost host, byte[] bytes)
                 {
                     if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
 
@@ -269,7 +269,7 @@ namespace Netly
                         {
                             try
                             {
-                                var endpoint = Host.Default.EndPoint;
+                                var endpoint = NHost.Default.EndPoint;
 
                                 var size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None,
                                     ref endpoint);
@@ -295,7 +295,7 @@ namespace Netly
                     {
                         try
                         {
-                            var host = new Host(endpoint);
+                            var host = new NHost(endpoint);
 
                             // Find a client connected user by endpoint connection (IP, PORT)
 
@@ -303,7 +303,7 @@ namespace Netly
 
                             lock (_clientsLocker)
                             {
-                                client = Clients.FirstOrDefault(x => Host.Equals(host, x.Host));
+                                client = Clients.FirstOrDefault(x => NHost.Equals(host, x.Host));
                             }
 
                             // new client

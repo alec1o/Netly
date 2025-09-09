@@ -37,7 +37,7 @@ namespace Netly
                     _isOpening = false;
                     _isClosing = false;
                     _isClosed = true;
-                    Host = Host.Default;
+                    Host = NHost.Default;
                     IsEncrypted = false;
                     _defaultBacklog = (int)SocketOptionName.MaxConnections;
                 }
@@ -48,19 +48,19 @@ namespace Netly
                 }
 
                 public bool IsOpened => _socket != null;
-                public Host Host { get; private set; }
+                public NHost Host { get; private set; }
                 private ServerOn On => _server._on;
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
                 public readonly List<ITCP.Client> Clients = new List<ITCP.Client>();
 
-                public Task Open(Host host)
+                public Task Open(NHost host)
                 {
                     return Open(host, _defaultBacklog);
                 }
 
-                public Task Open(Host host, int backlog)
+                public Task Open(NHost host, int backlog)
                 {
                     if (_isOpening || _isClosing || IsOpened) return Task.CompletedTask;
 
@@ -86,7 +86,7 @@ namespace Netly
                             socket.Listen(ClampBacklog(backlog));
 
 
-                            Host = new Host(socket.LocalEndPoint);
+                            Host = new NHost(socket.LocalEndPoint);
 
                             _socket = socket;
 

@@ -36,7 +36,7 @@ namespace Netly.Packages
         {
             _server = null;
             _onStream = NUtils.NewStream;
-            Host = Host.Default;
+            Host = NHost.Default;
             IsConnected = false;
             SecureProtocol = SslProtocols.Default;
             SecureDomain = string.Empty;
@@ -86,7 +86,7 @@ namespace Netly.Packages
 
         public Socket Socket { get; private set; }
         public Stream Stream => IsSecure ? _secureStream : (Stream)_networkStream;
-        public Host Host { get; private set; }
+        public NHost Host { get; private set; }
         public X509Certificate Certificate { get; private set; }
 
         public void OnFail(Action<Exception> callback)
@@ -143,12 +143,12 @@ namespace Netly.Packages
             Send(NTcpMessage.Create(name, message.Length), message);
         }
 
-        public void ToConnect(Host host)
+        public void ToConnect(NHost host)
         {
             ToConnectAsync(host);
         }
 
-        public Task ToConnectAsync(Host host)
+        public Task ToConnectAsync(NHost host)
         {
             return Task.Run(() =>
             {
@@ -164,7 +164,7 @@ namespace Netly.Packages
 
                         socket.Connect(host.Address, host.Port);
 
-                        Host = new Host(socket.RemoteEndPoint);
+                        Host = new NHost(socket.RemoteEndPoint);
 
                         _networkStream = new NetworkStream(socket);
 

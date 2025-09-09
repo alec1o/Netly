@@ -6,20 +6,20 @@ namespace Netly
     /// <summary>
     ///     Netly: Host (EndPoint Manager)
     /// </summary>
-    public class Host
+    public class NHost
     {
         /// <summary>
         ///     Return default Host instance: (0.0.0.0:0)
         /// </summary>
         /// <returns>Return default host instance: (0.0.0.0:0)</returns>
-        public static readonly Host Default = new Host(IPAddress.Any, 0);
+        public static readonly NHost Default = new NHost(IPAddress.Any, 0);
 
         /// <summary>
         ///     Create instance of (host)
         /// </summary>
         /// <param name="ip">IPAddress</param>
         /// <param name="port">Port</param>
-        public Host(string ip, int port)
+        public NHost(string ip, int port)
         {
             IPEndPoint = new IPEndPoint(IPAddress.Parse(ip), port);
         }
@@ -28,7 +28,7 @@ namespace Netly
         ///     Create instance of (host)
         /// </summary>
         /// <param name="endpoint">EndPoint</param>
-        public Host(EndPoint endpoint)
+        public NHost(EndPoint endpoint)
         {
             var temp = (IPEndPoint)endpoint;
             IPEndPoint = new IPEndPoint(temp.Address, temp.Port);
@@ -38,7 +38,7 @@ namespace Netly
         ///     Create instance of (host)
         /// </summary>
         /// <param name="ipEndpoint">IPEndPoint</param>
-        public Host(IPEndPoint ipEndpoint)
+        public NHost(IPEndPoint ipEndpoint)
         {
             IPEndPoint = new IPEndPoint(ipEndpoint.Address, ipEndpoint.Port);
         }
@@ -48,7 +48,7 @@ namespace Netly
         /// </summary>
         /// <param name="address">IPAddress</param>
         /// <param name="port">Port</param>
-        public Host(IPAddress address, int port)
+        public NHost(IPAddress address, int port)
         {
             IPEndPoint = new IPEndPoint(address, port);
         }
@@ -103,8 +103,8 @@ namespace Netly
         {
             if (objectA == null || objectB == null) return false;
 
-            if (objectA.GetType() == typeof(Host) && objectB.GetType() == typeof(Host))
-                return ((Host)objectA).ToString() == ((Host)objectB).ToString();
+            if (objectA.GetType() == typeof(NHost) && objectB.GetType() == typeof(NHost))
+                return ((NHost)objectA).ToString() == ((NHost)objectB).ToString();
 
             return false;
         }

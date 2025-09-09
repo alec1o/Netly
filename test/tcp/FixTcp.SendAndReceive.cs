@@ -87,7 +87,7 @@ public partial class FixTcp
             }
         }
 
-        void Client(Host host, out Action check)
+        void Client(NHost host, out Action check)
         {
             TCP.Client client = new();
 

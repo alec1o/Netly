@@ -70,7 +70,7 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            client.To.Open(new Host(IPAddress.Any, 0)).Wait();
+            client.To.Open(new NHost(IPAddress.Any, 0)).Wait();
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -141,7 +141,7 @@ public partial class FixTcp
             }
 
             // Cannot assign requested address
-            server.To.Open(new Host("1.1.1.1", 0)).Wait();
+            server.To.Open(new NHost("1.1.1.1", 0)).Wait();
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);

@@ -7,12 +7,12 @@ public static class HostManager
     private static int _index = Initial;
     private static readonly object Locker = new();
 
-    public static Host GenerateLocalHost()
+    public static NHost GenerateLocalHost()
     {
         lock (Locker)
         {
             _index += Skip;
-            return new Host(IPAddress.Loopback, _index);
+            return new NHost(IPAddress.Loopback, _index);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Netly
 
             public ServerTo(Server server)
             {
-                Host = Host.Default;
+                Host = NHost.Default;
                 _server = server;
                 _socket = null;
                 _isOpeningOrClosing = false;
@@ -35,11 +35,11 @@ namespace Netly
                 _noResponseTimeout = 5000; // 5s
             }
 
-            public Host Host { get; private set; }
+            public NHost Host { get; private set; }
             public bool IsOpened => _socket != null && !_isClosed;
             private ServerOn On => _server._on;
 
-            public Task Open(Host host)
+            public Task Open(NHost host)
             {
                 if (!_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
 
@@ -55,7 +55,7 @@ namespace Netly
 
                         _socket.Bind(host.EndPoint);
 
-                        Host = new Host(_socket.LocalEndPoint);
+                        Host = new NHost(_socket.LocalEndPoint);
 
                         _isClosed = false;
 
@@ -227,7 +227,7 @@ namespace Netly
                     {
                         try
                         {
-                            var endpoint = Host.Default.EndPoint;
+                            var endpoint = NHost.Default.EndPoint;
 
                             var size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None,
                                 ref endpoint);
@@ -253,7 +253,7 @@ namespace Netly
                 {
                     try
                     {
-                        var host = new Host(endpoint);
+                        var host = new NHost(endpoint);
                         Client client;
                         
                         lock (_clientsLocker)

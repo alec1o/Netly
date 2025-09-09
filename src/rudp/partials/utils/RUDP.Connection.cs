@@ -23,14 +23,14 @@ namespace Netly
             private readonly List<int> HandshakeDataQueue = new List<int>();
             private readonly bool IsServer;
             private readonly Channel MyChannel;
-            private readonly Host MyHost;
+            private readonly NHost MyHost;
             private readonly Socket MySocket;
             private string _receivedClientId = string.Empty;
             public string Id = string.Empty;
             private DateTime ConnectionTimeoutAt;
 
 
-            public Connection(Host host, Socket socket, bool isServer)
+            public Connection(NHost host, Socket socket, bool isServer)
             {
                 MyHost = host;
                 MySocket = socket;

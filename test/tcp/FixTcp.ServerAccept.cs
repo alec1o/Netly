@@ -7,7 +7,7 @@ public partial class FixTcp
     {
         await Server();
 
-        async Task Client(Host host)
+        async Task Client(NHost host)
         {
             TCP.Client client = new();
 

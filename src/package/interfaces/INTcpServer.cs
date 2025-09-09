@@ -21,7 +21,7 @@ namespace Netly.Packages.Interfaces
         IList<NTcpClient> Clients { get; }
 
         Socket Socket { get; }
-        Host Host { get; }
+        NHost Host { get; }
         X509Certificate Certificate { get; }
         SslProtocols SecureProtocol { get; }
 
@@ -36,10 +36,10 @@ namespace Netly.Packages.Interfaces
 
         void ToBroadcastMessage(byte[] message, Func<NTcpClient, bool> condition = null);
         void ToBroadcastEvent(string name, byte[] message, Func<NTcpClient, bool> condition = null);
-        void ToConnect(Host host);
-        Task ToConnectAsync(Host host);
-        void ToConnect(Host host, int backlog);
-        Task ToConnectAsync(Host host, int backlog);
+        void ToConnect(NHost host);
+        Task ToConnectAsync(NHost host);
+        void ToConnect(NHost host, int backlog);
+        Task ToConnectAsync(NHost host, int backlog);
         void ToDisconnect();
 
         void ToSecure(byte[] certificate, string password, SslProtocols protocols, bool allowUnsecured);

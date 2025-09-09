@@ -34,7 +34,7 @@ namespace Netly
             public SslStream SslStream => _to.GetSslStream();
             public IFraming Framing { get; }
             public bool IsOpened => _to.IsOpened;
-            public Host Host => _to.Host;
+            public NHost Host => _to.Host;
             public Socket Socket => _to.GetSocket();
             public NetworkStream NetworkStream => _to.GetNetworkStream();
             public bool IsEncrypted => _to.IsEncrypted;

@@ -24,7 +24,7 @@ namespace Netly
             }
 
             public string Id { get; }
-            public Host Host => _to.Host;
+            public NHost Host => _to.Host;
             public bool IsOpened => _to.IsOpened;
             public bool IsFraming { get; }
 

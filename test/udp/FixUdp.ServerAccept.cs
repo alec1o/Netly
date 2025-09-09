@@ -7,7 +7,7 @@ public partial class FixUdp
     {
         Server();
 
-        void Client(Host host)
+        void Client(NHost host)
         {
             UDP.Client client = new();
 

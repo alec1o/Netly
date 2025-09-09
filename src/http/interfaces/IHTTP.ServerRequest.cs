@@ -53,12 +53,12 @@ namespace Netly.Interfaces
             /// <summary>
             ///     Request (local end point)
             /// </summary>
-            Host LocalEndPoint { get; }
+            NHost LocalEndPoint { get; }
 
             /// <summary>
             ///     Request (remote end point)
             /// </summary>
-            Host RemoteEndPoint { get; }
+            NHost RemoteEndPoint { get; }
 
             /// <summary>
             ///     Return true if request is websocket

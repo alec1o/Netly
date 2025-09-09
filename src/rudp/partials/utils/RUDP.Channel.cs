@@ -30,7 +30,7 @@ namespace Netly
             private DateTime _pingTimer;
 
 
-            public Channel(Host host)
+            public Channel(NHost host)
             {
                 _ = host;
                 _sequencedId = 0;
@@ -132,7 +132,7 @@ namespace Netly
                 }
             }
 
-            public void OnReceiveRaw(ref byte[] data, Host host)
+            public void OnReceiveRaw(ref byte[] data, NHost host)
             {
                 if (data == null) return;
                 // Console.WriteLine($"Received: {data.Length}b [{host}]");
