@@ -1,0 +1,46 @@
+namespace NetlyTest.Netly;
+
+public class NMessageTest
+{
+    private const string Name = "Example";
+    private static readonly byte[] Message = "Hello World!"u8.ToArray();
+
+    public NMessageTest(ITestOutputHelper output)
+    {
+        NetlyEnvironment.Logger.On(output.WriteLine);
+        NetlyEnvironment.Logger.On((Exception exception) => output.WriteLine(exception.ToString()));
+    }
+
+    [Fact]
+    public void Start()
+    {
+        var header = NMessage.Create(Name, Message.LongLength);
+        Assert.NotEmpty(header);
+        var payload = NUtils.ArrayConcat(header, Message);
+        Assert.NotEmpty(payload);
+
+        var stream = NUtils.NewStream(payload.LongLength);
+        stream.Write(payload);
+        Assert.Equal(payload.LongLength, stream.Position);
+        Assert.True(NMessage.TryParse(stream, out var myName, out var myMessage, NUtils.NewStream));
+        stream.Close();
+        Assert.Equal(Name, myName);
+        var data = new byte[myMessage.Length];
+        Assert.Equal(Message.Length, myMessage.Read(data, 0, data.Length));
+        Assert.Equal(Message, data);
+    }
+
+    [Fact]
+    public void Create()
+    {
+        var header = NMessage.Create(Name, Message.Length);
+
+        var size =
+            sizeof(int) + // Prefix size
+            sizeof(long) + // Package size (payload + header)
+            sizeof(int) + // Message.Name size
+            Name.Length; // Message.Name buffer
+
+        Assert.Equal(size, header.Length);
+    }
+}

@@ -4,7 +4,6 @@ public class NFramingTest
 {
     public NFramingTest(ITestOutputHelper output)
     {
-        // initialize logger
         NetlyEnvironment.Logger.On(output.WriteLine);
         NetlyEnvironment.Logger.On((Exception exception) => output.WriteLine(exception.ToString()));
     }
@@ -25,13 +24,13 @@ public class NFramingTest
         for (var i = 0; i < 10; i++)
         {
             // first deploy
-            framing.Write(new ArraySegment<byte>(header), NFraming.NewStream);
+            framing.Write(new ArraySegment<byte>(header), NUtils.NewStream);
             var deploy1 = framing.Read(out var stream1);
             Assert.False(deploy1);
             Assert.Null(stream1);
 
             // last deploy
-            framing.Write(new ArraySegment<byte>(message), NFraming.NewStream);
+            framing.Write(new ArraySegment<byte>(message), NUtils.NewStream);
             var deploy2 = framing.Read(out var stream2);
             Assert.True(deploy2);
             Assert.NotNull(stream2);
@@ -51,7 +50,7 @@ public class NFramingTest
     {
         const int times = 10;
 
-        var random = new Random(Seed: 1024);
+        var random = new Random(1024);
         var messages = new List<byte[]>();
 
         // create buffer instance
@@ -74,7 +73,7 @@ public class NFramingTest
             messages.Add(message);
         }
 
-        framing.Write(new ArraySegment<byte>(buffer.ToArray()), NFraming.NewStream);
+        framing.Write(new ArraySegment<byte>(buffer.ToArray()), NUtils.NewStream);
         buffer.Clear();
 
         var count = 0;
