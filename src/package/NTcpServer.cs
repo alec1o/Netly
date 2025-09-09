@@ -34,7 +34,7 @@ namespace Netly.Packages
             IsFraming = false;
             AllowUnsecured = false;
             FramingSize = NFraming.DefaultSize;
-            OnStreamObject = NFraming.DefaultOnStream;
+            OnStreamObject = NFraming.NewStream;
             OnSecureObject = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
             Socket = null;
             Certificate = new X509Certificate();

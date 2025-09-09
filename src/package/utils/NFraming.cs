@@ -10,152 +10,154 @@ namespace Netly
         internal const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
         private static readonly byte[] Prefix = { 8, 16, 32, 64, 128 };
         private readonly object _locker = new object();
-        private List<byte> _cache = new List<byte>();
-        private long _size, _position;
-        private Stream _stream;
+        private long _size;
+
+        private readonly LinkedList<Transaction> _transactions = new LinkedList<Transaction>();
+        private List<byte> _memory = new List<byte>();
         public long MaxSize { get; set; } = DefaultSize;
+        public bool IsOpened { get; set; } = true;
 
 
         public void Close()
         {
             lock (_locker)
             {
+                // reset proprieties
+                IsOpened = false;
                 _size = 0;
-                _position = 0;
-                _cache.Clear();
-                _cache = new List<byte>();
-                _stream?.Close();
+
+                // clear memory
+                _memory.Clear();
+                _memory = new List<byte>();
+
+                // clear streams
+                foreach (var transaction in _transactions) transaction.Stream.Close();
+                _transactions.Clear();
             }
         }
 
-        public bool Write(byte[] buffer, int bufferCount, Func<long, Stream> getStream, out Stream stream,
-            out bool close, out bool recall)
+        public bool Read(out Stream stream)
         {
-            stream = null;
-            close = false;
-            recall = false;
-
-            try
+            lock (_locker)
             {
-                if (buffer == null || buffer.Length < 1 || bufferCount < 1 || getStream == null)
-                    throw new ApplicationException($"Invalid {GetType().FullName}.{nameof(Write)} params.");
+                ThrowIfClose();
 
-                lock (_locker)
+                stream = null;
+
+                if (_transactions.Count < 1)
+                    return false;
+
+                if (!_transactions.First.Value.IsDone)
+                    return false;
+
+                stream = _transactions.First.Value.Stream;
+
+                _transactions.RemoveFirst();
+
+                return true;
+            }
+        }
+
+        private void ThrowIfClose()
+        {
+            if (IsOpened is false)
+                throw new InvalidOperationException($"{GetType().FullName}.{nameof(IsOpened)} = {IsOpened}");
+        }
+
+        public void Write(byte[] buffer, int length, Func<long, Stream> getStream)
+        {
+            if (buffer == null || buffer.Length < 1 || length < 1 || getStream == null)
+                throw new ArgumentException($"Invalid {GetType().FullName}.{nameof(Write)} [arguments]");
+
+            lock (_locker)
+            {
+                ThrowIfClose();
+
+                for (;;)
                 {
-                    // new stream detected
                     if (_size == 0)
                     {
-                        // save buffer on cache
-                        _cache.AddRange(new ArraySegment<byte>(buffer, 0, bufferCount));
-
-                        // calculate entry size requirement
                         var count = Prefix.Length + sizeof(long);
 
-                        // have sufficient entry buffer
-                        if (_cache.Count >= count)
+                        if (length > 0)
+                            _memory.AddRange(new ArraySegment<byte>(buffer, 0, length));
+
+                        if (_memory.Count >= count)
                         {
                             // entry bytes
                             var bytes = new byte[count];
-                            _cache.CopyTo(0, bytes, 0, bytes.Length);
+                            _memory.CopyTo(0, bytes, 0, bytes.Length);
 
                             // get and verify size
                             var size = BitConverter.ToInt64(bytes, Prefix.Length);
-                            if (size < MinMessageSize) throw new IndexOutOfRangeException($"{nameof(size)}: {size}");
+
+                            if (size < MinMessageSize)
+                                throw new IndexOutOfRangeException($"{nameof(size)}: {size}");
 
                             // get and verify prefix
-
-                            if (CompareSequences(Prefix, bytes)) _stream = getStream(size);
+                            if (CompareSequences(Prefix, bytes))
+                                _transactions.AddLast(new Transaction(getStream(size), false));
                             else
-                                throw new InvalidDataException(
-                                    $"{nameof(Prefix)}: {Format(Prefix)} != {Format(bytes)}");
+                                throw new InvalidDataException($"{nameof(Prefix)}: {Format(Prefix)} - {Format(bytes)}");
 
-                            // calculate left bytes
-                            var left = _cache.Count - bytes.Length;
-
-                            // update stream size
+                            var left = _memory.Count - bytes.Length;
+                            length = 0;
                             _size = size;
 
-                            // reset write position
-                            _position = 0;
-
-                            // reset buffer count
-                            bufferCount = 0;
-
-                            // copy left bytes to stream
                             if (left > 0)
                             {
                                 buffer = new byte[left];
-                                bufferCount = buffer.Length;
-                                _cache.CopyTo(bytes.Length, buffer, 0, buffer.Length);
+                                length = buffer.Length;
+                                _memory.CopyTo(bytes.Length, buffer, 0, buffer.Length);
                             }
 
-                            // clear cache
-                            _cache.Clear();
-                            _cache = new List<byte>();
+                            _memory.Clear();
+                            _memory = new List<byte>();
                         }
                     }
 
-                    // is written buffer
-                    if (_size > 0 && bufferCount > 0)
+                    if (_size > 0 && length > 0)
                     {
-                        // calculate next cache size after write
-                        var nextCount = _position + bufferCount;
+                        var transaction = _transactions.Last.Value;
 
-                        // have sufficient cached buffer
-                        if (nextCount >= _size)
+                        if (transaction.IsDone)
+                            throw new InvalidOperationException("Context stream isn't available to modify");
+
+                        var stream = transaction.Stream;
+                        var next = transaction.Position + length;
+
+                        if (next >= _size)
                         {
-                            var leftCount = (int)(_size - nextCount);
-                            var readCount = bufferCount - leftCount;
+                            var count = (int)(_size - transaction.Position);
+                            var left = next - count;
 
-                            // write remain buffer
-                            _stream.Write(buffer, 0, readCount);
-
-                            // reset stream size
+                            stream.Write(buffer, 0, count);
+                            stream.Position = 0;
+                            transaction.IsDone = true; // REQUIRED: Save stream state
                             _size = 0;
 
-                            // reset write/read position
-                            _stream.Position = 0;
-
-                            // save remained data in cache
-                            if (leftCount > 0)
+                            if (left > 0)
                             {
-                                // copy buffer
-                                var leftBytes = new byte[leftCount];
-                                Array.Copy(buffer, readCount, leftBytes, 0, leftBytes.Length);
+                                // copy context
+                                var leftBytes = new byte[left];
+                                Array.Copy(buffer, count, leftBytes, 0, leftBytes.Length);
 
-                                // save buffer
-                                _cache.Clear();
-                                _cache = new List<byte>(leftBytes);
+                                // update context
+                                buffer = leftBytes;
+                                length = buffer.Length;
 
-                                // set recall option (to collect data again)
-                                recall = true;
+                                continue; // REQUIRED: Read new stream again!
                             }
-
-                            // copy internal stream reference
-                            stream = _stream;
-
-                            // delete internal stream reference
-                            _stream = null;
-
-                            // return success stream read
-                            return true;
                         }
-
-                        // write buffer on cache
-                        _stream.Write(buffer, 0, bufferCount);
-                        _position += bufferCount;
+                        else
+                        {
+                            stream.Write(buffer, 0, length);
+                            transaction.Position += length;
+                        }
                     }
 
-                    // return false: wait for next entry
-                    return false;
+                    break;
                 }
-            }
-            catch (Exception e)
-            {
-                close = true;
-                Close();
-                NetlyEnvironment.Logger.Create(e);
-                return false;
             }
         }
 
@@ -184,7 +186,7 @@ namespace Netly
             return $"[{string.Join(",", bytes)}]";
         }
 
-        public static Stream DefaultOnStream(long size)
+        public static Stream NewStream(long size)
         {
             if (size < 1024 * 1024 * 10) return new MemoryStream((int)size); // 10.00 MB                            
             throw new InternalBufferOverflowException($"{nameof(DefaultSize)}, {nameof(size)}: {size}");
@@ -201,6 +203,20 @@ namespace Netly
             Buffer.BlockCopy(body, 0, buffer, Prefix.Length, body.Length);
 
             return buffer;
+        }
+
+        private class Transaction
+        {
+            public Stream Stream { get; }
+            public bool IsDone { get; set; }
+            public long Size { get; set; }
+            public long Position { get; set; }
+
+            public Transaction(Stream stream, bool isDone)
+            {
+                Stream = stream;
+                IsDone = isDone;
+            }
         }
     }
 }

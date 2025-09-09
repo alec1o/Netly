@@ -35,7 +35,7 @@ namespace Netly.Packages
             _framing = new NFraming();
             _onSecure = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
             _server = null;
-            _onStream = NFraming.DefaultOnStream;
+            _onStream = NFraming.NewStream;
             Host = Host.Default;
             IsConnected = false;
             SecureProtocol = SslProtocols.Default;
@@ -304,14 +304,8 @@ namespace Netly.Packages
 
                 if (IsFraming)
                 {
-                    var recall = true;
-
-                    while (recall)
-                    {
-                        var got = _framing.Write(buffer, size, NewStream, out var stream, out var close, out recall);
-                        if (close) throw new Exception($"{nameof(close)} about internal parsing error");
-                        if (got) ReceiveRelease(stream);
-                    }
+                    _framing.Write(buffer, size, NewStream);
+                    while (_framing.Read(out var stream)) ReceiveRelease(stream);
                 }
                 else
                 {
