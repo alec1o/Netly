@@ -6,7 +6,7 @@ namespace Netly
 {
     public class NFraming
     {
-        private const long MinMessageSize = 1; // 20.00 MB
+        private const long MinMessageSize = 1;
         internal const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
         private static readonly byte[] Prefix = { 8, 16, 32, 64, 128 };
         private readonly byte[] _headerBuffer = new byte[Prefix.Length + sizeof(long)];
@@ -185,7 +185,7 @@ namespace Netly
 
         public static Stream NewStream(long size)
         {
-            if (size < 1024 * 1024 * 10) return new MemoryStream((int)size); // 10.00 MB                            
+            if (size <= DefaultSize) return new MemoryStream((int)size);
             throw new InternalBufferOverflowException($"{nameof(DefaultSize)}, {nameof(size)}: {size}");
         }
 
