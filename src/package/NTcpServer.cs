@@ -8,7 +8,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Netly.Packages.Interfaces;
-using Netly.Packages.Utils;
 
 namespace Netly.Packages
 {
@@ -34,7 +33,7 @@ namespace Netly.Packages
             IsFraming = false;
             AllowUnsecured = false;
             FramingSize = NFraming.DefaultSize;
-            OnStreamObject = NFraming.NewStream;
+            OnStreamObject = NUtils.NewStream;
             OnSecureObject = new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
             Socket = null;
             Certificate = new X509Certificate();

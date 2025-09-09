@@ -30,7 +30,7 @@ namespace Netly
         private readonly byte[] _headerBuffer = new byte[Prefix.Length + sizeof(long)];
         private readonly object _locker = new object();
         private readonly LinkedList<Transaction> _transactions = new LinkedList<Transaction>();
-        
+
         private int _headerOffset;
         private long _size;
 
@@ -158,15 +158,16 @@ namespace Netly
                                 throw new InvalidDataException($"{nameof(size)}: {size}");
 
                             // get and verify prefix
-                            if (CompareSequences(Prefix, _headerBuffer))
+                            if (NUtils.ArraySequenced(Prefix, _headerBuffer))
                                 _transactions.AddLast(new Transaction(getStream(size), false));
                             else
                                 throw new InvalidDataException(
-                                    $"{nameof(Prefix)}: {Format(Prefix)} - {Format(_headerBuffer)}");
+                                    $"{nameof(Prefix)}: {NUtils.Format(Prefix)} - {NUtils.Format(_headerBuffer)}");
 
-                            segment = SegmentShift(segment, copied);
+                            segment = NUtils.SegmentShift(segment, copied);
                             _size = size;
                             _headerOffset = 0;
+                            _transactions.Last.Value.Stream.Position = 0;
                         }
                     }
 
@@ -194,7 +195,7 @@ namespace Netly
 
                             if (left > 0)
                             {
-                                segment = SegmentShift(segment, count);
+                                segment = NUtils.SegmentShift(segment, count);
                                 continue; // REQUIRED: Read new stream again!
                             }
                         }
@@ -209,56 +210,6 @@ namespace Netly
                     break;
                 }
             }
-        }
-
-        private static ArraySegment<T> SegmentShift<T>(ArraySegment<T> segment, int shift)
-        {
-            if (shift < 0)
-                throw new ArgumentOutOfRangeException(nameof(shift));
-
-            if (segment.Array == null)
-                throw new ArgumentNullException(nameof(segment));
-
-            return shift >= segment.Count
-                ? new ArraySegment<T>(segment.Array, segment.Offset + segment.Count, 0)
-                : new ArraySegment<T>(segment.Array, shift + segment.Offset, segment.Count - shift);
-        }
-
-        private static bool CompareSequences(byte[] reference, byte[] compare)
-        {
-            try
-            {
-                for (var i = 0; i < Prefix.Length; i++)
-                    if (reference[i] != compare[i])
-                    {
-                        NetlyEnvironment.Logger.Create($"Compare not match: {reference[i]}:{compare[i]}");
-                        return false;
-                    }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                NetlyEnvironment.Logger.Create(e);
-                return false;
-            }
-        }
-
-        private static string Format<T>(T[] bytes)
-        {
-            return $"[{string.Join(",", bytes)}]";
-        }
-
-        /// <summary>
-        ///     Creates a new MemoryStream with the requested size.
-        ///     Throws <see cref="InternalBufferOverflowException" /> if the size exceeds the default maximum.
-        /// </summary>
-        /// <param name="size">The desired size of the stream.</param>
-        /// <returns>A MemoryStream with the specified size.</returns>
-        public static Stream NewStream(long size)
-        {
-            if (size <= DefaultSize) return new MemoryStream((int)size);
-            throw new InternalBufferOverflowException($"{nameof(DefaultSize)}, {nameof(size)}: {size}");
         }
 
         /// <summary>

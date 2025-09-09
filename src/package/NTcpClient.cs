@@ -35,7 +35,7 @@ namespace Netly.Packages
         private NTcpClient()
         {
             _server = null;
-            _onStream = NFraming.NewStream;
+            _onStream = NUtils.NewStream;
             Host = Host.Default;
             IsConnected = false;
             SecureProtocol = SslProtocols.Default;
