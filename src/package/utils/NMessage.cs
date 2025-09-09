@@ -8,8 +8,34 @@ namespace Netly
     {
         private const long MinSize = 1;
 
+        /// <summary>
+        ///     The prefix used in <see cref="NFraming" />.<see cref="NFraming.Prefix" /> is: [0x06, 0x03, 0x09, 0x01] in
+        ///     hexadecimal,
+        ///     which is [6, 3, 9, 1] in decimal. It serves as a “magic number”
+        ///     to identify the start of a message payload.
+        ///     <br />
+        ///     This value is the reverse of the prefix used in <see cref="NFraming" /> ([1, 9, 3, 6]),
+        ///     which refers to the year 1936 when Alan Turing introduced the Turing Machine.
+        ///     By reversing the digits to 6391, this prefix symbolically represents
+        ///     the message layer built on top of the framing layer, keeping a historical
+        ///     and conceptual link to the foundation of computability.
+        ///     <br />
+        ///     See: https://en.wikipedia.org/wiki/Turing_machine
+        /// </summary>
         public static readonly byte[] Prefix = { 6, 3, 9, 1 };
 
+        /// <summary>
+        ///     Creates a serialized message header that contains a prefix,
+        ///     the encoded name, and the message size.
+        /// </summary>
+        /// <param name="name">The logical name of the message (must not be empty).</param>
+        /// <param name="messageSize">The size of the payload message in bytes (must be greater than 0).</param>
+        /// <returns>
+        ///     A byte array containing the prefix, name length, message size, and the encoded name.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if <paramref name="name" /> is empty or <paramref name="messageSize" /> is less than 1.
+        /// </exception>
         public static byte[] Create(string name, long messageSize)
         {
             name = name ?? string.Empty;
@@ -51,6 +77,25 @@ namespace Netly
             return buffer;
         }
 
+
+        /// <summary>
+        ///     Attempts to parse a message from a given <see cref="Stream" />.
+        /// </summary>
+        /// <param name="stream">The input stream containing the message data.</param>
+        /// <param name="name">The parsed message name, if successful.</param>
+        /// <param name="message">The output stream containing the message payload, if successful.</param>
+        /// <param name="getStream">
+        ///     A factory function used to allocate a stream for storing the payload,
+        ///     given the expected payload size.
+        /// </param>
+        /// <returns>
+        ///     <c>true</c> if parsing was successful, otherwise <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        ///     - This method validates the prefix, name size, and message size.
+        ///     - Copies payload bytes into the allocated stream using <paramref name="getStream" />.
+        ///     - Resets stream positions appropriately before returning.
+        /// </remarks>
         public static bool TryParse(Stream stream, out string name, out Stream message,
             Func<long, Stream> getStream)
         {
@@ -65,14 +110,14 @@ namespace Netly
 
             try
             {
-                const long bodyPreview = 
+                const long bodyPreview =
                     MinSize + // Min Name Buffer
                     MinSize; // Min Message Buffer
-                
+
                 if (stream.Length < headerSize + bodyPreview) return false;
 
                 var header = new byte[headerSize];
-                
+
                 stream.Position = 0;
                 var readHeader = stream.Read(header, 0, header.Length);
 
@@ -95,7 +140,8 @@ namespace Netly
                 if (nameSize < MinSize || messageSize < MinSize)
                     return false;
 
-                if (nameSize + messageSize + offset != stream.Length)
+                var expectedSize = offset + nameSize + messageSize;
+                if (expectedSize != stream.Length)
                     return false;
 
                 var nameBuffer = new byte[nameSize];
@@ -107,22 +153,12 @@ namespace Netly
                 message = getStream(messageSize);
                 message.Position = 0;
 
-                var buffer = new byte[Math.Min(1024 * 32, messageSize)];
-                long position = 0;
+                stream.CopyTo(message);
 
-                for (;;)
-                {
-                    var size = stream.Read(buffer, 0, buffer.Length);
-                    if (size <= 0) break;
-
-                    position += size;
-                    message.Write(buffer, 0, size);
-                }
+                if (message.Position != messageSize)
+                    throw new InvalidDataException(nameof(message.Position));
 
                 message.Position = 0;
-
-                if (position != messageSize)
-                    throw new InvalidDataException(nameof(position));
 
                 return true;
             }
@@ -131,7 +167,7 @@ namespace Netly
                 stream.Position = 0;
                 name = null;
                 message?.Close();
-                NetlyEnvironment.Logger.Create("# N");
+                message = null;
                 NetlyEnvironment.Logger.Create(e);
                 return false;
             }

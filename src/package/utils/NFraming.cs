@@ -23,6 +23,7 @@ namespace Netly
         ///     challenge was defining when the machine should halt, leading to
         ///     the concept of the Halting Problem, establishing the limits of
         ///     what is computable.
+        ///     <br />
         ///     See: https://en.wikipedia.org/wiki/Turing_machine
         /// </summary>
         public static readonly byte[] Prefix = { 0x01, 0x09, 0x03, 0x03 };
