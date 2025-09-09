@@ -304,7 +304,7 @@ namespace Netly.Packages
 
                 if (IsFraming)
                 {
-                    _framing.Write(buffer, size, NewStream);
+                    _framing.Write(new ArraySegment<byte>(buffer, 0, size), NewStream);
                     while (_framing.Read(out var stream)) ReceiveRelease(stream);
                 }
                 else

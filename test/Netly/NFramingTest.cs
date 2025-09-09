@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
 namespace NetlyTest.Netly;
 
 public class NFramingTest
@@ -29,13 +27,13 @@ public class NFramingTest
         for (var i = 0; i < 10; i++)
         {
             // first deploy
-            framing.Write(MyHeader, MyHeader.Length, NFraming.NewStream);
+            framing.Write(new ArraySegment<byte>(MyHeader), NFraming.NewStream);
             var deploy1 = framing.Read(out var stream1);
             Assert.False(deploy1);
             Assert.Null(stream1);
 
             // last deploy
-            framing.Write(MyMessage, MyMessage.Length, NFraming.NewStream);
+            framing.Write(new ArraySegment<byte>(MyMessage), NFraming.NewStream);
             var deploy2 = framing.Read(out var stream2);
             Assert.True(deploy2);
             Assert.NotNull(stream2);
@@ -68,11 +66,11 @@ public class NFramingTest
             buffer.AddRange(MyMessage);
         }
 
-        framing.Write(buffer.ToArray(), buffer.Count, NFraming.NewStream);
+        framing.Write(new ArraySegment<byte>(buffer.ToArray()), NFraming.NewStream);
         buffer.Clear();
 
         var count = 0;
-        
+
         while (framing.Read(out var stream))
         {
             count++;

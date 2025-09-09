@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Netly
 {
@@ -64,9 +65,9 @@ namespace Netly
                 throw new InvalidOperationException($"{GetType().FullName}.{nameof(IsOpened)} = {IsOpened}");
         }
 
-        public void Write(byte[] buffer, int length, Func<long, Stream> getStream)
+        public void Write(ArraySegment<byte> segment, Func<long, Stream> getStream)
         {
-            if (buffer == null || buffer.Length < 1 || length < 1 || getStream == null)
+            if (segment == default || segment.Count < 1 || getStream == null)
                 throw new ArgumentException($"Invalid {GetType().FullName}.{nameof(Write)} [arguments]");
 
             lock (_locker)
@@ -79,8 +80,8 @@ namespace Netly
                     {
                         var count = Prefix.Length + sizeof(long);
 
-                        if (length > 0)
-                            _memory.AddRange(new ArraySegment<byte>(buffer, 0, length));
+                        if (segment.Count > 0)
+                            _memory.AddRange(segment);
 
                         if (_memory.Count >= count)
                         {
@@ -100,23 +101,22 @@ namespace Netly
                             else
                                 throw new InvalidDataException($"{nameof(Prefix)}: {Format(Prefix)} - {Format(bytes)}");
 
-                            var left = _memory.Count - bytes.Length;
-                            length = 0;
-                            _size = size;
+                            // copy left buffer
+                            var left = new byte[_memory.Count - bytes.Length];
 
-                            if (left > 0)
-                            {
-                                buffer = new byte[left];
-                                length = buffer.Length;
-                                _memory.CopyTo(bytes.Length, buffer, 0, buffer.Length);
-                            }
+                            if (left.Length > 0)
+                                _memory.CopyTo(bytes.Length, left, 0, left.Length);
+
+                            segment = new ArraySegment<byte>(left);
+
+                            _size = size;
 
                             _memory.Clear();
                             _memory = new List<byte>();
                         }
                     }
 
-                    if (_size > 0 && length > 0)
+                    if (_size > 0 && segment.Count > 0)
                     {
                         var transaction = _transactions.Last.Value;
 
@@ -124,41 +124,50 @@ namespace Netly
                             throw new InvalidOperationException("Context stream isn't available to modify");
 
                         var stream = transaction.Stream;
-                        var next = transaction.Position + length;
+                        var next = transaction.Position + segment.Count;
 
                         if (next >= _size)
                         {
                             var count = (int)(_size - transaction.Position);
                             var left = next - count;
 
-                            stream.Write(buffer, 0, count);
+                            stream.Write(segment.Array ?? throw new ArgumentNullException(nameof(segment)),
+                                segment.Offset, count);
+
                             stream.Position = 0;
                             transaction.IsDone = true; // REQUIRED: Save stream state
                             _size = 0;
 
                             if (left > 0)
                             {
-                                // copy context
-                                var leftBytes = new byte[left];
-                                Array.Copy(buffer, count, leftBytes, 0, leftBytes.Length);
-
-                                // update context
-                                buffer = leftBytes;
-                                length = buffer.Length;
-
+                                segment = SegmentShift(segment, count);
                                 continue; // REQUIRED: Read new stream again!
                             }
                         }
                         else
                         {
-                            stream.Write(buffer, 0, length);
-                            transaction.Position += length;
+                            stream.Write(segment.Array ?? throw new ArgumentNullException(nameof(segment)),
+                                segment.Offset, segment.Count);
+                            transaction.Position += segment.Count;
                         }
                     }
 
                     break;
                 }
             }
+        }
+
+        private static ArraySegment<T> SegmentShift<T>(ArraySegment<T> segment, int shift)
+        {
+            if (shift < 0)
+                throw new ArgumentOutOfRangeException(nameof(shift));
+
+            if (segment.Array == null)
+                throw new ArgumentNullException(nameof(segment));
+
+            return shift >= segment.Count
+                ? new ArraySegment<T>(segment.Array, segment.Offset + segment.Count, 0)
+                : new ArraySegment<T>(segment.Array, shift + segment.Offset, segment.Count - shift);
         }
 
         private static bool CompareSequences(byte[] reference, byte[] compare)
@@ -209,7 +218,6 @@ namespace Netly
         {
             public Stream Stream { get; }
             public bool IsDone { get; set; }
-            public long Size { get; set; }
             public long Position { get; set; }
 
             public Transaction(Stream stream, bool isDone)
