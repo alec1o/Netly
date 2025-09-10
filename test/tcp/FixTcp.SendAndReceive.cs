@@ -28,7 +28,7 @@ public partial class FixTcp
             {
                 client.On.Data(data =>
                 {
-                    client.To.Data(data);
+                    client.To.Data(data.GetBytes());
 
                     lock (dataLock)
                     {
@@ -38,7 +38,7 @@ public partial class FixTcp
 
                 client.On.Event((name, data) =>
                 {
-                    client.To.Event(name, data);
+                    client.To.Event(name, data.GetBytes());
 
                     lock (eventLock)
                     {
@@ -101,8 +101,8 @@ public partial class FixTcp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => dataReceived.AddRange(bytes));
-            client.On.Event((name, bytes) => eventReceived = (name, bytes));
+            client.On.Data(stream => dataReceived.AddRange(stream.GetBytes()));
+            client.On.Event((name, stream) => eventReceived = (name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);

@@ -90,8 +90,8 @@ public partial class FixTcp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => client.To.Data(bytes));
-            client.On.Event((name, bytes) => client.To.Event(name, bytes));
+            client.On.Data(stream => client.To.Data(stream.GetBytes()));
+            client.On.Event((name, stream) => client.To.Event(name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);

@@ -106,7 +106,9 @@ namespace Netly
 
                     InitReceiver();
 
-                    _isOpening = false; // allow client send data on OnOpen callback.
+                    _isOpening = false;
+
+                    // allow client send data on OnOpen callback.
                     On.OnOpen?.Invoke(null, null);
                 }
                 catch (Exception e)
@@ -164,7 +166,7 @@ namespace Netly
             {
                 if (CanSend == false || data == null || data.Length <= 0) return;
 
-                //SendDispatch(data);
+                SendDispatch(data);
             }
 
             public void Encryption(bool enable)
@@ -188,35 +190,40 @@ namespace Netly
             {
                 if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
-                //  SendDispatch(data.GetBytes());
+                SendDispatch(data.GetBytes());
             }
 
             public void Data(string data, Encoding encoding)
             {
                 if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
-                //SendDispatch(data.GetBytes(encoding));
+                SendDispatch(data.GetBytes(encoding));
             }
 
             public void Event(string name, byte[] data)
             {
                 if (CanSend == false || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                // SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
+                var header = NMessage.Create(name, data.LongLength);
+                SendDispatch(header, data);
             }
 
             public void Event(string name, string data)
             {
                 if (CanSend == false || string.IsNullOrEmpty(data) || string.IsNullOrEmpty(name)) return;
 
-                //SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                var bytes = data.GetBytes();
+                var header = NMessage.Create(name, bytes.LongLength);
+                SendDispatch(header, bytes);
             }
 
             public void Event(string name, string data, Encoding encoding)
             {
                 if (CanSend == false || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                //SendDispatch(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                var bytes = data.GetBytes(encoding);
+                var header = NMessage.Create(name, bytes.LongLength);
+                SendDispatch(header, bytes);
             }
 
             /* ---- INTERFACE --- */
@@ -338,32 +345,35 @@ namespace Netly
 
             private void PublishData(Stream stream)
             {
-                /*
-                if (Package.ParseMessage(bytes, out var name, out var data))
-                    On.OnEvent?.Invoke(null, (name, data));
+                if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                {
+                    message.Position = 0;
+                    On.OnEvent?.Invoke(null, (name, message));
+                }
                 else
-                    On.OnData?.Invoke(null, bytes);*/
+                {
+                    stream.Position = 0;
+                    On.OnData?.Invoke(null, stream);
+                }
             }
 
-            private void SendDispatch(object package)
+            private void SendDispatch(params byte[][] buffers)
             {
-/*
                 if (_socket == null || _netStream == null || (IsEncrypted && _sslStream == null))
                 {
-                    package.Clear();
                     return;
                 }
 
                 try
                 {
-                    if (package == null || package.Count <= 0) return;
                     var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
-                    foreach (var segment in package.Segments) stream.WriteAsync(segment, 0, segment.Length);
+                    foreach (var bytes in buffers)
+                        stream.WriteAsync(bytes, 0, bytes.Length);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
-                }*/
+                    NLogger.Singleton.Submit(e);
+                }
             }
 
             private void InitReceiver()
@@ -423,7 +433,7 @@ namespace Netly
                     }
                     else
                     {
-                        var stream = NUtils.NewStream(size); 
+                        var stream = NUtils.NewStream(size);
                         stream.Write(_buffer, 0, size);
                         PublishData(stream);
                     }

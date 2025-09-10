@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -15,9 +16,9 @@ namespace Netly
                 new List<Func<X509Certificate, X509Chain, SslPolicyErrors, bool>>();
 
             public EventHandler OnClose;
-            public EventHandler<byte[]> OnData;
+            public EventHandler<Stream> OnData;
             public EventHandler<Exception> OnError;
-            public EventHandler<(string name, byte[] buffer)> OnEvent;
+            public EventHandler<(string name, Stream buffer)> OnEvent;
             public EventHandler<Socket> OnModify;
             public EventHandler OnOpen;
 
@@ -42,12 +43,12 @@ namespace Netly
                 OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
-            public void Data(Action<byte[]> callback)
+            public void Data(Action<Stream> callback)
             {
                 OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
-            public void Event(Action<string, byte[]> callback)
+            public void Event(Action<string, Stream> callback)
             {
                 OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer));
             }
