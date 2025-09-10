@@ -8,7 +8,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Netly.Packages.Interfaces;
-using Netly.Packages.Utils;
 
 namespace Netly.Packages
 {
@@ -140,7 +139,7 @@ namespace Netly.Packages
         {
             if (string.IsNullOrWhiteSpace(name) || message == null || message.Length < 1) return;
 
-            Send(NTcpMessage.Create(name, message.Length), message);
+            Send(NMessage.Create(name, message.Length), message);
         }
 
         public void ToConnect(NHost host)
@@ -272,7 +271,7 @@ namespace Netly.Packages
             var bufferSize = IsServer
                 ? (int)_server.Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                 : (int)Socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-            
+
             _framing.Open();
 
             ReceiveTrigger(new byte[bufferSize]);
@@ -329,11 +328,7 @@ namespace Netly.Packages
         {
             if (stream.Length < 1) throw new ArgumentOutOfRangeException(nameof(stream));
 
-            var isMessage = NTcpMessage.Parse(stream, NewStream, out var name, out var message, out var close);
-
-            if (close) throw new OperationCanceledException($"{nameof(close)} about internal parsing error");
-
-            if (isMessage)
+            if (NMessage.TryParse(stream, out var name, out var message, NewStream))
             {
                 stream.Close();
                 _onEvent?.Invoke(null, (name, message));
