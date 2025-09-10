@@ -70,7 +70,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                             _isClosed = true;
                             On.OnError?.Invoke(null, e);
                         }
@@ -115,7 +115,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                         }
                         finally
                         {
@@ -154,21 +154,29 @@ namespace Netly
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                    Broadcast(NetlyEnvironment.EventManager.Create(name, data));
+                    var header = NMessage.Create(name, data.LongLength);
+
+                    Broadcast(header, data);
                 }
 
                 public void EventBroadcast(string name, string data)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+
+                    Broadcast(header, bytes);
                 }
 
                 public void EventBroadcast(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Broadcast(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+
+                    Broadcast(header, bytes);
                 }
 
                 public void Data(NHost targetHost, byte[] data)
@@ -197,7 +205,9 @@ namespace Netly
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) || data == null ||
                         data.Length <= 0) return;
 
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data));
+                    var header = NMessage.Create(name, data.LongLength);
+
+                    Send(targetHost, header, data);
                 }
 
                 public void Event(NHost targetHost, string name, string data)
@@ -205,7 +215,10 @@ namespace Netly
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
                         string.IsNullOrEmpty(data)) return;
 
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+
+                    Send(targetHost, header, bytes);
                 }
 
                 public void Event(NHost targetHost, string name, string data, Encoding encoding)
@@ -213,43 +226,52 @@ namespace Netly
                     if (!IsOpened || targetHost == null || string.IsNullOrEmpty(name) ||
                         string.IsNullOrEmpty(data)) return;
 
-                    Send(targetHost, NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+
+                    Send(targetHost, header, bytes);
                 }
 
-                private void Broadcast(byte[] data)
+                private void Broadcast(params byte[][] buffers)
                 {
-                    if (data == null || data.Length <= 0) return;
+                    if (buffers == null || buffers.Length <= 0) return;
 
-                    try
+                    foreach (var data in buffers)
                     {
-                        Client[] clients;
-
-                        lock (_clientsLocker)
+                        try
                         {
-                            if (Clients.Count <= 0) return;
-                            clients = Clients.ToArray();
-                        }
+                            Client[] clients;
 
-                        foreach (var client in clients)
-                            client?.To.Data(data);
-                    }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create(e);
+                            lock (_clientsLocker)
+                            {
+                                if (Clients.Count <= 0) return;
+                                clients = Clients.ToArray();
+                            }
+
+                            foreach (var client in clients)
+                                client?.To.Data(data);
+                        }
+                        catch (Exception e)
+                        {
+                            NLogger.Singleton.Submit(e);
+                        }
                     }
                 }
 
-                private void Send(NHost host, byte[] bytes)
+                private void Send(NHost host, params byte[][] buffers)
                 {
-                    if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
+                    if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
 
-                    try
+                    foreach (var buffer in buffers)
                     {
-                        _socket?.SendTo(bytes, 0, bytes.Length, SocketFlags.None, host.EndPoint);
-                    }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create(e);
+                        try
+                        {
+                            _socket?.SendTo(buffer, 0, buffer.Length, SocketFlags.None, host.EndPoint);
+                        }
+                        catch (Exception e)
+                        {
+                            NLogger.Singleton.Submit(e);
+                        }
                     }
                 }
 
@@ -284,7 +306,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NetlyEnvironment.Logger.Create(e);
+                                NLogger.Singleton.Submit(e);
                             }
                         }
 
@@ -338,7 +360,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                         }
                     }
                 }

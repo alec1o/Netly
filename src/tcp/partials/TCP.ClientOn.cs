@@ -4,7 +4,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using Netly.Interfaces;
-using Env = Netly.NetlyEnvironment;
 
 namespace Netly
 {
@@ -25,32 +24,32 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, e) => Env.MainThread.Add(() => callback?.Invoke());
+                OnClose += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<Socket> callback)
             {
-                OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+                OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
             public void Data(Action<byte[]> callback)
             {
-                OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
             public void Event(Action<string, byte[]> callback)
             {
-                OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer));
+                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer));
             }
 
             public void Encryption(Func<X509Certificate, X509Chain, SslPolicyErrors, bool> callback)

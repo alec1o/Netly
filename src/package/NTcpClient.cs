@@ -181,7 +181,7 @@ namespace Netly.Packages
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         _onFail?.Invoke(null, e);
                     }
                 }
@@ -225,7 +225,7 @@ namespace Netly.Packages
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -259,7 +259,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
             }
         }
 
@@ -285,7 +285,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
                 ToDisconnect();
             }
         }
@@ -319,7 +319,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
                 ToDisconnect();
             }
         }
@@ -376,7 +376,7 @@ namespace Netly.Packages
                             // callbacks not found.
                             if (list.Count <= 0)
                             {
-                                NetlyEnvironment.Logger.Create(
+                                NLogger.Singleton.Submit(
                                     $"[TCP] Encryption Callback Not Found. Client.Id: {Id}");
                                 return true;
                             }
@@ -424,7 +424,7 @@ namespace Netly.Packages
                     {
                         success = _server.AllowUnsecured;
                         if (success) IsSecure = false;
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
 
                 _onAccepted?.Invoke(success);
@@ -433,7 +433,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
                 _onAccepted?.Invoke(false);
             }
         }

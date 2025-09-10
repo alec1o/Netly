@@ -172,7 +172,7 @@ namespace Netly.Packages
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         _onFail?.Invoke(null, e);
                     }
                 }
@@ -214,7 +214,7 @@ namespace Netly.Packages
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
                 finally
                 {
@@ -236,7 +236,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
                 ToDisconnect();
             }
         }
@@ -279,7 +279,7 @@ namespace Netly.Packages
             }
             catch (Exception e)
             {
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
             }
 
             if (IsConnected)

@@ -12,7 +12,6 @@ public partial class FixUdp
             UDP.Client client = new();
 
             bool isOpen = false, isClose = false, isError = false, isModify = false;
-
             client.On.Open(() => isOpen = true);
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);

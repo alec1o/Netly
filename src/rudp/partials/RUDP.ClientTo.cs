@@ -84,7 +84,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         // logger
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         // error on open connection
                         On.OnError?.Invoke(null, e);
                         _connection = null;
@@ -113,7 +113,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -138,11 +138,11 @@ namespace Netly
 
                 try
                 {
-                    _connection?.Send(ref data, messageType);
+                    _connection?.Send(data, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -153,11 +153,11 @@ namespace Netly
                 try
                 {
                     var bytes = data.GetBytes();
-                    _connection?.Send(ref bytes, messageType);
+                    _connection?.Send(bytes, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -168,11 +168,11 @@ namespace Netly
                 try
                 {
                     var bytes = data.GetBytes(encoding);
-                    _connection?.Send(ref bytes, messageType);
+                    _connection?.Send(bytes, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -182,12 +182,12 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data);
-                    _connection?.Send(ref bytes, messageType);
+                    var header = NMessage.Create(name, data.LongLength);
+                    _connection?.Send(NUtils.ArrayConcat(header, data), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -197,12 +197,13 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data.GetBytes());
-                    _connection?.Send(ref bytes, messageType);
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    _connection?.Send(NUtils.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -212,12 +213,13 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding));
-                    _connection?.Send(ref bytes, messageType);
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    _connection?.Send(NUtils.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -407,7 +409,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         if (!_isConnecting) Close();
                     }
                 }

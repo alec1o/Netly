@@ -48,7 +48,7 @@ namespace Netly
                         "for handle it you can use those callbacks: Close, Fetch and, Error"
                     );
 
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
 
                     throw e;
                 }
@@ -129,7 +129,7 @@ namespace Netly
                     }
                     catch (Exception ex)
                     {
-                        NetlyEnvironment.Logger.Create(ex.Message);
+                        NLogger.Singleton.Submit(ex.Message);
                         On.OnError?.Invoke(null, ex);
                     }
                     finally

@@ -21,7 +21,7 @@ namespace Netly
             private readonly Server _server;
             private readonly Action<Client> _serverValidatorCallback;
             private byte[] _buffer;
-            private NetlyEnvironment.MessageFraming _framing;
+            private NFraming _framing;
 
             private bool
                 _isOpening,
@@ -111,7 +111,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                     On.OnError?.Invoke(null, e);
                 }
                 finally
@@ -141,7 +141,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -188,7 +188,7 @@ namespace Netly
             {
                 if (CanSend == false || string.IsNullOrEmpty(data)) return;
 
-              //  SendDispatch(data.GetBytes());
+                //  SendDispatch(data.GetBytes());
             }
 
             public void Data(string data, Encoding encoding)
@@ -202,7 +202,7 @@ namespace Netly
             {
                 if (CanSend == false || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-               // SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
+                // SendDispatch(NetlyEnvironment.EventManager.Create(name, data));
             }
 
             public void Event(string name, string data)
@@ -235,8 +235,8 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
-                        NetlyEnvironment.Logger.Create(
+                        NLogger.Singleton.Submit(e);
+                        NLogger.Singleton.Submit(
                             $"{GetType()}: {_client.Id}, Encryption error, use non encryption connection (fallback)");
                         IsEncrypted = false;
                         _serverValidatorCallback?.Invoke(_client);
@@ -311,7 +311,7 @@ namespace Netly
                                 // callbacks not found.
                                 if (encryptionCallbackList.Count <= 0)
                                 {
-                                    NetlyEnvironment.Logger.Create(
+                                    NLogger.Singleton.Submit(
                                         $"[TCP] Encryption Callback Not Found. Client.Id: {_client.Id}");
                                     return true;
                                 }
@@ -336,7 +336,7 @@ namespace Netly
                 }).Wait(EncryptionTimeout);
             }
 
-            private void PublishData(List<byte> bytes)
+            private void PublishData(Stream stream)
             {
                 /*
                 if (Package.ParseMessage(bytes, out var name, out var data))
@@ -376,24 +376,15 @@ namespace Netly
 
                     _buffer = new byte[bufferSize];
 
-                    _framing = new NetlyEnvironment.MessageFraming();
+                    _framing = new NFraming();
 
-                    if (IsFraming)
-                    {
-                       // _framing.OnData(data => PublishData(data));
+                    if (IsFraming) _framing.Open();
 
-                        _framing.OnError(exception =>
-                        {
-                            NetlyEnvironment.Logger.Create(exception);
-                            _ = Close();
-                        });
-                    }
-
-                    // ReceiveTrigger();
+                    ReceiveTrigger();
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                     Close();
                 }
             }
@@ -407,14 +398,13 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                     Close();
                 }
             }
 
             private void ReceiveHandler(IAsyncResult result)
             {
-                /*
                 try
                 {
                     var size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
@@ -425,25 +415,26 @@ namespace Netly
                         return;
                     }
 
-                    var bytes = new List<byte>(size);
-                    bytes.Insert();
-
-                    Buffer.BlockCopy(_buffer, 0, bytes, 0, bytes.Length);
-
                     if (IsFraming)
                     {
-                        _framing.Add(bytes);
+                        _framing.Write(new ArraySegment<byte>(_buffer, 0, size), NUtils.NewStream);
+                        while (_framing.Read(out var stream))
+                            PublishData(stream);
                     }
                     else
-                        PublishData(Package.New(()bytes));
+                    {
+                        var stream = NUtils.NewStream(size); 
+                        stream.Write(_buffer, 0, size);
+                        PublishData(stream);
+                    }
 
                     ReceiveTrigger();
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                     Close();
-                }*/
+                }
             }
 
             public Socket GetSocket()

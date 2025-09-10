@@ -98,7 +98,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                             On.OnError?.Invoke(null, e);
                         }
 
@@ -125,7 +125,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                         }
                         finally
                         {
@@ -203,7 +203,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         Close();
                     }
                 }
@@ -238,7 +238,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
 
                     if (IsOpened)

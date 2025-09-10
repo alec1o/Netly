@@ -99,16 +99,16 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
 
                         try
                         {
                             await _websocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, string.Empty,
                                 CancellationToken.None);
                         }
-                        catch(Exception e2)
+                        catch (Exception e2)
                         {
-                            NetlyEnvironment.Logger.Create(e2);
+                            NLogger.Singleton.Submit(e2);
                         }
                         finally
                         {
@@ -178,7 +178,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         // HACK: FIX IT
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -195,60 +195,69 @@ namespace Netly
 
             public void Data(byte[] buffer, HTTP.MessageType messageType)
             {
-                Send(buffer, messageType);
+                Send(messageType, buffer);
             }
 
             public void Data(string buffer, HTTP.MessageType messageType)
             {
-                Send(buffer.GetBytes(), messageType);
+                Send(messageType, buffer.GetBytes());
             }
 
             public void Data(string buffer, HTTP.MessageType messageType, Encoding encoding)
             {
-                Send(buffer.GetBytes(encoding), messageType);
+                Send(messageType, buffer.GetBytes(encoding));
             }
 
             public void Event(string name, byte[] buffer, HTTP.MessageType messageType)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer), messageType);
+                var header = NMessage.Create(name, buffer.LongLength);
+                Send(messageType, header, buffer);
             }
 
             public void Event(string name, string buffer, HTTP.MessageType messageType)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes()), messageType);
+                var bytes = buffer.GetBytes();
+                var header = NMessage.Create(name, bytes.LongLength);
+                Send(messageType, header, bytes);
             }
 
             public void Event(string name, string buffer, HTTP.MessageType messageType, Encoding encoding)
             {
-                Send(NetlyEnvironment.EventManager.Create(name, buffer.GetBytes(encoding)), messageType);
+                var bytes = buffer.GetBytes(encoding);
+                var header = NMessage.Create(name, bytes.LongLength);
+                Send(messageType, header, bytes);
             }
 
-            private void Send(byte[] buffer, HTTP.MessageType type)
+            private void Send(HTTP.MessageType type, params byte[][] buffers)
             {
-                if (IsConnected() is false || buffer == null || buffer.Length <= 0) return;
+                if (IsConnected() is false || buffers == null || buffers.Length <= 0) return;
 
-                var messageContent = new ArraySegment<byte>(buffer);
                 var messageType = type == MessageType.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
                 // Is Always true because our send all buffer on same moment is internal
                 // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
                 const bool endOfMessage = true;
 
-                if (_isServerSide)
-                    _websocketServerSide.SendAsync
-                    (
-                        messageContent,
-                        messageType,
-                        endOfMessage,
-                        CancellationToken.None
-                    );
-                else
-                    _websocket.SendAsync
-                    (
-                        messageContent,
-                        messageType,
-                        endOfMessage,
-                        CancellationToken.None
-                    );
+                foreach (var buffer in buffers)
+                {
+                    var messageContent = new ArraySegment<byte>(buffer);
+
+                    if (_isServerSide)
+                        _websocketServerSide.SendAsync
+                        (
+                            messageContent,
+                            messageType,
+                            endOfMessage,
+                            CancellationToken.None
+                        );
+                    else
+                        _websocket.SendAsync
+                        (
+                            messageContent,
+                            messageType,
+                            endOfMessage,
+                            CancellationToken.None
+                        );
+                }
             }
 
             private void _ReceiveData()
@@ -286,23 +295,29 @@ namespace Netly
 
                         Array.Copy(buffer.Array, 0, data, 0, data.Length);
 
-                        var eventData = NetlyEnvironment.EventManager.Verify(data);
-
                         var messageType = result.MessageType == WebSocketMessageType.Text
                             ? MessageType.Text
                             : MessageType.Binary;
 
-                        if (eventData.data != null && eventData.name != null)
+                        var stream = NUtils.NewStream(data.LongLength);
+                        await stream.WriteAsync(data, 0, data.Length);
+
+                        if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                        {
+                            var reference = new byte[message.Length];
+                            message.Position = 0;
+                            await message.WriteAsync(reference, 0, reference.Length);
                             // Is Netly Event
-                            _socket._on.OnEvent?.Invoke(null, (eventData.name, eventData.data, messageType));
+                            _socket._on.OnEvent?.Invoke(null, (name, reference, messageType));
+                        }
                         else
                             // Is Default buffer
                             _socket._on.OnData?.Invoke(null, (data, messageType));
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                     closeStatus = WebSocketCloseStatus.EndpointUnavailable;
                 }
                 finally

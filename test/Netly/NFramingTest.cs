@@ -4,8 +4,7 @@ public class NFramingTest
 {
     public NFramingTest(ITestOutputHelper output)
     {
-        NetlyEnvironment.Logger.On(output.WriteLine);
-        NetlyEnvironment.Logger.On((Exception exception) => output.WriteLine(exception.ToString()));
+        NLogger.Singleton.OnSubmit(output.WriteLine);
     }
 
     [Fact]

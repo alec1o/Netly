@@ -168,7 +168,7 @@ namespace Netly
                 name = null;
                 message?.Close();
                 message = null;
-                NetlyEnvironment.Logger.Create(e);
+                NLogger.Singleton.Submit(e);
                 return false;
             }
         }

@@ -95,16 +95,22 @@ namespace Netly
 
                 if (IsOpened)
                 {
-                    var eventObject = NetlyEnvironment.EventManager.Verify(data);
+                    var stream = NUtils.NewStream(data.LongLength);
+                    stream.Write(data, 0, data.Length);
 
-                    if (eventObject.data == null || string.IsNullOrEmpty(eventObject.name))
-                        OnData?.Invoke(data, messageType);
+                    if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                    {
+                        var reference = new byte[message.Length];
+                        message.Position = 0;
+                        message.Write(reference, 0, reference.Length);
+                        OnEvent?.Invoke(name, reference, messageType);
+                    }
                     else
-                        OnEvent?.Invoke(eventObject.name, eventObject.data, messageType);
+                        OnData?.Invoke(data, messageType);
                 }
                 else
                 {
-                    NetlyEnvironment.Logger.Create
+                    NLogger.Singleton.Submit
                     (
                         "[RUDP.Connection] Received data while connection is not opened, " +
                         $"IsOpened: {IsOpened}, " +
@@ -139,7 +145,7 @@ namespace Netly
                 return DateTime.UtcNow >= ConnectionTimeoutAt;
             }
 
-            public void Send(ref byte[] data, MessageType messageType)
+            public void Send(byte[] data, MessageType messageType)
             {
                 MyChannel.ToAddData(data, messageType);
             }
@@ -163,7 +169,7 @@ namespace Netly
                             if (GotTimeout())
                             {
                                 OnClose?.Invoke();
-                                NetlyEnvironment.Logger.Create(
+                                NLogger.Singleton.Submit(
                                     $"UDP Connection Close by Timeout (No Response), Id: {Id}");
                                 OnClose?.Invoke();
                                 break;
@@ -192,7 +198,7 @@ namespace Netly
 
                             var data = primitive.GetBytes();
 
-                            Send(ref data, MessageType.Reliable);
+                            Send(data, MessageType.Reliable);
                         }
 
                         primitive.Reset();
@@ -204,7 +210,7 @@ namespace Netly
 
                             var data = primitive.GetBytes();
 
-                            Send(ref data, MessageType.Reliable);
+                            Send(data, MessageType.Reliable);
                         }
                     }
 
@@ -228,7 +234,7 @@ namespace Netly
                                     var data = primitive.GetBytes();
 
                                     // send ack data to client
-                                    Send(ref data, MessageType.Reliable);
+                                    Send(data, MessageType.Reliable);
                                     break;
                                 }
 
@@ -261,7 +267,7 @@ namespace Netly
                     else
                     {
                         OnOpenFail(failMessage);
-                        NetlyEnvironment.Logger.Create(
+                        NLogger.Singleton.Submit(
                             $"UDP Connection Fail by Timeout (Handshake Timeout), Id: {Id}");
                     }
 

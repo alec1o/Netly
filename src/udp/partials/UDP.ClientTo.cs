@@ -73,7 +73,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                             _isClosed = true;
                             On.OnError?.Invoke(null, e);
                         }
@@ -101,7 +101,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NetlyEnvironment.Logger.Create(e);
+                                NLogger.Singleton.Submit(e);
                             }
                             finally
                             {
@@ -140,21 +140,26 @@ namespace Netly
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data));
+                    var header = NMessage.Create(name, data.LongLength);
+                    Send(header, data);
                 }
 
                 public void Event(string name, string data)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    Send(header, bytes);
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    Send(header, bytes);
                 }
 
                 public void InitServerSide()
@@ -169,42 +174,52 @@ namespace Netly
 
                 private void PushResult(ref byte[] bytes)
                 {
-                    (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
+                    var stream = NUtils.NewStream(bytes.LongLength);
+                    stream.Position = 0;
+                    stream.Write(bytes, 0, bytes.Length);
 
-                    if (content.buffer == null)
-                        On.OnData?.Invoke(null, bytes);
+                    if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                    {
+                        var buffer = new byte[message.Length];
+                        message.Position = 0;
+                        message.Write(buffer, 0, buffer.Length);
+                        On.OnEvent?.Invoke(null, (name, buffer));
+                    }
                     else
-                        On.OnEvent?.Invoke(null, (content.name, content.buffer));
+                        On.OnData?.Invoke(null, bytes);
                 }
 
-                private void Send(byte[] bytes)
+                private void Send(params byte[][] bytes)
                 {
                     if (bytes == null || bytes.Length <= 0) return;
 
                     Send(Host, bytes);
                 }
 
-                private void Send(NHost host, byte[] bytes)
+                private void Send(NHost host, params byte[][] buffers)
                 {
-                    if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
+                    if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
 
-                    try
+                    foreach (var buffer in buffers)
                     {
-                        var data = new ArraySegment<byte>(bytes);
-                        if (_isServer)
+                        try
                         {
-                            // this way of send just work on windows and linux, except macOS (maybe iOS)
-                            _socket?.SendToAsync(data, SocketFlags.None, host.EndPoint);
+                            var data = new ArraySegment<byte>(buffer);
+                            if (_isServer)
+                            {
+                                // this way of send just work on windows and linux, except macOS (maybe iOS)
+                                _socket?.SendToAsync(data, SocketFlags.None, host.EndPoint);
+                            }
+                            else
+                            {
+                                // this way of send just work on windows and linux, include macOS and iOS
+                                _socket?.SendAsync(data, SocketFlags.None);
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-                            // this way of send just work on windows and linux, include macOS and iOS
-                            _socket?.SendAsync(data, SocketFlags.None);
+                            NLogger.Singleton.Submit(e);
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create(e);
                     }
                 }
 
@@ -241,7 +256,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NetlyEnvironment.Logger.Create(e);
+                                NLogger.Singleton.Submit(e);
                             }
                         }
 

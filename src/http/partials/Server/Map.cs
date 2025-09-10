@@ -153,7 +153,7 @@ namespace Netly
             {
                 path = (path ?? string.Empty).Trim();
 
-                NetlyEnvironment.Logger.Create(
+                NLogger.Singleton.Submit(
                     $"Add Path: {path} | IsValid: {Path.IsValid(path)} | UseParams: {Path.IsParamPath(path)}"
                 );
 

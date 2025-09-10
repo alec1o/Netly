@@ -14,7 +14,7 @@ namespace Netly.Interfaces
             bool IsOpened { get; }
             bool IsFraming { get; }
             Socket Socket { get; }
-            IFraming Framing { get; }
+           // IFraming Framing { get; }
             X509Certificate Certificate { get; }
             SslProtocols EncryptionProtocol { get; }
             bool IsEncrypted { get; }
