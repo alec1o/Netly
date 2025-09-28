@@ -367,12 +367,32 @@ namespace Netly
                 try
                 {
                     var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
+
+                    if (IsFraming)
+                    {
+                        var buf = NFraming.Create(buffers.Sum(x => x.LongLength));
+                        StreamSender(stream, buf);
+                    }
+
                     foreach (var bytes in buffers)
-                        stream.WriteAsync(bytes, 0, bytes.Length);
+                        StreamSender(stream, bytes);
                 }
                 catch (Exception e)
                 {
                     NLogger.Singleton.Submit(e);
+                }
+            }
+
+            private static void StreamSender(Stream stream, byte[] buffer,
+                int chunkSize = int.MaxValue - short.MaxValue, CancellationToken cancellationToken = default)
+            {
+                long offset = 0;
+
+                while (offset < buffer.LongLength)
+                {
+                    var toWrite = (int)Math.Min(chunkSize, buffer.LongLength - offset);
+                    stream.WriteAsync(buffer, (int)offset, toWrite, cancellationToken);
+                    offset += toWrite;
                 }
             }
 
