@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using Netly.Interfaces;
 
@@ -11,9 +12,9 @@ namespace Netly
             private class ClientOn : IUDP.ClientOn
             {
                 public EventHandler OnClose;
-                public EventHandler<byte[]> OnData;
+                public EventHandler<Stream> OnData;
                 public EventHandler<Exception> OnError;
-                public EventHandler<(string name, byte[] buffer)> OnEvent;
+                public EventHandler<(string name, Stream stream)> OnEvent;
                 public EventHandler<Socket> OnModify;
                 public EventHandler OnOpen;
 
@@ -37,14 +38,14 @@ namespace Netly
                     OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
                 }
 
-                public void Data(Action<byte[]> callback)
+                public void Data(Action<Stream> callback)
                 {
                     OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
                 }
 
-                public void Event(Action<string, byte[]> callback)
+                public void Event(Action<string, Stream> callback)
                 {
-                    OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer));
+                    OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.stream));
                 }
             }
         }

@@ -236,25 +236,14 @@ namespace Netly
                 {
                     if (buffers == null || buffers.Length <= 0) return;
 
-                    foreach (var data in buffers)
+                    try
                     {
-                        try
-                        {
-                            Client[] clients;
-
-                            lock (_clientsLocker)
-                            {
-                                if (Clients.Count <= 0) return;
-                                clients = Clients.ToArray();
-                            }
-
-                            foreach (var client in clients)
-                                client?.To.Data(data);
-                        }
-                        catch (Exception e)
-                        {
-                            NLogger.Singleton.Submit(e);
-                        }
+                        var buffer = buffers.SelectMany(x => x).ToArray();
+                        foreach (var client in Clients.ToArray()) client?.To.Data(buffer);
+                    }
+                    catch (Exception e)
+                    {
+                        NLogger.Singleton.Submit(e);
                     }
                 }
 
@@ -262,16 +251,16 @@ namespace Netly
                 {
                     if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
 
-                    foreach (var buffer in buffers)
+                    var buffer = buffers.SelectMany(x => x).ToArray();
+                    var segment = new ArraySegment<byte>(buffer);
+
+                    try
                     {
-                        try
-                        {
-                            _socket?.SendTo(buffer, 0, buffer.Length, SocketFlags.None, host.EndPoint);
-                        }
-                        catch (Exception e)
-                        {
-                            NLogger.Singleton.Submit(e);
-                        }
+                        _socket?.SendToAsync(segment, SocketFlags.None, host.EndPoint);
+                    }
+                    catch (Exception e)
+                    {
+                        NLogger.Singleton.Submit(e);
                     }
                 }
 

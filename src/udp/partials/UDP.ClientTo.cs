@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -172,21 +174,16 @@ namespace Netly
                     On.OnOpen?.Invoke(null, null);
                 }
 
-                private void PushResult(ref byte[] bytes)
+                private void PushResult(Stream stream)
                 {
-                    var stream = NHelper.NewStream(bytes.LongLength);
-                    stream.Position = 0;
-                    stream.Write(bytes, 0, bytes.Length);
-
                     if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
                     {
-                        var buffer = new byte[message.Length];
-                        message.Position = 0;
-                        message.Write(buffer, 0, buffer.Length);
-                        On.OnEvent?.Invoke(null, (name, buffer));
+                        On.OnEvent?.Invoke(null, (name, message));
                     }
                     else
-                        On.OnData?.Invoke(null, bytes);
+                    {
+                        On.OnData?.Invoke(null, stream);
+                    }
                 }
 
                 private void Send(params byte[][] bytes)
@@ -200,26 +197,29 @@ namespace Netly
                 {
                     if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
 
-                    foreach (var buffer in buffers)
+
+                    try
                     {
-                        try
+                        const SocketFlags frags = SocketFlags.None;
+
+                        var bytes = buffers.SelectMany(x => x).ToArray();
+
+                        var segment = new ArraySegment<byte>(bytes);
+
+                        if (_isServer)
                         {
-                            var data = new ArraySegment<byte>(buffer);
-                            if (_isServer)
-                            {
-                                // this way of send just work on windows and linux, except macOS (maybe iOS)
-                                _socket?.SendToAsync(data, SocketFlags.None, host.EndPoint);
-                            }
-                            else
-                            {
-                                // this way of send just work on windows and linux, include macOS and iOS
-                                _socket?.SendAsync(data, SocketFlags.None);
-                            }
+                            // this way of send just work on windows and linux, except macOS (maybe iOS)
+                            _socket?.SendToAsync(segment, frags, host.EndPoint);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            NLogger.Singleton.Submit(e);
+                            // this way of send just work on windows and linux, include macOS and iOS
+                            _socket?.SendAsync(segment, frags);
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        NLogger.Singleton.Submit(e);
                     }
                 }
 
@@ -246,13 +246,14 @@ namespace Netly
                                 if (size <= 0)
                                 {
                                     if (IsOpened) continue;
-                                    else break;
+                                    break;
                                 }
 
-                                var bytes = new byte[size];
-                                Array.Copy(buffer, 0, bytes, 0, bytes.Length);
+                                var stream = NHelper.NewStream(size);
+                                stream.Position = 0;
+                                stream.Write(buffer, 0, size);
 
-                                PushResult(ref bytes);
+                                PushResult(stream);
                             }
                             catch (Exception e)
                             {
@@ -264,9 +265,9 @@ namespace Netly
                     }
                 }
 
-                public void OnServerBuffer(ref byte[] buffer)
+                public void OnServerBuffer(Stream stream)
                 {
-                    PushResult(ref buffer);
+                    PushResult(stream);
                 }
             }
         }
