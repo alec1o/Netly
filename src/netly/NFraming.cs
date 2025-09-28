@@ -159,13 +159,13 @@ namespace Netly
                                 throw new InvalidDataException($"{nameof(size)}: {size}");
 
                             // get and verify prefix
-                            if (NUtils.ArraySequenced(Prefix, _headerBuffer))
+                            if (NHelper.ArraySequenced(Prefix, _headerBuffer))
                                 _transactions.AddLast(new Transaction(getStream(size), false));
                             else
                                 throw new InvalidDataException(
-                                    $"{nameof(Prefix)}: {NUtils.Format(Prefix)} - {NUtils.Format(_headerBuffer)}");
+                                    $"{nameof(Prefix)}: {NHelper.Format(Prefix)} - {NHelper.Format(_headerBuffer)}");
 
-                            segment = NUtils.SegmentShift(segment, copied);
+                            segment = NHelper.SegmentShift(segment, copied);
                             _size = size;
                             _headerOffset = 0;
                             _transactions.Last.Value.Stream.Position = 0;
@@ -196,7 +196,7 @@ namespace Netly
 
                             if (left > 0)
                             {
-                                segment = NUtils.SegmentShift(segment, count);
+                                segment = NHelper.SegmentShift(segment, count);
                                 continue; // REQUIRED: Read new stream again!
                             }
                         }

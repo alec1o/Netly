@@ -299,10 +299,10 @@ namespace Netly
                             ? MessageType.Text
                             : MessageType.Binary;
 
-                        var stream = NUtils.NewStream(data.LongLength);
+                        var stream = NHelper.NewStream(data.LongLength);
                         await stream.WriteAsync(data, 0, data.Length);
 
-                        if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                        if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
                         {
                             var reference = new byte[message.Length];
                             message.Position = 0;

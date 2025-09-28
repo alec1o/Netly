@@ -174,11 +174,11 @@ namespace Netly
 
                 private void PushResult(ref byte[] bytes)
                 {
-                    var stream = NUtils.NewStream(bytes.LongLength);
+                    var stream = NHelper.NewStream(bytes.LongLength);
                     stream.Position = 0;
                     stream.Write(bytes, 0, bytes.Length);
 
-                    if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                    if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
                     {
                         var buffer = new byte[message.Length];
                         message.Position = 0;

@@ -15,13 +15,13 @@ public class NMessageTest
     {
         var header = NMessage.Create(Name, Message.LongLength);
         Assert.NotEmpty(header);
-        var payload = NUtils.ArrayConcat(header, Message);
+        var payload = NHelper.ArrayConcat(header, Message);
         Assert.NotEmpty(payload);
 
-        var stream = NUtils.NewStream(payload.LongLength);
+        var stream = NHelper.NewStream(payload.LongLength);
         stream.Write(payload);
         Assert.Equal(payload.LongLength, stream.Position);
-        Assert.True(NMessage.TryParse(stream, out var myName, out var myMessage, NUtils.NewStream));
+        Assert.True(NMessage.TryParse(stream, out var myName, out var myMessage, NHelper.NewStream));
         stream.Close();
         Assert.Equal(Name, myName);
         var data = new byte[myMessage.Length];

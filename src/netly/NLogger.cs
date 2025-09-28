@@ -69,8 +69,8 @@ namespace Netly
         /// </summary>
         /// <param name="callback">The action to call with each log message.</param>
         /// <param name="forceImmediateDispatcherMode">
-        ///     If true, the callback is executed immediately on the submitting thread.<br/>
-        ///     If false, the callback is enqueued using the available <see cref="NDispatcher"/> instance.
+        ///     If true, the callback is executed immediately on the submitting thread.<br />
+        ///     If false, the callback is enqueued using the available <see cref="NDispatcher" /> instance.
         /// </param>
         public void OnSubmit(Action<string> callback, bool forceImmediateDispatcherMode = false)
         {

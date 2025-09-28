@@ -4,7 +4,7 @@
     ///     Provides general information about the Netly library,
     ///     including its name, version, Git repository, and supported protocols.
     /// </summary>
-    public static partial class NEnvironment
+    public static class NEnvironment
     {
         /// <summary>
         ///     The name of the library.

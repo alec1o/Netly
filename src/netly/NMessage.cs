@@ -126,7 +126,7 @@ namespace Netly
 
                 var offset = 0;
 
-                if (!NUtils.ArraySequenced(Prefix, header))
+                if (!NHelper.ArraySequenced(Prefix, header))
                     return false;
 
                 offset += Prefix.Length;

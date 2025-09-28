@@ -183,7 +183,7 @@ namespace Netly
                 try
                 {
                     var header = NMessage.Create(name, data.LongLength);
-                    _connection?.Send(NUtils.ArrayConcat(header, data), messageType);
+                    _connection?.Send(NHelper.ArrayConcat(header, data), messageType);
                 }
                 catch (Exception e)
                 {
@@ -199,7 +199,7 @@ namespace Netly
                 {
                     var bytes = data.GetBytes();
                     var header = NMessage.Create(name, bytes.LongLength);
-                    _connection?.Send(NUtils.ArrayConcat(header, bytes), messageType);
+                    _connection?.Send(NHelper.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {
@@ -215,7 +215,7 @@ namespace Netly
                 {
                     var bytes = data.GetBytes(encoding);
                     var header = NMessage.Create(name, bytes.LongLength);
-                    _connection?.Send(NUtils.ArrayConcat(header, bytes), messageType);
+                    _connection?.Send(NHelper.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {

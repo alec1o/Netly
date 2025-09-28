@@ -4,18 +4,18 @@ using System.Linq;
 
 namespace Netly
 {
-    public static class NUtils
+    public static class NHelper
     {
         /// <summary>
-        /// Returns a new <see cref="ArraySegment{T}"/> shifted by the specified number of elements.
-        /// If the shift is greater than or equal to the segment count, an empty segment at the end is returned.
+        ///     Returns a new <see cref="ArraySegment{T}" /> shifted by the specified number of elements.
+        ///     If the shift is greater than or equal to the segment count, an empty segment at the end is returned.
         /// </summary>
         /// <typeparam name="T">The type of elements in the array segment.</typeparam>
         /// <param name="segment">The original array segment.</param>
         /// <param name="shift">The number of elements to skip from the start.</param>
         /// <returns>A new array segment representing the shifted portion.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="shift"/> is negative.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the array in <paramref name="segment"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="shift" /> is negative.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the array in <paramref name="segment" /> is null.</exception>
         public static ArraySegment<T> SegmentShift<T>(ArraySegment<T> segment, int shift)
         {
             if (shift < 0)
@@ -30,15 +30,15 @@ namespace Netly
         }
 
         /// <summary>
-        /// Compares all elements in the given array to determine if they are equal.
-        /// For arrays with more than one element, returns true if all elements are the same.
+        ///     Compares all elements in the given array to determine if they are equal.
+        ///     For arrays with more than one element, returns true if all elements are the same.
         /// </summary>
         /// <typeparam name="T">The type of elements in the array. Must support equality comparison.</typeparam>
         /// <param name="array">The array of elements to compare.</param>
         /// <returns>
-        /// True if all elements are equal or the array has zero or one element; otherwise, false.
+        ///     True if all elements are equal or the array has zero or one element; otherwise, false.
         /// </returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="array"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="array" /> is null.</exception>
         public static bool ArraySequenced<T>(params T[][] array)
         {
             if (array == null)
@@ -57,7 +57,7 @@ namespace Netly
         }
 
         /// <summary>
-        /// Returns a string representation of an array in the format [elem1,elem2,...].
+        ///     Returns a string representation of an array in the format [elem1,elem2,...].
         /// </summary>
         /// <typeparam name="T">The type of elements in the array.</typeparam>
         /// <param name="elements">The array to format.</param>
@@ -68,13 +68,13 @@ namespace Netly
         }
 
         /// <summary>
-        /// Concatenates all elements of the given array into a new array.
-        /// This is mainly useful if you want a copy of the array or to combine multiple arrays later.
+        ///     Concatenates all elements of the given array into a new array.
+        ///     This is mainly useful if you want a copy of the array or to combine multiple arrays later.
         /// </summary>
         /// <typeparam name="T">The type of elements in the array.</typeparam>
         /// <param name="elements">The array of elements to concatenate.</param>
         /// <returns>A new array containing all elements from the input array in order.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="elements"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="elements" /> is null.</exception>
         public static T[] ArrayConcat<T>(params T[][] elements)
         {
             if (elements == null)
@@ -99,7 +99,7 @@ namespace Netly
         ///     Throws <see cref="InternalBufferOverflowException" /> if the size exceeds the default maximum.
         /// </summary>
         /// <param name="size">The desired size of the stream.</param>
-        /// <returns>A <see cref="Stream"/> with the specified size.</returns>
+        /// <returns>A <see cref="Stream" /> with the specified size.</returns>
         public static Stream NewStream(long size)
         {
             if (size <= 1024 * 1024 * 20) // 20.00 MB

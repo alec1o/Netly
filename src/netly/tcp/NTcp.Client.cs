@@ -4,7 +4,6 @@ namespace Netly
     {
         public class Client
         {
-            
         }
     }
 }

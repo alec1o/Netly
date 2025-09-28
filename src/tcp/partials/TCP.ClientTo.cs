@@ -345,7 +345,7 @@ namespace Netly
 
             private void PublishData(Stream stream)
             {
-                if (NMessage.TryParse(stream, out var name, out var message, NUtils.NewStream))
+                if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
                 {
                     message.Position = 0;
                     On.OnEvent?.Invoke(null, (name, message));
@@ -427,13 +427,13 @@ namespace Netly
 
                     if (IsFraming)
                     {
-                        _framing.Write(new ArraySegment<byte>(_buffer, 0, size), NUtils.NewStream);
+                        _framing.Write(new ArraySegment<byte>(_buffer, 0, size), NHelper.NewStream);
                         while (_framing.Read(out var stream))
                             PublishData(stream);
                     }
                     else
                     {
-                        var stream = NUtils.NewStream(size);
+                        var stream = NHelper.NewStream(size);
                         stream.Write(_buffer, 0, size);
                         PublishData(stream);
                     }

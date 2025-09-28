@@ -1,6 +1,6 @@
 namespace NetlyTest.Netly;
 
-public class NUtilsTest
+public class NHelperTest
 {
     [Fact]
     public void SegmentShift_ShiftsCorrectly()
@@ -8,7 +8,7 @@ public class NUtilsTest
         var array = new[] { 1, 2, 3, 4, 5 };
         var segment = new ArraySegment<int>(array, 0, array.Length);
 
-        var shifted = NUtils.SegmentShift(segment, 2);
+        var shifted = NHelper.SegmentShift(segment, 2);
 
         Assert.Equal(3, shifted.Count);
         Assert.Equal(3, shifted.Array![shifted.Offset]);
@@ -22,7 +22,7 @@ public class NUtilsTest
         var array = new[] { 1, 2, 3 };
         var segment = new ArraySegment<int>(array);
 
-        var shifted = NUtils.SegmentShift(segment, 5);
+        var shifted = NHelper.SegmentShift(segment, 5);
 
         Assert.Equal(0, shifted.Count);
         Assert.Equal(array, shifted.Array);
@@ -34,7 +34,7 @@ public class NUtilsTest
     {
         var array = new[] { 1, 2 };
         var segment = new ArraySegment<int>(array);
-        Assert.Throws<ArgumentOutOfRangeException>(() => NUtils.SegmentShift(segment, -1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => NHelper.SegmentShift(segment, -1));
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class NUtilsTest
         var a2 = new[] { 1, 2, 3 };
         var a3 = new[] { 1, 2, 3 };
 
-        var result = NUtils.ArraySequenced(a1, a2, a3);
+        var result = NHelper.ArraySequenced(a1, a2, a3);
         Assert.True(result);
     }
 
@@ -54,7 +54,7 @@ public class NUtilsTest
         var a1 = new[] { 1, 2 };
         var a2 = new[] { 1, 3 };
 
-        var result = NUtils.ArraySequenced(a1, a2);
+        var result = NHelper.ArraySequenced(a1, a2);
         Assert.False(result);
     }
 
@@ -62,7 +62,7 @@ public class NUtilsTest
     public void Format_ReturnsCorrectString()
     {
         var arr = new[] { 1, 2, 3 };
-        var result = NUtils.Format(arr);
+        var result = NHelper.Format(arr);
         Assert.Equal("[1,2,3]", result);
     }
 
@@ -73,21 +73,21 @@ public class NUtilsTest
         var a2 = new[] { 3, 4 };
         var a3 = new[] { 5 };
 
-        var result = NUtils.ArrayConcat(a1, a2, a3);
+        var result = NHelper.ArrayConcat(a1, a2, a3);
         Assert.Equal(new[] { 1, 2, 3, 4, 5 }, result);
     }
 
     [Fact]
     public void ArrayConcat_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => NUtils.ArrayConcat<int>(null));
+        Assert.Throws<ArgumentNullException>(() => NHelper.ArrayConcat<int>(null));
     }
 
     [Fact]
     public void NewStream_SizeUnderLimit_CreatesMemoryStream()
     {
         var size = 1024 * 1024 * 20; // 20 MB
-        using var stream = NUtils.NewStream(size);
+        using var stream = NHelper.NewStream(size);
         Assert.IsType<MemoryStream>(stream);
         Assert.Equal(size, ((MemoryStream)stream).Capacity);
     }
@@ -96,6 +96,6 @@ public class NUtilsTest
     public void NewStream_SizeOverLimit_Throws()
     {
         var size = 1024 * 1024 * 21; // 21 MB
-        Assert.Throws<InternalBufferOverflowException>(() => NUtils.NewStream(size));
+        Assert.Throws<InternalBufferOverflowException>(() => NHelper.NewStream(size));
     }
 }
