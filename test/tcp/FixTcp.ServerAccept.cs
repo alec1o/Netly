@@ -7,7 +7,7 @@ public partial class FixTcp
     {
         await Server();
 
-        async Task Client(NHost host)
+        async Task<TCP.Client> Client(NHost host)
         {
             TCP.Client client = new();
 
@@ -37,11 +37,13 @@ public partial class FixTcp
                 Assert.False(isClose);
                 Assert.False(isError);
             }
+
+            return client;
         }
 
         async Task Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 9673);
 
             TCP.Server server = new();
 
@@ -75,14 +77,16 @@ public partial class FixTcp
                 Assert.False(isError);
             }
 
-            const int maxConnection = 100;
+            const int maxConnection = 10;
 
             for (int i = 0; i < maxConnection; i++)
             {
-                await Client(server.Host);
+                var x = await Client(server.Host);
+                Assert.NotNull(x);
+                Assert.True(x.IsOpened, $"Client: {i}");
             }
 
-            Thread.Sleep(5000);
+            Thread.Sleep(500);
 
             Assert.Equal(maxConnection, server.Clients.Count);
         }

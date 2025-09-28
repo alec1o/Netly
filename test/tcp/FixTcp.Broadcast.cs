@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixTcp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixTcp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 17492);
 
             TCP.Server server = new();
 

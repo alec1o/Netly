@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixUdp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixUdp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 45639);
 
             UDP.Server server = new();
 
@@ -56,7 +58,7 @@ public partial class FixUdp
 
             server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 1000);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -77,7 +79,7 @@ public partial class FixUdp
             server.To.EventBroadcast(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
             // wait for client respond broadcast
-            Thread.Sleep(5000);
+            Thread.Sleep(100);
 
             Assert.Equal(maxConnection, server.Clients.Length);
             Assert.Equal(maxConnection, allDataReceived);
@@ -108,7 +110,7 @@ public partial class FixUdp
             // for open connection
             client.To.Data([0]);
 
-            Thread.Sleep(millisecondsTimeout: 2000);
+            Thread.Sleep(millisecondsTimeout: 100);
             {
                 Assert.True(client.IsOpened);
                 Assert.True(isModify);

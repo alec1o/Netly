@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixUdp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixUdp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 4675);
 
             UDP.Server server = new();
 

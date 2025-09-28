@@ -6,7 +6,7 @@ public partial class FixTcp
     [Fact]
     public void Encryption()
     {
-        var host = HostManager.GenerateLocalHost();
+        var host = new NHost(IPAddress.Loopback, 14896);
 
         Server();
 

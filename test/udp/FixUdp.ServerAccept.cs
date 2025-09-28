@@ -42,7 +42,7 @@ public partial class FixUdp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 32593);
 
             UDP.Server server = new();
 

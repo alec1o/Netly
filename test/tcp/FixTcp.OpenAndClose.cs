@@ -5,7 +5,7 @@ public partial class FixTcp(ITestOutputHelper output)
     [Fact]
     public async Task OpenAndClose()
     {
-        var host = HostManager.GenerateLocalHost();
+        var host = new NHost(IPAddress.Loopback, 18576);
 
         await Server();
 
