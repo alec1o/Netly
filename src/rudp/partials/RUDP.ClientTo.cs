@@ -304,15 +304,15 @@ namespace Netly
                             On.OnError?.Invoke(null, new Exception(message));
                         }
                     },
-                    OnData = (data, type) =>
+                    OnData = (stream, type) =>
                     {
                         // raw data received
-                        On.OnData?.Invoke(null, (data, type));
+                        On.OnData?.Invoke(null, (stream, type));
                     },
-                    OnEvent = (name, data, type) =>
+                    OnEvent = (name, stream, type) =>
                     {
                         // event received
-                        On.OnEvent?.Invoke(null, (name, data, type));
+                        On.OnEvent?.Invoke(null, (name, stream, type));
                     },
                     HandshakeTimeout = GetHandshakeTimeout(),
                     NoResponseTimeout = GetNoResponseTimeout()

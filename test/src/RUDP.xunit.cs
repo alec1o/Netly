@@ -59,13 +59,13 @@ public class RUDP_xunit
         client.On.Data((data, type) =>
         {
             index += 16;
-            clientData = (data, type);
+            clientData = (data.GetBytes(), type);
         });
 
         client.On.Event((name, data, type) =>
         {
             index += 32;
-            clientEvent = (name, data, type);
+            clientEvent = (name, data.GetBytes(), type);
         });
 
         // test
@@ -81,16 +81,16 @@ public class RUDP_xunit
         (string name, byte[] data, RUDP.MessageType type) sessionEvent = (null!, null!, RUDP.Sequenced);
         session.On.Event((name, data, type) =>
         {
-            sessionEvent = (name, data, type);
-            session.To.Event(name, data, type);
+            sessionEvent = (name, data.GetBytes(), type);
+            session.To.Event(name, data.GetBytes(), type);
         });
 
         (byte[] data, RUDP.MessageType type) sessionData = (null!, RUDP.Sequenced);
 
         session.On.Data((data, type) =>
         {
-            sessionData = (data, type);
-            session.To.Data(data, type);
+            sessionData = (data.GetBytes(), type);
+            session.To.Data(data.GetBytes(), type);
         });
 
         client.To.Data("Hello World, by To.Data", RUDP.Reliable);

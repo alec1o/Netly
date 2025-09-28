@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 
 namespace Netly.Interfaces
@@ -14,13 +15,13 @@ namespace Netly.Interfaces
             ///     Use to handle raw data receiving event
             /// </summary>
             /// <param name="callback">Callback function</param>
-            void Data(Action<byte[], RUDP.MessageType> callback);
+            void Data(Action<Stream, RUDP.MessageType> callback);
 
             /// <summary>
             ///     Use to handle event receive event (netly event)
             /// </summary>
             /// <param name="callback">Callback function</param>
-            void Event(Action<string, byte[], RUDP.MessageType> callback);
+            void Event(Action<string, Stream, RUDP.MessageType> callback);
         }
     }
 }

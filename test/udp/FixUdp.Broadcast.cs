@@ -28,8 +28,10 @@ public partial class FixUdp
             });
             server.On.Accept(client =>
             {
-                client.On.Data(data =>
+                client.On.Data(stream =>
                 {
+                    var data = stream.GetBytes();
+                    
                     // used to open connection
                     if (data.Length == 1 && data[0] == 0) return;
 
@@ -95,8 +97,8 @@ public partial class FixUdp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => client.To.Data(bytes));
-            client.On.Event((name, bytes) => client.To.Event(name, bytes));
+            client.On.Data(stream => client.To.Data(stream.GetBytes()));
+            client.On.Event((name, stream) => client.To.Event(name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);

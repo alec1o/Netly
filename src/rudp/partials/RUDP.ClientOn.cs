@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using Netly.Interfaces;
 
@@ -9,9 +10,9 @@ namespace Netly
         internal class ClientOn : IRUDP.ClientOn
         {
             public EventHandler OnClose;
-            public EventHandler<(byte[] data, MessageType messageType)> OnData;
+            public EventHandler<(Stream stream, MessageType messageType)> OnData;
             public EventHandler<Exception> OnError;
-            public EventHandler<(string name, byte[] buffer, MessageType messageType)> OnEvent;
+            public EventHandler<(string name, Stream stream, MessageType messageType)> OnEvent;
             public EventHandler<Socket> OnModify;
             public EventHandler OnOpen;
 
@@ -35,14 +36,14 @@ namespace Netly
                 OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
-            public void Data(Action<byte[], MessageType> callback)
+            public void Data(Action<Stream, MessageType> callback)
             {
-                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.data, e.messageType));
+                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.stream, e.messageType));
             }
 
-            public void Event(Action<string, byte[], MessageType> callback)
+            public void Event(Action<string, Stream, MessageType> callback)
             {
-                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer, e.messageType));
+                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.stream, e.messageType));
             }
         }
     }

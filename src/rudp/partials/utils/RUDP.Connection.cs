@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +39,16 @@ namespace Netly
                 MyChannel = new Channel(host)
                 {
                     SendRaw = SendRaw,
-                    OnRawData = OnRawDataHandler,
+                    OnRawData = (data, type) =>
+                    {
+                        // TODO: Will cause bug when +2GB size. (NEED FIX!)
+                        if (data.LongLength > int.MaxValue) throw new IndexOutOfRangeException(nameof(data.LongLength));
+                        
+                        var stream = NHelper.NewStream(data.LongLength);
+                        stream.Position = 0;
+                        stream.Write(data, 0, data.Length);
+                        OnRawDataHandler(stream, type);
+                    },
                 };
 
 
@@ -50,17 +60,17 @@ namespace Netly
             public Action OnOpen { private get; set; }
             public Action OnClose { private get; set; }
             public Action<string> OnOpenFail { private get; set; }
-            public Action<byte[], MessageType> OnData { private get; set; }
-            public Action<string, byte[], MessageType> OnEvent { private get; set; }
+            public Action<Stream, MessageType> OnData { private get; set; }
+            public Action<string, Stream, MessageType> OnEvent { private get; set; }
             public int HandshakeTimeout { get; set; }
             public int NoResponseTimeout { get; set; }
             public Action<bool> StartServerSideConnection { get; set; }
 
-            private void OnRawDataHandler(byte[] data, MessageType messageType)
+            private void OnRawDataHandler(Stream stream, MessageType messageType)
             {
                 if (!IsOpened && IsConnecting)
                 {
-                    var primitive = new Primitive(data);
+                    var primitive = new Primitive(stream.GetBytes());
 
                     var prefix = primitive.Get.Int();
                     var content = primitive.Get.Int();
@@ -95,18 +105,14 @@ namespace Netly
 
                 if (IsOpened)
                 {
-                    var stream = NHelper.NewStream(data.LongLength);
-                    stream.Write(data, 0, data.Length);
-
                     if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
                     {
-                        var reference = new byte[message.Length];
-                        message.Position = 0;
-                        message.Write(reference, 0, reference.Length);
-                        OnEvent?.Invoke(name, reference, messageType);
+                        OnEvent?.Invoke(name, message, messageType);
                     }
                     else
-                        OnData?.Invoke(data, messageType);
+                    {
+                        OnData?.Invoke(stream, messageType);
+                    }
                 }
                 else
                 {
@@ -116,7 +122,7 @@ namespace Netly
                         $"IsOpened: {IsOpened}, " +
                         $"IsConnecting: {IsConnecting}, " +
                         $"IsServer: {IsServer}, " +
-                        $"DataSize: {data.Length}"
+                        $"DataSize: {stream.Length}"
                     );
                 }
             }
