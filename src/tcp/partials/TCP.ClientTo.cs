@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -63,7 +64,7 @@ namespace Netly
                 _server = server;
                 _socket = socket;
                 _netStream = new NetworkStream(_socket);
-                _sslStream = new SslStream(_netStream);
+                _sslStream = null;
                 _isServer = true;
                 _isClosed = false;
                 IsEncrypted = _server.IsEncrypted;
@@ -96,8 +97,10 @@ namespace Netly
 
                     await _socket.ConnectAsync(host.Address, host.Port);
 
+                    // Host = new NHost(host.EndPoint);
                     Host = new NHost(_socket.RemoteEndPoint);
 
+                    // _netStream = new NetworkStream(_socket, FileAccess.ReadWrite, false);
                     _netStream = new NetworkStream(_socket);
 
                     if (IsEncrypted) InitEncryption();
@@ -254,9 +257,6 @@ namespace Netly
                     _serverValidatorCallback?.Invoke(_client);
                 }
             }
-
-
-            /* ---- INTERNAL --- */
 
             private bool IsConnected()
             {
