@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Netly
@@ -9,9 +10,20 @@ namespace Netly
             var position = stream.Position;
 
             stream.Position = 0;
+
+            if (stream.Length < 1)
+                return Array.Empty<byte>();
+
             var bytes = new byte[stream.Length];
-            stream.Write(bytes, 0, bytes.Length);
+
+            var count = stream.Read(bytes, 0, bytes.Length);
+
             stream.Position = position;
+
+            if (count != bytes.Length)
+                throw new IndexOutOfRangeException(
+                    $"Error on stream read, Can't read the stream totally ({count} from {bytes.Length})");
+
             return bytes;
         }
 
