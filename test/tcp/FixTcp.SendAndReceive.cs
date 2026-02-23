@@ -1,3 +1,5 @@
+using System.Text;
+
 public partial class FixTcp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixTcp
 
         async Task Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost("127.0.0.1", 6577);
 
             TCP.Server server = new();
 
@@ -28,7 +30,8 @@ public partial class FixTcp
             {
                 client.On.Data(data =>
                 {
-                    client.To.Data(data);
+                    var buffer = data.GetBytes();
+                    client.To.Data(buffer);
 
                     lock (dataLock)
                     {
@@ -38,7 +41,7 @@ public partial class FixTcp
 
                 client.On.Event((name, data) =>
                 {
-                    client.To.Event(name, data);
+                    client.To.Event(name, data.GetBytes());
 
                     lock (eventLock)
                     {
@@ -77,7 +80,7 @@ public partial class FixTcp
 
             Thread.Sleep(5000);
 
-            Assert.Equal(maxConnection, server.Clients.Length);
+            Assert.Equal(maxConnection, server.Clients.Count);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
 
@@ -87,22 +90,32 @@ public partial class FixTcp
             }
         }
 
-        void Client(Host host, out Action check)
+        void Client(NHost host, out Action check)
         {
             TCP.Client client = new();
 
             bool isOpen = false, isClose = false, isError = false, isModify = false;
-            byte[] dataSent = Guid.NewGuid().ToString().GetBytes();
-            List<byte> dataReceived = [];
-            (string name, byte[] data) eventSent = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString().GetBytes());
+            byte[] dataSent = new byte[36];
+            for (byte i = 0; i < dataSent.Length; i++)
+            {
+                dataSent[i] = (byte)(1 + i);
+            }
+
+            byte[] dataReceived = [];
+            (string name, byte[] data) eventSent = (new byte[] { 3, 4, 4, 4, 4, 4, 3 }.GetString(),
+                new byte[] { 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6 });
             (string name, byte[] data) eventReceived = (string.Empty, []);
 
             client.On.Open(() => isOpen = true);
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => dataReceived.AddRange(bytes));
-            client.On.Event((name, bytes) => eventReceived = (name, bytes));
+            client.On.Data(stream =>
+            {
+                var data = stream.GetBytes();
+                dataReceived = data;
+            });
+            client.On.Event((name, stream) => eventReceived = (name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);
@@ -135,6 +148,7 @@ public partial class FixTcp
                 Assert.NotEmpty(dataReceived); // data
                 Assert.NotEmpty(eventReceived.name); // event
                 Assert.NotEmpty(eventReceived.data); // event
+                Assert.Equal(dataSent.Length, dataReceived.Length); // data length
                 Assert.Equal(dataSent, dataReceived); // data
                 Assert.Equal(eventSent.name, eventReceived.name); // event
                 Assert.Equal(eventSent.data, eventReceived.data); // event

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -14,9 +15,8 @@ namespace Netly
     {
         private class ServerTo : IRUDP.ServerTo
         {
-            private readonly List<Client> _clients;
-            private readonly object _clientsLocker, _contentsLooker;
-            private readonly List<(Host host, byte[] data)> _contents;
+            private readonly List<Client> _clients = new List<Client>();
+            private readonly object _clientsLocker = new object();
             private readonly Server _server;
             private bool _isOpeningOrClosing, _isClosed;
             private Socket _socket;
@@ -26,12 +26,8 @@ namespace Netly
 
             public ServerTo(Server server)
             {
-                Host = Host.Default;
+                Host = NHost.Default;
                 _server = server;
-                _clients = new List<Client>();
-                _contents = new List<(Host host, byte[] data)>();
-                _clientsLocker = new object();
-                _contentsLooker = new object();
                 _socket = null;
                 _isOpeningOrClosing = false;
                 _isClosed = true;
@@ -39,11 +35,11 @@ namespace Netly
                 _noResponseTimeout = 5000; // 5s
             }
 
-            public Host Host { get; private set; }
+            public NHost Host { get; private set; }
             public bool IsOpened => _socket != null && !_isClosed;
             private ServerOn On => _server._on;
 
-            public Task Open(Host host)
+            public Task Open(NHost host)
             {
                 if (!_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
 
@@ -59,7 +55,7 @@ namespace Netly
 
                         _socket.Bind(host.EndPoint);
 
-                        Host = new Host(_socket.LocalEndPoint);
+                        Host = new NHost(_socket.LocalEndPoint);
 
                         _isClosed = false;
 
@@ -69,7 +65,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         _isClosed = true;
                         On.OnError?.Invoke(null, e);
                     }
@@ -109,7 +105,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -182,13 +178,14 @@ namespace Netly
                         clients = _clients.ToArray();
                     }
 
-                    if (clients.Length > 0)
-                        foreach (var client in clients)
-                            client?.To.Data(data, messageType);
+                    if (clients.Length <= 0) return;
+                    
+                    foreach (var client in clients)
+                        client?.To.Data(data, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -203,13 +200,14 @@ namespace Netly
                         clients = _clients.ToArray();
                     }
 
-                    if (clients.Length > 0)
-                        foreach (var client in clients)
-                            client?.To.Data(data, messageType);
+                    if (clients.Length <= 0) return;
+                    
+                    foreach (var client in clients)
+                        client?.To.Event(name, data, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -218,96 +216,57 @@ namespace Netly
             {
                 var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
                 var buffer = new byte[length > 0 ? length : 4096];
-                var remoteEndPoint = Host.EndPoint;
 
-                AcceptUpdate();
+                new Thread(Accept) { IsBackground = true }.Start();
 
-                new Thread(ContentUpdate) { IsBackground = true }.Start();
+                return;
 
-                void AcceptUpdate()
+                void Accept()
                 {
-                    try
+                    while (IsOpened)
                     {
-                        if (!IsOpened)
+                        try
                         {
-                            Close();
-                            return;
+                            var endpoint = NHost.Default.EndPoint;
+
+                            var size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None,
+                                ref endpoint);
+
+                            if (size <= 0) continue;
+
+                            var bytes = new byte[size];
+
+                            Array.Copy(buffer, 0, bytes, 0, bytes.Length);
+
+                            EndAccept(endpoint, bytes);
                         }
-
-                        _socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEndPoint,
-                            AcceptCallback, null);
-                    }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create(e);
-                        Close();
-                    }
-                }
-
-                void AcceptCallback(IAsyncResult result)
-                {
-                    try
-                    {
-                        var size = _socket.EndReceiveFrom(result, ref remoteEndPoint);
-
-                        if (size > 0)
+                        catch (Exception e)
                         {
-                            var data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            lock (_contentsLooker)
-                            {
-                                _contents.Add((new Host(remoteEndPoint), data));
-                            }
+                            NLogger.Singleton.Submit(e);
                         }
                     }
-                    catch (Exception e)
-                    {
-                        NetlyEnvironment.Logger.Create(e);
-                    }
 
-                    AcceptUpdate();
+                    Close();
                 }
-            }
 
-            private void ContentUpdate()
-            {
-                while (IsOpened)
+                void EndAccept(EndPoint endpoint, byte[] data)
                 {
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    if (_contents.Count <= 0) continue;
-
-                    (Host host, byte[] data) value;
-                    Client client;
-
-                    lock (_contentsLooker)
-                    {
-                        // recheck on thread safe area
-                        if (_contents.Count <= 0) continue;
-
-                        // get first element
-                        value = _contents[0];
-
-                        // remove first element
-                        _contents.RemoveAt(0);
-                    }
-
                     try
                     {
+                        var host = new NHost(endpoint);
+                        Client client;
+                        
                         lock (_clientsLocker)
                         {
                             // find client
-                            client = _clients.FirstOrDefault(x => value.host.Equals(x.Host));
+                            client = _clients.FirstOrDefault(x => host.Equals(x.Host));
                         }
-
-                        var buffer = value.data;
 
                         // use existent context
                         if (client != null)
                         {
-                            client.InjectBuffer(ref buffer);
-                            continue;
+                            client.InjectBuffer(ref data);
+                            return;
                         }
 
                         #region Prevent Invalid Data
@@ -315,34 +274,26 @@ namespace Netly
                         if (UseConnectionSecurity)
                         {
                             // detect expired data
-                            if (value.data.Length == 1)
+                            if (data.Length == 1)
                             {
-                                if (value.data[0] == Channel.PingPackageBytes[0])
+                                if (data[0] == Channel.PingPackageBytes[0])
                                 {
                                     // this client already disconnected, can't receive ping
-                                    continue;
+                                    return;
                                 }
 
-                                if (value.data[0] == Channel.ClosePackageBytes[0])
+                                if (data[0] == Channel.ClosePackageBytes[0])
                                 {
                                     // this client already disconnected, ignore this package
-                                    continue;
+                                    return;
                                 }
                             }
-
-                            // detect if is connection package
-                            /*
-                            if (!Channel.IsValidEntryPoint(value.data))
-                            {
-                                continue;
-                            }
-                            */
                         }
 
                         #endregion
 
                         // create new context
-                        client = new Client(value.host, _socket)
+                        client = new Client(host, _socket)
                         {
                             HandshakeTimeout = GetHandshakeTimeout(),
                             NoResponseTimeout = GetNoResponseTimeout()
@@ -390,12 +341,12 @@ namespace Netly
 
                         if (client.IsOpened)
                         {
-                            client.InjectBuffer(ref buffer);
+                            client.InjectBuffer(ref data);
                         }
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                 }
             }

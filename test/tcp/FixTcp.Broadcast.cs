@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixTcp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixTcp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 17492);
 
             TCP.Server server = new();
 
@@ -76,12 +78,12 @@ public partial class FixTcp
             // wait for client respond broadcast
             Thread.Sleep(1000);
 
-            Assert.Equal(maxConnection, server.Clients.Length);
+            Assert.Equal(maxConnection, server.Clients.Count);
             Assert.Equal(maxConnection, allDataReceived);
             Assert.Equal(maxConnection, allEventReceived);
         }
 
-        void Client(Host host)
+        void Client(NHost host)
         {
             TCP.Client client = new();
             bool isOpen = false, isClose = false, isError = false, isModify = false;
@@ -90,8 +92,8 @@ public partial class FixTcp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => client.To.Data(bytes));
-            client.On.Event((name, bytes) => client.To.Event(name, bytes));
+            client.On.Data(stream => client.To.Data(stream.GetBytes()));
+            client.On.Event((name, stream) => client.To.Event(name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);

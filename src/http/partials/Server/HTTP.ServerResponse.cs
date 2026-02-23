@@ -182,17 +182,17 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NetlyEnvironment.Logger.Create(
+                                NLogger.Singleton.Submit(
                                     $"{nameof(ServerResponse)} -> {nameof(_bytes)}: {_bytes.Count}");
 
                                 try
                                 {
                                     _response.Close();
-                                    NetlyEnvironment.Logger.Create($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
+                                    NLogger.Singleton.Submit($"{nameof(ServerRequest)} -> {nameof(Send)}: {e}");
                                 }
                                 catch (Exception exception)
                                 {
-                                    NetlyEnvironment.Logger.Create(
+                                    NLogger.Singleton.Submit(
                                         $"{nameof(ServerRequest)} -> {nameof(Send)}: {e} & {exception}");
                                 }
                             }

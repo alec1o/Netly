@@ -22,7 +22,7 @@ namespace Netly
 
             private ClientTo()
             {
-                Host = Host.Default;
+                Host = NHost.Default;
                 _client = null;
                 _socket = null;
                 _connection = null;
@@ -39,7 +39,7 @@ namespace Netly
                 _isServer = false;
             }
 
-            public ClientTo(Client client, Host host, Socket socket) : this()
+            public ClientTo(Client client, NHost host, Socket socket) : this()
             {
                 _client = client;
                 Host = host;
@@ -59,10 +59,10 @@ namespace Netly
                 return _connection.IsOpened;
             }
 
-            public Host Host { get; private set; }
+            public NHost Host { get; private set; }
             private ClientOn On => _client._on;
 
-            public Task Open(Host host)
+            public Task Open(NHost host)
             {
                 if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
                 _isOpeningOrClosing = true;
@@ -84,7 +84,7 @@ namespace Netly
                     catch (Exception e)
                     {
                         // logger
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         // error on open connection
                         On.OnError?.Invoke(null, e);
                         _connection = null;
@@ -113,7 +113,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -138,11 +138,11 @@ namespace Netly
 
                 try
                 {
-                    _connection?.Send(ref data, messageType);
+                    _connection?.Send(data, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -153,11 +153,11 @@ namespace Netly
                 try
                 {
                     var bytes = data.GetBytes();
-                    _connection?.Send(ref bytes, messageType);
+                    _connection?.Send(bytes, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -168,11 +168,11 @@ namespace Netly
                 try
                 {
                     var bytes = data.GetBytes(encoding);
-                    _connection?.Send(ref bytes, messageType);
+                    _connection?.Send(bytes, messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -182,12 +182,12 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data);
-                    _connection?.Send(ref bytes, messageType);
+                    var header = NMessage.Create(name, data.LongLength);
+                    _connection?.Send(NHelper.ArrayConcat(header, data), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -197,12 +197,13 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data.GetBytes());
-                    _connection?.Send(ref bytes, messageType);
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    _connection?.Send(NHelper.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -212,12 +213,13 @@ namespace Netly
 
                 try
                 {
-                    var bytes = NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding));
-                    _connection?.Send(ref bytes, messageType);
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    _connection?.Send(NHelper.ArrayConcat(header, bytes), messageType);
                 }
                 catch (Exception e)
                 {
-                    NetlyEnvironment.Logger.Create(e);
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -265,9 +267,9 @@ namespace Netly
                 _noResponseTimeout = value;
             }
 
-            private void InitConnection(ref Host host)
+            private void InitConnection(ref NHost host)
             {
-                var myHost = new Host(host.IPEndPoint);
+                var myHost = new NHost(host.IPEndPoint);
 
                 _connection = new Connection(host, _socket, _isServer)
                 {
@@ -302,15 +304,15 @@ namespace Netly
                             On.OnError?.Invoke(null, new Exception(message));
                         }
                     },
-                    OnData = (data, type) =>
+                    OnData = (stream, type) =>
                     {
                         // raw data received
-                        On.OnData?.Invoke(null, (data, type));
+                        On.OnData?.Invoke(null, (stream, type));
                     },
-                    OnEvent = (name, data, type) =>
+                    OnEvent = (name, stream, type) =>
                     {
                         // event received
-                        On.OnEvent?.Invoke(null, (name, data, type));
+                        On.OnEvent?.Invoke(null, (name, stream, type));
                     },
                     HandshakeTimeout = GetHandshakeTimeout(),
                     NoResponseTimeout = GetNoResponseTimeout()
@@ -407,7 +409,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                         if (!_isConnecting) Close();
                     }
                 }

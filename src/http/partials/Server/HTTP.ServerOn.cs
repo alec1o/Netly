@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using Netly.Interfaces;
-using Env = Netly.NetlyEnvironment;
 
 namespace Netly
 {
@@ -16,22 +15,22 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnClose += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<HttpListener> callback)
             {
-                OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnModify += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
         }
     }

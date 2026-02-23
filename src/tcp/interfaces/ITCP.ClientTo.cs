@@ -7,7 +7,7 @@ namespace Netly.Interfaces
     {
         public interface ClientTo
         {
-            Task Open(Host host);
+            Task Open(NHost host);
             Task Close();
             void Data(byte[] data);
             void Encryption(bool enable);

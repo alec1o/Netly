@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
 using Netly.Interfaces;
-using Env = Netly.NetlyEnvironment;
 
 namespace Netly
 {
@@ -18,39 +17,39 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnClose += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<ClientWebSocket> callback)
             {
-                OnModify += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnModify += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Data(Action<byte[], MessageType> callback)
             {
                 OnData += (@object, @event) =>
-                    Env.MainThread.Add(() => callback?.Invoke(@event.buffer, @event.messageType));
+                    NDispatcher.Singleton.Submit(() => callback?.Invoke(@event.buffer, @event.messageType));
             }
 
             public void Event(Action<string, byte[], MessageType> callback)
             {
                 OnEvent += (@object, @event) =>
-                    Env.MainThread.Add(() => callback?.Invoke(@event.name, @event.buffer, @event.messageType));
+                    NDispatcher.Singleton.Submit(() => callback?.Invoke(@event.name, @event.buffer, @event.messageType));
             }
 
             public void Close(Action<WebSocketCloseStatus> callback)
             {
-                OnClose += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnClose += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
         }
     }

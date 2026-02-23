@@ -51,9 +51,9 @@ namespace Netly
 
                     Path = request.Url.LocalPath;
 
-                    LocalEndPoint = new Host(request.LocalEndPoint);
+                    LocalEndPoint = new NHost(request.LocalEndPoint);
 
-                    RemoteEndPoint = new Host(request.RemoteEndPoint);
+                    RemoteEndPoint = new NHost(request.RemoteEndPoint);
 
                     IsWebSocket = request.IsWebSocketRequest;
 
@@ -108,10 +108,10 @@ namespace Netly
                     Path = uri.LocalPath;
 
                     // Not applicable
-                    LocalEndPoint = new Host(IPAddress.Any, 0);
+                    LocalEndPoint = new NHost(IPAddress.Any, 0);
 
                     // Not applicable
-                    RemoteEndPoint = new Host(IPAddress.Any, 0);
+                    RemoteEndPoint = new NHost(IPAddress.Any, 0);
 
                     IsWebSocket = true;
 
@@ -136,8 +136,8 @@ namespace Netly
             public HttpMethod Method { get; }
             public string Url { get; }
             public string Path { get; }
-            public Host LocalEndPoint { get; }
-            public Host RemoteEndPoint { get; }
+            public NHost LocalEndPoint { get; }
+            public NHost RemoteEndPoint { get; }
             public bool IsWebSocket { get; }
             public bool IsLocalRequest { get; }
             public bool IsEncrypted { get; }

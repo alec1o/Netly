@@ -5,7 +5,7 @@ public partial class FixTcp(ITestOutputHelper output)
     [Fact]
     public async Task OpenAndClose()
     {
-        var host = HostManager.GenerateLocalHost();
+        var host = new NHost(IPAddress.Loopback, 18576);
 
         await Server();
 
@@ -50,7 +50,7 @@ public partial class FixTcp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            await client.To.Open(new Host(IPAddress.Any, 0));
+            await client.To.Open(new NHost(IPAddress.Any, 0));
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -110,7 +110,7 @@ public partial class FixTcp(ITestOutputHelper output)
             }
 
             // Cannot assign requested address
-            await server.To.Open(new Host("1.1.1.1", 0));
+            await server.To.Open(new NHost("1.1.1.1", 0));
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);

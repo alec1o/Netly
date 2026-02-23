@@ -29,7 +29,7 @@ namespace Netly
                 get => _to.GetNoResponseTimeout();
                 set => _to.SetNoResponseTimeout(value);
             }
-            public Host Host => _to.Host;
+            public NHost Host => _to.Host;
             public bool IsOpened => _to.IsOpened;
             public IRUDP.ServerTo To => _to;
             public IRUDP.ServerOn On => _on;

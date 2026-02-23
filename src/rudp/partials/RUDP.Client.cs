@@ -17,13 +17,13 @@ namespace Netly
                 _to = new ClientTo(this);
             }
 
-            public Client(Host host, Socket socket) : this()
+            public Client(NHost host, Socket socket) : this()
             {
                 _to = new ClientTo(this, host, socket);
             }
 
             public bool IsOpened => _to.IsOpened;
-            public Host Host => _to.Host;
+            public NHost Host => _to.Host;
             public IRUDP.ClientTo To => _to;
             public IRUDP.ClientOn On => _on;
             public string Id => _to.Id;

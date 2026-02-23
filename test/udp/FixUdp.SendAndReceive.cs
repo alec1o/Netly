@@ -1,3 +1,5 @@
+using System.Net;
+
 public partial class FixUdp
 {
     [Fact]
@@ -7,7 +9,7 @@ public partial class FixUdp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 4675);
 
             UDP.Server server = new();
 
@@ -28,7 +30,7 @@ public partial class FixUdp
             {
                 client.On.Data(data =>
                 {
-                    client.To.Data(data);
+                    client.To.Data(data.GetBytes());
 
                     lock (dataLock)
                     {
@@ -38,7 +40,7 @@ public partial class FixUdp
 
                 client.On.Event((name, data) =>
                 {
-                    client.To.Event(name, data);
+                    client.To.Event(name, data.GetBytes());
 
                     lock (eventLock)
                     {
@@ -88,7 +90,7 @@ public partial class FixUdp
             }
         }
 
-        void Client(Host host, out Action action)
+        void Client(NHost host, out Action action)
         {
             UDP.Client client = new();
 
@@ -102,8 +104,8 @@ public partial class FixUdp
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
             client.On.Modify(_ => isModify = true);
-            client.On.Data(bytes => dataReceived.AddRange(bytes));
-            client.On.Event((name, bytes) => eventReceived = (name, bytes));
+            client.On.Data(stream => dataReceived.AddRange(stream.GetBytes()));
+            client.On.Event((name, stream) => eventReceived = (name, stream.GetBytes()));
             {
                 Assert.False(client.IsOpened);
                 Assert.False(isOpen);

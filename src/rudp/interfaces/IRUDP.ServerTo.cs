@@ -15,7 +15,7 @@ namespace Netly.Interfaces
             /// </summary>
             /// <param name="host">Host (local endpoint)</param>
             /// <returns></returns>
-            Task Open(Host host);
+            Task Open(NHost host);
 
             /// <summary>
             ///     Use to close listening connection

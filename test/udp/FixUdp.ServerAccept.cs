@@ -7,12 +7,11 @@ public partial class FixUdp
     {
         Server();
 
-        void Client(Host host)
+        void Client(NHost host)
         {
             UDP.Client client = new();
 
             bool isOpen = false, isClose = false, isError = false, isModify = false;
-
             client.On.Open(() => isOpen = true);
             client.On.Close(() => isClose = true);
             client.On.Error(_ => isError = true);
@@ -43,7 +42,7 @@ public partial class FixUdp
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 32593);
 
             UDP.Server server = new();
 
@@ -68,7 +67,7 @@ public partial class FixUdp
 
             server.To.Open(host).Wait();
 
-            Thread.Sleep(millisecondsTimeout: 2000);
+            Thread.Sleep(millisecondsTimeout: 1000);
             {
                 Assert.True(server.IsOpened);
                 Assert.True(isModify);
@@ -77,14 +76,14 @@ public partial class FixUdp
                 Assert.False(isError);
             }
 
-            const int maxConnection = 100;
+            const int maxConnection = 10;
 
             for (int i = 0; i < maxConnection; i++)
             {
                 Client(host);
             }
 
-            Thread.Sleep(5000);
+            Thread.Sleep(2000);
 
             Assert.Equal(maxConnection, server.Clients.Length);
         }

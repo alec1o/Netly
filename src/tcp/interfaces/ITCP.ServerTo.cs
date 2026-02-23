@@ -8,8 +8,8 @@ namespace Netly.Interfaces
     {
         public interface ServerTo
         {
-            Task Open(Host host);
-            Task Open(Host host, int backlog);
+            Task Open(NHost host);
+            Task Open(NHost host, int backlog);
             Task Close();
             void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols);
             

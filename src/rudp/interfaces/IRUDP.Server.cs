@@ -28,7 +28,7 @@
             /// <summary>
             ///     Server host (bind endpoint)
             /// </summary>
-            Host Host { get; }
+            NHost Host { get; }
 
             /// <summary>
             ///     Is Opened? (true if is bind)

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byter;
 using Netly.Interfaces;
@@ -25,7 +28,7 @@ namespace Netly
                     _isClosed = true;
                     _isOpeningOrClosing = false;
                     _initServerSide = false;
-                    Host = Host.Default;
+                    Host = NHost.Default;
                 }
 
                 public ClientTo(Client client) : this()
@@ -33,7 +36,7 @@ namespace Netly
                     _client = client;
                 }
 
-                public ClientTo(Client client, ref Host host, ref Socket socket) : this()
+                public ClientTo(Client client, ref NHost host, ref Socket socket) : this()
                 {
                     Host = host;
                     _client = client;
@@ -42,11 +45,11 @@ namespace Netly
                     _isClosed = false;
                 }
 
-                public Host Host { get; private set; }
+                public NHost Host { get; private set; }
                 public bool IsOpened => !_isClosed && _socket != null;
                 private ClientOn On => _client._on;
 
-                public Task Open(Host host)
+                public Task Open(NHost host)
                 {
                     if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
 
@@ -62,7 +65,7 @@ namespace Netly
 
                             _socket.Connect(host.Address, host.Port);
 
-                            Host = new Host(_socket.RemoteEndPoint);
+                            Host = new NHost(_socket.RemoteEndPoint);
 
                             _isClosed = false;
 
@@ -72,7 +75,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NetlyEnvironment.Logger.Create(e);
+                            NLogger.Singleton.Submit(e);
                             _isClosed = true;
                             On.OnError?.Invoke(null, e);
                         }
@@ -100,7 +103,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NetlyEnvironment.Logger.Create(e);
+                                NLogger.Singleton.Submit(e);
                             }
                             finally
                             {
@@ -139,21 +142,26 @@ namespace Netly
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data));
+                    var header = NMessage.Create(name, data.LongLength);
+                    Send(header, data);
                 }
 
                 public void Event(string name, string data)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes()));
+                    var bytes = data.GetBytes();
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    Send(header, bytes);
                 }
 
                 public void Event(string name, string data, Encoding encoding)
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
-                    Send(NetlyEnvironment.EventManager.Create(name, data.GetBytes(encoding)));
+                    var bytes = data.GetBytes(encoding);
+                    var header = NMessage.Create(name, bytes.LongLength);
+                    Send(header, bytes);
                 }
 
                 public void InitServerSide()
@@ -166,130 +174,100 @@ namespace Netly
                     On.OnOpen?.Invoke(null, null);
                 }
 
-                private void PushResult(ref byte[] bytes)
+                private void PushResult(Stream stream)
                 {
-                    (string name, byte[] buffer) content = NetlyEnvironment.EventManager.Verify(bytes);
-
-                    if (content.buffer == null)
-                        On.OnData?.Invoke(null, bytes);
+                    if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
+                    {
+                        On.OnEvent?.Invoke(null, (name, message));
+                    }
                     else
-                        On.OnEvent?.Invoke(null, (content.name, content.buffer));
+                    {
+                        On.OnData?.Invoke(null, stream);
+                    }
                 }
 
-                private void Send(byte[] bytes)
+                private void Send(params byte[][] bytes)
                 {
                     if (bytes == null || bytes.Length <= 0) return;
 
                     Send(Host, bytes);
                 }
 
-                private void Send(Host host, byte[] bytes)
+                private void Send(NHost host, params byte[][] buffers)
                 {
-                    if (bytes == null || bytes.Length <= 0 || !IsOpened || host == null) return;
+                    if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
+
 
                     try
                     {
+                        const SocketFlags frags = SocketFlags.None;
+
+                        var bytes = buffers.SelectMany(x => x).ToArray();
+
+                        var segment = new ArraySegment<byte>(bytes);
+
                         if (_isServer)
                         {
-                            // this way of send just work on windows and linux, except macOs (maybe iOs)
-                            _socket?.BeginSendTo
-                            (
-                                bytes,
-                                0,
-                                bytes.Length,
-                                SocketFlags.None,
-                                host.EndPoint,
-                                null,
-                                null
-                            );
+                            // this way of send just work on windows and linux, except macOS (maybe iOS)
+                            _socket?.SendToAsync(segment, frags, host.EndPoint);
                         }
                         else
                         {
-                            // this way of send just work on windows and linux, include macOs and iOs
-                            _socket?.BeginSend
-                            (
-                                bytes,
-                                0,
-                                bytes.Length,
-                                SocketFlags.None,
-                                null,
-                                null
-                            );
+                            // this way of send just work on windows and linux, include macOS and iOS
+                            _socket?.SendAsync(segment, frags);
                         }
                     }
                     catch (Exception e)
                     {
-                        NetlyEnvironment.Logger.Create(e);
+                        NLogger.Singleton.Submit(e);
                     }
                 }
 
                 private void InitReceiver()
                 {
-                    var endpoint = Host.EndPoint;
-
                     var buffer = new byte
                     [
                         // Maximum/Default receive buffer length.
                         (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer)
                     ];
 
-                    ReceiverUpdate();
+                    new Thread(Receive) { IsBackground = true }.Start();
 
-                    void ReceiverUpdate()
+                    return;
+
+                    void Receive()
                     {
-                        if (!IsOpened)
+                        while (IsOpened)
                         {
-                            Close();
-                            return;
-                        }
-
-                        _socket.BeginReceiveFrom
-                        (
-                            buffer,
-                            0,
-                            buffer.Length,
-                            SocketFlags.None,
-                            ref endpoint,
-                            ReceiveCallback,
-                            null
-                        );
-                    }
-
-                    void ReceiveCallback(IAsyncResult result)
-                    {
-                        try
-                        {
-                            var size = _socket.EndReceiveFrom(result, ref endpoint);
-
-                            if (size <= 0)
+                            try
                             {
-                                if (IsOpened)
-                                    ReceiverUpdate();
-                                else
-                                    Close();
+                                var size = _socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
 
-                                return;
+                                if (size <= 0)
+                                {
+                                    if (IsOpened) continue;
+                                    break;
+                                }
+
+                                var stream = NHelper.NewStream(size);
+                                stream.Position = 0;
+                                stream.Write(buffer, 0, size);
+
+                                PushResult(stream);
                             }
-
-                            var data = new byte[size];
-
-                            Array.Copy(buffer, 0, data, 0, data.Length);
-
-                            PushResult(ref data);
-
-                            ReceiverUpdate();
+                            catch (Exception e)
+                            {
+                                NLogger.Singleton.Submit(e);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            NetlyEnvironment.Logger.Create(e);
-                            Close();
-                        }
+
+                        Close();
                     }
                 }
 
-                public void OnServerBuffer(ref byte[] buffer)
+                public void OnServerBuffer(Stream stream)
                 {
-                    PushResult(ref buffer);
+                    PushResult(stream);
                 }
             }
         }

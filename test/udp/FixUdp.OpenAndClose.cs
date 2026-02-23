@@ -10,7 +10,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
         void Client()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 2937);
 
             UDP.Client client = new();
 
@@ -51,7 +51,7 @@ public partial class FixUdp(ITestOutputHelper output)
                 Assert.False(isError);
             }
 
-            client.To.Open(new Host(IPAddress.Any, 0)).Wait();
+            client.To.Open(new NHost(IPAddress.Any, 0)).Wait();
             {
                 Assert.False(client.IsOpened);
                 Assert.True(isModify);
@@ -65,7 +65,7 @@ public partial class FixUdp(ITestOutputHelper output)
 
         void Server()
         {
-            var host = HostManager.GenerateLocalHost();
+            var host = new NHost(IPAddress.Loopback, 8834);
 
             UDP.Server server = new();
 
@@ -111,7 +111,7 @@ public partial class FixUdp(ITestOutputHelper output)
             }
 
             // Cannot assign requested address
-            server.To.Open(new Host("1.1.1.1", 0)).Wait();
+            server.To.Open(new NHost("1.1.1.1", 0)).Wait();
             {
                 Assert.False(server.IsOpened);
                 Assert.True(isModify);

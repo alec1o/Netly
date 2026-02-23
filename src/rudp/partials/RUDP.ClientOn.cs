@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using Netly.Interfaces;
-using Env = Netly.NetlyEnvironment;
 
 namespace Netly
 {
@@ -10,40 +10,40 @@ namespace Netly
         internal class ClientOn : IRUDP.ClientOn
         {
             public EventHandler OnClose;
-            public EventHandler<(byte[] data, MessageType messageType)> OnData;
+            public EventHandler<(Stream stream, MessageType messageType)> OnData;
             public EventHandler<Exception> OnError;
-            public EventHandler<(string name, byte[] buffer, MessageType messageType)> OnEvent;
+            public EventHandler<(string name, Stream stream, MessageType messageType)> OnEvent;
             public EventHandler<Socket> OnModify;
             public EventHandler OnOpen;
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke());
+                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => Env.MainThread.Add(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, e) => Env.MainThread.Add(() => callback?.Invoke());
+                OnClose += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<Socket> callback)
             {
-                OnModify += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e));
+                OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
-            public void Data(Action<byte[], MessageType> callback)
+            public void Data(Action<Stream, MessageType> callback)
             {
-                OnData += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.data, e.messageType));
+                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.stream, e.messageType));
             }
 
-            public void Event(Action<string, byte[], MessageType> callback)
+            public void Event(Action<string, Stream, MessageType> callback)
             {
-                OnEvent += (@object, e) => Env.MainThread.Add(() => callback?.Invoke(e.name, e.buffer, e.messageType));
+                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.stream, e.messageType));
             }
         }
     }
