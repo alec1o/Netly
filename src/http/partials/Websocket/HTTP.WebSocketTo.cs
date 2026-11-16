@@ -135,15 +135,13 @@ namespace Netly
 
                 return Task.Run(async () =>
                 {
+                    System.Net.WebSockets.WebSocket socket = _isServerSide ? _websocketServerSide : _websocket;
+
                     try
                     {
-                        var state = _initServerSide ? _websocketServerSide.State : _websocket.State;
+                        var state = socket.State;
 
-                        /*
-                             System.Net.WebSockets.WebSocketException (997):
-                             The WebSocket is in an invalid state ('Aborted') for this operation.
-                             Valid states are: 'Open, CloseReceived, CloseSent'
-                        */
+                        // close handshake only works in these states, otherwise it throws (WebSocketException 997)
                         if
                         (
                             state == WebSocketState.Open ||
@@ -151,25 +149,26 @@ namespace Netly
                             state == WebSocketState.CloseSent
                         )
                         {
-                            if (_isServerSide)
-                            {
-                                await _websocketServerSide.CloseAsync(status, string.Empty, CancellationToken.None);
-                                _websocketServerSide.Dispose();
-                            }
-                            else
-                            {
-                                await _websocket.CloseAsync(status, string.Empty, CancellationToken.None);
-                                _websocket.Dispose();
-                            }
+                            await socket.CloseAsync(status, string.Empty, CancellationToken.None);
                         }
+                    }
+                    catch (Exception e) when
+                    (
+                        e is WebSocketException ||
+                        e is ObjectDisposedException ||
+                        e is OperationCanceledException
+                    )
+                    {
+                        // peer aborted or disposed the socket between the state check and the close
                     }
                     catch (Exception e)
                     {
-                        // HACK: FIX IT
                         NLogger.Singleton.Submit(e);
                     }
                     finally
                     {
+                        socket.Dispose();
+
                         if (_isServerSide)
                             _websocketServerSide = null;
                         else

@@ -65,6 +65,27 @@ public class WebSocketTests
         await server.To.Close();
     }
 
+    [Fact]
+    public async Task CloseAfterPeerAbort_RaisesCloseOnceWithoutError()
+    {
+        var (server, url, session) = await Start();
+        var client = new HTTP.WebSocket();
+        int close = 0, error = 0;
+        client.On.Close(() => Interlocked.Increment(ref close));
+        client.On.Error(_ => Interlocked.Increment(ref error));
+        await client.To.Open(new Uri($"ws://{url}/ws"));
+        await Wait.For(TaskToSignal(session), what: "server session");
+
+        await server.To.Close();
+        await Wait.Until(() => !client.IsOpened, what: "client sees server gone");
+        await client.To.Close();
+        await client.To.Close();
+        await Wait.Until(() => close > 0, what: "client close event");
+
+        Assert.Equal(1, close);
+        Assert.Equal(0, error);
+    }
+
     [Theory]
     [InlineData(HTTP.MessageType.Text)]
     [InlineData(HTTP.MessageType.Binary)]
