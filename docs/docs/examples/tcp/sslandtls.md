@@ -103,6 +103,7 @@ Note password used to create PKCS#12 must be same that use on `TCP.Server.To.Enc
 ### Create TCP client using and connect on SSL/TLS server
 
 ```cs
+using System.Net.Security;
 using System.Security.Authentication;
 using Byter;
 using Netly;
@@ -128,14 +129,15 @@ client.To.Encryption(enable: true);
 // [OPTIONAL] Validate certificate: (by default nothing is validated): validate
 client.On.Encryption((x509Cert, x509Chain, policyError) =>
 {
-    // validate it
-
     // RETURN
     // true: connection will open. mean valid certificate
     // false: connection will be closed mean invalid server certificate
 
-    // [TODO:] Check it on production.
-    return true; // I'm saying is valid certificate.
+    // on production accept only certificates without policy errors
+    return policyError == SslPolicyErrors.None;
+
+    // self-signed certificate (development only): compare it with the one you expect
+    // return x509Cert.GetCertHashString() == "EXPECTED_CERTIFICATE_HASH";
 });
 
 
