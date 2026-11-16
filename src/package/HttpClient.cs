@@ -44,6 +44,40 @@ namespace Netly
         }
 
         /// <summary>
+        ///     How many times a request that failed by network or timeout is sent again. Default is 0 (never).
+        ///     A request canceled by <see cref="Close" /> or with an invalid url is never sent again.
+        /// </summary>
+        public int RetryAttempts => _inner._to.RetryAttempts;
+
+        /// <summary>
+        ///     Time to wait before each new attempt. Default is one second.
+        /// </summary>
+        public TimeSpan RetryDelay => _inner._to.RetryDelay;
+
+        /// <summary>
+        ///     Sends again a request that failed by network or timeout, <see cref="OnError" /> is called only when
+        ///     all the attempts fail.
+        /// </summary>
+        /// <param name="attempts">How many times to send again. 0 turns it off.</param>
+        /// <param name="delay">Time to wait before each new attempt. Null means one second.</param>
+        /// <exception cref="InvalidOperationException">While a request is running.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is negative.</exception>
+        public void UseRetry(int attempts, TimeSpan? delay = null)
+        {
+            if (IsOpened)
+                throw new InvalidOperationException($"Must not modify ({nameof(RetryAttempts)}) while a request is running.");
+
+            if (attempts < 0)
+                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
+
+            if (delay < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
+
+            _inner._to.RetryAttempts = attempts;
+            _inner._to.RetryDelay = delay ?? TimeSpan.FromSeconds(1);
+        }
+
+        /// <summary>
         ///     Called with the native client before each request, change the client options here.
         /// </summary>
         public void OnModify(Action<System.Net.Http.HttpClient> callback)

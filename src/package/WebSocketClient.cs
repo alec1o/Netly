@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netly
 {
@@ -13,6 +15,9 @@ namespace Netly
     public class WebSocketClient
     {
         private readonly HTTP.WebSocket _inner;
+        private Uri _openHost;
+        private int _reopenId, _activeId, _isOpening;
+        private EventHandler<int> _onReopen;
 
         /* ---- CONSTRUCTOR --- */
 
@@ -23,6 +28,15 @@ namespace Netly
         {
             _inner = new HTTP.WebSocket();
             IsServer = false;
+            ReopenEnabled = false;
+            ReopenAttempts = 5;
+            ReopenDelay = TimeSpan.FromSeconds(1);
+
+            // closes made by the user change _reopenId
+            _inner.On.Close((Action)(() =>
+            {
+                if (ReopenEnabled && Volatile.Read(ref _reopenId) == _activeId) Reopen(_openHost, _activeId);
+            }));
         }
 
         internal WebSocketClient(HTTP.WebSocket inner)
@@ -127,6 +141,56 @@ namespace Netly
             {
                 callback(stream);
             }
+        }
+
+        /// <summary>
+        ///     True when the client opens the connection again after it was lost or failed to open.
+        ///     Use <see cref="UseAutoReopen" /> to change it.
+        /// </summary>
+        public bool ReopenEnabled { get; private set; }
+
+        /// <summary>
+        ///     How many times the client tries to open again. -1 means no limit.
+        /// </summary>
+        public int ReopenAttempts { get; private set; }
+
+        /// <summary>
+        ///     Time to wait before each attempt to open again.
+        /// </summary>
+        public TimeSpan ReopenDelay { get; private set; }
+
+        /// <summary>
+        ///     Called before each attempt to open again, with the number of the attempt (starts at 1).
+        ///     <see cref="OnOpen" /> is called when an attempt works, <see cref="OnError" /> when it fails.
+        /// </summary>
+        public void OnReopen(Action<int> callback)
+        {
+            _onReopen += (sender, attempt) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(attempt));
+        }
+
+        /// <summary>
+        ///     Enables or disables opening the connection again when it is lost or when the first open fails.
+        ///     It does not happen after <see cref="Close()" /> and it must be called before <see cref="Open" />.
+        /// </summary>
+        /// <param name="enabled">True to open the connection again.</param>
+        /// <param name="attempts">Maximum number of attempts for each failure. -1 means no limit.</param>
+        /// <param name="delay">Time to wait before each attempt. Null means one second.</param>
+        /// <exception cref="InvalidOperationException">While the connection is opened or for a client of a server.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is invalid.</exception>
+        public void UseAutoReopen(bool enabled, int attempts = 5, TimeSpan? delay = null)
+        {
+            if (IsOpened || IsServer)
+                throw new InvalidOperationException($"Must not modify ({nameof(ReopenEnabled)}) while socket is Opened.");
+
+            if (attempts == 0 || attempts < -1)
+                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
+
+            if (delay < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
+
+            ReopenEnabled = enabled;
+            ReopenAttempts = attempts;
+            ReopenDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /* ---- SEND --- */
@@ -246,7 +310,54 @@ namespace Netly
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
-            _ = _inner.To.Open(host);
+            // a new Open replaces any pending reopen
+            var id = Interlocked.Increment(ref _reopenId);
+
+            _ = OpenAsync(host, id, false);
+        }
+
+        // true when the connection is open, every failure goes to OnError
+        private async Task<bool> OpenAsync(Uri host, int id, bool isAttempt)
+        {
+            if (IsServer || IsOpened || Interlocked.Exchange(ref _isOpening, 1) == 1) return IsOpened;
+
+            try
+            {
+                _openHost = host;
+                _activeId = id;
+
+                await _inner.To.Open(host);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isOpening, 0);
+            }
+
+            if (IsOpened) return true;
+
+            // an attempt that fails is handled by the loop of the reopen
+            if (isAttempt is false && ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
+
+            return false;
+        }
+
+        private void Reopen(Uri host, int id)
+        {
+            if (host == null) return;
+
+            Task.Run(async () =>
+            {
+                for (var attempt = 1; ReopenAttempts < 0 || attempt <= ReopenAttempts; attempt++)
+                {
+                    await Task.Delay(ReopenDelay);
+
+                    if (Volatile.Read(ref _reopenId) != id || IsOpened) return;
+
+                    _onReopen?.Invoke(null, attempt);
+
+                    if (await OpenAsync(host, id, true)) return;
+                }
+            });
         }
 
         /// <summary>
@@ -254,6 +365,9 @@ namespace Netly
         /// </summary>
         public void Close()
         {
+            // user close never opens again
+            Interlocked.Increment(ref _reopenId);
+
             _ = _inner.To.Close();
         }
 
@@ -262,6 +376,8 @@ namespace Netly
         /// </summary>
         public void Close(WebSocketCloseStatus status)
         {
+            Interlocked.Increment(ref _reopenId);
+
             _ = _inner.To.Close(status);
         }
 
