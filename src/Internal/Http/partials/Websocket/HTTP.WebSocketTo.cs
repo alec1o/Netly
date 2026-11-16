@@ -255,12 +255,8 @@ namespace Netly
 
             private void _ReceiveData()
             {
-                if (_isServerSide)
-                    // optimize server resources.
-                    ThreadPool.QueueUserWorkItem(ReceiveJob);
-                else
-                    // dedicate thread
-                    new Thread(ReceiveJob) { IsBackground = true }.Start();
+                // the loop awaits the socket, it does not hold a thread while the connection is idle
+                ThreadPool.QueueUserWorkItem(ReceiveJob);
             }
 
             private async void ReceiveJob(object _)
