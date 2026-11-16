@@ -201,4 +201,55 @@ public class WebSocketServerTests
         await client.CloseAsync();
         await server.CloseAsync();
     }
+
+    [Fact]
+    public async Task ConcurrentCloseFromBothSides_NeverCrashesAndClosesOnce()
+    {
+        var (server, uri) = await Start();
+
+        for (var round = 0; round < 60; round++)
+        {
+            var client = new WebSocketClient();
+            var closed = 0;
+            client.OnClose(() => Interlocked.Increment(ref closed));
+            await client.OpenAsync(uri);
+            await Wait.Until(() => server.Clients.Count > 0, what: "server accept");
+
+            var peer = server.Clients.First();
+
+            // the user, the peer and the receiver all try to close at the same time
+            await Task.WhenAll(
+                Task.Run(() => client.Close()),
+                Task.Run(() => client.Close()),
+                Task.Run(() => peer.Close()),
+                Task.Run(() => client.Close(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure)));
+
+            await Wait.Until(() => !client.IsOpened && server.Clients.Count == 0, what: $"closed (round {round})");
+            await Wait.Until(() => closed >= 1, what: "OnClose");
+            Assert.Equal(1, closed);
+        }
+
+        await server.CloseAsync();
+    }
+
+    [Fact]
+    public async Task ThrowingCallback_DoesNotKillTheProcess()
+    {
+        var (server, uri) = await Start(c =>
+        {
+            c.OnClose(() => throw new InvalidOperationException("user callback in OnClose"));
+            c.OnData((_, _) => throw new InvalidOperationException("user callback in OnData"));
+        });
+        var client = new WebSocketClient();
+        client.OnClose(() => throw new InvalidOperationException("client callback in OnClose"));
+        await client.OpenAsync(uri);
+        await Wait.Until(() => server.Clients.Count == 1, what: "server accept");
+
+        client.SendData("boom", WebSocketDelivery.Text);
+        await Task.Delay(100);
+        client.Close();
+
+        await Wait.Until(() => !client.IsOpened && server.Clients.Count == 0, what: "closed");
+        await server.CloseAsync();
+    }
 }

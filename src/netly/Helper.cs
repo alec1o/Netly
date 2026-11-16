@@ -115,6 +115,9 @@ namespace Netly
         /// </exception>
         public static Stream NewStream(long size)
         {
+            if (size > MemoryLimit)
+                CleanOnce();
+
             if (size < 0)
                 throw new InvalidDataException($"{nameof(size)}: {size}");
 
@@ -123,7 +126,7 @@ namespace Netly
 
             try
             {
-                var directory = Path.Combine(Path.GetTempPath(), "Netly");
+                var directory = TemporaryDirectory;
 
                 Directory.CreateDirectory(directory);
 
@@ -141,6 +144,42 @@ namespace Netly
                 return new MemoryStream();
 
             throw new InternalBufferOverflowException($"{nameof(NewStream)}, {nameof(size)}: {size}");
+        }
+
+        private static readonly string TemporaryDirectory = Path.Combine(Path.GetTempPath(), "Netly");
+
+        private static int _cleaned;
+
+        // a crash can leave temporary files, removed once per process when the first one is needed
+        private static void CleanOnce()
+        {
+            if (System.Threading.Interlocked.Exchange(ref _cleaned, 1) == 0)
+                CleanTemporaryFiles(TimeSpan.FromHours(1));
+        }
+
+        internal static void CleanTemporaryFiles(TimeSpan olderThan)
+        {
+            try
+            {
+                if (Directory.Exists(TemporaryDirectory) is false) return;
+
+                var limit = DateTime.UtcNow - olderThan;
+
+                foreach (var file in Directory.GetFiles(TemporaryDirectory, "*.tmp"))
+                    try
+                    {
+                        // files in use by another process are locked and stay
+                        if (File.GetLastWriteTimeUtc(file) < limit) File.Delete(file);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Singleton.Submit(e);
+                    }
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+            }
         }
     }
 }

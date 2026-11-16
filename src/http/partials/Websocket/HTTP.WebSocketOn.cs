@@ -17,39 +17,39 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnOpen += (@object, @event) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnClose += (@object, @event) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
             }
 
             public void Modify(Action<ClientWebSocket> callback)
             {
-                OnModify += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnModify += (@object, @event) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(@event));
             }
 
             public void Data(Action<byte[], MessageType> callback)
             {
                 OnData += (@object, @event) =>
-                    Dispatcher.Singleton.Submit(() => callback?.Invoke(@event.buffer, @event.messageType));
+                    Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(@event.buffer, @event.messageType));
             }
 
             public void Event(Action<string, byte[], MessageType> callback)
             {
                 OnEvent += (@object, @event) =>
-                    Dispatcher.Singleton.Submit(() => callback?.Invoke(@event.name, @event.buffer, @event.messageType));
+                    Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(@event.name, @event.buffer, @event.messageType));
             }
 
             public void Close(Action<WebSocketCloseStatus> callback)
             {
-                OnClose += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnClose += (@object, @event) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(@event));
             }
         }
     }

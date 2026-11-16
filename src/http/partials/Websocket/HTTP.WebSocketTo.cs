@@ -20,6 +20,7 @@ namespace Netly
             private static readonly object CONNECT_LOCKER = new object();
 
             private readonly SemaphoreSlim _sendLocker = new SemaphoreSlim(1, 1);
+            private readonly object _closeLocker = new object();
             private readonly bool _isServerSide;
             private readonly WebSocket _socket;
             public readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
@@ -107,8 +108,11 @@ namespace Netly
                     }
                     finally
                     {
-                        _tryClosing = false;
-                        _tryConnecting = false;
+                        // REQUIRED: do not touch the closing flag, a close can already be running
+                        lock (_closeLocker)
+                        {
+                            _tryConnecting = false;
+                        }
                     }
                 });
             }
@@ -120,23 +124,22 @@ namespace Netly
 
             public Task Close(WebSocketCloseStatus status)
             {
-                if (_tryClosing || _tryConnecting) return Task.CompletedTask;
+                System.Net.WebSockets.WebSocket socket;
 
-                if (_isServerSide)
+                // the user and the receiver can close at the same time, only one of them goes on
+                lock (_closeLocker)
                 {
-                    if (_websocketServerSide == null) return Task.CompletedTask;
-                }
-                else
-                {
-                    if (_websocket == null) return Task.CompletedTask;
-                }
+                    if (_tryClosing || _tryConnecting) return Task.CompletedTask;
 
-                _tryClosing = true;
+                    socket = _isServerSide ? _websocketServerSide : _websocket;
+
+                    if (socket == null) return Task.CompletedTask;
+
+                    _tryClosing = true;
+                }
 
                 return Task.Run(async () =>
                 {
-                    System.Net.WebSockets.WebSocket socket = _isServerSide ? _websocketServerSide : _websocket;
-
                     try
                     {
                         var state = socket.State;
@@ -318,7 +321,15 @@ namespace Netly
                 }
                 finally
                 {
-                    await Close(closeStatus);
+                    try
+                    {
+                        await Close(closeStatus);
+                    }
+                    catch (Exception e)
+                    {
+                        // async void: nothing can be thrown from here
+                        Logger.Singleton.Submit(e);
+                    }
                 }
             }
 

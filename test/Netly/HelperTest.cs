@@ -128,4 +128,36 @@ public class HelperTest
         using var stream = Helper.NewStream(0);
         Assert.Equal(0, stream.Length);
     }
+
+    [Fact]
+    public void CleanTemporaryFiles_RemovesOnlyOldFiles()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "Netly");
+        Directory.CreateDirectory(directory);
+
+        var old = Path.Combine(directory, $"{Guid.NewGuid():N}.tmp");
+        var fresh = Path.Combine(directory, $"{Guid.NewGuid():N}.tmp");
+        var other = Path.Combine(directory, $"{Guid.NewGuid():N}.keep");
+
+        File.WriteAllText(old, "old");
+        File.WriteAllText(fresh, "fresh");
+        File.WriteAllText(other, "other");
+        File.SetLastWriteTimeUtc(old, DateTime.UtcNow.AddDays(-2));
+        File.SetLastWriteTimeUtc(other, DateTime.UtcNow.AddDays(-2));
+
+        try
+        {
+            Helper.CleanTemporaryFiles(TimeSpan.FromHours(1));
+
+            Assert.False(File.Exists(old));
+            Assert.True(File.Exists(fresh));
+            Assert.True(File.Exists(other));
+        }
+        finally
+        {
+            File.Delete(old);
+            File.Delete(fresh);
+            File.Delete(other);
+        }
+    }
 }
