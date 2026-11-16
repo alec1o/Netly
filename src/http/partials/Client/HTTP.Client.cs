@@ -5,7 +5,7 @@ namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Client : IHTTP.Client
+        internal partial class Client : IHTTP.Client
         {
             internal readonly ClientOn _on;
             internal readonly ClientTo _to;

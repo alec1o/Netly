@@ -6,21 +6,21 @@ namespace NetlyTest.WebSocket;
 
 public class WebSocketTests
 {
-    private static async Task<(HTTP.Server server, string url, Task<HTTP.WebSocket> session)> Start(
-        Action<HTTP.WebSocket>? onSession = null)
+    private static async Task<(HttpServer server, string url, Task<WebSocketClient> session)> Start(
+        Action<WebSocketClient>? onSession = null)
     {
-        var session = Wait.Signal<HTTP.WebSocket>();
-        var server = new HTTP.Server();
+        var session = Wait.Signal<WebSocketClient>();
+        var server = new HttpServer();
 
         server.Map.WebSocket("/ws", (_, socket) =>
         {
-            var ws = (HTTP.WebSocket)socket;
+            var ws = (WebSocketClient)socket;
             onSession?.Invoke(ws);
             session.TrySetResult(ws);
         });
 
         var url = $"127.0.0.1:{Net.FreeTcpPort()}";
-        await server.To.Open(new Uri($"http://{url}"));
+        await server.OpenAsync(new Uri($"http://{url}"));
 
         return (server, url, session.Task);
     }
@@ -28,58 +28,56 @@ public class WebSocketTests
     [Fact]
     public void DefaultConfig()
     {
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
 
         Assert.False(client.IsOpened);
         Assert.NotNull(client.Host);
-        Assert.NotNull(client.On);
-        Assert.NotNull(client.To);
-        Assert.Null(client.ServerRequest);
+        Assert.Null(client.Request);
     }
 
     [Fact]
     public async Task HandshakeAndClose()
     {
         var (server, url, session) = await Start();
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         int open = 0, close = 0, modify = 0, error = 0;
-        client.On.Open(() => Interlocked.Increment(ref open));
-        client.On.Close(() => Interlocked.Increment(ref close));
-        client.On.Modify(_ => Interlocked.Increment(ref modify));
-        client.On.Error(_ => Interlocked.Increment(ref error));
+        client.OnOpen(() => Interlocked.Increment(ref open));
+        client.OnClose(() => Interlocked.Increment(ref close));
+        client.OnModify(_ => Interlocked.Increment(ref modify));
+        client.OnError(_ => Interlocked.Increment(ref error));
 
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
         var peer = await Wait.For(TaskToSignal(session), what: "server session");
         Assert.True(client.IsOpened);
         Assert.True(peer.IsOpened);
-        Assert.NotNull(peer.ServerRequest);
+        Assert.NotNull(peer.Request);
         Assert.Equal((1, 1, 0, 0), (open, modify, close, error));
 
-        await client.To.Close();
+        await client.CloseAsync();
 
         Assert.False(client.IsOpened);
         Assert.Equal(1, close);
 
         await Wait.Until(() => !peer.IsOpened, what: "server session closed");
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task CloseAfterPeerAbort_RaisesCloseOnceWithoutError()
     {
         var (server, url, session) = await Start();
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         int close = 0, error = 0;
-        client.On.Close(() => Interlocked.Increment(ref close));
-        client.On.Error(_ => Interlocked.Increment(ref error));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        client.OnClose(() => Interlocked.Increment(ref close));
+        client.OnError(_ => Interlocked.Increment(ref error));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
         await Wait.For(TaskToSignal(session), what: "server session");
 
-        await server.To.Close();
+        await server.CloseAsync();
         await Wait.Until(() => !client.IsOpened, what: "client sees server gone");
-        await client.To.Close();
-        await client.To.Close();
+        await client.CloseAsync();
+        await client.CloseAsync();
         await Wait.Until(() => close > 0, what: "client close event");
 
         Assert.Equal(1, close);
@@ -87,85 +85,85 @@ public class WebSocketTests
     }
 
     [Theory]
-    [InlineData(HTTP.MessageType.Text)]
-    [InlineData(HTTP.MessageType.Binary)]
-    public async Task EchoData(HTTP.MessageType type)
+    [InlineData(WebSocketDelivery.Text)]
+    [InlineData(WebSocketDelivery.Binary)]
+    public async Task EchoData(WebSocketDelivery type)
     {
-        var (server, url, _) = await Start(ws => ws.On.Data((data, t) => ws.To.Data(data, t)));
-        var client = new HTTP.WebSocket();
-        var received = Wait.Signal<(byte[] data, HTTP.MessageType type)>();
-        client.On.Data((data, t) => received.TrySetResult((data, t)));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        var (server, url, _) = await Start(ws => ws.OnData((data, t) => ws.SendData(data.GetBytes(), t)));
+        var client = new WebSocketClient();
+        var received = Wait.Signal<(byte[] data, WebSocketDelivery type)>();
+        client.OnData((data, t) => received.TrySetResult((data.GetBytes(), t)));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
-        var payload = type == HTTP.MessageType.Text ? Encoding.UTF8.GetBytes("olá ✓ websocket") : Net.Payload(5000);
-        client.To.Data(payload, type);
+        var payload = type == WebSocketDelivery.Text ? Encoding.UTF8.GetBytes("olá ✓ websocket") : Net.Payload(5000);
+        client.SendData(payload, type);
 
         var (data, receivedType) = await Wait.For(received, what: "echo");
         Assert.Equal(payload, data);
         Assert.Equal(type, receivedType);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task EchoEvent()
     {
-        var (server, url, _) = await Start(ws => ws.On.Event((name, data, t) => ws.To.Event(name, data, t)));
-        var client = new HTTP.WebSocket();
+        var (server, url, _) = await Start(ws => ws.OnEvent((name, data, t) => ws.SendEvent(name, data.GetBytes(), t)));
+        var client = new WebSocketClient();
         var received = Wait.Signal<(string name, byte[] data)>();
-        client.On.Event((name, data, _) => received.TrySetResult((name, data)));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        client.OnEvent((name, data, _) => received.TrySetResult((name, data.GetBytes())));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
         var payload = Net.Payload(256, 9);
-        client.To.Event("chat.message", payload, HTTP.MessageType.Binary);
+        client.SendEvent("chat.message", payload, WebSocketDelivery.Binary);
 
         var (name, data) = await Wait.For(received, what: "event echo");
         Assert.Equal("chat.message", name);
         Assert.Equal(payload, data);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task LargeMessageIsReassembled()
     {
-        var (server, url, _) = await Start(ws => ws.On.Data((data, t) => ws.To.Data(data, t)));
-        var client = new HTTP.WebSocket();
+        var (server, url, _) = await Start(ws => ws.OnData((data, t) => ws.SendData(data.GetBytes(), t)));
+        var client = new WebSocketClient();
         var received = Wait.Signal<byte[]>();
-        client.On.Data((data, _) => received.TrySetResult(data));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        client.OnData((data, _) => received.TrySetResult(data.GetBytes()));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
         var payload = Net.Payload(1024 * 1024);
-        client.To.Data(payload, HTTP.MessageType.Binary);
+        client.SendData(payload, WebSocketDelivery.Binary);
 
         Assert.Equal(payload, await Wait.For(received, what: "1MB echo"));
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task ManyMessagesKeepOrder()
     {
         const int total = 200;
-        var (server, url, _) = await Start(ws => ws.On.Data((data, t) => ws.To.Data(data, t)));
-        var client = new HTTP.WebSocket();
+        var (server, url, _) = await Start(ws => ws.OnData((data, t) => ws.SendData(data.GetBytes(), t)));
+        var client = new WebSocketClient();
         var received = new List<string>();
-        client.On.Data((data, _) =>
+        client.OnData((data, _) =>
         {
-            lock (received) received.Add(Encoding.UTF8.GetString(data));
+            lock (received) received.Add(Encoding.UTF8.GetString(data.GetBytes()));
         });
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
-        for (var i = 0; i < total; i++) client.To.Data(i.ToString(), HTTP.MessageType.Text);
+        for (var i = 0; i < total; i++) client.SendData(i.ToString(), WebSocketDelivery.Text);
 
         await Wait.Until(() => { lock (received) return received.Count == total; }, what: "all messages");
         lock (received) Assert.Equal(Enumerable.Range(0, total).Select(i => i.ToString()), received);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -174,38 +172,38 @@ public class WebSocketTests
         const int total = 5;
         var (server, url, _) = await Start();
         var count = 0;
-        var clients = new List<HTTP.WebSocket>();
+        var clients = new List<WebSocketClient>();
 
         for (var i = 0; i < total; i++)
         {
-            var client = new HTTP.WebSocket();
-            client.On.Data((data, _) =>
+            var client = new WebSocketClient();
+            client.OnData((data, _) =>
             {
-                if (Encoding.UTF8.GetString(data) == "hello all") Interlocked.Increment(ref count);
+                if (Encoding.UTF8.GetString(data.GetBytes()) == "hello all") Interlocked.Increment(ref count);
             });
-            await client.To.Open(new Uri($"ws://{url}/ws"));
+            await client.OpenAsync(new Uri($"ws://{url}/ws"));
             clients.Add(client);
         }
 
         await Task.Delay(300);
-        server.To.WebsocketDataBroadcast("hello all", HTTP.MessageType.Text);
+        server.BroadcastWebSocketData(Encoding.UTF8.GetBytes("hello all"), WebSocketDelivery.Text);
 
         await Wait.Until(() => count == total, what: "broadcast delivered");
 
-        foreach (var client in clients) await client.To.Close();
-        await server.To.Close();
+        foreach (var client in clients) await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task ServerCloseDisconnectsClient()
     {
         var (server, url, _) = await Start();
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         var closed = Wait.Signal<bool>();
-        client.On.Close(() => closed.TrySetResult(true));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        client.OnClose(() => closed.TrySetResult(true));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
-        await server.To.Close();
+        await server.CloseAsync();
 
         await Wait.For(closed, what: "client close after server close");
         Assert.False(client.IsOpened);
@@ -215,17 +213,17 @@ public class WebSocketTests
     public async Task ClientObservesServerSideClose()
     {
         var (server, url, session) = await Start();
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         var closed = Wait.Signal<bool>();
-        client.On.Close(() => closed.TrySetResult(true));
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        client.OnClose(() => closed.TrySetResult(true));
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
 
         var peer = await Wait.For(TaskToSignal(session));
-        await peer.To.Close();
+        await peer.CloseAsync();
 
         await Wait.For(closed, what: "client close after session close");
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -233,38 +231,38 @@ public class WebSocketTests
     {
         var (server, url, session) = await Start();
         var serverStatus = Wait.Signal<WebSocketCloseStatus>();
-        var client = new HTTP.WebSocket();
-        await client.To.Open(new Uri($"ws://{url}/ws"));
+        var client = new WebSocketClient();
+        await client.OpenAsync(new Uri($"ws://{url}/ws"));
         var peer = await Wait.For(TaskToSignal(session));
-        peer.On.Close(status => serverStatus.TrySetResult(status));
+        peer.OnClose(status => serverStatus.TrySetResult(status));
 
-        await client.To.Close(WebSocketCloseStatus.NormalClosure);
+        await client.CloseAsync(WebSocketCloseStatus.NormalClosure);
 
         Assert.Equal(WebSocketCloseStatus.NormalClosure, await Wait.For(serverStatus, what: "close status"));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task UnknownPathIsRejected()
     {
         var (server, url, _) = await Start();
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         var events = new List<string>();
         var finished = Wait.Signal<bool>();
-        client.On.Open(() => { lock (events) events.Add("open"); });
-        client.On.Close(() =>
+        client.OnOpen(() => { lock (events) events.Add("open"); });
+        client.OnClose(() =>
         {
             lock (events) events.Add("close");
             finished.TrySetResult(true);
         });
-        client.On.Error(e =>
+        client.OnError(e =>
         {
             lock (events) events.Add("error");
             finished.TrySetResult(true);
         });
 
-        await client.To.Open(new Uri($"ws://{url}/empty"));
+        await client.OpenAsync(new Uri($"ws://{url}/empty"));
 
         try
         {
@@ -279,17 +277,17 @@ public class WebSocketTests
 
         Assert.False(client.IsOpened);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
     public async Task ConnectionRefusedRaisesError()
     {
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         var error = Wait.Signal<Exception>();
-        client.On.Error(e => error.TrySetResult(e));
+        client.OnError(e => error.TrySetResult(e));
 
-        await client.To.Open(new Uri($"ws://127.0.0.1:{Net.FreeTcpPort()}/ws"));
+        await client.OpenAsync(new Uri($"ws://127.0.0.1:{Net.FreeTcpPort()}/ws"));
 
         Assert.NotNull(await Wait.For(error, what: "connection error"));
         Assert.False(client.IsOpened);
@@ -298,12 +296,12 @@ public class WebSocketTests
     [Fact]
     public async Task SendBeforeOpenIsIgnored()
     {
-        var client = new HTTP.WebSocket();
+        var client = new WebSocketClient();
         var error = false;
-        client.On.Error(_ => error = true);
+        client.OnError(_ => error = true);
 
-        client.To.Data("ignored", HTTP.MessageType.Text);
-        await client.To.Close();
+        client.SendData("ignored", WebSocketDelivery.Text);
+        await client.CloseAsync();
 
         Assert.False(client.IsOpened);
         Assert.False(error);

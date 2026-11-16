@@ -32,7 +32,7 @@ namespace Netly.Interfaces
             ///     Use to handle socket modification event
             /// </summary>
             /// <param name="callback">Callback</param>
-            void Modify(Action<HttpClient> callback);
+            void Modify(Action<System.Net.Http.HttpClient> callback);
         }
     }
 }

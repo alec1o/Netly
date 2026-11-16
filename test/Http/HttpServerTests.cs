@@ -1,3 +1,4 @@
+using HttpClient = Netly.HttpClient;
 using System.Text;
 using NetlyTest.Support;
 
@@ -8,32 +9,30 @@ public class HttpServerTests
     [Fact]
     public void DefaultConfig()
     {
-        var server = new HTTP.Server();
+        var server = new HttpServer();
 
         Assert.False(server.IsOpened);
         Assert.NotNull(server.Host);
         Assert.NotNull(server.Map);
         Assert.NotNull(server.Middleware);
-        Assert.NotNull(server.On);
-        Assert.NotNull(server.To);
     }
 
     [Fact]
     public async Task OpenAndClose()
     {
-        var server = new HTTP.Server();
+        var server = new HttpServer();
         int open = 0, close = 0, modify = 0, error = 0;
-        server.On.Open(() => Interlocked.Increment(ref open));
-        server.On.Close(() => Interlocked.Increment(ref close));
-        server.On.Modify(_ => Interlocked.Increment(ref modify));
-        server.On.Error(_ => Interlocked.Increment(ref error));
+        server.OnOpen(() => Interlocked.Increment(ref open));
+        server.OnClose(() => Interlocked.Increment(ref close));
+        server.OnModify(_ => Interlocked.Increment(ref modify));
+        server.OnError(_ => Interlocked.Increment(ref error));
 
-        await server.To.Open(new Uri($"http://127.0.0.1:{Net.FreeTcpPort()}/"));
+        await server.OpenAsync(new Uri($"http://127.0.0.1:{Net.FreeTcpPort()}/"));
 
         Assert.True(server.IsOpened);
         Assert.Equal((1, 1, 0, 0), (open, modify, close, error));
 
-        await server.To.Close();
+        await server.CloseAsync();
 
         Assert.False(server.IsOpened);
         Assert.Equal(1, close);
@@ -44,18 +43,18 @@ public class HttpServerTests
     public async Task CanReopenAfterClose()
     {
         var port = Net.FreeTcpPort();
-        var server = new HTTP.Server();
+        var server = new HttpServer();
         server.Map.Get("/ping", (_, res) => res.Send(200, "pong"));
 
         for (var i = 0; i < 3; i++)
         {
-            await server.To.Open(new Uri($"http://127.0.0.1:{port}/"));
+            await server.OpenAsync(new Uri($"http://127.0.0.1:{port}/"));
             Assert.True(server.IsOpened);
 
             var (status, body) = await HttpHelper.Request("GET", $"http://127.0.0.1:{port}/ping");
             Assert.Equal((200, "pong"), (status, body));
 
-            await server.To.Close();
+            await server.CloseAsync();
             Assert.False(server.IsOpened);
         }
     }
@@ -63,11 +62,11 @@ public class HttpServerTests
     [Fact]
     public async Task OpenOnUnassignableAddressFails()
     {
-        var server = new HTTP.Server();
+        var server = new HttpServer();
         Exception? failure = null;
-        server.On.Error(e => failure = e);
+        server.OnError(e => failure = e);
 
-        await server.To.Open(new Uri("http://1.1.1.1:4002/"));
+        await server.OpenAsync(new Uri("http://1.1.1.1:4002/"));
 
         Assert.False(server.IsOpened);
         Assert.NotNull(failure);
@@ -103,7 +102,7 @@ public class HttpServerTests
         Assert.Equal((200, "ok"), (status, body));
         Assert.Equal(method, received);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -116,7 +115,7 @@ public class HttpServerTests
         Assert.Equal(200, status);
         Assert.Equal(string.Empty, body);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -134,7 +133,7 @@ public class HttpServerTests
 
         Assert.Equal(new[] { "GET", "POST", "PUT", "PATCH", "DELETE" }, methods);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -144,7 +143,7 @@ public class HttpServerTests
 
         Assert.Equal(404, (await HttpHelper.Request("POST", $"{url}/only-get")).status);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -154,7 +153,7 @@ public class HttpServerTests
 
         Assert.Equal(404, (await HttpHelper.Request("GET", $"{url}/missing")).status);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Theory]
@@ -172,7 +171,7 @@ public class HttpServerTests
 
         Assert.Equal(code, (await HttpHelper.Request("GET", $"{url}/status")).status);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -185,7 +184,7 @@ public class HttpServerTests
 
         Assert.Equal((200, "42:abc"), (status, body));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -203,7 +202,7 @@ public class HttpServerTests
 
         Assert.Equal((200, "1|two words|header-value"), (status, body));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -215,14 +214,14 @@ public class HttpServerTests
             res.Send(200);
         }));
 
-        var client = new HTTP.Client();
+        var client = new HttpClient();
         var header = Wait.Signal<string>();
-        client.On.Open(r => header.TrySetResult(r.Headers.TryGetValue("x-answer", out var value) ? value : "missing"));
-        await client.To.Open("GET", $"{url}/h");
+        client.OnOpen(r => header.TrySetResult(r.Headers.TryGetValue("x-answer", out var value) ? value : "missing"));
+        await client.OpenAsync("GET", $"{url}/h");
 
         Assert.Equal("42", await Wait.For(header));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -245,7 +244,7 @@ public class HttpServerTests
         Assert.Equal("olá ✓ body", echoed);
         Assert.Equal(Encoding.UTF8.GetBytes("olá ✓ body"), binary);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -258,7 +257,7 @@ public class HttpServerTests
 
         Assert.Equal((200, payload.Length.ToString()), (status, body));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -267,14 +266,14 @@ public class HttpServerTests
         var data = Net.Payload(100 * 1024);
         var (server, url) = await HttpHelper.Start(s => s.Map.Get("/bin", (_, res) => res.Send(200, data)));
 
-        var client = new HTTP.Client();
+        var client = new HttpClient();
         var received = Wait.Signal<byte[]>();
-        client.On.Open(r => received.TrySetResult(r.Body.Binary));
-        await client.To.Open("GET", $"{url}/bin");
+        client.OnOpen(r => received.TrySetResult(r.Body.Binary));
+        await client.OpenAsync("GET", $"{url}/bin");
 
         Assert.Equal(data, await Wait.For(received));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -290,7 +289,7 @@ public class HttpServerTests
 
         Assert.True(status == 200 && body == "arrived" || status == 302, $"status {status}");
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -327,7 +326,7 @@ public class HttpServerTests
 
         Assert.Equal(new[] { "global", "scoped", "route", "global", "other" }, order);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -350,7 +349,7 @@ public class HttpServerTests
         Assert.Equal((401, "denied"), (status, body));
         Assert.False(routeCalled);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -364,7 +363,7 @@ public class HttpServerTests
 
         Assert.All(results, r => Assert.Equal((200, r.i.ToString()), r.Item2));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 
     [Theory]
@@ -383,6 +382,6 @@ public class HttpServerTests
         Assert.Equal(404, (await HttpHelper.Request("GET", $"{url}/{path.TrimStart('/')}")).status);
         Assert.False(called);
 
-        await server.To.Close();
+        await server.CloseAsync();
     }
 }

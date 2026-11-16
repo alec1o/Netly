@@ -60,7 +60,7 @@ namespace Netly
                 {
                     try
                     {
-                        var http = new HttpClient();
+                        var http = new System.Net.Http.HttpClient();
 
                         var host = new Uri(url);
 

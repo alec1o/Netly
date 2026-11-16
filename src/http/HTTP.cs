@@ -8,21 +8,21 @@
         /// <summary>
         ///     HTTP Client
         /// </summary>
-        public partial class Client
+        internal partial class Client
         {
         }
 
         /// <summary>
         ///     HTTP Server
         /// </summary>
-        public partial class Server
+        internal partial class Server
         {
         }
 
         /// <summary>
         ///     WebSocket Client
         /// </summary>
-        public partial class WebSocket
+        internal partial class WebSocket
         {
         }
     }

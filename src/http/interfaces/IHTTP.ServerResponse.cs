@@ -9,15 +9,7 @@ namespace Netly.Interfaces
     {
         public interface ServerResponse
         {
-            /// <summary>
-            ///     Native Response Object
-            /// </summary>
-            HttpListenerResponse NativeResponse { get; }
             
-            /// <summary>
-            ///     WebSocket Context Object (valid only when 'ServerRequest.IsWebSocket is <i>true</i>', otherwise is 'null')
-            /// </summary>
-            HttpListenerWebSocketContext WebSocketContext { get; }
 
             /// <summary>
             ///     Response Headers

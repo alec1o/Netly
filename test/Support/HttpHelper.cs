@@ -1,3 +1,4 @@
+using HttpClient = Netly.HttpClient;
 namespace NetlyTest.Support;
 
 /// <summary>
@@ -5,33 +6,33 @@ namespace NetlyTest.Support;
 /// </summary>
 internal static class HttpHelper
 {
-    public static async Task<(HTTP.Server server, string url)> Start(Action<HTTP.Server> setup)
+    public static async Task<(HttpServer server, string url)> Start(Action<HttpServer> setup)
     {
-        var server = new HTTP.Server();
+        var server = new HttpServer();
         setup(server);
 
         var url = $"http://127.0.0.1:{Net.FreeTcpPort()}";
-        await server.To.Open(new Uri(url));
+        await server.OpenAsync(new Uri(url));
 
         if (!server.IsOpened) throw new InvalidOperationException($"http server not opened: {url}");
 
         return (server, url);
     }
 
-    public static async Task<(int status, string body)> Request(string method, string url, Action<HTTP.Client>? setup = null,
+    public static async Task<(int status, string body)> Request(string method, string url, Action<HttpClient>? setup = null,
         string? body = null)
     {
-        var client = new HTTP.Client();
+        var client = new HttpClient();
         var done = Wait.Signal<(int, string)>();
 
-        client.On.Open(response => done.TrySetResult((response.Status, response.Body.Text)));
-        client.On.Error(e => done.TrySetException(e));
+        client.OnOpen(response => done.TrySetResult((response.Status, response.Body.Text)));
+        client.OnError(e => done.TrySetException(e));
         setup?.Invoke(client);
 
         if (body == null)
-            await client.To.Open(method, url);
+            await client.OpenAsync(method, url);
         else
-            await client.To.Open(method, url, body);
+            await client.OpenAsync(method, url, body);
 
         return await Wait.For(done, what: $"{method} {url}");
     }

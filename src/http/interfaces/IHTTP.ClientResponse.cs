@@ -8,15 +8,7 @@ namespace Netly.Interfaces
     {
         public interface ClientResponse
         {
-            /// <summary>
-            /// Native Response Object
-            /// </summary>
-            HttpResponseMessage NativeResponse { get; }
 
-            /// <summary>
-            /// Native Client Object
-            /// </summary>
-            HttpClient NativeClient { get; }
 
             /// <summary>
             ///     Response encoding

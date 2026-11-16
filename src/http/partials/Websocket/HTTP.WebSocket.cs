@@ -6,7 +6,7 @@ namespace Netly
 {
     public partial class HTTP
     {
-        public partial class WebSocket : IHTTP.WebSocket
+        internal partial class WebSocket : IHTTP.WebSocket
         {
             internal readonly WebsocketOn _on = new WebsocketOn();
             private readonly WebsocketTo _to;

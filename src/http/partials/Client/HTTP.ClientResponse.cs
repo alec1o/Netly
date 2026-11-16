@@ -12,7 +12,7 @@ namespace Netly
     {
         internal class ClientResponse : IHTTP.ClientResponse
         {
-            public ClientResponse(ref HttpResponseMessage response, ref HttpClient client)
+            public ClientResponse(ref HttpResponseMessage response, ref System.Net.Http.HttpClient client)
             {
                 // native response
                 NativeResponse = response;
@@ -66,7 +66,7 @@ namespace Netly
             }
 
             public HttpResponseMessage NativeResponse { get; }
-            public HttpClient NativeClient { get; }
+            public System.Net.Http.HttpClient NativeClient { get; }
             public Encoding Encoding { get; }
             public Dictionary<string, string> Headers { get; }
             public Dictionary<string, string> Queries { get; }

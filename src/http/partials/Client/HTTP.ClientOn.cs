@@ -10,7 +10,7 @@ namespace Netly
         {
             public EventHandler OnClose { get; private set; } = delegate { };
             public EventHandler<Exception> OnError { get; private set; } = delegate { };
-            public EventHandler<HttpClient> OnModify { get; private set; } = delegate { };
+            public EventHandler<System.Net.Http.HttpClient> OnModify { get; private set; } = delegate { };
             public EventHandler<IHTTP.ClientResponse> OnOpen { get; private set; } = delegate { };
 
             public void Error(Action<Exception> callback)
@@ -23,7 +23,7 @@ namespace Netly
                 OnClose += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
-            public void Modify(Action<HttpClient> callback)
+            public void Modify(Action<System.Net.Http.HttpClient> callback)
             {
                 OnModify += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }

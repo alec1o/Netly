@@ -5,7 +5,7 @@ namespace Netly
 {
     public static partial class HTTP
     {
-        public partial class Server : IHTTP.Server
+        internal partial class Server : IHTTP.Server
         {
             internal readonly Map MyMap;
             internal readonly Middleware MyMiddleware;
