@@ -91,7 +91,14 @@ namespace Netly
                     {
                         try
                         {
-                            _socket?.Shutdown(SocketShutdown.Both);
+                            try
+                            {
+                                // datagram socket is not connected, shutdown can throw and skip the close
+                                _socket?.Shutdown(SocketShutdown.Both);
+                            }
+                            catch (SocketException)
+                            {
+                            }
 
                             Client[] clients;
 
