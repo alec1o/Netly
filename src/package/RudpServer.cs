@@ -25,7 +25,7 @@ namespace Netly
 
         private class Session
         {
-            public RUDP.Connection Connection;
+            public RudpConnection Connection;
             public RudpClient Client;
         }
 
@@ -399,10 +399,10 @@ namespace Netly
             }
 
             // only a valid syn creates a connection
-            if (!RUDP.Wire.IsSyn(data, size)) return;
+            if (!RudpWire.IsSyn(data, size)) return;
 
             var remote = new IPEndPoint(endpoint.Address, endpoint.Port);
-            var connection = new RUDP.Connection(owner, remote, true)
+            var connection = new RudpConnection(owner, remote, true)
             {
                 HandshakeTimeout = _handshakeTimeout,
                 NoResponseTimeout = _noResponseTimeout
@@ -429,7 +429,7 @@ namespace Netly
             connection.Receive(data, size);
         }
 
-        private void Remove(IPEndPoint endpoint, RUDP.Connection connection)
+        private void Remove(IPEndPoint endpoint, RudpConnection connection)
         {
             lock (_locker)
             {

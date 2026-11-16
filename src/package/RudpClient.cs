@@ -14,7 +14,7 @@ namespace Netly
     {
         private readonly object _locker = new object();
         private readonly RudpServer _server;
-        private RUDP.Connection _connection;
+        private RudpConnection _connection;
         private bool _isOpening;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
         private EventHandler _onOpen, _onClose;
@@ -40,7 +40,7 @@ namespace Netly
         }
 
         // client accepted by the server, the connection is created by the server
-        internal RudpClient(RudpServer server, Socket socket, RUDP.Connection connection, Host host) : this()
+        internal RudpClient(RudpServer server, Socket socket, RudpConnection connection, Host host) : this()
         {
             _server = server;
             _connection = connection;
@@ -310,7 +310,7 @@ namespace Netly
 
                     socket.Connect(host.EndPoint);
 
-                    var connection = new RUDP.Connection(socket, host.IPEndPoint, false)
+                    var connection = new RudpConnection(socket, host.IPEndPoint, false)
                     {
                         HandshakeTimeout = _handshakeTimeout,
                         NoResponseTimeout = _noResponseTimeout
@@ -509,7 +509,7 @@ namespace Netly
             }
         }
 
-        private static void StartReceiver(Socket socket, RUDP.Connection connection)
+        private static void StartReceiver(Socket socket, RudpConnection connection)
         {
             var buffer = new byte[connection.MaxDatagram + 64];
 
