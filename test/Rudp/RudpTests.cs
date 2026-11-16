@@ -5,56 +5,52 @@ namespace NetlyTest.Rudp;
 
 public class RudpTests
 {
-    private static async Task<(RUDP.Server server, Host host)> EchoServer()
+    private static async Task<(RudpServer server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
-        server.On.Accept(client =>
+        var server = new RudpServer();
+        server.OnAccept(client =>
         {
-            client.On.Data((stream, type) => client.To.Data(stream.GetBytes(), type));
-            client.On.Event((name, stream, type) => client.To.Event(name, stream.GetBytes(), type));
+            client.OnData((stream, type) => client.SendData(stream.GetBytes(), type));
+            client.OnEvent((name, stream, type) => client.SendEvent(name, stream.GetBytes(), type));
         });
-        await server.To.Open(host);
+        await server.OpenAsync(host);
         return (server, host);
     }
 
     [Fact]
     public void DefaultConfig()
     {
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         Assert.NotEmpty(server.Id);
         Assert.False(server.IsOpened);
         Assert.Equal(5000, server.HandshakeTimeout);
         Assert.Equal(5000, server.NoResponseTimeout);
-        Assert.NotNull(server.On);
-        Assert.NotNull(server.To);
         Assert.Empty(server.Clients);
 
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         Assert.False(client.IsOpened);
         Assert.Equal(5000, client.HandshakeTimeout);
         Assert.Equal(5000, client.NoResponseTimeout);
-        Assert.NotNull(client.On);
-        Assert.NotNull(client.To);
     }
 
     [Fact]
     public Task ServerOpenAndClose() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         int open = 0, close = 0, modify = 0, error = 0;
-        server.On.Open(() => Interlocked.Increment(ref open));
-        server.On.Close(() => Interlocked.Increment(ref close));
-        server.On.Modify(_ => Interlocked.Increment(ref modify));
-        server.On.Error(_ => Interlocked.Increment(ref error));
+        server.OnOpen(() => Interlocked.Increment(ref open));
+        server.OnClose(() => Interlocked.Increment(ref close));
+        server.OnModify(_ => Interlocked.Increment(ref modify));
+        server.OnError(_ => Interlocked.Increment(ref error));
 
-        await server.To.Open(host);
+        await server.OpenAsync(host);
 
         Assert.True(server.IsOpened);
         Assert.Equal((1, 1, 0, 0), (open, modify, close, error));
 
-        await server.To.Close();
+        await server.CloseAsync();
 
         Assert.False(server.IsOpened);
         Assert.Equal(1, close);
@@ -65,13 +61,13 @@ public class RudpTests
     public Task ServerCanReopenAfterClose() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
 
         for (var i = 0; i < 3; i++)
         {
-            await server.To.Open(host);
+            await server.OpenAsync(host);
             Assert.True(server.IsOpened);
-            await server.To.Close();
+            await server.CloseAsync();
             Assert.False(server.IsOpened);
         }
     });
@@ -79,20 +75,20 @@ public class RudpTests
     [Fact]
     public Task ClientHandshakeAndClose() => Guard.Run(async () =>
     {
-        var accepted = Wait.Signal<global::Netly.Interfaces.IRUDP.Client>();
+        var accepted = Wait.Signal<RudpClient>();
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
-        server.On.Accept(c => accepted.TrySetResult(c));
-        await server.To.Open(host);
+        var server = new RudpServer();
+        server.OnAccept(c => accepted.TrySetResult(c));
+        await server.OpenAsync(host);
 
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         int open = 0, close = 0, modify = 0, error = 0;
-        client.On.Open(() => Interlocked.Increment(ref open));
-        client.On.Close(() => Interlocked.Increment(ref close));
-        client.On.Modify(_ => Interlocked.Increment(ref modify));
-        client.On.Error(_ => Interlocked.Increment(ref error));
+        client.OnOpen(() => Interlocked.Increment(ref open));
+        client.OnClose(() => Interlocked.Increment(ref close));
+        client.OnModify(_ => Interlocked.Increment(ref modify));
+        client.OnError(_ => Interlocked.Increment(ref error));
 
-        await client.To.Open(host);
+        await client.OpenAsync(host);
 
         var peer = await Wait.For(accepted, what: "server accept");
         Assert.True(client.IsOpened);
@@ -100,25 +96,25 @@ public class RudpTests
         Assert.NotEmpty(peer.Id);
         Assert.Equal((1, 1, 0, 0), (open, modify, close, error));
 
-        await client.To.Close();
+        await client.CloseAsync();
 
         Assert.False(client.IsOpened);
         Assert.Equal(1, close);
 
         await Wait.Until(() => !peer.IsOpened, TimeSpan.FromSeconds(15), "server session closed");
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task ClientToUnreachableServerRaisesError() => Guard.Run(async () =>
     {
-        var client = new RUDP.Client { HandshakeTimeout = 1000 };
+        var client = new RudpClient { HandshakeTimeout = 1000 };
         var failed = Wait.Signal<bool>();
         var opened = false;
-        client.On.Open(() => opened = true);
-        client.On.Error(_ => failed.TrySetResult(true));
+        client.OnOpen(() => opened = true);
+        client.OnError(_ => failed.TrySetResult(true));
 
-        await client.To.Open(Net.UdpHost());
+        await client.OpenAsync(Net.UdpHost());
 
         await Wait.For(failed, TimeSpan.FromSeconds(15), "handshake error");
         Assert.False(opened);
@@ -126,63 +122,63 @@ public class RudpTests
     });
 
     [Theory]
-    [InlineData(RUDP.MessageType.Reliable)]
-    [InlineData(RUDP.MessageType.Sequenced)]
-    [InlineData(RUDP.MessageType.Unreliable)]
-    public Task EchoData(RUDP.MessageType type) => Guard.Run(async () =>
+    [InlineData(RudpDelivery.Reliable)]
+    [InlineData(RudpDelivery.Sequenced)]
+    [InlineData(RudpDelivery.Unreliable)]
+    public Task EchoData(RudpDelivery type) => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
-        var received = Wait.Signal<(byte[] data, RUDP.MessageType type)>();
-        client.On.Data((stream, t) => received.TrySetResult((stream.GetBytes(), t)));
-        await client.To.Open(host);
+        var client = new RudpClient();
+        var received = Wait.Signal<(byte[] data, RudpDelivery type)>();
+        client.OnData((stream, t) => received.TrySetResult((stream.GetBytes(), t)));
+        await client.OpenAsync(host);
 
         var payload = Net.Payload(512);
-        client.To.Data(payload, type);
+        client.SendData(payload, type);
 
         var (data, receivedType) = await Wait.For(received, what: $"{type} echo");
         Assert.Equal(payload, data);
         Assert.Equal(type, receivedType);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task EchoEvent() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = Wait.Signal<(string name, byte[] data)>();
-        client.On.Event((name, stream, _) => received.TrySetResult((name, stream.GetBytes())));
-        await client.To.Open(host);
+        client.OnEvent((name, stream, _) => received.TrySetResult((name, stream.GetBytes())));
+        await client.OpenAsync(host);
 
         var payload = Net.Payload(200, 4);
-        client.To.Event("rudp.event", payload, RUDP.MessageType.Reliable);
+        client.SendEvent("rudp.event", payload, RudpDelivery.Reliable);
 
         var (name, data) = await Wait.For(received, what: "event echo");
         Assert.Equal("rudp.event", name);
         Assert.Equal(payload, data);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task StringOverloadsUseUtf8ByDefault() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = Wait.Signal<string>();
-        client.On.Data((stream, _) => received.TrySetResult(Encoding.UTF8.GetString(stream.GetBytes())));
-        await client.To.Open(host);
+        client.OnData((stream, _) => received.TrySetResult(Encoding.UTF8.GetString(stream.GetBytes())));
+        await client.OpenAsync(host);
 
-        client.To.Data("olá ✓ rudp", RUDP.MessageType.Reliable);
+        client.SendData("olá ✓ rudp", RudpDelivery.Reliable);
 
         Assert.Equal("olá ✓ rudp", await Wait.For(received));
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
@@ -196,23 +192,23 @@ public class RudpTests
     private static async Task ReliableOrder(int total)
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = new List<string>();
-        client.On.Data((stream, _) =>
+        client.OnData((stream, _) =>
         {
             lock (received) received.Add(Encoding.UTF8.GetString(stream.GetBytes()));
         });
-        await client.To.Open(host);
+        await client.OpenAsync(host);
 
-        for (var i = 0; i < total; i++) client.To.Data(i.ToString(), RUDP.MessageType.Reliable);
+        for (var i = 0; i < total; i++) client.SendData(i.ToString(), RudpDelivery.Reliable);
 
         await Wait.Until(() => { lock (received) return received.Count >= total; }, TimeSpan.FromSeconds(20), "all reliable messages");
         await Task.Delay(500);
 
         lock (received) Assert.Equal(Enumerable.Range(0, total).Select(i => i.ToString()), received);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Theory]
@@ -226,18 +222,18 @@ public class RudpTests
     private static async Task LargePayload(int size)
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = Wait.Signal<byte[]>();
-        client.On.Data((stream, _) => received.TrySetResult(stream.GetBytes()));
-        await client.To.Open(host);
+        client.OnData((stream, _) => received.TrySetResult(stream.GetBytes()));
+        await client.OpenAsync(host);
 
         var payload = Net.Payload(size);
-        client.To.Data(payload, RUDP.MessageType.Reliable);
+        client.SendData(payload, RudpDelivery.Reliable);
 
         Assert.Equal(payload, await Wait.For(received, TimeSpan.FromSeconds(20), "large echo"));
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -251,16 +247,16 @@ public class RudpTests
     private static async Task AcceptClients(int total)
     {
         var (server, host) = await EchoServer();
-        var clients = Enumerable.Range(0, total).Select(_ => new RUDP.Client()).ToList();
+        var clients = Enumerable.Range(0, total).Select(_ => new RudpClient()).ToList();
 
-        await Task.WhenAll(clients.Select(c => c.To.Open(host)));
+        await Task.WhenAll(clients.Select(c => c.OpenAsync(host)));
 
-        await Wait.Until(() => server.Clients.Length == total, what: "all accepts");
+        await Wait.Until(() => server.Clients.Count == total, what: "all accepts");
         Assert.All(clients, c => Assert.True(c.IsOpened));
         Assert.Equal(total, clients.Select(c => c.Id).Distinct().Count());
 
-        await Task.WhenAll(clients.Select(c => c.To.Close()));
-        await server.To.Close();
+        await Task.WhenAll(clients.Select(c => c.CloseAsync()));
+        await server.CloseAsync();
     }
 
     [Fact]
@@ -268,43 +264,43 @@ public class RudpTests
     {
         const int total = 5;
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
-        await server.To.Open(host);
+        var server = new RudpServer();
+        await server.OpenAsync(host);
 
         var count = 0;
-        var clients = new List<RUDP.Client>();
+        var clients = new List<RudpClient>();
 
         for (var i = 0; i < total; i++)
         {
-            var client = new RUDP.Client();
-            client.On.Data((stream, _) =>
+            var client = new RudpClient();
+            client.OnData((stream, _) =>
             {
                 if (Encoding.UTF8.GetString(stream.GetBytes()) == "broadcast") Interlocked.Increment(ref count);
             });
-            await client.To.Open(host);
+            await client.OpenAsync(host);
             clients.Add(client);
         }
 
-        await Wait.Until(() => server.Clients.Length == total, what: "server accepted all");
+        await Wait.Until(() => server.Clients.Count == total, what: "server accepted all");
 
-        server.To.DataBroadcast("broadcast", RUDP.MessageType.Reliable);
+        server.BroadcastData("broadcast", RudpDelivery.Reliable);
 
         await Wait.Until(() => count == total, TimeSpan.FromSeconds(15), "broadcast delivered");
 
-        await Task.WhenAll(clients.Select(c => c.To.Close()));
-        await server.To.Close();
+        await Task.WhenAll(clients.Select(c => c.CloseAsync()));
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task ClientObservesServerClose() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client { NoResponseTimeout = 1500 };
+        var client = new RudpClient { NoResponseTimeout = 1500 };
         var closed = Wait.Signal<bool>();
-        client.On.Close(() => closed.TrySetResult(true));
-        await client.To.Open(host);
+        client.OnClose(() => closed.TrySetResult(true));
+        await client.OpenAsync(host);
 
-        await server.To.Close();
+        await server.CloseAsync();
 
         await Wait.For(closed, TimeSpan.FromSeconds(20), "client close after server close");
         Assert.False(client.IsOpened);

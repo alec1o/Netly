@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Netly
 {
-    public static partial class RUDP
+    internal static partial class RUDP
     {
         // packet format (little endian)
         //

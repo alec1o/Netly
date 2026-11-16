@@ -7,30 +7,30 @@ namespace NetlyTest.Rudp;
 
 public class RudpRobustnessTests
 {
-    private static async Task<(RUDP.Server server, Host host)> EchoServer(int noResponse = 5000)
+    private static async Task<(RudpServer server, Host host)> EchoServer(int noResponse = 5000)
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server { NoResponseTimeout = noResponse };
-        server.On.Accept(client => client.On.Data((stream, type) => client.To.Data(stream.GetBytes(), type)));
-        await server.To.Open(host);
+        var server = new RudpServer { NoResponseTimeout = noResponse };
+        server.OnAccept(client => client.OnData((stream, type) => client.SendData(stream.GetBytes(), type)));
+        await server.OpenAsync(host);
         return (server, host);
     }
 
     private static async Task AssertServerStillWorks(Host host)
     {
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var echoed = Wait.Signal<string>();
         Exception? error = null;
-        client.On.Error(e => error = e);
-        client.On.Data((stream, _) => echoed.TrySetResult(Encoding.UTF8.GetString(stream.GetBytes())));
-        await client.To.Open(host);
+        client.OnError(e => error = e);
+        client.OnData((stream, _) => echoed.TrySetResult(Encoding.UTF8.GetString(stream.GetBytes())));
+        await client.OpenAsync(host);
 
         Assert.True(client.IsOpened, $"open failed: {error?.Message}");
 
-        client.To.Data("still alive", RUDP.MessageType.Reliable);
+        client.SendData("still alive", RudpDelivery.Reliable);
 
         Assert.Equal("still alive", await Wait.For(echoed, what: "echo after attack"));
-        await client.To.Close();
+        await client.CloseAsync();
     }
 
     [Fact]
@@ -38,47 +38,47 @@ public class RudpRobustnessTests
     {
         var (server, host) = await EchoServer();
         using var proxy = new UdpProxy(host);
-        var client = new RUDP.Client { NoResponseTimeout = 1500 };
+        var client = new RudpClient { NoResponseTimeout = 1500 };
         var closed = Wait.Signal<bool>();
-        client.On.Close(() => closed.TrySetResult(true));
-        await client.To.Open(proxy.Host);
+        client.OnClose(() => closed.TrySetResult(true));
+        await client.OpenAsync(proxy.Host);
 
         proxy.Blackhole = true;
 
         await Wait.For(closed, TimeSpan.FromSeconds(10), "close by timeout");
         Assert.False(client.IsOpened);
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task ServerSessionClosesWhenClientDisappears() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server { NoResponseTimeout = 1500 };
+        var server = new RudpServer { NoResponseTimeout = 1500 };
         var closed = Wait.Signal<bool>();
-        server.On.Accept(c => c.On.Close(() => closed.TrySetResult(true)));
-        await server.To.Open(host);
+        server.OnAccept(c => c.OnClose(() => closed.TrySetResult(true)));
+        await server.OpenAsync(host);
 
         using var proxy = new UdpProxy(host);
-        var client = new RUDP.Client();
-        await client.To.Open(proxy.Host);
-        await Wait.Until(() => server.Clients.Length == 1, what: "accept");
+        var client = new RudpClient();
+        await client.OpenAsync(proxy.Host);
+        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
 
         proxy.Blackhole = true;
 
         await Wait.For(closed, TimeSpan.FromSeconds(10), "server session timeout");
-        await Wait.Until(() => server.Clients.Length == 0, what: "session removed");
+        await Wait.Until(() => server.Clients.Count == 0, what: "session removed");
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task IdleConnectionStaysOpen() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer(1500);
-        var client = new RUDP.Client { NoResponseTimeout = 1500 };
-        await client.To.Open(host);
+        var client = new RudpClient { NoResponseTimeout = 1500 };
+        await client.OpenAsync(host);
 
         // idle for more than twice the no response timeout, keep alive packets must hold the connection
         await Task.Delay(3500);
@@ -87,12 +87,12 @@ public class RudpRobustnessTests
         Assert.Single(server.Clients);
 
         var echoed = Wait.Signal<bool>();
-        client.On.Data((_, _) => echoed.TrySetResult(true));
-        client.To.Data("after idle", RUDP.MessageType.Reliable);
+        client.OnData((_, _) => echoed.TrySetResult(true));
+        client.SendData("after idle", RudpDelivery.Reliable);
         await Wait.For(echoed, what: "echo after idle");
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }, TimeSpan.FromSeconds(30));
 
     [Fact]
@@ -100,8 +100,8 @@ public class RudpRobustnessTests
     {
         var (server, host) = await EchoServer();
         using var proxy = new UdpProxy(host);
-        var client = new RUDP.Client();
-        await client.To.Open(proxy.Host);
+        var client = new RudpClient();
+        await client.OpenAsync(proxy.Host);
         await Task.Delay(100);
         var before = proxy.ToServerPackets + proxy.ToClientPackets;
 
@@ -111,39 +111,39 @@ public class RudpRobustnessTests
         var idle = proxy.ToServerPackets + proxy.ToClientPackets - before;
         Assert.True(idle <= 12, $"{idle} packets in 3s of idle");
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     }, TimeSpan.FromSeconds(30));
 
     [Fact]
     public Task ClosedClientCanOpenAgain() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var open = 0;
-        client.On.Open(() => Interlocked.Increment(ref open));
+        client.OnOpen(() => Interlocked.Increment(ref open));
 
         for (var i = 0; i < 5; i++)
         {
-            await client.To.Open(host);
+            await client.OpenAsync(host);
             Assert.True(client.IsOpened, $"round {i}");
-            await client.To.Close();
+            await client.CloseAsync();
             Assert.False(client.IsOpened);
         }
 
         Assert.Equal(5, open);
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task SendOnClosedClientIsIgnored() => Guard.Run(async () =>
     {
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var error = false;
-        client.On.Error(_ => error = true);
+        client.OnError(_ => error = true);
 
-        client.To.Data("ignored", RUDP.MessageType.Reliable);
-        await client.To.Close();
+        client.SendData("ignored", RudpDelivery.Reliable);
+        await client.CloseAsync();
 
         Assert.False(client.IsOpened);
         Assert.False(error);
@@ -166,7 +166,7 @@ public class RudpRobustnessTests
         await AssertServerStillWorks(host);
         Assert.Empty(server.Clients.Where(c => c == null));
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Theory]
@@ -189,22 +189,22 @@ public class RudpRobustnessTests
         Assert.Empty(server.Clients);
         await AssertServerStillWorks(host);
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task ForgedPacketsCannotCloseOrInjectIntoASession() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         var injected = 0;
-        server.On.Accept(c => c.On.Data((_, _) => Interlocked.Increment(ref injected)));
-        await server.To.Open(host);
+        server.OnAccept(c => c.OnData((_, _) => Interlocked.Increment(ref injected)));
+        await server.OpenAsync(host);
 
         // the proxy gives the client a known source endpoint, the attacker uses the same one
-        var client = new RUDP.Client();
-        await client.To.Open(host);
-        await Wait.Until(() => server.Clients.Length == 1, what: "accept");
+        var client = new RudpClient();
+        await client.OpenAsync(host);
+        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
 
         // attacker does not know the token: guess packets from another socket (other endpoint) and blind tokens
         using var attacker = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -224,17 +224,17 @@ public class RudpRobustnessTests
         Assert.Single(server.Clients);
         Assert.Equal(0, injected);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task SynFloodIsCleanedUp() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server { HandshakeTimeout = 1000 };
-        server.On.Accept(client => client.On.Data((stream, type) => client.To.Data(stream.GetBytes(), type)));
-        await server.To.Open(host);
+        var server = new RudpServer { HandshakeTimeout = 1000 };
+        server.OnAccept(client => client.OnData((stream, type) => client.SendData(stream.GetBytes(), type)));
+        await server.OpenAsync(host);
 
         // many syn from different sources that never complete the handshake
         for (var i = 0; i < 200; i++)
@@ -251,20 +251,20 @@ public class RudpRobustnessTests
         Assert.Empty(server.Clients);
         await AssertServerStillWorks(host);
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task ServerCloseNotifiesClientsFast() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var closed = Wait.Signal<bool>();
-        client.On.Close(() => closed.TrySetResult(true));
-        await client.To.Open(host);
+        client.OnClose(() => closed.TrySetResult(true));
+        await client.OpenAsync(host);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await server.To.Close();
+        await server.CloseAsync();
         await Wait.For(closed, what: "client close");
 
         Assert.True(watch.ElapsedMilliseconds < 1000, $"close notice took {watch.ElapsedMilliseconds} ms");
@@ -276,56 +276,56 @@ public class RudpRobustnessTests
         const int total = 100;
         var (server, host) = await EchoServer();
         var echoed = 0;
-        var clients = new List<RUDP.Client>();
+        var clients = new List<RudpClient>();
 
         for (var i = 0; i < total; i++)
         {
-            var client = new RUDP.Client();
+            var client = new RudpClient();
             var expected = $"client-{i}";
-            client.On.Data((stream, _) =>
+            client.OnData((stream, _) =>
             {
                 if (Encoding.UTF8.GetString(stream.GetBytes()) == expected) Interlocked.Increment(ref echoed);
             });
             clients.Add(client);
         }
 
-        await Task.WhenAll(clients.Select(c => c.To.Open(host)));
+        await Task.WhenAll(clients.Select(c => c.OpenAsync(host)));
         Assert.All(clients, c => Assert.True(c.IsOpened));
 
-        for (var i = 0; i < total; i++) clients[i].To.Data($"client-{i}", RUDP.MessageType.Reliable);
+        for (var i = 0; i < total; i++) clients[i].SendData($"client-{i}", RudpDelivery.Reliable);
 
         await Wait.Until(() => echoed == total, TimeSpan.FromSeconds(20), "all echoes");
-        Assert.Equal(total, server.Clients.Length);
+        Assert.Equal(total, server.Clients.Count);
 
-        await Task.WhenAll(clients.Select(c => c.To.Close()));
-        await server.To.Close();
+        await Task.WhenAll(clients.Select(c => c.CloseAsync()));
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task SessionIdsAreUnique() => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var clients = Enumerable.Range(0, 20).Select(_ => new RUDP.Client()).ToList();
+        var clients = Enumerable.Range(0, 20).Select(_ => new RudpClient()).ToList();
 
-        await Task.WhenAll(clients.Select(c => c.To.Open(host)));
+        await Task.WhenAll(clients.Select(c => c.OpenAsync(host)));
 
         Assert.Equal(20, clients.Select(c => c.Id).Distinct().Count());
         Assert.All(clients, c => Assert.True(Guid.TryParse(c.Id, out _)));
 
-        await Task.WhenAll(clients.Select(c => c.To.Close()));
-        await server.To.Close();
+        await Task.WhenAll(clients.Select(c => c.CloseAsync()));
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task TimeoutsAreValidated() => Guard.Run(() =>
     {
-        var client = new RUDP.Client();
-        var server = new RUDP.Server();
+        var client = new RudpClient();
+        var server = new RudpServer();
 
-        Assert.Throws<Exception>(() => client.HandshakeTimeout = 999);
-        Assert.Throws<Exception>(() => client.NoResponseTimeout = 999);
-        Assert.Throws<Exception>(() => server.HandshakeTimeout = 999);
-        Assert.Throws<Exception>(() => server.NoResponseTimeout = 999);
+        Assert.Throws<ArgumentOutOfRangeException>(() => client.HandshakeTimeout = 999);
+        Assert.Throws<ArgumentOutOfRangeException>(() => client.NoResponseTimeout = 999);
+        Assert.Throws<ArgumentOutOfRangeException>(() => server.HandshakeTimeout = 999);
+        Assert.Throws<ArgumentOutOfRangeException>(() => server.NoResponseTimeout = 999);
 
         client.HandshakeTimeout = 1000;
         server.NoResponseTimeout = 8000;
@@ -334,5 +334,17 @@ public class RudpRobustnessTests
         Assert.Equal(8000, server.NoResponseTimeout);
 
         return Task.CompletedTask;
+    });
+
+    [Fact]
+    public Task TimeoutsCannotChangeWhileOpened() => Guard.Run(async () =>
+    {
+        var host = Net.UdpHost();
+        var server = new RudpServer();
+        await server.OpenAsync(host);
+
+        Assert.Throws<InvalidOperationException>(() => server.HandshakeTimeout = 2000);
+
+        await server.CloseAsync();
     });
 }

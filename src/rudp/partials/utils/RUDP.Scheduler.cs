@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Netly
 {
-    public static partial class RUDP
+    internal static partial class RUDP
     {
         // one thread updates every connection (retransmission, delayed ack, keep alive, timeouts)
         internal static class Scheduler

@@ -6,7 +6,7 @@ using System.Net.Sockets;
 
 namespace Netly
 {
-    public static partial class RUDP
+    internal static partial class RUDP
     {
         // selective repeat connection: window, cumulative ack + sack, rtt based retransmission, fragmentation.
         // all the state is protected by _locker, callbacks and socket reads never run inside it.
@@ -49,12 +49,12 @@ namespace Netly
             {
                 public bool Opened, Closed;
                 public string Fail;
-                public List<KeyValuePair<byte[], MessageType>> Messages;
+                public List<KeyValuePair<byte[], RudpDelivery>> Messages;
 
-                public void Add(byte[] data, MessageType type)
+                public void Add(byte[] data, RudpDelivery type)
                 {
-                    if (Messages == null) Messages = new List<KeyValuePair<byte[], MessageType>>();
-                    Messages.Add(new KeyValuePair<byte[], MessageType>(data, type));
+                    if (Messages == null) Messages = new List<KeyValuePair<byte[], RudpDelivery>>();
+                    Messages.Add(new KeyValuePair<byte[], RudpDelivery>(data, type));
                 }
             }
 
@@ -125,7 +125,7 @@ namespace Netly
             public Action OnOpen { get; set; }
             public Action OnClose { get; set; }
             public Action<string> OnOpenFail { get; set; }
-            public Action<byte[], MessageType> OnMessage { get; set; }
+            public Action<byte[], RudpDelivery> OnMessage { get; set; }
 
             /* ---- CLIENT --- */
 
@@ -189,7 +189,7 @@ namespace Netly
 
             /* ---- INTERFACE --- */
 
-            public void Send(byte[] data, MessageType messageType)
+            public void Send(byte[] data, RudpDelivery messageType)
             {
                 if (data == null || data.Length < 1) return;
 
@@ -197,7 +197,7 @@ namespace Netly
                 {
                     if (_state != State.Connected) return;
 
-                    if (messageType == MessageType.Reliable)
+                    if (messageType == RudpDelivery.Reliable)
                         SendReliable(data);
                     else
                         SendDatagram(data, messageType);
@@ -436,9 +436,9 @@ namespace Netly
                 _ackDueAt = 0;
             }
 
-            private void SendDatagram(byte[] data, MessageType messageType)
+            private void SendDatagram(byte[] data, RudpDelivery messageType)
             {
-                var isSequenced = messageType == MessageType.Sequenced;
+                var isSequenced = messageType == RudpDelivery.Sequenced;
                 var header = 1 + Wire.TokenSize + (isSequenced ? 4 : 0);
                 var type = isSequenced ? Wire.Sequenced : Wire.Unreliable;
                 var seq = isSequenced ? ++_sendSequenced : 0;
@@ -599,7 +599,7 @@ namespace Netly
                     var data = new byte[length];
 
                     Buffer.BlockCopy(buffer, offset, data, 0, length);
-                    pending.Add(data, MessageType.Reliable);
+                    pending.Add(data, RudpDelivery.Reliable);
                     return;
                 }
 
@@ -619,7 +619,7 @@ namespace Netly
 
                 if (!isLast) return;
 
-                pending.Add(_assembly.ToArray(), MessageType.Reliable);
+                pending.Add(_assembly.ToArray(), RudpDelivery.Reliable);
                 _assembly = null;
             }
 
@@ -628,7 +628,7 @@ namespace Netly
                 var isSequenced = type == Wire.Sequenced;
                 var header = 1 + Wire.TokenSize + (isSequenced ? 4 : 0);
                 var isFragment = (buffer[0] & Wire.Fragment) != 0;
-                var messageType = isSequenced ? MessageType.Sequenced : MessageType.Unreliable;
+                var messageType = isSequenced ? RudpDelivery.Sequenced : RudpDelivery.Unreliable;
 
                 if (length < header + (isFragment ? Wire.FragmentSize : 0) + 1) return;
 
@@ -687,9 +687,9 @@ namespace Netly
                 DeliverDatagram(data2, messageType, assembly.Seq, ref pending);
             }
 
-            private void DeliverDatagram(byte[] data, MessageType messageType, uint seq, ref Pending pending)
+            private void DeliverDatagram(byte[] data, RudpDelivery messageType, uint seq, ref Pending pending)
             {
-                if (messageType == MessageType.Sequenced)
+                if (messageType == RudpDelivery.Sequenced)
                 {
                     // old message: a newer one was already delivered
                     if (_hasSequenced && !Wire.IsNewer(seq, _lastSequenced)) return;

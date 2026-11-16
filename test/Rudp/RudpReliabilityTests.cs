@@ -5,15 +5,15 @@ namespace NetlyTest.Rudp;
 
 public class RudpReliabilityTests
 {
-    private static async Task<(RUDP.Server server, Host host)> EchoServer()
+    private static async Task<(RudpServer server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
-        server.On.Accept(client =>
+        var server = new RudpServer();
+        server.OnAccept(client =>
         {
-            client.On.Data((stream, type) => client.To.Data(stream.GetBytes(), type));
+            client.OnData((stream, type) => client.SendData(stream.GetBytes(), type));
         });
-        await server.To.Open(host);
+        await server.OpenAsync(host);
         return (server, host);
     }
 
@@ -32,17 +32,17 @@ public class RudpReliabilityTests
     // sends everything and checks that the echo arrives complete, once and in order
     private static async Task AssertReliableEcho(Host target, List<byte[]> messages, TimeSpan timeout)
     {
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = new List<byte[]>();
-        client.On.Data((stream, _) =>
+        client.OnData((stream, _) =>
         {
             lock (received) received.Add(stream.GetBytes());
         });
 
-        await client.To.Open(target);
+        await client.OpenAsync(target);
         Assert.True(client.IsOpened, "handshake");
 
-        foreach (var message in messages) client.To.Data(message, RUDP.MessageType.Reliable);
+        foreach (var message in messages) client.SendData(message, RudpDelivery.Reliable);
 
         await Wait.Until(() => { lock (received) return received.Count >= messages.Count; }, timeout,
             $"{messages.Count} messages");
@@ -54,7 +54,7 @@ public class RudpReliabilityTests
             for (var i = 0; i < messages.Count; i++) Assert.Equal(messages[i], received[i]);
         }
 
-        await client.To.Close();
+        await client.CloseAsync();
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class RudpReliabilityTests
 
         await AssertReliableEcho(host, Messages(1000, 4, 200, 1), TimeSpan.FromSeconds(20));
 
-        await server.To.Close();
+        await server.CloseAsync();
     });
 
     [Theory]
@@ -76,7 +76,7 @@ public class RudpReliabilityTests
 
         await AssertReliableEcho(host, new List<byte[]> { Net.Payload(size, 3) }, TimeSpan.FromSeconds(60));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }, TimeSpan.FromSeconds(90));
 
     [Theory]
@@ -92,7 +92,7 @@ public class RudpReliabilityTests
 
         await AssertReliableEcho(proxy.Host, messages, TimeSpan.FromSeconds(60));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }, TimeSpan.FromSeconds(90));
 
     [Fact]
@@ -103,7 +103,7 @@ public class RudpReliabilityTests
 
         await AssertReliableEcho(proxy.Host, Messages(300, 4, 2500, 3), TimeSpan.FromSeconds(60));
 
-        await server.To.Close();
+        await server.CloseAsync();
     }, TimeSpan.FromSeconds(90));
 
     [Fact]
@@ -111,14 +111,14 @@ public class RudpReliabilityTests
     {
         var (server, host) = await EchoServer();
         using var proxy = new UdpProxy(host, 0.5, seed: 4);
-        var client = new RUDP.Client { HandshakeTimeout = 10000 };
+        var client = new RudpClient { HandshakeTimeout = 10000 };
 
-        await client.To.Open(proxy.Host);
+        await client.OpenAsync(proxy.Host);
 
         Assert.True(client.IsOpened);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
@@ -126,35 +126,35 @@ public class RudpReliabilityTests
     {
         const int total = 500;
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         var serverReceived = new List<int>();
-        global::Netly.Interfaces.IRUDP.Client? peer = null;
-        server.On.Accept(c =>
+        RudpClient? peer = null;
+        server.OnAccept(c =>
         {
             peer = c;
-            c.On.Data((stream, _) =>
+            c.OnData((stream, _) =>
             {
                 lock (serverReceived) serverReceived.Add(BitConverter.ToInt32(stream.GetBytes(), 0));
             });
         });
-        await server.To.Open(host);
+        await server.OpenAsync(host);
 
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var clientReceived = new List<int>();
-        client.On.Data((stream, _) =>
+        client.OnData((stream, _) =>
         {
             lock (clientReceived) clientReceived.Add(BitConverter.ToInt32(stream.GetBytes(), 0));
         });
-        await client.To.Open(host);
+        await client.OpenAsync(host);
         await Wait.Until(() => peer != null, what: "accept");
 
         var a = Task.Run(() =>
         {
-            for (var i = 0; i < total; i++) client.To.Data(BitConverter.GetBytes(i), RUDP.MessageType.Reliable);
+            for (var i = 0; i < total; i++) client.SendData(BitConverter.GetBytes(i), RudpDelivery.Reliable);
         });
         var b = Task.Run(() =>
         {
-            for (var i = 0; i < total; i++) peer!.To.Data(BitConverter.GetBytes(i), RUDP.MessageType.Reliable);
+            for (var i = 0; i < total; i++) peer!.SendData(BitConverter.GetBytes(i), RudpDelivery.Reliable);
         });
         await Task.WhenAll(a, b);
 
@@ -164,8 +164,8 @@ public class RudpReliabilityTests
         lock (serverReceived) Assert.Equal(Enumerable.Range(0, total), serverReceived);
         lock (clientReceived) Assert.Equal(Enumerable.Range(0, total), clientReceived);
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
@@ -173,19 +173,19 @@ public class RudpReliabilityTests
     {
         const int senders = 8, perSender = 100;
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = new List<byte[]>();
-        client.On.Data((stream, _) =>
+        client.OnData((stream, _) =>
         {
             lock (received) received.Add(stream.GetBytes());
         });
-        await client.To.Open(host);
+        await client.OpenAsync(host);
 
         var expected = Messages(senders * perSender, 10, 4000, 6);
 
         await Task.WhenAll(Enumerable.Range(0, senders).Select(s => Task.Run(() =>
         {
-            for (var m = 0; m < perSender; m++) client.To.Data(expected[s * perSender + m], RUDP.MessageType.Reliable);
+            for (var m = 0; m < perSender; m++) client.SendData(expected[s * perSender + m], RudpDelivery.Reliable);
         })));
 
         await Wait.Until(() => { lock (received) return received.Count == expected.Count; }, TimeSpan.FromSeconds(30), "all messages");
@@ -197,28 +197,28 @@ public class RudpReliabilityTests
             Assert.Empty(remaining);
         }
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task SequencedNeverGoesBackwards() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         var received = new List<int>();
-        server.On.Accept(c => c.On.Data((stream, type) =>
+        server.OnAccept(c => c.OnData((stream, type) =>
         {
-            Assert.Equal(RUDP.MessageType.Sequenced, type);
+            Assert.Equal(RudpDelivery.Sequenced, type);
             lock (received) received.Add(BitConverter.ToInt32(stream.GetBytes(), 0));
         }));
-        await server.To.Open(host);
+        await server.OpenAsync(host);
 
         using var proxy = new UdpProxy(host, 0.1, 0.2, 30, 5);
-        var client = new RUDP.Client();
-        await client.To.Open(proxy.Host);
+        var client = new RudpClient();
+        await client.OpenAsync(proxy.Host);
 
-        for (var i = 1; i <= 300; i++) client.To.Data(BitConverter.GetBytes(i), RUDP.MessageType.Sequenced);
+        for (var i = 1; i <= 300; i++) client.SendData(BitConverter.GetBytes(i), RudpDelivery.Sequenced);
 
         await Task.Delay(1000);
 
@@ -228,49 +228,49 @@ public class RudpReliabilityTests
             for (var i = 1; i < received.Count; i++) Assert.True(received[i] > received[i - 1], $"{received[i - 1]} then {received[i]}");
         }
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Theory]
-    [InlineData(RUDP.MessageType.Unreliable)]
-    [InlineData(RUDP.MessageType.Sequenced)]
-    public Task BigDatagramMessageIsFragmented(RUDP.MessageType type) => Guard.Run(async () =>
+    [InlineData(RudpDelivery.Unreliable)]
+    [InlineData(RudpDelivery.Sequenced)]
+    public Task BigDatagramMessageIsFragmented(RudpDelivery type) => Guard.Run(async () =>
     {
         var (server, host) = await EchoServer();
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = Wait.Signal<byte[]>();
-        client.On.Data((stream, _) => received.TrySetResult(stream.GetBytes()));
-        await client.To.Open(host);
+        client.OnData((stream, _) => received.TrySetResult(stream.GetBytes()));
+        await client.OpenAsync(host);
 
         var payload = Net.Payload(100 * 1024, 8);
-        client.To.Data(payload, type);
+        client.SendData(payload, type);
 
         Assert.Equal(payload, await Wait.For(received, what: "fragmented datagram echo"));
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
     public Task EventsKeepNameAndPayloadUnderLoss() => Guard.Run(async () =>
     {
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
-        server.On.Accept(c => c.On.Event((name, stream, type) => c.To.Event(name, stream.GetBytes(), type)));
-        await server.To.Open(host);
+        var server = new RudpServer();
+        server.OnAccept(c => c.OnEvent((name, stream, type) => c.SendEvent(name, stream.GetBytes(), type)));
+        await server.OpenAsync(host);
 
         using var proxy = new UdpProxy(host, 0.1, seed: 12);
-        var client = new RUDP.Client();
+        var client = new RudpClient();
         var received = new List<(string name, byte[] data)>();
-        client.On.Event((name, stream, _) =>
+        client.OnEvent((name, stream, _) =>
         {
             lock (received) received.Add((name, stream.GetBytes()));
         });
-        await client.To.Open(proxy.Host);
+        await client.OpenAsync(proxy.Host);
 
         var payloads = Messages(100, 5, 3000, 14);
-        for (var i = 0; i < payloads.Count; i++) client.To.Event($"event.{i}", payloads[i], RUDP.MessageType.Reliable);
+        for (var i = 0; i < payloads.Count; i++) client.SendEvent($"event.{i}", payloads[i], RudpDelivery.Reliable);
 
         await Wait.Until(() => { lock (received) return received.Count == payloads.Count; }, TimeSpan.FromSeconds(30), "events");
 
@@ -281,8 +281,8 @@ public class RudpReliabilityTests
                 Assert.Equal(payloads[i], received[i].data);
             }
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 
     [Fact]
@@ -290,19 +290,19 @@ public class RudpReliabilityTests
     {
         const int size = 4 * 1024 * 1024;
         var host = Net.UdpHost();
-        var server = new RUDP.Server();
+        var server = new RudpServer();
         var done = Wait.Signal<bool>();
-        server.On.Accept(c => c.On.Data((stream, _) =>
+        server.OnAccept(c => c.OnData((stream, _) =>
         {
             if (stream.Length == size) done.TrySetResult(true);
         }));
-        await server.To.Open(host);
+        await server.OpenAsync(host);
 
         using var proxy = new UdpProxy(host);
-        var client = new RUDP.Client();
-        await client.To.Open(proxy.Host);
+        var client = new RudpClient();
+        await client.OpenAsync(proxy.Host);
 
-        client.To.Data(Net.Payload(size, 2), RUDP.MessageType.Reliable);
+        client.SendData(Net.Payload(size, 2), RudpDelivery.Reliable);
 
         await Wait.For(done, TimeSpan.FromSeconds(30), "transfer");
         await Task.Delay(200);
@@ -312,7 +312,7 @@ public class RudpReliabilityTests
         // ack direction: cumulative acks, at most 1% of the data
         Assert.True(proxy.ToClientBytes < size * 0.01, $"to client: {proxy.ToClientBytes} bytes for {size}");
 
-        await client.To.Close();
-        await server.To.Close();
+        await client.CloseAsync();
+        await server.CloseAsync();
     });
 }
