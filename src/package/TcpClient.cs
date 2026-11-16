@@ -69,7 +69,7 @@ namespace Netly
         ///     When true each <see cref="OnData" /> is exactly one sent message,
         ///     otherwise it is whatever bytes arrived.
         /// </param>
-        public TcpClient(bool isFraming) : this()
+        public TcpClient(bool isFraming = true) : this()
         {
             IsFraming = isFraming;
         }
@@ -901,12 +901,12 @@ namespace Netly
 
         private async Task<SslStream> InitializeSecureServer(NetworkStream networkStream)
         {
-            var secure = new SslStream(networkStream, false);
+            var secure = new SslStream(networkStream, false, ValidateClientCertificate);
 
             await Timeout(secure.AuthenticateAsServerAsync
             (
                 serverCertificate: _server.Certificate,
-                clientCertificateRequired: false,
+                clientCertificateRequired: _server.ClientCertificateRequired,
                 enabledSslProtocols: _server.SecureProtocol,
                 checkCertificateRevocation: false
             ), secure);
@@ -925,6 +925,19 @@ namespace Netly
             }
 
             await handshake;
+        }
+
+        // server side: the certificate is only checked when the client sends one
+        private bool ValidateClientCertificate(object sender, X509Certificate certificate, X509Chain chain,
+            SslPolicyErrors errors)
+        {
+            if (certificate == null) return !_server.ClientCertificateRequired;
+
+            var callbacks = _server.OnSecureObject;
+
+            if (callbacks.Count <= 0) return errors == SslPolicyErrors.None;
+
+            return callbacks.All(callback => callback.Invoke(certificate, chain, errors));
         }
 
         // without callbacks, only valid certificates are accepted

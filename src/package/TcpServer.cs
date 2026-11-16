@@ -52,7 +52,7 @@ namespace Netly
         ///     When true each <see cref="TcpClient.OnData" /> is exactly one sent message,
         ///     otherwise it is whatever bytes arrived.
         /// </param>
-        public TcpServer(bool isFraming) : this()
+        public TcpServer(bool isFraming = true) : this()
         {
             IsFraming = isFraming;
         }
@@ -83,6 +83,11 @@ namespace Netly
         ///     True when clients without TLS are accepted on a secure server.
         /// </summary>
         public bool AllowUnsecured { get; private set; }
+
+        /// <summary>
+        ///     True when clients must send a certificate during the TLS handshake. Default is false.
+        /// </summary>
+        public bool ClientCertificateRequired { get; private set; }
 
         /// <summary>
         ///     Biggest message accepted from each client when <see cref="IsFraming" /> is true.
@@ -200,8 +205,10 @@ namespace Netly
         /// <param name="password">Password of <paramref name="certificate" />.</param>
         /// <param name="protocols">Allowed TLS protocols. None uses the system default.</param>
         /// <param name="allowUnsecured">Accept clients that don't start a TLS handshake.</param>
+        /// <param name="clientCertificateRequired">Refuse clients that don't send a certificate.</param>
         /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
-        public void ToSecure(byte[] certificate, string password, SslProtocols protocols, bool allowUnsecured)
+        public void ToSecure(byte[] certificate, string password, SslProtocols protocols, bool allowUnsecured,
+            bool clientCertificateRequired = false)
         {
             if (IsOpened)
                 throw new InvalidOperationException($"Must not modify ({nameof(IsSecure)}) while socket is Opened.");
@@ -210,6 +217,7 @@ namespace Netly
             _certificatePassword = password;
             SecureProtocol = protocols;
             AllowUnsecured = allowUnsecured;
+            ClientCertificateRequired = clientCertificateRequired;
             IsSecure = true;
         }
 
