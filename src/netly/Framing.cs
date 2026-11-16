@@ -126,6 +126,10 @@ namespace Netly
         /// <param name="getStream">
         ///     A function that creates a stream for a new message, given its size.
         /// </param>
+        /// <remarks>
+        ///     When it throws, the state is undefined (a partial header or message may be buffered):
+        ///     the caller must close the connection and <see cref="Open" /> again before reusing it.
+        /// </remarks>
         /// <exception cref="ArgumentException">Thrown if arguments are invalid.</exception>
         /// <exception cref="InvalidDataException">Thrown if the prefix or size is invalid.</exception>
         /// <exception cref="InvalidOperationException">Thrown if trying to write to a completed stream.</exception>
@@ -189,7 +193,7 @@ namespace Netly
                         if (next >= _size)
                         {
                             var count = (int)(_size - transaction.Position);
-                            var left = next - count;
+                            var left = segment.Count - count;
 
                             stream.Write(segment.Array ?? throw new ArgumentNullException(nameof(segment)),
                                 segment.Offset, count);

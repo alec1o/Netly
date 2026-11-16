@@ -131,4 +131,25 @@ public class MessageEdgeTest
     {
         Assert.False(Message.TryParse(StreamOf(Array.Empty<byte>()), out _, out _, Memory));
     }
+
+    [Fact]
+    public void TryParse_NameSizeOverflowingInt_DoesNotAllocate()
+    {
+        var hostile = Message.Create("name", 0);
+        var body = new byte[10];
+
+        // 16 + nameSize overflows int, messageSize is chosen so the old int math matched the stream length
+        var nameSize = int.MaxValue - 15;
+        var stream = StreamOf(Helper.ArrayConcat(hostile, body));
+        var messageSize = stream.Length + (1L << 31);
+
+        BitConverter.GetBytes(nameSize).CopyTo(hostile, Message.Prefix.Length);
+        BitConverter.GetBytes(messageSize).CopyTo(hostile, Message.Prefix.Length + sizeof(int));
+        stream = StreamOf(Helper.ArrayConcat(hostile, body));
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+
+        Assert.False(Message.TryParse(stream, out _, out _, Memory));
+        Assert.True(GC.GetAllocatedBytesForCurrentThread() - before < 1024 * 1024);
+    }
 }

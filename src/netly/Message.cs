@@ -139,7 +139,8 @@ namespace Netly
                 if (nameSize < MinSize || messageSize < 0)
                     return false;
 
-                var expectedSize = offset + nameSize + messageSize;
+                // long math, nameSize comes from the peer and can overflow int
+                var expectedSize = (long)offset + nameSize + messageSize;
                 if (expectedSize != stream.Length)
                     return false;
 

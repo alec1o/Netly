@@ -91,4 +91,26 @@ public class FramingTest
 
         Assert.Equal(times, count);
     }
+
+    [Fact]
+    public void MessageTailAndNextMessageInSameSegment_AreBothRead()
+    {
+        byte[] first = "12345"u8.ToArray(), second = "abcdefgh"u8.ToArray();
+
+        var framing = new Framing();
+        var part1 = Helper.ArrayConcat(Framing.Create(first.Length), first.Take(3).ToArray());
+        var part2 = Helper.ArrayConcat(first.Skip(3).ToArray(), Framing.Create(second.Length), second);
+
+        framing.Write(new ArraySegment<byte>(part1), Helper.NewStream);
+        Assert.False(framing.Read(out _));
+
+        // 2 bytes complete the first message (position > 0), the rest is the second one
+        framing.Write(new ArraySegment<byte>(part2), Helper.NewStream);
+
+        Assert.True(framing.Read(out var stream1));
+        Assert.Equal(5, stream1.Length);
+        Assert.True(framing.Read(out var stream2));
+        Assert.Equal(8, stream2.Length);
+        Assert.False(framing.Read(out _));
+    }
 }
