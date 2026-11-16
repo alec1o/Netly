@@ -21,6 +21,7 @@ namespace Netly
             private readonly bool _isServer;
             private readonly Server _server;
             private readonly Action<Client> _serverValidatorCallback;
+            private readonly object _sendLock = new object();
             private byte[] _buffer;
             private NFraming _framing;
 
@@ -368,14 +369,19 @@ namespace Netly
                 {
                     var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
 
-                    if (IsFraming)
+                    // frame prefix and body must be written atomically, otherwise concurrent
+                    // senders interleave their bytes and corrupt the framing.
+                    lock (_sendLock)
                     {
-                        var buf = NFraming.Create(buffers.Sum(x => x.LongLength));
-                        StreamSender(stream, buf);
-                    }
+                        if (IsFraming)
+                        {
+                            var buf = NFraming.Create(buffers.Sum(x => x.LongLength));
+                            StreamSender(stream, buf);
+                        }
 
-                    foreach (var bytes in buffers)
-                        StreamSender(stream, bytes);
+                        foreach (var bytes in buffers)
+                            StreamSender(stream, bytes);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -391,7 +397,8 @@ namespace Netly
                 while (offset < buffer.LongLength)
                 {
                     var toWrite = (int)Math.Min(chunkSize, buffer.LongLength - offset);
-                    stream.WriteAsync(buffer, (int)offset, toWrite, cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    stream.Write(buffer, (int)offset, toWrite);
                     offset += toWrite;
                 }
             }
