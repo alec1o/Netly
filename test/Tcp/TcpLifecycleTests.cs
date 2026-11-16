@@ -179,6 +179,27 @@ public class TcpLifecycleTests
     }
 
     [Fact]
+    public async Task ClientReconnectIgnoresOldReceive()
+    {
+        var host = Net.TcpHost();
+        var server = new TCP.Server();
+        await server.To.Open(host);
+
+        var client = new TCP.Client();
+        Exception? error = null;
+        client.On.Error(e => error = e);
+
+        for (var i = 0; i < 100; i++)
+        {
+            await client.To.Open(host);
+            Assert.True(client.IsOpened, $"closed by old receive callback (round {i}) error: {error}");
+            await client.To.Close();
+        }
+
+        await server.To.Close();
+    }
+
+    [Fact]
     public async Task ClientConnectToClosedPortRaisesError()
     {
         var client = new TCP.Client();
@@ -254,6 +275,29 @@ public class TcpLifecycleTests
 
             await Wait.Until(() => closed == total, what: $"all clients closed (round {round})");
         }
+    }
+
+    [Fact]
+    public async Task IsOpenedDoesNotBlock()
+    {
+        const int total = 200;
+        var host = Net.TcpHost();
+        var server = new TCP.Server();
+        await server.To.Open(host);
+
+        var clients = Enumerable.Range(0, total).Select(_ => new TCP.Client()).ToList();
+        await Task.WhenAll(clients.Select(c => c.To.Open(host)));
+        await Wait.Until(() => server.Clients.Count == total, what: "all accepts");
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var opened = clients.Count(c => c.IsOpened) + server.Clients.Count(c => c.IsOpened);
+        watch.Stop();
+
+        Assert.Equal(total * 2, opened);
+        Assert.True(watch.ElapsedMilliseconds < 200, $"IsOpened took {watch.ElapsedMilliseconds} ms");
+
+        await Task.WhenAll(clients.Select(c => c.To.Close()));
+        await server.To.Close();
     }
 
     [Fact]

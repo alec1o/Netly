@@ -22,6 +22,7 @@ namespace Netly
             private readonly Server _server;
             private readonly Action<Client> _serverValidatorCallback;
             private readonly object _sendLock = new object();
+            private readonly object _closeLock = new object();
             private byte[] _buffer;
             private NFraming _framing;
 
@@ -128,10 +129,22 @@ namespace Netly
 
             public Task Close()
             {
-                if (_isOpening || _isClosing) return Task.CompletedTask;
+                return Close(null);
+            }
 
-                _isClosing = true;
-                _buffer = null;
+            // owner: socket of the connection that asks to close, null means the current one
+            private Task Close(Socket owner)
+            {
+                lock (_closeLock)
+                {
+                    // old connection must not close the current one
+                    if (owner != null && !ReferenceEquals(owner, _socket)) return Task.CompletedTask;
+
+                    if (_isOpening || _isClosing) return Task.CompletedTask;
+
+                    _isClosing = true;
+                    _buffer = null;
+                }
 
                 return Task.Run(() =>
                 {
@@ -263,9 +276,9 @@ namespace Netly
             {
                 try
                 {
-                    if (_socket == null || !_socket.Connected) return false;
-                    const int timeout = 5000;
-                    return !(_socket.Poll(timeout, SelectMode.SelectRead) && _socket.Available == 0);
+                    // remote close is detected by the receiver (read 0), it updates _isClosed
+                    var socket = _socket;
+                    return _isClosed is false && socket != null && socket.Connected;
                 }
                 catch
                 {
@@ -428,27 +441,34 @@ namespace Netly
 
             private void ReceiveTrigger()
             {
+                var owner = _socket;
+
                 try
                 {
                     var stream = IsEncrypted ? (Stream)_sslStream : (Stream)_netStream;
-                    stream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, null);
+                    stream.BeginRead(_buffer, 0, _buffer.Length, ReceiveHandler, owner);
                 }
                 catch (Exception e)
                 {
                     NLogger.Singleton.Submit(e);
-                    Close();
+                    Close(owner);
                 }
             }
 
             private void ReceiveHandler(IAsyncResult result)
             {
+                // callback of an old connection (reconnected), must not touch the new one
+                var owner = (Socket)result.AsyncState;
+
+                if (!ReferenceEquals(owner, _socket)) return;
+
                 try
                 {
                     var size = IsEncrypted ? _sslStream.EndRead(result) : _netStream.EndRead(result);
 
                     if (size <= 0)
                     {
-                        Close();
+                        Close(owner);
                         return;
                     }
 
@@ -470,7 +490,7 @@ namespace Netly
                 catch (Exception e)
                 {
                     NLogger.Singleton.Submit(e);
-                    Close();
+                    Close(owner);
                 }
             }
 
