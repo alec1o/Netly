@@ -188,7 +188,7 @@ public class RudpTests
     [Fact]
     public Task ReliableMessagesKeepOrderAndArriveOnce() => Guard.Run(() => ReliableOrder(2));
 
-    [Theory(Skip = "bug: RUDP hangs with 10+ quick reliable messages (see tasks.md, rudp audit)")]
+    [Theory]
     [InlineData(10)]
     [InlineData(50)]
     public Task ReliableManyMessagesKeepOrder(int total) => Guard.Run(() => ReliableOrder(total));
@@ -220,7 +220,7 @@ public class RudpTests
     [InlineData(8 * 1024)]
     public Task ReliablePayload(int size) => Guard.Run(() => LargePayload(size));
 
-    [Fact(Skip = "bug: RUDP does not fragment payloads of 64KB, never delivered (see tasks.md, rudp audit)")]
+    [Fact]
     public Task LargeReliablePayload() => Guard.Run(() => LargePayload(64 * 1024));
 
     private static async Task LargePayload(int size)
@@ -243,7 +243,7 @@ public class RudpTests
     [Fact]
     public Task ServerAcceptsTwoClients() => Guard.Run(() => AcceptClients(2));
 
-    [Theory(Skip = "bug: concurrent RUDP handshakes sometimes never complete (see tasks.md, rudp audit)")]
+    [Theory]
     [InlineData(5)]
     [InlineData(10)]
     public Task ServerAcceptsManyClients(int total) => Guard.Run(() => AcceptClients(total));
