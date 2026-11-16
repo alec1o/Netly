@@ -109,12 +109,18 @@ namespace Netly
 
                     _isClosed = false;
 
-                    InitReceiver();
-
                     _isOpening = false;
 
-                    // allow client send data on OnOpen callback.
-                    On.OnOpen?.Invoke(null, null);
+                    try
+                    {
+                        // allow client send data on OnOpen callback.
+                        On.OnOpen?.Invoke(null, null);
+                    }
+                    finally
+                    {
+                        // receive after open event, a fast remote close must not be ignored or come before it
+                        InitReceiver();
+                    }
                 }
                 catch (Exception e)
                 {
