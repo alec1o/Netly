@@ -18,8 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Byter\src\Byter.csproj" />
-        <PackageReference1 Include="Byter" Version="4.0.0"/>
+        <PackageReference Include="Byter" Version="4.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
