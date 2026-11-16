@@ -2,7 +2,7 @@ using System.Security.Authentication;
 
 using NetlyTest.Support;
 
-namespace NetlyTest.Package;
+namespace NetlyTest.Tcp;
 
 public class TcpClientTests
 {

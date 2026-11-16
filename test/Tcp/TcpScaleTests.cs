@@ -2,7 +2,7 @@ using TcpClient = Netly.TcpClient;
 using NetlyTest.Support;
 using Xunit.Abstractions;
 
-namespace NetlyTest.Package;
+namespace NetlyTest.Tcp;
 
 public class TcpScaleTests(ITestOutputHelper output)
 {

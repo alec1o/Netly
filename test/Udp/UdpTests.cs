@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using NetlyTest.Support;
 
-namespace NetlyTest.Package;
+namespace NetlyTest.Udp;
 
 public class UdpTests
 {

@@ -23,7 +23,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 
 <div align="center">
   <a href="#">
-    <img align="center" src="static/logo/netly-logo-3.png" width="128px" alt="netly logo">
+    <img align="center" src="doc/static/logo/netly-logo-3.png" width="128px" alt="netly logo">
   </a>
 </div>
 
@@ -195,7 +195,7 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
         <th><sub>Dependencies</sub></th>
 <td valign="top" align="left">
 <br>
-<a href="https://github.com/alec1o/Byter"><img alt="byter logo" src="static/Byter-logo-512/sprite_1.png" width="24px"> <sup><strong>
+<a href="https://github.com/alec1o/Byter"><img alt="byter logo" src="doc/static/Byter-logo-512/sprite_1.png" width="24px"> <sup><strong>
 Byter</strong></sup></a>
 <br>
 </td>
@@ -1342,7 +1342,7 @@ using Byter;
 
 </details>
 
-<a href="###"><img src="/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
+<a href="###"><img src="doc/static/transparent-horizontal-1px-2048px.png" width="100%"><a/>
 
 </td>
 

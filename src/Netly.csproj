@@ -12,8 +12,8 @@
         -->
 
         <Content Pack="true" PackagePath="." Include="../LICENSE.md"/>
-        <Content Pack="true" PackagePath="." Include="../static/nuget/README.md"/>
-        <Content Pack="true" PackagePath="." Include="../static/logo/netly-logo-3.png"/>
+        <Content Pack="true" PackagePath="." Include="../doc/static/nuget/README.md"/>
+        <Content Pack="true" PackagePath="." Include="../doc/static/logo/netly-logo-3.png"/>
 
     </ItemGroup>
 

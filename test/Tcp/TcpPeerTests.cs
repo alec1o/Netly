@@ -4,7 +4,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using NetlyTest.Support;
 
-namespace NetlyTest.Package;
+namespace NetlyTest.Tcp;
 
 public class TcpPeerTests
 {

@@ -3,7 +3,7 @@ using System.Security.Authentication;
 using System.Text;
 using NetlyTest.Support;
 
-namespace NetlyTest.Package;
+namespace NetlyTest.Tcp;
 
 public class TcpSecureTests
 {

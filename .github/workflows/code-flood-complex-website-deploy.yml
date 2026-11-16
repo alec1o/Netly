@@ -20,7 +20,7 @@ jobs:
         node-version: '20.15.0' # specify the node version you're using
 
     - name: Install Node.js dependencies (PNPM)
-      working-directory: docs/
+      working-directory: doc/
       run: |
         corepack enable
         corepack prepare pnpm@latest --activate
@@ -32,15 +32,15 @@ jobs:
         dotnet-version: '6.x'
 
     - name: Install DocFx
-      working-directory: docs/
+      working-directory: doc/
       run: dotnet tool install -g docfx
 
     - name: Install FxMarkdownGen (dfmg)
-      working-directory: docs/
+      working-directory: doc/
       run: dotnet tool install -g DocFxMarkdownGen
 
     - name: Generate API documentation
-      working-directory: docs/
+      working-directory: doc/
       run: |
         docfx
         dfmg
@@ -59,7 +59,7 @@ jobs:
         push_options: '--force' # rewrite docs branch with new content
 
     # - name: Force push documentation to `docs` branch of netly-docs repository
-    #   working-directory: docs/
+    #   working-directory: doc/
     #   run: |
     #     git config --global user.name 'Alecio Furanze (CODE FLOOD)'
     #     git config --global user.email 'i@alecio.me'
