@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Netly
@@ -26,6 +27,9 @@ namespace Netly
         private byte[] _certificate;
         private string _certificatePassword;
         private bool _isOpening, _isClosing;
+        private int _reopenId;
+        private Host _openHost;
+        private EventHandler<int> _onReopen;
         private NetworkStream _networkStream;
         private Action<bool> _onAccepted;
         private EventHandler _onOpen, _onClose;
@@ -50,6 +54,9 @@ namespace Netly
             IsSecure = false;
             IsFraming = false;
             IsServer = false;
+            ReopenEnabled = false;
+            ReopenAttempts = 5;
+            ReopenDelay = TimeSpan.FromSeconds(1);
             FramingSize = Framing.DefaultSize;
             Socket = null;
             Certificate = null;
@@ -91,22 +98,43 @@ namespace Netly
         ///     True while the connection is open.
         /// </summary>
         public bool IsOpened { get; private set; }
+
         /// <summary>
         ///     True when the connection uses TLS.
         /// </summary>
         public bool IsSecure { get; private set; }
+
         /// <summary>
         ///     True when each message is delimited, so one send is one <see cref="OnData" />.
         /// </summary>
         public bool IsFraming { get; }
+
         /// <summary>
         ///     True when this client was accepted by a <see cref="TcpServer" />.
         /// </summary>
         public bool IsServer { get; }
+
         /// <summary>
         ///     TLS protocols allowed for this connection.
         /// </summary>
         public SslProtocols SecureProtocol { get; private set; }
+
+        /// <summary>
+        ///     True when the client opens the connection again after it was lost.
+        ///     Use <see cref="UseAutoReopen" /> to change it.
+        /// </summary>
+        public bool ReopenEnabled { get; private set; }
+
+        /// <summary>
+        ///     How many times the client tries to open again after a connection is lost. -1 means no limit.
+        /// </summary>
+        public int ReopenAttempts { get; private set; }
+
+        /// <summary>
+        ///     Time to wait before each attempt to open again.
+        /// </summary>
+        public TimeSpan ReopenDelay { get; private set; }
+
         /// <summary>
         ///     Server name used to validate the certificate. Empty means the host address.
         /// </summary>
@@ -132,6 +160,7 @@ namespace Netly
         ///     The underlying socket. It is null while the client is closed.
         /// </summary>
         public Socket Socket { get; private set; }
+
         /// <summary>
         ///     The stream used to read and write. It is the TLS stream when <see cref="IsSecure" />.
         /// </summary>
@@ -140,6 +169,7 @@ namespace Netly
         ///     Address of the remote side.
         /// </summary>
         public Host Host { get; private set; }
+
         /// <summary>
         ///     Certificate sent to the server. It is null when none was set.
         /// </summary>
@@ -159,6 +189,15 @@ namespace Netly
         public void OnOpen(Action callback)
         {
             _onOpen += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
+        }
+
+        /// <summary>
+        ///     Called before each attempt to open the connection again, with the number of the attempt (starts at 1).
+        ///     <see cref="OnOpen" /> is called when an attempt works, <see cref="OnError" /> when it fails.
+        /// </summary>
+        public void OnReopen(Action<int> callback)
+        {
+            _onReopen += (sender, attempt) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(attempt));
         }
 
         /// <summary>
@@ -215,6 +254,31 @@ namespace Netly
             if (callback == null) return;
 
             _onSecure.Add(callback);
+        }
+
+        /// <summary>
+        ///     Enables or disables opening the connection again when it is lost, for example when the server closes it.
+        ///     It does not happen after <see cref="Close()" /> and it must be called before <see cref="Open" />.
+        /// </summary>
+        /// <param name="enabled">True to open the connection again.</param>
+        /// <param name="attempts">Maximum number of attempts for each lost connection. -1 means no limit.</param>
+        /// <param name="delay">Time to wait before each attempt. Null means one second.</param>
+        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is invalid.</exception>
+        public void UseAutoReopen(bool enabled, int attempts = 5, TimeSpan? delay = null)
+        {
+            if (IsOpened || IsServer)
+                throw new InvalidOperationException($"Must not modify ({nameof(ReopenEnabled)}) while socket is Opened.");
+
+            if (attempts == 0 || attempts < -1)
+                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
+
+            if (delay < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
+
+            ReopenEnabled = enabled;
+            ReopenAttempts = attempts;
+            ReopenDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
@@ -340,6 +404,9 @@ namespace Netly
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
+            // a new Open replaces any pending reopen
+            Interlocked.Increment(ref _reopenId);
+
             _ = OpenAsync(host);
         }
 
@@ -378,7 +445,11 @@ namespace Netly
                     _networkStream = networkStream;
                     Socket = socket;
                     Host = new Host(socket.RemoteEndPoint);
+                    _openHost = host;
                     IsOpened = true;
+
+                    // Open can be called again from the OnOpen callback
+                    _isOpening = false;
                 }
 
                 _framing.Open();
@@ -421,6 +492,9 @@ namespace Netly
         /// </summary>
         public void Close()
         {
+            // user close never opens again
+            Interlocked.Increment(ref _reopenId);
+
             Socket owner;
 
             lock (_locker)
@@ -430,7 +504,7 @@ namespace Netly
 
             if (owner == null) return;
 
-            Task.Run(() => Close(owner));
+            Task.Run(() => Close(owner, true));
         }
 
         internal void OnAccepted(Action<bool> callback)
@@ -629,7 +703,16 @@ namespace Netly
         {
             Logger.Singleton.Submit(e);
             _onError?.Invoke(null, e);
-            Close();
+
+            Socket owner;
+
+            lock (_locker)
+            {
+                owner = Socket;
+            }
+
+            // connection lost, not closed by the user
+            if (owner != null) Task.Run(() => Close(owner));
         }
 
         /* ---- RECEIVE --- */
@@ -685,7 +768,7 @@ namespace Netly
             catch (Exception e)
             {
                 // connection closed by this side or by the peer
-                if (IsOpened) Logger.Singleton.Submit(e);
+                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
                 Close(owner);
             }
         }
@@ -731,8 +814,10 @@ namespace Netly
         /* ---- CLOSE --- */
 
         // owner avoids an old connection closing a new one.
-        private void Close(Socket owner)
+        private void Close(Socket owner, bool byUser = false)
         {
+            var id = Volatile.Read(ref _reopenId);
+
             lock (_locker)
             {
                 if (_isClosing || IsOpened is false || ReferenceEquals(Socket, owner) is false) return;
@@ -764,6 +849,30 @@ namespace Netly
 
                 _onClose?.Invoke(null, null);
             }
+
+            if (byUser is false && ReopenEnabled && IsServer is false) Reopen(_openHost, id);
+        }
+
+        // closes made by the user change _reopenId, so the connection is only opened again when the id is the same
+        private void Reopen(Host host, int id)
+        {
+            if (host == null) return;
+
+            Task.Run(async () =>
+            {
+                for (var attempt = 1; ReopenAttempts < 0 || attempt <= ReopenAttempts; attempt++)
+                {
+                    await Task.Delay(ReopenDelay);
+
+                    if (Volatile.Read(ref _reopenId) != id || IsOpened) return;
+
+                    _onReopen?.Invoke(null, attempt);
+
+                    await OpenAsync(host);
+
+                    if (IsOpened) return;
+                }
+            });
         }
 
         /* ---- TLS --- */

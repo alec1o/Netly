@@ -68,14 +68,17 @@ namespace Netly
         ///     True while the server is listening.
         /// </summary>
         public bool IsOpened { get; private set; }
+
         /// <summary>
         ///     True when the server uses TLS.
         /// </summary>
         public bool IsSecure { get; private set; }
+
         /// <summary>
         ///     True when each message is delimited, so one send is one <see cref="TcpClient.OnData" />.
         /// </summary>
         public bool IsFraming { get; }
+
         /// <summary>
         ///     True when clients without TLS are accepted on a secure server.
         /// </summary>
@@ -115,14 +118,17 @@ namespace Netly
         ///     The listening socket. It is null while the server is closed.
         /// </summary>
         public Socket Socket { get; private set; }
+
         /// <summary>
         ///     Address where the server is listening.
         /// </summary>
         public Host Host { get; private set; }
+
         /// <summary>
         ///     Server certificate. It is null when TLS is not used.
         /// </summary>
         public X509Certificate Certificate { get; private set; }
+
         /// <summary>
         ///     TLS protocols allowed for the clients.
         /// </summary>
@@ -279,6 +285,9 @@ namespace Netly
                         Socket = socket;
                         _clients = new List<TcpClient>();
                         IsOpened = true;
+
+                        // Open can be called again from the OnOpen callback
+                        _isOpening = false;
                     }
 
                     _onOpen?.Invoke(null, null);
