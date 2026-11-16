@@ -257,7 +257,7 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Enables or disables opening the connection again when it is lost, for example when the server closes it.
+        ///     Enables or disables opening the connection again when it is lost (for example when the server closes it) or when the first open fails.
         ///     It does not happen after <see cref="Close()" /> and it must be called before <see cref="Open" />.
         /// </summary>
         /// <param name="enabled">True to open the connection again.</param>
@@ -405,13 +405,13 @@ namespace Netly
             if (host == null) throw new ArgumentNullException(nameof(host));
 
             // a new Open replaces any pending reopen
-            Interlocked.Increment(ref _reopenId);
+            var id = Interlocked.Increment(ref _reopenId);
 
-            _ = OpenAsync(host);
+            _ = OpenAsync(host, id, false);
         }
 
         // every failure goes to OnError, it never throws
-        private async Task OpenAsync(Host host)
+        private async Task OpenAsync(Host host, int id, bool isAttempt)
         {
             lock (_locker)
             {
@@ -480,6 +480,10 @@ namespace Netly
 
                 Logger.Singleton.Submit(e);
                 _onError?.Invoke(null, e);
+
+                // an attempt that fails is handled by the loop of the reopen
+                if (isAttempt is false && ReopenEnabled && IsServer is false && Volatile.Read(ref _reopenId) == id)
+                    Reopen(host, id);
             }
             finally
             {
@@ -868,7 +872,7 @@ namespace Netly
 
                     _onReopen?.Invoke(null, attempt);
 
-                    await OpenAsync(host);
+                    await OpenAsync(host, id, true);
 
                     if (IsOpened) return;
                 }
