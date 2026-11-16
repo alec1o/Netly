@@ -95,6 +95,9 @@ namespace Netly
                 {
                     _socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                    // small messages must not wait for nagle and delayed ack (~80ms), On.Modify can change it
+                    _socket.NoDelay = true;
+
                     On.OnModify?.Invoke(null, _socket);
 
                     await _socket.ConnectAsync(host.Address, host.Port);

@@ -219,6 +219,8 @@ namespace Netly
                     {
                         var socket = _socket.EndAccept(result);
 
+                        socket.NoDelay = true;
+
                         var client = new Client(socket, _server, it =>
                         {
                             it.On.Close(() =>

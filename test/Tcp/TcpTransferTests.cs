@@ -42,6 +42,31 @@ public class TcpTransferTests
     }
 
     [Fact]
+    public async Task SmallMessagesPingPongIsFast()
+    {
+        const int rounds = 100;
+        var (server, host) = await EchoServer();
+        var client = new TCP.Client();
+        var pong = new SemaphoreSlim(0);
+        client.On.Data(_ => pong.Release());
+        await client.To.Open(host);
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        for (var i = 0; i < rounds; i++)
+        {
+            client.To.Data("ping");
+            Assert.True(await pong.WaitAsync(TimeSpan.FromSeconds(5)), $"round {i}");
+        }
+
+        // nagle + delayed ack made every round about 80 ms
+        Assert.True(watch.ElapsedMilliseconds / rounds < 20, $"{watch.ElapsedMilliseconds / rounds} ms by round trip");
+
+        await client.To.Close();
+        await server.To.Close();
+    }
+
+    [Fact]
     public async Task EchoEvent()
     {
         var (server, host) = await EchoServer();
