@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -15,14 +15,19 @@ namespace Netly
     {
         private class ServerTo : IRUDP.ServerTo
         {
-            private readonly List<Client> _clients = new List<Client>();
-            private readonly object _clientsLocker = new object();
+            private class Session
+            {
+                public Connection Connection;
+                public Client Client;
+            }
+
+            private readonly Dictionary<IPEndPoint, Session> _sessions = new Dictionary<IPEndPoint, Session>();
+            private readonly object _locker = new object();
             private readonly Server _server;
             private bool _isOpeningOrClosing, _isClosed;
             private Socket _socket;
-            private int _handshakeTimeout;
-            private int _noResponseTimeout;
-            private const bool UseConnectionSecurity = true;
+            private int _handshakeTimeout = 5000;
+            private int _noResponseTimeout = 5000;
 
             public ServerTo(Server server)
             {
@@ -31,8 +36,6 @@ namespace Netly
                 _socket = null;
                 _isOpeningOrClosing = false;
                 _isClosed = true;
-                _handshakeTimeout = 5000; // 5s 
-                _noResponseTimeout = 5000; // 5s
             }
 
             public NHost Host { get; private set; }
@@ -41,87 +44,81 @@ namespace Netly
 
             public Task Open(NHost host)
             {
-                if (!_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
-
-                _isOpeningOrClosing = true;
-
-                return Task.Run(() =>
+                lock (_locker)
                 {
-                    try
-                    {
-                        _socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                    if (!_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
 
-                        On.OnModify?.Invoke(null, _socket);
+                    _isOpeningOrClosing = true;
+                }
 
-                        _socket.Bind(host.EndPoint);
+                try
+                {
+                    var socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
-                        Host = new NHost(_socket.LocalEndPoint);
+                    On.OnModify?.Invoke(null, socket);
 
-                        _isClosed = false;
+                    Tune(socket);
 
-                        InitAccept();
+                    socket.Bind(host.EndPoint);
 
-                        On.OnOpen?.Invoke(null, null);
-                    }
-                    catch (Exception e)
-                    {
-                        NLogger.Singleton.Submit(e);
-                        _isClosed = true;
-                        On.OnError?.Invoke(null, e);
-                    }
-                    finally
-                    {
-                        _isOpeningOrClosing = false;
-                    }
-                });
+                    Host = new NHost(socket.LocalEndPoint);
+
+                    _socket = socket;
+                    _isClosed = false;
+
+                    new Thread(() => Accept(socket)) { IsBackground = true }.Start();
+
+                    On.OnOpen?.Invoke(null, null);
+                }
+                catch (Exception e)
+                {
+                    NLogger.Singleton.Submit(e);
+                    _isClosed = true;
+                    On.OnError?.Invoke(null, e);
+                }
+                finally
+                {
+                    _isOpeningOrClosing = false;
+                }
+
+                return Task.CompletedTask;
             }
 
             public Task Close()
             {
-                if (_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
+                Session[] sessions;
+                Socket socket;
 
-                _isOpeningOrClosing = true;
-
-                return Task.Run(() =>
+                lock (_locker)
                 {
-                    try
-                    {
-                        try
-                        {
-                            // datagram socket is not connected, shutdown can throw and skip the close
-                            _socket?.Shutdown(SocketShutdown.Both);
-                        }
-                        catch (SocketException)
-                        {
-                        }
+                    if (_isClosed || _isOpeningOrClosing) return Task.CompletedTask;
 
-                        Client[] clients;
+                    _isOpeningOrClosing = true;
+                    _isClosed = true;
+                    socket = _socket;
+                    sessions = _sessions.Values.ToArray();
+                    _sessions.Clear();
+                }
 
-                        lock (_clientsLocker)
-                        {
-                            clients = _clients.ToArray();
-                            _clients.Clear();
-                        }
+                try
+                {
+                    // clients receive the close notice before the socket is closed
+                    foreach (var session in sessions) session.Connection.Close();
 
-                        if (clients.Length > 0)
-                            foreach (var client in clients)
-                                client.To.Close().Wait();
+                    socket?.Close();
+                }
+                catch (Exception e)
+                {
+                    NLogger.Singleton.Submit(e);
+                }
+                finally
+                {
+                    _socket = null;
+                    _isOpeningOrClosing = false;
+                    On.OnClose?.Invoke(null, null);
+                }
 
-                        _socket?.Close();
-                        _socket?.Dispose();
-                    }
-                    catch (Exception e)
-                    {
-                        NLogger.Singleton.Submit(e);
-                    }
-                    finally
-                    {
-                        _socket = null;
-                        _isClosed = true;
-                        _isOpeningOrClosing = false;
-                        On.OnClose?.Invoke(null, null);
-                    }
-                });
+                return Task.CompletedTask;
             }
 
             public void DataBroadcast(byte[] data, MessageType messageType)
@@ -133,228 +130,175 @@ namespace Netly
 
             public void DataBroadcast(string data, MessageType messageType)
             {
-                if (!IsOpened || data == null || data.Length <= 0) return;
+                if (string.IsNullOrEmpty(data)) return;
 
-                Broadcast(data.GetBytes(), messageType);
+                DataBroadcast(data.GetBytes(), messageType);
             }
 
             public void DataBroadcast(string data, MessageType messageType, Encoding encoding)
             {
-                if (!IsOpened || data == null || data.Length <= 0) return;
+                if (string.IsNullOrEmpty(data)) return;
 
-                Broadcast(data.GetBytes(encoding), messageType);
+                DataBroadcast(data.GetBytes(encoding), messageType);
             }
 
             public void EventBroadcast(string name, byte[] data, MessageType messageType)
             {
-                if (!IsOpened || name == null || name.Length <= 0 || data == null || data.Length <= 0) return;
+                if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                Broadcast(name, data, messageType);
+                Broadcast(NHelper.ArrayConcat(NMessage.Create(name, data.LongLength), data), messageType);
             }
 
             public void EventBroadcast(string name, string data, MessageType messageType)
             {
-                if (!IsOpened || name == null || name.Length <= 0 || data == null || data.Length <= 0) return;
+                if (string.IsNullOrEmpty(data)) return;
 
-                Broadcast(name, data.GetBytes(), messageType);
+                EventBroadcast(name, data.GetBytes(), messageType);
             }
 
             public void EventBroadcast(string name, string data, MessageType messageType, Encoding encoding)
             {
-                if (!IsOpened || name == null || name.Length <= 0 || data == null || data.Length <= 0) return;
+                if (string.IsNullOrEmpty(data)) return;
 
-                Broadcast(name, data.GetBytes(encoding), messageType);
+                EventBroadcast(name, data.GetBytes(encoding), messageType);
             }
 
             public IRUDP.Client[] GetClients()
             {
-                lock (_clientsLocker)
+                lock (_locker)
                 {
-                    return _clients.Where(x => x.IsOpened).Select(x => (IRUDP.Client)x).ToArray();
+                    return _sessions.Values.Where(x => x.Connection.IsOpened).Select(x => (IRUDP.Client)x.Client)
+                        .ToArray();
                 }
             }
 
             private void Broadcast(byte[] data, MessageType messageType)
             {
-                try
+                Session[] sessions;
+
+                lock (_locker)
                 {
-                    Client[] clients;
-
-                    lock (_clientsLocker)
-                    {
-                        clients = _clients.ToArray();
-                    }
-
-                    if (clients.Length <= 0) return;
-                    
-                    foreach (var client in clients)
-                        client?.To.Data(data, messageType);
-                }
-                catch (Exception e)
-                {
-                    NLogger.Singleton.Submit(e);
-                }
-            }
-
-            private void Broadcast(string name, byte[] data, MessageType messageType)
-            {
-                try
-                {
-                    Client[] clients;
-
-                    lock (_clientsLocker)
-                    {
-                        clients = _clients.ToArray();
-                    }
-
-                    if (clients.Length <= 0) return;
-                    
-                    foreach (var client in clients)
-                        client?.To.Event(name, data, messageType);
-                }
-                catch (Exception e)
-                {
-                    NLogger.Singleton.Submit(e);
-                }
-            }
-
-
-            private void InitAccept()
-            {
-                var length = (int)_socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
-                var buffer = new byte[length > 0 ? length : 4096];
-
-                new Thread(Accept) { IsBackground = true }.Start();
-
-                return;
-
-                void Accept()
-                {
-                    while (IsOpened)
-                    {
-                        try
-                        {
-                            var endpoint = NHost.Default.EndPoint;
-
-                            var size = _socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None,
-                                ref endpoint);
-
-                            if (size <= 0) continue;
-
-                            var bytes = new byte[size];
-
-                            Array.Copy(buffer, 0, bytes, 0, bytes.Length);
-
-                            EndAccept(endpoint, bytes);
-                        }
-                        catch (Exception e)
-                        {
-                            NLogger.Singleton.Submit(e);
-                        }
-                    }
-
-                    Close();
+                    sessions = _sessions.Values.ToArray();
                 }
 
-                void EndAccept(EndPoint endpoint, byte[] data)
-                {
+                foreach (var session in sessions)
                     try
                     {
-                        var host = new NHost(endpoint);
-                        Client client;
-                        
-                        lock (_clientsLocker)
-                        {
-                            // find client
-                            client = _clients.FirstOrDefault(x => host.Equals(x.Host));
-                        }
-
-                        // use existent context
-                        if (client != null)
-                        {
-                            client.InjectBuffer(ref data);
-                            return;
-                        }
-
-                        #region Prevent Invalid Data
-
-                        if (UseConnectionSecurity)
-                        {
-                            // detect expired data
-                            if (data.Length == 1)
-                            {
-                                if (data[0] == Channel.PingPackageBytes[0])
-                                {
-                                    // this client already disconnected, can't receive ping
-                                    return;
-                                }
-
-                                if (data[0] == Channel.ClosePackageBytes[0])
-                                {
-                                    // this client already disconnected, ignore this package
-                                    return;
-                                }
-                            }
-                        }
-
-                        #endregion
-
-                        // create new context
-                        client = new Client(host, _socket)
-                        {
-                            HandshakeTimeout = GetHandshakeTimeout(),
-                            NoResponseTimeout = GetNoResponseTimeout()
-                        };
-
-                        // save context
-                        lock (_clientsLocker)
-                        {
-                            _clients.Add(client);
-                        }
-
-                        client.StartServerSideConnection(isConnected =>
-                        {
-                            if (!isConnected)
-                            {
-                                // remove client from client list
-                                lock (_clientsLocker)
-                                {
-                                    _clients.Remove(client);
-                                }
-
-                                client.To.Close();
-                            }
-                            else // connected successful
-                            {
-                                client.On.Close(() =>
-                                {
-                                    // connection closed
-                                    lock (_clientsLocker)
-                                    {
-                                        _clients.Remove(client);
-                                    }
-
-                                    client = null;
-                                });
-
-                                // invoke new client
-                                On.OnAccept?.Invoke(null, client);
-
-                                // start client connection callback
-                                client._on?.OnModify(null, _socket);
-                                client._on?.OnOpen(null, null);
-                            }
-                        });
-
-                        if (client.IsOpened)
-                        {
-                            client.InjectBuffer(ref data);
-                        }
+                        session.Connection.Send(data, messageType);
                     }
                     catch (Exception e)
                     {
                         NLogger.Singleton.Submit(e);
                     }
+            }
+
+            /* ---- ACCEPT --- */
+
+            private static void Tune(Socket socket)
+            {
+                try
+                {
+                    socket.ReceiveBufferSize = 4 * 1024 * 1024;
+                    socket.SendBufferSize = 4 * 1024 * 1024;
+                }
+                catch (Exception)
+                {
+                    // the system keeps the default size
+                }
+
+                try
+                {
+                    // windows: don't fail the receive when a client is gone (icmp port unreachable)
+                    socket.IOControl(-1744830452, new byte[] { 0 }, null);
+                }
+                catch (Exception)
+                {
+                    // not windows
+                }
+            }
+
+            private void Accept(Socket socket)
+            {
+                var buffer = new byte[ushort.MaxValue];
+                var any = socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
+
+                while (!_isClosed)
+                    try
+                    {
+                        EndPoint endpoint = new IPEndPoint(any, 0);
+
+                        var size = socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref endpoint);
+
+                        if (size > 0) Dispatch((IPEndPoint)endpoint, buffer, size);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        break;
+                    }
+                    catch (SocketException e)
+                    {
+                        // client gone (connection reset), the socket still works
+                        if (_isClosed || e.SocketErrorCode == SocketError.Interrupted) break;
+                    }
+                    catch (Exception e)
+                    {
+                        NLogger.Singleton.Submit(e);
+                    }
+            }
+
+            private void Dispatch(IPEndPoint endpoint, byte[] data, int size)
+            {
+                Session session;
+
+                lock (_locker)
+                {
+                    _sessions.TryGetValue(endpoint, out session);
+                }
+
+                if (session != null)
+                {
+                    session.Connection.Receive(data, size);
+                    return;
+                }
+
+                // only a valid syn creates a connection
+                if (!Wire.IsSyn(data, size)) return;
+
+                var remote = new IPEndPoint(endpoint.Address, endpoint.Port);
+                var connection = new Connection(_socket, remote, true)
+                {
+                    HandshakeTimeout = _handshakeTimeout,
+                    NoResponseTimeout = _noResponseTimeout
+                };
+                var client = new Client(connection, new NHost(remote));
+
+                session = new Session { Connection = connection, Client = client };
+
+                connection.OnOpen += () =>
+                {
+                    On.OnAccept?.Invoke(null, client);
+                    client._on.OnModify?.Invoke(null, _socket);
+                    client._on.OnOpen?.Invoke(null, null);
+                };
+                connection.OnOpenFail += _ => Remove(remote, connection);
+                connection.OnClose += () => Remove(remote, connection);
+
+                lock (_locker)
+                {
+                    if (_isClosed) return;
+
+                    _sessions[remote] = session;
+                }
+
+                connection.Receive(data, size);
+            }
+
+            private void Remove(IPEndPoint endpoint, Connection connection)
+            {
+                lock (_locker)
+                {
+                    if (_sessions.TryGetValue(endpoint, out var session) && session.Connection == connection)
+                        _sessions.Remove(endpoint);
                 }
             }
 
@@ -396,7 +340,7 @@ namespace Netly
                 if (value < 1000)
                     throw new Exception
                     (
-                        $"Isn't possible use {nameof(SetNoResponseTimeout)} with value less than `2000`"
+                        $"Isn't possible use {nameof(SetNoResponseTimeout)} with value less than `1000`"
                     );
 
                 _noResponseTimeout = value;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Sockets;
 using Netly.Interfaces;
 
@@ -17,9 +17,11 @@ namespace Netly
                 _to = new ClientTo(this);
             }
 
-            public Client(NHost host, Socket socket) : this()
+            // server side client
+            internal Client(Connection connection, NHost host)
             {
-                _to = new ClientTo(this, host, socket);
+                _on = new ClientOn();
+                _to = new ClientTo(this, connection, host);
             }
 
             public bool IsOpened => _to.IsOpened;
@@ -40,15 +42,6 @@ namespace Netly
                 set => _to.SetNoResponseTimeout(value);
             }
 
-            internal void InjectBuffer(ref byte[] bytes)
-            {
-                _to.InjectBuffer(ref bytes);
-            }
-
-            internal void StartServerSideConnection(Action<bool> callback)
-            {
-                _to.StartServerSideConnection(ref callback);
-            }
         }
     }
 }
