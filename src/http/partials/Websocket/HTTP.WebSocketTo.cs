@@ -19,6 +19,7 @@ namespace Netly
             /// </summary>
             private static readonly object CONNECT_LOCKER = new object();
 
+            private readonly SemaphoreSlim _sendLocker = new SemaphoreSlim(1, 1);
             private readonly bool _isServerSide;
             private readonly WebSocket _socket;
             public readonly Dictionary<string, string> Headers = new Dictionary<string, string>();
@@ -61,25 +62,9 @@ namespace Netly
 
                 return Task.Run(async () =>
                 {
-                    Thread.Sleep(500);
-
                     try
                     {
-                        ClientWebSocket ws;
-
-                        lock (CONNECT_LOCKER)
-                        {
-                            // Why is this lock necessary?
-                            // When creating multiple WebSocket clients in quick succession, the operating system may reuse the same 
-                            // local port for different connections before fully releasing the previous ones. This happens because 
-                            // ephemeral port allocation is fast but not always synchronized optimally for high-concurrency scenarios.
-                            //
-                            // By using this global lock (via CONNECT_LOCKER) and introducing a small delay, we allow the OS enough 
-                            // time to properly assign unique local ports for each connection. This effectively prevents port reuse 
-                            // issues and connection instability under heavy load.
-                            Thread.Sleep(TimeSpan.FromMilliseconds(byte.MaxValue)); // (Only client side)
-                            ws = new ClientWebSocket();
-                        }
+                        var ws = new ClientWebSocket();
 
                         foreach (var header in Headers) ws.Options.SetRequestHeader(header.Key, header.Value);
 
@@ -94,6 +79,9 @@ namespace Netly
                         _websocket = ws;
 
                         _socket._on.OnOpen?.Invoke(null, null);
+
+                        // receiver can close right now, connecting is done
+                        _tryConnecting = false;
 
                         _ReceiveData();
                     }
@@ -228,35 +216,35 @@ namespace Netly
                 Send(messageType, header, bytes);
             }
 
-            private void Send(HTTP.MessageType type, params byte[][] buffers)
+            private async void Send(HTTP.MessageType type, params byte[][] buffers)
             {
                 if (IsConnected() is false || buffers == null || buffers.Length <= 0) return;
 
                 var messageType = type == MessageType.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
-                // Is Always true because our send all buffer on same moment is internal
-                // behaviour that will parse the data and put EndOfMessage=true when send last fragment of buffer
-                const bool endOfMessage = true;
 
-                foreach (var buffer in buffers)
+                // event header and body must be the same websocket message
+                var messageContent = new ArraySegment<byte>(buffers.Length == 1 ? buffers[0] : NHelper.ArrayConcat(buffers));
+
+                try
                 {
-                    var messageContent = new ArraySegment<byte>(buffer);
+                    // websocket allows only one outstanding send
+                    await _sendLocker.WaitAsync();
 
-                    if (_isServerSide)
-                        _websocketServerSide.SendAsync
-                        (
-                            messageContent,
-                            messageType,
-                            endOfMessage,
-                            CancellationToken.None
-                        );
-                    else
-                        _websocket.SendAsync
-                        (
-                            messageContent,
-                            messageType,
-                            endOfMessage,
-                            CancellationToken.None
-                        );
+                    try
+                    {
+                        if (_isServerSide)
+                            await _websocketServerSide.SendAsync(messageContent, messageType, true, CancellationToken.None);
+                        else
+                            await _websocket.SendAsync(messageContent, messageType, true, CancellationToken.None);
+                    }
+                    finally
+                    {
+                        _sendLocker.Release();
+                    }
+                }
+                catch (Exception e)
+                {
+                    NLogger.Singleton.Submit(e);
                 }
             }
 
@@ -278,6 +266,7 @@ namespace Netly
                 {
                     const int size = 1024 * 8;
                     var buffer = new ArraySegment<byte>(new byte[size], 0, size);
+                    var fragments = new System.IO.MemoryStream();
 
                     while (_socket.IsOpened)
                     {
@@ -291,9 +280,17 @@ namespace Netly
                             break;
                         }
 
-                        var data = new byte[result.Count];
+                        fragments.Write(buffer.Array, 0, result.Count);
 
-                        Array.Copy(buffer.Array, 0, data, 0, data.Length);
+                        if (fragments.Length > NFraming.DefaultSize)
+                            throw new InvalidOperationException($"{nameof(fragments)}: {fragments.Length}");
+
+                        // wait the end of message
+                        if (!result.EndOfMessage) continue;
+
+                        var data = fragments.ToArray();
+
+                        fragments.SetLength(0);
 
                         var messageType = result.MessageType == WebSocketMessageType.Text
                             ? MessageType.Text
@@ -306,7 +303,7 @@ namespace Netly
                         {
                             var reference = new byte[message.Length];
                             message.Position = 0;
-                            await message.WriteAsync(reference, 0, reference.Length);
+                            await message.ReadAsync(reference, 0, reference.Length);
                             // Is Netly Event
                             _socket._on.OnEvent?.Invoke(null, (name, reference, messageType));
                         }
