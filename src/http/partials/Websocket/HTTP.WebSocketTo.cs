@@ -79,10 +79,13 @@ namespace Netly
 
                         _websocket = ws;
 
-                        _socket._on.OnOpen?.Invoke(null, null);
+                        // connecting is done, the user can close (or open again) inside OnOpen
+                        lock (_closeLocker)
+                        {
+                            _tryConnecting = false;
+                        }
 
-                        // receiver can close right now, connecting is done
-                        _tryConnecting = false;
+                        _socket._on.OnOpen?.Invoke(null, null);
 
                         _ReceiveData();
                     }
