@@ -31,6 +31,7 @@ namespace Netly
           //  public IFraming Framing { get; }
             public X509Certificate Certificate => _to.Certificate;
             public SslProtocols EncryptionProtocol => _to.EncryptionProtocol;
+            public bool ClientCertificateRequired => _to.ClientCertificateRequired;
             public bool IsEncrypted => _to.IsEncrypted;
             public ITCP.ServerTo To => _to;
             public ITCP.ServerOn On => _on;

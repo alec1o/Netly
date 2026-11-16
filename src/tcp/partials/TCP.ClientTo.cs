@@ -321,7 +321,7 @@ namespace Netly
 
                         await _sslStream.AuthenticateAsServerAsync
                         (
-                            clientCertificateRequired: false, // TODO: clientCertificateRequired is optional
+                            clientCertificateRequired: _server.ClientCertificateRequired,
                             checkCertificateRevocation: true,
                             serverCertificate: _server.Certificate,
                             enabledSslProtocols: _server.EncryptionProtocol

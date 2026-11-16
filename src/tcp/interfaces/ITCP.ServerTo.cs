@@ -12,6 +12,17 @@ namespace Netly.Interfaces
             Task Open(NHost host, int backlog);
             Task Close();
             void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols);
+
+            /// <summary>
+            ///     Enable SSL/TLS on server
+            /// </summary>
+            /// <param name="enableEncryption">Enable or disable encryption</param>
+            /// <param name="pfxCertificate">Server certificate (pfx)</param>
+            /// <param name="pfxPassword">Server certificate password</param>
+            /// <param name="protocols">Allowed SSL/TLS protocols</param>
+            /// <param name="clientCertificateRequired">Reject clients that do not present a valid certificate</param>
+            void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword, SslProtocols protocols,
+                bool clientCertificateRequired);
             
             /// <summary>
             ///     Use to send raw data to all connected clients

@@ -17,6 +17,7 @@ namespace Netly.Interfaces
            // IFraming Framing { get; }
             X509Certificate Certificate { get; }
             SslProtocols EncryptionProtocol { get; }
+            bool ClientCertificateRequired { get; }
             bool IsEncrypted { get; }
             ServerTo To { get; }
             ServerOn On { get; }

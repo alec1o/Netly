@@ -80,6 +80,64 @@ public class TcpTlsTests
     }
 
     [Fact]
+    public async Task ClientCertificateIsNotRequiredByDefault()
+    {
+        var (server, host) = await SecureServer();
+        var client = new TCP.Client();
+        var echoed = Wait.Signal<string>();
+        client.To.Encryption(true);
+        client.On.Encryption((_, _, _) => true);
+        client.On.Data(s => echoed.TrySetResult(System.Text.Encoding.UTF8.GetString(s.GetBytes())));
+
+        await client.To.Open(host);
+        client.To.Data("hello");
+
+        Assert.Equal("hello", await Wait.For(echoed, what: "echo without client certificate"));
+
+        await client.To.Close();
+        await server.To.Close();
+    }
+
+    [Fact]
+    public async Task ClientCertificateRequired_RejectsClientWithoutCertificate()
+    {
+        var host = Net.TcpHost();
+        var server = new TCP.Server();
+        server.On.Accept(client => client.On.Data(s => client.To.Data(s.GetBytes())));
+        server.To.Encryption(true, File.ReadAllBytes("certificate.p12"), "alecio", SslProtocols.Tls12, true);
+        await server.To.Open(host);
+
+        var client = new TCP.Client();
+        var echoed = 0;
+        client.To.Encryption(true);
+        client.On.Encryption((_, _, _) => true);
+        client.On.Data(_ => Interlocked.Increment(ref echoed));
+
+        await client.To.Open(host);
+        client.To.Data("hello");
+
+        await Wait.Never(() => echoed > 0, TimeSpan.FromSeconds(1), "client without certificate served");
+
+        await client.To.Close();
+        await server.To.Close();
+    }
+
+    [Fact]
+    public void ClientCertificateRequired_CannotChangeWhileOpened()
+    {
+        var host = Net.TcpHost();
+        var server = new TCP.Server();
+        var pfx = File.ReadAllBytes("certificate.p12");
+        server.To.Encryption(true, pfx, "alecio", SslProtocols.Tls12, true);
+        server.To.Open(host).GetAwaiter().GetResult();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            server.To.Encryption(true, pfx, "alecio", SslProtocols.Tls12, false));
+
+        server.To.Close().GetAwaiter().GetResult();
+    }
+
+    [Fact]
     public async Task ManyEncryptedClients_EchoIndependently()
     {
         const int total = 10;

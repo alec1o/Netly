@@ -21,6 +21,7 @@ namespace Netly
                 private byte[] _pfxCertificate;
                 private string _pfxPassword;
                 private SslProtocols _pfxCertificateProtocol;
+                private bool _clientCertificateRequired;
 
                 private bool
                     _isOpening,
@@ -53,6 +54,7 @@ namespace Netly
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate Certificate { get; private set; }
                 public SslProtocols EncryptionProtocol { get; private set; }
+                public bool ClientCertificateRequired { get; private set; }
                 public readonly List<ITCP.Client> Clients = new List<ITCP.Client>();
 
                 public Task Open(NHost host)
@@ -78,6 +80,7 @@ namespace Netly
                             {
                                 Certificate = new X509Certificate(_pfxCertificate, _pfxPassword);
                                 EncryptionProtocol = _pfxCertificateProtocol;
+                                ClientCertificateRequired = _clientCertificateRequired;
                                 IsEncrypted = _enableEncryption;
                             }
 
@@ -176,6 +179,12 @@ namespace Netly
                 public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
                     SslProtocols protocols)
                 {
+                    Encryption(enableEncryption, pfxCertificate, pfxPassword, protocols, false);
+                }
+
+                public void Encryption(bool enableEncryption, byte[] pfxCertificate, string pfxPassword,
+                    SslProtocols protocols, bool clientCertificateRequired)
+                {
                     if (IsOpened || _isClosing || _isOpening)
                         throw new InvalidOperationException
                         (
@@ -186,6 +195,7 @@ namespace Netly
                     _pfxCertificate = pfxCertificate;
                     _pfxPassword = pfxPassword;
                     _pfxCertificateProtocol = protocols;
+                    _clientCertificateRequired = clientCertificateRequired;
                 }
 
                 // ---
