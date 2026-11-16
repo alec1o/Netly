@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -23,10 +24,25 @@ namespace Netly
         /// <exception cref="FormatException">Thrown if the IP string is not a valid IP address.</exception>
         public Host(string ip, int port)
         {
-            if (!IPAddress.TryParse(ip, out var address))
+            if (string.IsNullOrWhiteSpace(ip))
                 throw new FormatException($"Invalid IP address: {ip}");
 
-            IPEndPoint = new IPEndPoint(address, port);
+            if (port < IPEndPoint.MinPort || port > IPEndPoint.MaxPort)
+                throw new ArgumentOutOfRangeException(nameof(port), $"{nameof(port)}: {port}");
+
+            // not an ip, keep as hostname and resolve later
+            if (IPAddress.TryParse(ip, out var address) is false)
+            {
+                // looks like an ip (digits and dots, or ipv6) but is invalid
+                if (Uri.CheckHostName(ip) != UriHostNameType.Dns || ip.Contains(":") || ip.Replace(".", "").All(char.IsDigit))
+                    throw new FormatException($"Invalid IP address: {ip}");
+
+                Name = ip;
+                _port = port;
+                return;
+            }
+
+            _endpoint = new IPEndPoint(address, port);
         }
 
         /// <summary>
@@ -36,7 +52,7 @@ namespace Netly
         public Host(EndPoint endpoint)
         {
             var temp = endpoint as IPEndPoint ?? throw new ArgumentException("EndPoint must be IPEndPoint");
-            IPEndPoint = new IPEndPoint(temp.Address, temp.Port);
+            _endpoint = new IPEndPoint(temp.Address, temp.Port);
         }
 
         /// <summary>
@@ -45,7 +61,7 @@ namespace Netly
         /// <param name="ipEndpoint">The IPEndPoint to copy.</param>
         public Host(IPEndPoint ipEndpoint)
         {
-            IPEndPoint = new IPEndPoint(ipEndpoint.Address, ipEndpoint.Port);
+            _endpoint = new IPEndPoint(ipEndpoint.Address, ipEndpoint.Port);
         }
 
         /// <summary>
@@ -55,7 +71,39 @@ namespace Netly
         /// <param name="port">The port number.</param>
         public Host(IPAddress address, int port)
         {
-            IPEndPoint = new IPEndPoint(address, port);
+            _endpoint = new IPEndPoint(address, port);
+        }
+
+        private readonly int _port;
+        private IPEndPoint _endpoint;
+
+        /// <summary>
+        ///     Returns the hostname when the host was created from a DNS name, otherwise null.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        ///     Returns true when the host has an IP address (always true for hosts created from an IP).
+        /// </summary>
+        public bool IsResolved => _endpoint != null;
+
+        /// <summary>
+        ///     Resolves the hostname to an IP address (first IPv4, then IPv6). Does nothing if already resolved.
+        /// </summary>
+        /// <exception cref="SocketException">Thrown if the hostname cannot be resolved.</exception>
+        public void Resolve()
+        {
+            if (IsResolved)
+                return;
+
+            var list = Dns.GetHostAddresses(Name);
+            var address = Array.Find(list, x => x.AddressFamily == AddressFamily.InterNetwork)
+                          ?? Array.Find(list, x => x.AddressFamily == AddressFamily.InterNetworkV6);
+
+            if (address == null)
+                throw new SocketException((int)SocketError.HostNotFound);
+
+            _endpoint = new IPEndPoint(address, _port);
         }
 
         /// <summary>
@@ -66,7 +114,7 @@ namespace Netly
         /// <summary>
         ///     Returns the port number of the host.
         /// </summary>
-        public int Port => IPEndPoint.Port;
+        public int Port => _endpoint?.Port ?? _port;
 
         /// <summary>
         ///     Returns the host as an <see cref="EndPoint" />.
@@ -76,7 +124,14 @@ namespace Netly
         /// <summary>
         ///     Returns the <see cref="IPEndPoint" /> representing this host.
         /// </summary>
-        public IPEndPoint IPEndPoint { get; }
+        public IPEndPoint IPEndPoint
+        {
+            get
+            {
+                Resolve();
+                return _endpoint;
+            }
+        }
 
         /// <summary>
         ///     Returns the address family of the host.
@@ -88,7 +143,7 @@ namespace Netly
         /// </summary>
         public override string ToString()
         {
-            return IPEndPoint.ToString();
+            return IsResolved ? _endpoint.ToString() : $"{Name}:{_port}";
         }
 
         /// <summary>
@@ -97,7 +152,13 @@ namespace Netly
         /// <param name="obj">The object to compare.</param>
         public override bool Equals(object obj)
         {
-            return obj is Host other && Address.Equals(other.Address) && Port == other.Port;
+            if (obj is Host other is false || Port != other.Port)
+                return false;
+
+            if (IsResolved && other.IsResolved)
+                return Address.Equals(other.Address);
+
+            return Name != null && string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -105,7 +166,7 @@ namespace Netly
         /// </summary>
         public override int GetHashCode()
         {
-            return IPEndPoint == null ? 0 : IPEndPoint.GetHashCode();
+            return IsResolved ? _endpoint.GetHashCode() : (Name.ToLowerInvariant().GetHashCode() * 397) ^ _port;
         }
 
         /// <summary>
@@ -131,10 +192,11 @@ namespace Netly
                 throw new FormatException($"Invalid host format: {host}");
             }
 
-            if (!IPAddress.TryParse(uri.Host, out _))
-                throw new FormatException($"Invalid IP address in host: {host}");
+            if (uri.Port < 0)
+                throw new FormatException($"Invalid host format: {host}");
 
-            return new Host(uri.Host, uri.Port);
+            // ipv6 uri host comes inside brackets
+            return new Host(uri.Host.Trim('[', ']'), uri.Port);
         }
     }
 }

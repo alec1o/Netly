@@ -60,7 +60,7 @@ public class HostTest
     {
         Assert.Throws<FormatException>(() =>
         {
-            Host host = "invalidhost:1234";
+            Host host = "bad host!:1234";
         });
     }
 
