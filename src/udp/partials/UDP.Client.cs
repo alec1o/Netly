@@ -37,9 +37,6 @@ namespace Netly
 
             internal void OnServerBuffer(ref byte[] buffer)
             {
-                // TODO: Will cause error +2GB
-                if (buffer.LongLength > int.MaxValue) throw new IndexOutOfRangeException(nameof(buffer.LongLength));
-                
                 var stream = NHelper.NewStream(buffer.LongLength);
                 stream.Write(buffer, 0, buffer.Length);
                 _to.OnServerBuffer(stream);
