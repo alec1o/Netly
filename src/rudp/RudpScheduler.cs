@@ -14,6 +14,10 @@ namespace Netly
 
         private static readonly object Locker = new object();
         private static Thread _thread;
+        private static long _ticks;
+
+        // how many connections were updated, to measure the cost of idle connections
+        public static long Ticks => Interlocked.Read(ref _ticks);
 
         public static void Add(RudpConnection connection)
         {
@@ -46,7 +50,13 @@ namespace Netly
                 var now = RudpWire.Now();
 
                 foreach (var pair in Connections)
+                {
+                    // an idle connection waits for its deadline, a connection with work asks for a tick every pass
+                    if (now < pair.Key.NextTickAt) continue;
+
+                    Interlocked.Increment(ref _ticks);
                     pair.Key.Tick(now);
+                }
 
                 Thread.Sleep(Interval);
             }

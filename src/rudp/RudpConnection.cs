@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Netly
 {
@@ -77,6 +78,7 @@ namespace Netly
         private volatile State _state = State.Idle;
         private uint _token, _nonce;
         private long _startedAt, _nextHandshakeAt, _handshakeDelay, _synSentAt;
+        private long _nextTickAt;
         private bool _synRetransmitted;
         private long _lastReceiveAt, _lastSendAt;
 
@@ -120,6 +122,9 @@ namespace Netly
         public bool IsOpened => _state == State.Connected;
         public bool IsClosed => _state == State.Closed;
 
+        // the scheduler skips the connection until this time, 0 means right now
+        public long NextTickAt => Interlocked.Read(ref _nextTickAt);
+
         public Action OnOpen { get; set; }
         public Action OnClose { get; set; }
         public Action<string> OnOpenFail { get; set; }
@@ -135,6 +140,7 @@ namespace Netly
             {
                 if (_state != State.Idle) return;
 
+                _nextTickAt = 0;
                 _state = State.Handshaking;
                 _nonce = RudpWire.RandomUInt();
                 _startedAt = RudpWire.Now();
@@ -195,6 +201,8 @@ namespace Netly
             {
                 if (_state != State.Connected) return;
 
+                _nextTickAt = 0;
+
                 if (messageType == RudpDelivery.Reliable)
                     SendReliable(data);
                 else
@@ -223,6 +231,9 @@ namespace Netly
             lock (_locker)
             {
                 if (_state == State.Closed) return;
+
+                // a packet can create work (ack, retransmission), check this connection at the next pass
+                _nextTickAt = 0;
 
                 var type = (byte)(buffer[0] & RudpWire.TypeMask);
 
@@ -278,6 +289,8 @@ namespace Netly
                         TickConnected(now, ref pending);
                         break;
                 }
+
+                _nextTickAt = NextDeadline();
             }
 
             Flush(pending);
@@ -352,6 +365,28 @@ namespace Netly
             _state = State.Connected;
             _lastReceiveAt = RudpWire.Now();
             pending.Opened = true;
+        }
+
+        // earliest time this connection needs a tick, 0 means keep ticking
+        private long NextDeadline()
+        {
+            switch (_state)
+            {
+                case State.Handshaking:
+                    return Math.Min(_startedAt + HandshakeTimeout + 1, _nextHandshakeAt);
+
+                case State.Connected:
+                    // data in flight or waiting for the window needs the retransmission timer and the pump
+                    if (_out.Count > _head || _assemblies.Count > 0) return 0;
+
+                    var next = Math.Min(_lastReceiveAt + NoResponseTimeout + 1,
+                        _lastSendAt + Math.Min(1000, NoResponseTimeout / 3));
+
+                    return _ackDueAt != 0 ? Math.Min(next, _ackDueAt) : next;
+
+                default:
+                    return 0;
+            }
         }
 
         private void TickHandshake(long now, ref Pending pending)

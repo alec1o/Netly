@@ -1,9 +1,11 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -721,11 +723,80 @@ namespace Netly
 
         /* ---- RECEIVE --- */
 
+        // buffer of a connection that can't wait for data without one, and of the pool when it can
+        private const int ChunkSize = 16 * 1024, PoolChunkSize = 64 * 1024;
+
+        // a zero byte read waits for data without a buffer, runtimes before .NET 5 and Mono return at once
+        private static readonly bool ZeroByteRead = IsZeroByteReadSupported();
+
+        private static bool IsZeroByteReadSupported()
+        {
+            var name = RuntimeInformation.FrameworkDescription ?? string.Empty;
+
+            // ".NET 8.0.1" yes, ".NET Core 3.1", ".NET Framework 4.8" and "Mono" no
+            return name.StartsWith(".NET ", StringComparison.Ordinal) && name.Length > 5 && char.IsDigit(name[5]);
+        }
+
         private void InitReceiver(Socket owner)
         {
-            var bufferSize = (int)owner.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer);
+            if (ZeroByteRead && IsSecure is false)
+            {
+                ReceiveWait(owner);
+                return;
+            }
 
-            ReceiveTrigger(owner, new byte[bufferSize > 0 ? bufferSize : 4096]);
+            ReceiveTrigger(owner, new byte[ChunkSize]);
+        }
+
+        // no buffer is kept while the connection is idle, one is rented only to read the data that arrived
+        private void ReceiveWait(Socket owner)
+        {
+            try
+            {
+                Stream.BeginRead(Array.Empty<byte>(), 0, 0, WaitHandler, owner);
+            }
+            catch (Exception e)
+            {
+                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
+                Close(owner);
+            }
+        }
+
+        private void WaitHandler(IAsyncResult result)
+        {
+            var owner = (Socket)result.AsyncState;
+            byte[] buffer = null;
+
+            try
+            {
+                Stream.EndRead(result);
+
+                buffer = ArrayPool<byte>.Shared.Rent(PoolChunkSize);
+
+                // the data is already there, this read does not wait
+                var size = Stream.Read(buffer, 0, buffer.Length);
+
+                if (size <= 0)
+                {
+                    Close(owner);
+                    return;
+                }
+
+                ReceiveProcess(buffer, size);
+            }
+            catch (Exception e)
+            {
+                // connection closed by this side or by the peer
+                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
+                Close(owner);
+                return;
+            }
+            finally
+            {
+                if (buffer != null) ArrayPool<byte>.Shared.Return(buffer);
+            }
+
+            ReceiveWait(owner);
         }
 
         private void ReceiveTrigger(Socket owner, byte[] buffer)
@@ -755,17 +826,7 @@ namespace Netly
                     return;
                 }
 
-                if (IsFraming)
-                {
-                    _framing.Write(new ArraySegment<byte>(buffer, 0, size), Allocate);
-                    while (_framing.Read(out var stream)) ReceiveRelease(stream);
-                }
-                else
-                {
-                    var stream = Allocate(size);
-                    stream.Write(buffer, 0, size);
-                    ReceiveRelease(stream);
-                }
+                ReceiveProcess(buffer, size);
 
                 ReceiveTrigger(owner, buffer);
             }
@@ -774,6 +835,21 @@ namespace Netly
                 // connection closed by this side or by the peer
                 if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
                 Close(owner);
+            }
+        }
+
+        private void ReceiveProcess(byte[] buffer, int size)
+        {
+            if (IsFraming)
+            {
+                _framing.Write(new ArraySegment<byte>(buffer, 0, size), Allocate);
+                while (_framing.Read(out var stream)) ReceiveRelease(stream);
+            }
+            else
+            {
+                var stream = Allocate(size);
+                stream.Write(buffer, 0, size);
+                ReceiveRelease(stream);
             }
         }
 
