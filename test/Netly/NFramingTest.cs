@@ -2,11 +2,6 @@ namespace NetlyTest.Netly;
 
 public class NFramingTest
 {
-    public NFramingTest(ITestOutputHelper output)
-    {
-        NLogger.Singleton.OnSubmit(output.WriteLine);
-    }
-
     [Fact]
     public void Start()
     {

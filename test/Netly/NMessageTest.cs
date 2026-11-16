@@ -5,11 +5,6 @@ public class NMessageTest
     private const string Name = "Example";
     private static readonly byte[] Message = "Hello World!"u8.ToArray();
 
-    public NMessageTest(ITestOutputHelper output)
-    {
-        NLogger.Singleton.OnSubmit(output.WriteLine);
-    }
-
     [Fact]
     public void Start()
     {

@@ -29,7 +29,9 @@ public class NDispatcherTest
         dispatcher.Submit(() => actionThreadId = Environment.CurrentManagedThreadId);
 
         // Dispatch using a separate thread
-        await Task.Run(() => dispatcher.Dispatch());
+        var thread = new Thread(() => dispatcher.Dispatch());
+        thread.Start();
+        thread.Join();
 
         // Assert
         Assert.NotEqual(callerThreadId, actionThreadId);
@@ -84,7 +86,9 @@ public class NDispatcherTest
         dispatcher.ImmediateMode = false;
         dispatcher.Submit(() => queuedActionThreadId = Environment.CurrentManagedThreadId);
 
-        await Task.Run(() => dispatcher.Dispatch());
+        var thread = new Thread(() => dispatcher.Dispatch());
+        thread.Start();
+        thread.Join();
 
         // Assert
         Assert.Equal(callerThreadId, immediateActionThreadId);  // Immediate action ran on caller thread
