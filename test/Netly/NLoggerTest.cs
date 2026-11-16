@@ -28,7 +28,7 @@ public class NLoggerTest
     }
 
     [Fact]
-    public async Task Submit_String_NonImmediateMode_DispatchesViaDispatcher()
+    public void Submit_String_NonImmediateMode_DispatchesViaDispatcher()
     {
         var dispatcher = new NDispatcher(immediateMode: false);
         var logger = new NLogger { Dispatcher = dispatcher };
@@ -44,7 +44,9 @@ public class NLoggerTest
 
         logger.Submit("QueuedMessage");
 
-        await Task.Run(() => dispatcher.Dispatch());
+        var thread = new Thread(() => dispatcher.Dispatch());
+        thread.Start();
+        thread.Join();
 
         Assert.NotEqual(callerThreadId, actionThreadId);
         Assert.NotNull(capturedMessage);
