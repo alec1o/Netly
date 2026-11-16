@@ -158,6 +158,10 @@ namespace Netly
                             if (size < MinMessageSize)
                                 throw new InvalidDataException($"{nameof(size)}: {size}");
 
+                            // size comes from the remote peer, never allocate/open a stream above the limit.
+                            if (size > MaxSize)
+                                throw new InvalidDataException($"{nameof(size)}: {size} > {nameof(MaxSize)}: {MaxSize}");
+
                             // get and verify prefix
                             if (NHelper.ArraySequenced(Prefix, _headerBuffer))
                                 _transactions.AddLast(new Transaction(getStream(size), false));
