@@ -5,7 +5,7 @@ namespace NetlyTest.Tcp;
 
 public class TcpTlsTests
 {
-    private static async Task<(TCP.Server server, NHost host)> SecureServer()
+    private static async Task<(TCP.Server server, Host host)> SecureServer()
     {
         var host = Net.TcpHost();
         var server = new TCP.Server();

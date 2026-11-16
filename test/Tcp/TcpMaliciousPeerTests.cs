@@ -6,7 +6,7 @@ namespace NetlyTest.Tcp;
 
 public class TcpMaliciousPeerTests
 {
-    private static async Task<(TCP.Server server, NHost host)> EchoServer()
+    private static async Task<(TCP.Server server, Host host)> EchoServer()
     {
         var host = Net.TcpHost();
         var server = new TCP.Server();
@@ -15,7 +15,7 @@ public class TcpMaliciousPeerTests
         return (server, host);
     }
 
-    private static Socket RawConnect(NHost host)
+    private static Socket RawConnect(Host host)
     {
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(host.EndPoint);
@@ -45,7 +45,7 @@ public class TcpMaliciousPeerTests
         return false;
     }
 
-    private static async Task AssertServerStillWorks(NHost host)
+    private static async Task AssertServerStillWorks(Host host)
     {
         var client = new TCP.Client();
         var echoed = Wait.Signal<string>();
@@ -64,7 +64,7 @@ public class TcpMaliciousPeerTests
         var (server, host) = await EchoServer();
         using var raw = RawConnect(host);
 
-        raw.Send(NHelper.ArrayConcat(new byte[] { 9, 9, 9, 9 }, BitConverter.GetBytes(4L), new byte[4]));
+        raw.Send(Helper.ArrayConcat(new byte[] { 9, 9, 9, 9 }, BitConverter.GetBytes(4L), new byte[4]));
 
         Assert.True(await IsClosedByRemote(raw), "connection with invalid prefix must be closed");
         await AssertServerStillWorks(host);
@@ -80,7 +80,7 @@ public class TcpMaliciousPeerTests
         var (server, host) = await EchoServer();
         using var raw = RawConnect(host);
 
-        raw.Send(NHelper.ArrayConcat(NFraming.Prefix, BitConverter.GetBytes(size)));
+        raw.Send(Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size)));
 
         Assert.True(await IsClosedByRemote(raw));
         await AssertServerStillWorks(host);
@@ -90,14 +90,14 @@ public class TcpMaliciousPeerTests
     [Theory]
     [InlineData(long.MaxValue)]
     [InlineData(1024L * 1024 * 1024 * 8)]
-    [InlineData(NFraming.DefaultSize + 1)]
+    [InlineData(Framing.DefaultSize + 1)]
     public async Task HugeSize_ClosesConnectionWithoutAllocating(long size)
     {
         var (server, host) = await EchoServer();
         using var raw = RawConnect(host);
         var before = GC.GetTotalMemory(true);
 
-        raw.Send(NHelper.ArrayConcat(NFraming.Prefix, BitConverter.GetBytes(size)));
+        raw.Send(Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size)));
 
         Assert.True(await IsClosedByRemote(raw), $"size {size} must be refused");
         Assert.True(GC.GetTotalMemory(true) - before < 64 * 1024 * 1024, "must not allocate the announced size");
@@ -112,7 +112,7 @@ public class TcpMaliciousPeerTests
         using var slow = RawConnect(host);
 
         // slowloris style: only part of the header, then silence
-        slow.Send(new[] { NFraming.Prefix[0], NFraming.Prefix[1], NFraming.Prefix[2] });
+        slow.Send(new[] { Framing.Prefix[0], Framing.Prefix[1], Framing.Prefix[2] });
 
         await AssertServerStillWorks(host);
         Assert.False(await IsClosedByRemote(slow, 500), "server must not close an idle valid-so-far connection immediately");
@@ -128,7 +128,7 @@ public class TcpMaliciousPeerTests
         raw.NoDelay = true;
 
         var body = new byte[] { 1, 2, 3, 4, 5 };
-        var frame = NHelper.ArrayConcat(NFraming.Create(body.Length), body);
+        var frame = Helper.ArrayConcat(Framing.Create(body.Length), body);
 
         foreach (var b in frame)
         {
@@ -188,7 +188,7 @@ public class TcpMaliciousPeerTests
         var (server, host) = await EchoServer();
         var raw = RawConnect(host);
 
-        raw.Send(NHelper.ArrayConcat(NFraming.Create(1000), new byte[100]));
+        raw.Send(Helper.ArrayConcat(Framing.Create(1000), new byte[100]));
         await Wait.Until(() => server.Clients.Count == 1, what: "accept");
         raw.Close();
 

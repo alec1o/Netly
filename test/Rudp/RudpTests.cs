@@ -5,7 +5,7 @@ namespace NetlyTest.Rudp;
 
 public class RudpTests
 {
-    private static async Task<(RUDP.Server server, NHost host)> EchoServer()
+    private static async Task<(RUDP.Server server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
         var server = new RUDP.Server();

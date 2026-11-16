@@ -3,8 +3,16 @@ using System.IO;
 
 namespace Netly
 {
-    public static class NStream
+    /// <summary>
+    ///     Extension methods for <see cref="Stream" />.
+    /// </summary>
+    public static class StreamExtensions
     {
+        /// <summary>
+        ///     Returns a copy of the whole stream as an array. The stream position is not changed.
+        /// </summary>
+        /// <param name="stream">A readable and seekable stream.</param>
+        /// <returns>All bytes of the stream, or an empty array when the stream is empty.</returns>
         public static byte[] GetBytes(this Stream stream)
         {
             var position = stream.Position;
@@ -27,6 +35,11 @@ namespace Netly
             return bytes;
         }
 
+        /// <summary>
+        ///     Writes the bytes from the start of the stream and sets the position back to 0.
+        /// </summary>
+        /// <param name="stream">A writable and seekable stream.</param>
+        /// <param name="bytes">The bytes to write.</param>
         public static void FillWithBytes(this Stream stream, byte[] bytes)
         {
             stream.Position = 0;

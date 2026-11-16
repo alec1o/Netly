@@ -28,7 +28,7 @@ namespace Netly
                     _isClosed = true;
                     _isOpeningOrClosing = false;
                     _initServerSide = false;
-                    Host = NHost.Default;
+                    Host = Host.Default;
                 }
 
                 public ClientTo(Client client) : this()
@@ -36,7 +36,7 @@ namespace Netly
                     _client = client;
                 }
 
-                public ClientTo(Client client, ref NHost host, ref Socket socket) : this()
+                public ClientTo(Client client, ref Host host, ref Socket socket) : this()
                 {
                     Host = host;
                     _client = client;
@@ -45,11 +45,11 @@ namespace Netly
                     _isClosed = false;
                 }
 
-                public NHost Host { get; private set; }
+                public Host Host { get; private set; }
                 public bool IsOpened => !_isClosed && _socket != null;
                 private ClientOn On => _client._on;
 
-                public Task Open(NHost host)
+                public Task Open(Host host)
                 {
                     if (_isOpeningOrClosing || IsOpened || _isServer) return Task.CompletedTask;
 
@@ -65,7 +65,7 @@ namespace Netly
 
                             _socket.Connect(host.Address, host.Port);
 
-                            Host = new NHost(_socket.RemoteEndPoint);
+                            Host = new Host(_socket.RemoteEndPoint);
 
                             _isClosed = false;
 
@@ -75,7 +75,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NLogger.Singleton.Submit(e);
+                            Logger.Singleton.Submit(e);
                             _isClosed = true;
                             On.OnError?.Invoke(null, e);
                         }
@@ -103,7 +103,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NLogger.Singleton.Submit(e);
+                                Logger.Singleton.Submit(e);
                             }
                             finally
                             {
@@ -142,7 +142,7 @@ namespace Netly
                 {
                     if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                    var header = NMessage.Create(name, data.LongLength);
+                    var header = Message.Create(name, data.LongLength);
                     Send(header, data);
                 }
 
@@ -151,7 +151,7 @@ namespace Netly
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     var bytes = data.GetBytes();
-                    var header = NMessage.Create(name, bytes.LongLength);
+                    var header = Message.Create(name, bytes.LongLength);
                     Send(header, bytes);
                 }
 
@@ -160,7 +160,7 @@ namespace Netly
                     if (!IsOpened || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(data)) return;
 
                     var bytes = data.GetBytes(encoding);
-                    var header = NMessage.Create(name, bytes.LongLength);
+                    var header = Message.Create(name, bytes.LongLength);
                     Send(header, bytes);
                 }
 
@@ -176,7 +176,7 @@ namespace Netly
 
                 private void PushResult(Stream stream)
                 {
-                    if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
+                    if (Message.TryParse(stream, out var name, out var message, Helper.NewStream))
                     {
                         On.OnEvent?.Invoke(null, (name, message));
                     }
@@ -193,7 +193,7 @@ namespace Netly
                     Send(Host, bytes);
                 }
 
-                private void Send(NHost host, params byte[][] buffers)
+                private void Send(Host host, params byte[][] buffers)
                 {
                     if (buffers == null || buffers.Length <= 0 || !IsOpened || host == null) return;
 
@@ -219,7 +219,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
                 }
 
@@ -249,7 +249,7 @@ namespace Netly
                                     break;
                                 }
 
-                                var stream = NHelper.NewStream(size);
+                                var stream = Helper.NewStream(size);
                                 stream.Position = 0;
                                 stream.Write(buffer, 0, size);
 
@@ -257,7 +257,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NLogger.Singleton.Submit(e);
+                                Logger.Singleton.Submit(e);
                             }
                         }
 

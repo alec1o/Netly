@@ -16,7 +16,7 @@ internal sealed class UdpProxy : IDisposable
     private volatile bool _closed;
     private long _toServerBytes, _toClientBytes, _toServerPackets, _toClientPackets;
 
-    public UdpProxy(NHost server, double loss = 0, double duplicate = 0, int maxDelayMs = 0, int seed = 1)
+    public UdpProxy(Host server, double loss = 0, double duplicate = 0, int maxDelayMs = 0, int seed = 1)
     {
         Loss = loss;
         Duplicate = duplicate;
@@ -29,13 +29,13 @@ internal sealed class UdpProxy : IDisposable
 
         _front.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         _back.Connect(server.EndPoint);
-        Host = new NHost(_front.LocalEndPoint!);
+        Host = new Host(_front.LocalEndPoint!);
 
         new Thread(() => Relay(_front, true)) { IsBackground = true }.Start();
         new Thread(() => Relay(_back, false)) { IsBackground = true }.Start();
     }
 
-    public NHost Host { get; }
+    public Host Host { get; }
     public double Loss { get; set; }
     public double Duplicate { get; set; }
     public int MaxDelayMs { get; set; }

@@ -4,7 +4,10 @@ using System.Linq;
 
 namespace Netly
 {
-    public static class NHelper
+    /// <summary>
+    ///     Small helpers for arrays, segments and streams used by Netly.
+    /// </summary>
+    public static class Helper
     {
         /// <summary>
         ///     Returns a new <see cref="ArraySegment{T}" /> shifted by the specified number of elements.
@@ -95,15 +98,47 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Creates a new MemoryStream with the requested size.
-        ///     Throws <see cref="InternalBufferOverflowException" /> if the size exceeds the default maximum.
+        ///     Biggest size (64 MiB) of a <see cref="NewStream" /> kept in memory, bigger goes to a temporary file.
         /// </summary>
-        /// <param name="size">The desired size of the stream.</param>
-        /// <returns>A <see cref="Stream" /> with the specified size.</returns>
+        public const long MemoryLimit = 64L * 1024 * 1024;
+
+        /// <summary>
+        ///     Creates a new empty <see cref="Stream" /> to receive <paramref name="size" /> bytes.<br />
+        ///     Up to <see cref="MemoryLimit" /> it is a <see cref="MemoryStream" />, otherwise a temporary file
+        ///     deleted when the stream is closed. If the file can't be created it falls back to memory.
+        /// </summary>
+        /// <param name="size">The size of the data that will be written.</param>
+        /// <returns>A <see cref="Stream" /> with position 0.</returns>
+        /// <exception cref="InvalidDataException">Thrown if <paramref name="size" /> is negative.</exception>
+        /// <exception cref="InternalBufferOverflowException">
+        ///     Thrown if the file can't be created and <paramref name="size" /> doesn't fit in memory.
+        /// </exception>
         public static Stream NewStream(long size)
         {
-            if (size <= 1024 * 1024 * 20) // 20.00 MB
+            if (size < 0)
+                throw new InvalidDataException($"{nameof(size)}: {size}");
+
+            if (size <= MemoryLimit)
                 return new MemoryStream((int)size);
+
+            try
+            {
+                var directory = Path.Combine(Path.GetTempPath(), "Netly");
+
+                Directory.CreateDirectory(directory);
+
+                var path = Path.Combine(directory, $"{Guid.NewGuid():N}.tmp");
+
+                return new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 81920,
+                    FileOptions.DeleteOnClose);
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+            }
+
+            if (size <= int.MaxValue)
+                return new MemoryStream();
 
             throw new InternalBufferOverflowException($"{nameof(NewStream)}, {nameof(size)}: {size}");
         }

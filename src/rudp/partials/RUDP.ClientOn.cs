@@ -18,32 +18,32 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnOpen += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnClose += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<Socket> callback)
             {
-                OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
+                OnModify += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
             public void Data(Action<Stream, MessageType> callback)
             {
-                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.stream, e.messageType));
+                OnData += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e.stream, e.messageType));
             }
 
             public void Event(Action<string, Stream, MessageType> callback)
             {
-                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.stream, e.messageType));
+                OnEvent += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.stream, e.messageType));
             }
         }
     }

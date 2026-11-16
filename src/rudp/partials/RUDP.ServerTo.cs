@@ -31,18 +31,18 @@ namespace Netly
 
             public ServerTo(Server server)
             {
-                Host = NHost.Default;
+                Host = Host.Default;
                 _server = server;
                 _socket = null;
                 _isOpeningOrClosing = false;
                 _isClosed = true;
             }
 
-            public NHost Host { get; private set; }
+            public Host Host { get; private set; }
             public bool IsOpened => _socket != null && !_isClosed;
             private ServerOn On => _server._on;
 
-            public Task Open(NHost host)
+            public Task Open(Host host)
             {
                 lock (_locker)
                 {
@@ -61,7 +61,7 @@ namespace Netly
 
                     socket.Bind(host.EndPoint);
 
-                    Host = new NHost(socket.LocalEndPoint);
+                    Host = new Host(socket.LocalEndPoint);
 
                     _socket = socket;
                     _isClosed = false;
@@ -72,7 +72,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                     _isClosed = true;
                     On.OnError?.Invoke(null, e);
                 }
@@ -109,7 +109,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                 }
                 finally
                 {
@@ -146,7 +146,7 @@ namespace Netly
             {
                 if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                Broadcast(NHelper.ArrayConcat(NMessage.Create(name, data.LongLength), data), messageType);
+                Broadcast(Helper.ArrayConcat(Message.Create(name, data.LongLength), data), messageType);
             }
 
             public void EventBroadcast(string name, string data, MessageType messageType)
@@ -188,7 +188,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
             }
 
@@ -242,7 +242,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
             }
 
@@ -270,7 +270,7 @@ namespace Netly
                     HandshakeTimeout = _handshakeTimeout,
                     NoResponseTimeout = _noResponseTimeout
                 };
-                var client = new Client(connection, new NHost(remote));
+                var client = new Client(connection, new Host(remote));
 
                 session = new Session { Connection = connection, Client = client };
 

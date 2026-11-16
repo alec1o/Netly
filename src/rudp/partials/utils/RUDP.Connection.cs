@@ -376,7 +376,7 @@ namespace Netly
             {
                 if (_pendingBytes + data.Length > MaxPendingBytes)
                 {
-                    NLogger.Singleton.Submit($"[RUDP.Connection] Send queue is full, data ignored. Id: {Id}");
+                    Logger.Singleton.Submit($"[RUDP.Connection] Send queue is full, data ignored. Id: {Id}");
                     return;
                 }
 
@@ -462,7 +462,7 @@ namespace Netly
 
                 if (count > byte.MaxValue)
                 {
-                    NLogger.Singleton.Submit($"[RUDP.Connection] Message too big for {messageType}, ignored. Id: {Id}");
+                    Logger.Singleton.Submit($"[RUDP.Connection] Message too big for {messageType}, ignored. Id: {Id}");
                     return;
                 }
 
@@ -610,9 +610,9 @@ namespace Netly
 
                 _assembly.Write(buffer, offset, length);
 
-                if (_assembly.Length > NFraming.DefaultSize)
+                if (_assembly.Length > Framing.DefaultSize)
                 {
-                    NLogger.Singleton.Submit($"[RUDP.Connection] Message above the limit, connection closed. Id: {Id}");
+                    Logger.Singleton.Submit($"[RUDP.Connection] Message above the limit, connection closed. Id: {Id}");
                     CloseLocked(ref pending, true, null);
                     return;
                 }
@@ -853,7 +853,7 @@ namespace Netly
             {
                 if (now - _lastReceiveAt > NoResponseTimeout)
                 {
-                    NLogger.Singleton.Submit($"RUDP Connection Close by Timeout (No Response), Id: {Id}");
+                    Logger.Singleton.Submit($"RUDP Connection Close by Timeout (No Response), Id: {Id}");
                     CloseLocked(ref pending, false, null);
                     return;
                 }
@@ -884,7 +884,7 @@ namespace Netly
 
                     if (item.Retransmits >= MaxRetransmits)
                     {
-                        NLogger.Singleton.Submit($"RUDP Connection Close by too many retransmissions, Id: {Id}");
+                        Logger.Singleton.Submit($"RUDP Connection Close by too many retransmissions, Id: {Id}");
                         CloseLocked(ref pending, false, null);
                         return;
                     }
@@ -970,7 +970,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                 }
             }
         }

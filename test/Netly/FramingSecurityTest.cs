@@ -1,10 +1,10 @@
 namespace NetlyTest.Netly;
 
-public class NFramingSecurityTest
+public class FramingSecurityTest
 {
-    private static byte[] Frame(byte[] body) => NHelper.ArrayConcat(NFraming.Create(body.Length), body);
+    private static byte[] Frame(byte[] body) => Helper.ArrayConcat(Framing.Create(body.Length), body);
 
-    private static List<byte[]> ReadAll(NFraming framing)
+    private static List<byte[]> ReadAll(Framing framing)
     {
         var list = new List<byte[]>();
         while (framing.Read(out var stream)) list.Add(((MemoryStream)stream).ToArray());
@@ -16,10 +16,10 @@ public class NFramingSecurityTest
     [Fact]
     public void HeaderAboveMaxSize_Throws_AndNeverAllocatesStream()
     {
-        var framing = new NFraming { MaxSize = 1024 };
+        var framing = new Framing { MaxSize = 1024 };
         var called = false;
 
-        var header = NFraming.Create(1025);
+        var header = Framing.Create(1025);
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), size =>
         {
@@ -32,9 +32,9 @@ public class NFramingSecurityTest
     [Fact]
     public void HugeHeader_Throws_AndNeverAllocatesStream()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var called = false;
-        var header = NFraming.Create(long.MaxValue);
+        var header = Framing.Create(long.MaxValue);
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), size =>
         {
@@ -47,7 +47,7 @@ public class NFramingSecurityTest
     [Fact]
     public void SizeEqualToMaxSize_IsAccepted()
     {
-        var framing = new NFraming { MaxSize = 8 };
+        var framing = new Framing { MaxSize = 8 };
         var body = new byte[8];
 
         framing.Write(new ArraySegment<byte>(Frame(body)), Memory);
@@ -61,8 +61,8 @@ public class NFramingSecurityTest
     [InlineData(long.MinValue)]
     public void InvalidSize_Throws(long size)
     {
-        var framing = new NFraming();
-        var header = NHelper.ArrayConcat(NFraming.Prefix, BitConverter.GetBytes(size));
+        var framing = new Framing();
+        var header = Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size));
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), Memory));
     }
@@ -70,8 +70,8 @@ public class NFramingSecurityTest
     [Fact]
     public void InvalidPrefix_Throws()
     {
-        var framing = new NFraming();
-        var header = NHelper.ArrayConcat(new byte[] { 9, 9, 9, 9 }, BitConverter.GetBytes(4L));
+        var framing = new Framing();
+        var header = Helper.ArrayConcat(new byte[] { 9, 9, 9, 9 }, BitConverter.GetBytes(4L));
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), Memory));
     }
@@ -79,7 +79,7 @@ public class NFramingSecurityTest
     [Fact]
     public void HeaderAndBodySentByteByByte_AreReassembled()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var body = Enumerable.Range(1, 50).Select(x => (byte)x).ToArray();
 
         foreach (var b in Frame(body))
@@ -93,9 +93,9 @@ public class NFramingSecurityTest
     [Fact]
     public void ManyMessagesInOneSegment_AreSplitCorrectly()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var bodies = Enumerable.Range(1, 30).Select(i => Enumerable.Repeat((byte)i, i).ToArray()).ToList();
-        var all = NHelper.ArrayConcat(bodies.Select(Frame).ToArray());
+        var all = Helper.ArrayConcat(bodies.Select(Frame).ToArray());
 
         framing.Write(new ArraySegment<byte>(all), Memory);
 
@@ -107,10 +107,10 @@ public class NFramingSecurityTest
     [Fact]
     public void SegmentWithOffset_IsRespected()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var body = new byte[] { 1, 2, 3, 4, 5 };
         var frame = Frame(body);
-        var padded = NHelper.ArrayConcat(new byte[] { 0xFF, 0xFF, 0xFF }, frame, new byte[] { 0xEE });
+        var padded = Helper.ArrayConcat(new byte[] { 0xFF, 0xFF, 0xFF }, frame, new byte[] { 0xEE });
 
         framing.Write(new ArraySegment<byte>(padded, 3, frame.Length), Memory);
 
@@ -120,7 +120,7 @@ public class NFramingSecurityTest
     [Fact]
     public void IncompleteMessage_IsNotReadable()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var frame = Frame(new byte[100]);
 
         framing.Write(new ArraySegment<byte>(frame, 0, frame.Length - 1), Memory);
@@ -131,7 +131,7 @@ public class NFramingSecurityTest
     [Fact]
     public void CustomStreamFactory_CanUseDisk()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var files = new List<string>();
         var body = Enumerable.Range(0, 1000).Select(x => (byte)x).ToArray();
 
@@ -156,7 +156,7 @@ public class NFramingSecurityTest
     [Fact]
     public void WriteAfterClose_Throws()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         framing.Close();
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -166,7 +166,7 @@ public class NFramingSecurityTest
     [Fact]
     public void Reopen_DiscardsPartialMessage()
     {
-        var framing = new NFraming();
+        var framing = new Framing();
         var frame = Frame(new byte[10]);
         framing.Write(new ArraySegment<byte>(frame, 0, 6), Memory);
 

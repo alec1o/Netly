@@ -5,7 +5,7 @@ namespace NetlyTest.Rudp;
 
 public class RudpReliabilityTests
 {
-    private static async Task<(RUDP.Server server, NHost host)> EchoServer()
+    private static async Task<(RUDP.Server server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
         var server = new RUDP.Server();
@@ -30,7 +30,7 @@ public class RudpReliabilityTests
     }
 
     // sends everything and checks that the echo arrives complete, once and in order
-    private static async Task AssertReliableEcho(NHost target, List<byte[]> messages, TimeSpan timeout)
+    private static async Task AssertReliableEcho(Host target, List<byte[]> messages, TimeSpan timeout)
     {
         var client = new RUDP.Client();
         var received = new List<byte[]>();

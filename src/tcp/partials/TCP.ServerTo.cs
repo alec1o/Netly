@@ -38,7 +38,7 @@ namespace Netly
                     _isOpening = false;
                     _isClosing = false;
                     _isClosed = true;
-                    Host = NHost.Default;
+                    Host = Host.Default;
                     IsEncrypted = false;
                     _defaultBacklog = (int)SocketOptionName.MaxConnections;
                 }
@@ -49,7 +49,7 @@ namespace Netly
                 }
 
                 public bool IsOpened => _socket != null;
-                public NHost Host { get; private set; }
+                public Host Host { get; private set; }
                 private ServerOn On => _server._on;
                 public bool IsEncrypted { get; private set; }
                 public X509Certificate Certificate { get; private set; }
@@ -57,12 +57,12 @@ namespace Netly
                 public bool ClientCertificateRequired { get; private set; }
                 public readonly List<ITCP.Client> Clients = new List<ITCP.Client>();
 
-                public Task Open(NHost host)
+                public Task Open(Host host)
                 {
                     return Open(host, _defaultBacklog);
                 }
 
-                public Task Open(NHost host, int backlog)
+                public Task Open(Host host, int backlog)
                 {
                     if (_isOpening || _isClosing || IsOpened) return Task.CompletedTask;
 
@@ -89,7 +89,7 @@ namespace Netly
                             socket.Listen(ClampBacklog(backlog));
 
 
-                            Host = new NHost(socket.LocalEndPoint);
+                            Host = new Host(socket.LocalEndPoint);
 
                             _socket = socket;
 
@@ -101,7 +101,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NLogger.Singleton.Submit(e);
+                            Logger.Singleton.Submit(e);
                             On.OnError?.Invoke(null, e);
                         }
 
@@ -128,7 +128,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NLogger.Singleton.Submit(e);
+                            Logger.Singleton.Submit(e);
                         }
                         finally
                         {
@@ -218,7 +218,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                         Close();
                     }
                 }
@@ -262,7 +262,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
 
                     if (IsOpened)

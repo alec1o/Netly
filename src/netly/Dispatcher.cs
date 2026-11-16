@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 namespace Netly
 {
     /// <summary>
-    ///     NDispatcher is a lightweight action dispatcher that allows actions to be executed either immediately
+    ///     Dispatcher is a lightweight action dispatcher that allows actions to be executed either immediately
     ///     on the calling thread or enqueued for later execution by a dedicated dispatching thread.
     ///     <para>
     ///         It supports both singleton usage via <see cref="Singleton" /> or independent instances with custom
@@ -12,35 +12,35 @@ namespace Netly
     ///         multiple threads submitting actions concurrently.
     ///     </para>
     /// </summary>
-    public class NDispatcher
+    internal class Dispatcher
     {
         /// <summary>
-        ///     Singleton instance of <see cref="NDispatcher" /> with <see cref="ImmediateMode" /> default set to true
+        ///     Singleton instance of <see cref="Dispatcher" /> with <see cref="ImmediateMode" /> default set to true
         ///     Use this instance for global execution scenarios.
         /// </summary>
-        public static readonly NDispatcher Singleton = new NDispatcher(true);
+        public static readonly Dispatcher Singleton = new Dispatcher(true);
 
         private readonly ConcurrentQueue<Action> _actions = new ConcurrentQueue<Action>();
 
         /// <summary>
-        ///     Indicates whether this <see cref="NDispatcher" /> instance is the <see cref="Singleton" /> instance.
+        ///     Indicates whether this <see cref="Dispatcher" /> instance is the <see cref="Singleton" /> instance.
         /// </summary>
         public readonly bool IsSingleton;
 
         /// <summary>
-        ///     Initializes a new NDispatcher instance.
+        ///     Initializes a new Dispatcher instance.
         /// </summary>
         /// <param name="immediateMode">
         ///     If true, submitted actions execute immediately on the caller thread.
         ///     If false, actions are enqueued for later execution via <see cref="Dispatch" />.
         /// </param>
-        public NDispatcher(bool immediateMode = false)
+        public Dispatcher(bool immediateMode = false)
         {
             ImmediateMode = immediateMode;
             IsSingleton = false;
         }
 
-        private NDispatcher()
+        private Dispatcher()
         {
             ImmediateMode = true;
             IsSingleton = true;
@@ -78,6 +78,28 @@ namespace Netly
                 action();
             else
                 _actions.Enqueue(action);
+        }
+
+        /// <summary>
+        ///     Same as <see cref="Submit" />, but an exception thrown by the action is logged instead of propagated.
+        ///     Used for user callbacks called from network threads.
+        /// </summary>
+        /// <param name="action">The action to execute or enqueue.</param>
+        public void SubmitSafe(Action action)
+        {
+            if (action == null) return;
+
+            Submit(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                }
+            });
         }
 
         /// <summary>

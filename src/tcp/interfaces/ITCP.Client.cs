@@ -8,7 +8,7 @@ namespace Netly.Interfaces
         public interface Client
         {
             string Id { get; }
-            NHost Host { get; }
+            Host Host { get; }
             Socket Socket { get; }
             NetworkStream NetworkStream { get; }
 

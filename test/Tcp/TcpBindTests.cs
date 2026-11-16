@@ -28,7 +28,7 @@ public class TcpBindTests
         var server = new TCP.Server();
         var accepted = Wait.Signal<global::Netly.Interfaces.ITCP.Client>();
         server.On.Accept(c => accepted.TrySetResult(c));
-        await server.To.Open(new NHost(IPAddress.Any, port));
+        await server.To.Open(new Host(IPAddress.Any, port));
 
         var client = new TCP.Client();
         // On.Modify runs before connect: the socket can be bound to a local ip (and port) here.
@@ -36,7 +36,7 @@ public class TcpBindTests
         Exception? error = null;
         client.On.Error(e => error = e);
 
-        await client.To.Open(new NHost(ip, port));
+        await client.To.Open(new Host(ip, port));
 
         Assert.Null(error);
         Assert.True(client.IsOpened);

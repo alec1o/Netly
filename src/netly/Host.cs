@@ -8,20 +8,20 @@ namespace Netly
     ///     Represents a network host (IP address + port) and provides multiple constructors and implicit conversions
     ///     from string. Supports equality comparison and conversion to <see cref="IPEndPoint" />.
     /// </summary>
-    public class NHost
+    public class Host
     {
         /// <summary>
         ///     Default host instance representing 0.0.0.0:0.
         /// </summary>
-        public static readonly NHost Default = new NHost(IPAddress.Any, 0);
+        public static readonly Host Default = new Host(IPAddress.Any, 0);
 
         /// <summary>
-        ///     Creates a new <see cref="NHost" /> from an IP string and port number.
+        ///     Creates a new <see cref="Host" /> from an IP string and port number.
         /// </summary>
         /// <param name="ip">The IP address as a string.</param>
         /// <param name="port">The port number.</param>
         /// <exception cref="FormatException">Thrown if the IP string is not a valid IP address.</exception>
-        public NHost(string ip, int port)
+        public Host(string ip, int port)
         {
             if (!IPAddress.TryParse(ip, out var address))
                 throw new FormatException($"Invalid IP address: {ip}");
@@ -30,30 +30,30 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Creates a new <see cref="NHost" /> from an <see cref="EndPoint" />.
+        ///     Creates a new <see cref="Host" /> from an <see cref="EndPoint" />.
         /// </summary>
         /// <param name="endpoint">The endpoint to copy.</param>
-        public NHost(EndPoint endpoint)
+        public Host(EndPoint endpoint)
         {
             var temp = endpoint as IPEndPoint ?? throw new ArgumentException("EndPoint must be IPEndPoint");
             IPEndPoint = new IPEndPoint(temp.Address, temp.Port);
         }
 
         /// <summary>
-        ///     Creates a new <see cref="NHost" /> from an <see cref="IPEndPoint" />.
+        ///     Creates a new <see cref="Host" /> from an <see cref="IPEndPoint" />.
         /// </summary>
         /// <param name="ipEndpoint">The IPEndPoint to copy.</param>
-        public NHost(IPEndPoint ipEndpoint)
+        public Host(IPEndPoint ipEndpoint)
         {
             IPEndPoint = new IPEndPoint(ipEndpoint.Address, ipEndpoint.Port);
         }
 
         /// <summary>
-        ///     Creates a new <see cref="NHost" /> from an <see cref="IPAddress" /> and port.
+        ///     Creates a new <see cref="Host" /> from an <see cref="IPAddress" /> and port.
         /// </summary>
         /// <param name="address">The IP address.</param>
         /// <param name="port">The port number.</param>
-        public NHost(IPAddress address, int port)
+        public Host(IPAddress address, int port)
         {
             IPEndPoint = new IPEndPoint(address, port);
         }
@@ -97,7 +97,7 @@ namespace Netly
         /// <param name="obj">The object to compare.</param>
         public override bool Equals(object obj)
         {
-            return obj is NHost other && Address.Equals(other.Address) && Port == other.Port;
+            return obj is Host other && Address.Equals(other.Address) && Port == other.Port;
         }
 
         /// <summary>
@@ -109,11 +109,11 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Implicitly converts a valid IP:Port string to an <see cref="NHost" />.
+        ///     Implicitly converts a valid IP:Port string to an <see cref="Host" />.
         /// </summary>
         /// <param name="host">The host string (e.g., "127.0.0.1:3300").</param>
         /// <exception cref="FormatException">Thrown if the string is not a valid IP:Port format.</exception>
-        public static implicit operator NHost(string host)
+        public static implicit operator Host(string host)
         {
             if (string.IsNullOrWhiteSpace(host))
                 throw new FormatException("Host string is null or empty.");
@@ -134,7 +134,7 @@ namespace Netly
             if (!IPAddress.TryParse(uri.Host, out _))
                 throw new FormatException($"Invalid IP address in host: {host}");
 
-            return new NHost(uri.Host, uri.Port);
+            return new Host(uri.Host, uri.Port);
         }
     }
 }

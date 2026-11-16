@@ -9,7 +9,7 @@ public class UdpRobustnessTests
 {
     private static readonly byte[] Hello = Encoding.ASCII.GetBytes("netly-udp-hello");
 
-    private static async Task<(UDP.Server server, NHost host)> EchoServer()
+    private static async Task<(UDP.Server server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
         var server = new UDP.Server();
@@ -22,7 +22,7 @@ public class UdpRobustnessTests
         return (server, host);
     }
 
-    private static async Task AssertServerStillWorks(NHost host)
+    private static async Task AssertServerStillWorks(Host host)
     {
         var client = new UDP.Client();
         var echoed = Wait.Signal<string>();

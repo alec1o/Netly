@@ -8,7 +8,7 @@ public class NetStandardCompatibilityTest
     [Fact]
     public void LibraryTargetsNetStandard20()
     {
-        var attribute = typeof(NHost).Assembly.GetCustomAttribute<TargetFrameworkAttribute>();
+        var attribute = typeof(Host).Assembly.GetCustomAttribute<TargetFrameworkAttribute>();
 
         Assert.NotNull(attribute);
         Assert.Equal(".NETStandard,Version=v2.0", attribute.FrameworkName);
@@ -18,7 +18,7 @@ public class NetStandardCompatibilityTest
     public void LibraryDoesNotReferenceNewerFrameworkAssemblies()
     {
         // netstandard2.0 libraries must only reference netstandard (and System.Memory/Byter packages).
-        var references = typeof(NHost).Assembly.GetReferencedAssemblies().Select(x => x.Name).ToList();
+        var references = typeof(Host).Assembly.GetReferencedAssemblies().Select(x => x.Name).ToList();
 
         Assert.Contains("netstandard", references);
         Assert.DoesNotContain("System.Runtime.Experimental", references);

@@ -19,13 +19,13 @@ namespace Netly
                 _to = new ClientTo(this);
             }
 
-            internal Client(ref NHost host, ref Socket socket) : this()
+            internal Client(ref Host host, ref Socket socket) : this()
             {
                 _to = new ClientTo(this, ref host, ref socket);
             }
 
             public bool IsOpened => _to.IsOpened;
-            public NHost Host => _to.Host;
+            public Host Host => _to.Host;
             public IUDP.ClientTo To => _to;
             public IUDP.ClientOn On => _on;
             public string Id { get; }
@@ -37,7 +37,7 @@ namespace Netly
 
             internal void OnServerBuffer(ref byte[] buffer)
             {
-                var stream = NHelper.NewStream(buffer.LongLength);
+                var stream = Helper.NewStream(buffer.LongLength);
                 stream.Write(buffer, 0, buffer.Length);
                 _to.OnServerBuffer(stream);
             }

@@ -10,7 +10,7 @@ public class UdpTests
 
     private static bool IsHello(byte[] data) => data.AsSpan().SequenceEqual(Hello);
 
-    private static async Task<(UDP.Server server, NHost host)> EchoServer()
+    private static async Task<(UDP.Server server, Host host)> EchoServer()
     {
         var host = Net.UdpHost();
         var server = new UDP.Server();
@@ -76,7 +76,7 @@ public class UdpTests
         Exception? failure = null;
         server.On.Error(e => failure = e);
 
-        await server.To.Open(new NHost("1.1.1.1", 0));
+        await server.To.Open(new Host("1.1.1.1", 0));
 
         Assert.False(server.IsOpened);
         Assert.NotNull(failure);
@@ -232,7 +232,7 @@ public class UdpTests
     {
         var host = Net.UdpHost();
         var server = new UDP.Server();
-        var peers = new System.Collections.Concurrent.ConcurrentDictionary<string, NHost>();
+        var peers = new System.Collections.Concurrent.ConcurrentDictionary<string, Host>();
         server.On.Accept(c => c.On.Data(s =>
         {
             var text = Encoding.UTF8.GetString(s.GetBytes());

@@ -8,7 +8,7 @@ public class TcpEncryptionTests
 {
     private const string Password = "alecio";
 
-    private static async Task<(TCP.Server server, NHost host)> SecureEchoServer()
+    private static async Task<(TCP.Server server, Host host)> SecureEchoServer()
     {
         var host = Net.TcpHost();
         var server = new TCP.Server();

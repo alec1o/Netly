@@ -70,7 +70,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                         _server.MyServerOn.OnError?.Invoke(null, e);
                     }
                     finally
@@ -104,7 +104,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -185,7 +185,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
                 }
 
@@ -204,7 +204,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NLogger.Singleton.Submit($"{this}: {e}");
+                            Logger.Singleton.Submit($"{this}: {e}");
                             if (socket?.WebSocket != null)
                                 await socket.WebSocket.CloseAsync
                                 (
@@ -285,7 +285,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                         descriptor.Next = null;
                     }
                 }
@@ -368,7 +368,7 @@ namespace Netly
                         }
                         catch (Exception e)
                         {
-                            NLogger.Singleton.Submit(e);
+                            Logger.Singleton.Submit(e);
                         }
                         finally
                         {
@@ -378,7 +378,7 @@ namespace Netly
                             }
                             catch (Exception e)
                             {
-                                NLogger.Singleton.Submit(e);
+                                Logger.Singleton.Submit(e);
                             }
                         }
 

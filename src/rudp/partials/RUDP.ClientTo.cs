@@ -23,11 +23,11 @@ namespace Netly
             {
                 _client = client;
                 _isServer = false;
-                Host = NHost.Default;
+                Host = Host.Default;
             }
 
             // server side: the connection is created by the server
-            public ClientTo(Client client, Connection connection, NHost host)
+            public ClientTo(Client client, Connection connection, Host host)
             {
                 _client = client;
                 _isServer = true;
@@ -42,10 +42,10 @@ namespace Netly
 
             public string Id => _connection == null ? string.Empty : _connection.Id;
             public bool IsOpened => _connection != null && _connection.IsOpened;
-            public NHost Host { get; private set; }
+            public Host Host { get; private set; }
             private ClientOn On => _client._on;
 
-            public Task Open(NHost host)
+            public Task Open(Host host)
             {
                 lock (_locker)
                 {
@@ -76,7 +76,7 @@ namespace Netly
 
                     connection.OnOpen += () =>
                     {
-                        Host = new NHost(host.IPEndPoint);
+                        Host = new Host(host.IPEndPoint);
                         _isOpening = false;
                         On.OnOpen?.Invoke(null, null);
                         source.TrySetResult(true);
@@ -105,7 +105,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                     _isOpening = false;
                     CloseSocket(_socket);
                     On.OnError?.Invoke(null, e);
@@ -147,7 +147,7 @@ namespace Netly
             {
                 if (!IsOpened || string.IsNullOrEmpty(name) || data == null || data.Length <= 0) return;
 
-                Send(NHelper.ArrayConcat(NMessage.Create(name, data.LongLength), data), messageType);
+                Send(Helper.ArrayConcat(Message.Create(name, data.LongLength), data), messageType);
             }
 
             public void Event(string name, string data, MessageType messageType)
@@ -218,18 +218,18 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                 }
             }
 
             private void OnMessage(byte[] data, MessageType messageType)
             {
-                var stream = NHelper.NewStream(data.LongLength);
+                var stream = Helper.NewStream(data.LongLength);
 
                 stream.Write(data, 0, data.Length);
                 stream.Position = 0;
 
-                if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
+                if (Message.TryParse(stream, out var name, out var message, Helper.NewStream))
                 {
                     stream.Close();
                     On.OnEvent?.Invoke(null, (name, message, messageType));
@@ -249,7 +249,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                 }
             }
 
@@ -289,7 +289,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
 
                     if (!connection.IsClosed) Receive();

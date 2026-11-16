@@ -4,17 +4,17 @@ using System.IO;
 
 namespace Netly
 {
-    public sealed class NFraming
+    internal sealed class Framing
     {
         private const long MinMessageSize = 1;
 
         /// <summary>
-        ///     Default <see cref="NFraming" /> Size: 20 MB or 2.097.1520
+        ///     Default <see cref="Framing" /> Size: 20 MB or 2.097.1520
         /// </summary>
         public const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
 
         /// <summary>
-        ///     The prefix used in <see cref="NFraming" /> is: [0x1, 0x9, 0x3, 0x3] in hexadecimal,
+        ///     The prefix used in <see cref="Framing" /> is: [0x1, 0x9, 0x3, 0x3] in hexadecimal,
         ///     which is [1, 9, 3, 3] in decimal. It serves as a “magic number”
         ///     to identify the start of a message in a TCP stream.
         ///     <br />
@@ -35,7 +35,7 @@ namespace Netly
         private int _headerOffset;
         private long _size;
 
-        public NFraming()
+        public Framing()
         {
             Open();
         }
@@ -46,13 +46,13 @@ namespace Netly
         public long MaxSize { get; set; } = DefaultSize;
 
         /// <summary>
-        ///     Gets whether the <see ref="NFraming" /> instance is opened for writing/reading.
+        ///     Gets whether the <see ref="Framing" /> instance is opened for writing/reading.
         /// </summary>
         public bool IsOpened { get; private set; } = true;
 
 
         /// <summary>
-        ///     Closes the <see ref="NFraming" /> instance, clearing all pending transactions and streams.
+        ///     Closes the <see ref="Framing" /> instance, clearing all pending transactions and streams.
         ///     After calling this, writing or reading is not allowed.
         /// </summary>
         public void Close()
@@ -71,7 +71,7 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Opens the <see cref="NFraming" /> instance for reading and writing.
+        ///     Opens the <see cref="Framing" /> instance for reading and writing.
         ///     After calling this, the instance can accept new data via <see cref="Write" />
         ///     and completed transactions can be read via <see cref="Read" />.
         /// </summary>
@@ -119,7 +119,7 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Writes data from a segment into the <see ref="NFraming" /> system. Handles
+        ///     Writes data from a segment into the <see ref="Framing" /> system. Handles
         ///     header processing, message framing, and transaction management.
         /// </summary>
         /// <param name="segment">The data segment to write.</param>
@@ -163,13 +163,13 @@ namespace Netly
                                 throw new InvalidDataException($"{nameof(size)}: {size} > {nameof(MaxSize)}: {MaxSize}");
 
                             // get and verify prefix
-                            if (NHelper.ArraySequenced(Prefix, _headerBuffer))
+                            if (Helper.ArraySequenced(Prefix, _headerBuffer))
                                 _transactions.AddLast(new Transaction(getStream(size), false));
                             else
                                 throw new InvalidDataException(
-                                    $"{nameof(Prefix)}: {NHelper.Format(Prefix)} - {NHelper.Format(_headerBuffer)}");
+                                    $"{nameof(Prefix)}: {Helper.Format(Prefix)} - {Helper.Format(_headerBuffer)}");
 
-                            segment = NHelper.SegmentShift(segment, copied);
+                            segment = Helper.SegmentShift(segment, copied);
                             _size = size;
                             _headerOffset = 0;
                             _transactions.Last.Value.Stream.Position = 0;
@@ -200,7 +200,7 @@ namespace Netly
 
                             if (left > 0)
                             {
-                                segment = NHelper.SegmentShift(segment, count);
+                                segment = Helper.SegmentShift(segment, count);
                                 continue; // REQUIRED: Read new stream again!
                             }
                         }

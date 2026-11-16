@@ -1,12 +1,12 @@
 namespace NetlyTest.Netly;
 
-public class NDispatcherTest
+public class DispatcherTest
 {
     [Fact]
     public void Submit_WhenImmediateMode_ExecutesOnCallerThread()
     {
         // Arrange
-        var dispatcher = new NDispatcher(immediateMode: true);
+        var dispatcher = new Dispatcher(immediateMode: true);
         var callerThreadId = Environment.CurrentManagedThreadId;
         var actionThreadId = -1;
 
@@ -21,7 +21,7 @@ public class NDispatcherTest
     public async Task Submit_WhenNonImmediateMode_ExecutesOnDispatchThread()
     {
         // Arrange
-        var dispatcher = new NDispatcher(immediateMode: false);
+        var dispatcher = new Dispatcher(immediateMode: false);
         var callerThreadId = Environment.CurrentManagedThreadId;
         var actionThreadId = -1;
 
@@ -41,7 +41,7 @@ public class NDispatcherTest
     public void Dispatch_WhenMultipleActions_AllActionsExecuted()
     {
         // Arrange
-        var dispatcher = new NDispatcher(immediateMode: false);
+        var dispatcher = new Dispatcher(immediateMode: false);
         var count = 0;
 
         dispatcher.Submit(() => Interlocked.Increment(ref count));
@@ -59,7 +59,7 @@ public class NDispatcherTest
     public void Clear_WhenCalled_EmptiesPendingActions()
     {
         // Arrange
-        var dispatcher = new NDispatcher(immediateMode: false);
+        var dispatcher = new Dispatcher(immediateMode: false);
         var ran = false;
         dispatcher.Submit(() => ran = true);
 
@@ -75,7 +75,7 @@ public class NDispatcherTest
     public async Task Submit_ImmediateThenNonImmediateMode_ProcessesQueuedActions()
     {
         // Arrange
-        var dispatcher = new NDispatcher(immediateMode: true);
+        var dispatcher = new Dispatcher(immediateMode: true);
         var callerThreadId = Environment.CurrentManagedThreadId;
         var immediateActionThreadId = -1;
         var queuedActionThreadId = -1;

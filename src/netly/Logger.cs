@@ -3,17 +3,17 @@ using System;
 namespace Netly
 {
     /// <summary>
-    ///     <see cref="NLogger" /> provides a simple logging system that supports generic messages and exceptions.
-    ///     Logs can be dispatched via <see cref="OnSubmit" />, and can be executed immediately or enqueued
-    ///     via a <see cref="NDispatcher" /> for later processing.
-    ///     Handlers registered with <see cref="OnSubmit" /> can listen to multiple log events.
+    ///     <see cref="Logger" /> provides a simple logging system that supports generic messages and exceptions.
+    ///     Logs can be dispatched via <see cref="OnLog" />, and can be executed immediately or enqueued
+    ///     via a <see cref="Dispatcher" /> for later processing.
+    ///     Handlers registered with <see cref="OnLog" /> can listen to multiple log events.
     /// </summary>
-    public class NLogger
+    public class Logger
     {
         /// <summary>
         ///     Singleton instance of the logger for global usage.
         /// </summary>
-        public static readonly NLogger Singleton = new NLogger(true);
+        public static readonly Logger Singleton = new Logger(true);
 
         /// <summary>
         ///     Indicates whether this instance is the singleton.
@@ -22,7 +22,7 @@ namespace Netly
 
         private EventHandler<string> _handler;
 
-        private NLogger(bool isSingleton)
+        private Logger(bool isSingleton)
         {
             IsSingleton = isSingleton;
         }
@@ -30,17 +30,17 @@ namespace Netly
         /// <summary>
         ///     Default public constructor for non-singleton instances.
         /// </summary>
-        public NLogger() : this(false)
+        public Logger() : this(false)
         {
         }
 
         /// <summary>
         ///     Optional dispatcher for deferred log execution.
-        ///     If null, <see cref="NDispatcher.Singleton" /> will be used.
+        ///     If null, <see cref="Dispatcher.Singleton" /> will be used.
         /// </summary>
-        public NDispatcher Dispatcher { get; set; }
+        internal Dispatcher Dispatcher { get; set; }
 
-        private NDispatcher CurrentDispatcher => Dispatcher ?? NDispatcher.Singleton;
+        private Dispatcher CurrentDispatcher => Dispatcher ?? Dispatcher.Singleton;
 
         /// <summary>
         ///     Submits a log message or exception to any type.
@@ -70,9 +70,9 @@ namespace Netly
         /// <param name="callback">The action to call with each log message.</param>
         /// <param name="forceImmediateDispatcherMode">
         ///     If true, the callback is executed immediately on the submitting thread.<br />
-        ///     If false, the callback is enqueued using the available <see cref="NDispatcher" /> instance.
+        ///     If false, the callback is enqueued using the available <see cref="Dispatcher" /> instance.
         /// </param>
-        public void OnSubmit(Action<string> callback, bool forceImmediateDispatcherMode = false)
+        public void OnLog(Action<string> callback, bool forceImmediateDispatcherMode = false)
         {
             if (callback == null) return;
 
@@ -87,7 +87,7 @@ namespace Netly
 
         private static string Format(Type type, string message)
         {
-            return $"[{nameof(NDispatcher)} > {type.Name}] {message}";
+            return $"[{nameof(Dispatcher)} > {type.Name}] {message}";
         }
     }
 }

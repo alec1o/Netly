@@ -25,32 +25,32 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnOpen += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnClose += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<Socket> callback)
             {
-                OnModify += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
+                OnModify += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
             public void Data(Action<Stream> callback)
             {
-                OnData += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e));
+                OnData += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e));
             }
 
             public void Event(Action<string, Stream> callback)
             {
-                OnEvent += (@object, e) => NDispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer));
+                OnEvent += (@object, e) => Dispatcher.Singleton.Submit(() => callback?.Invoke(e.name, e.buffer));
             }
 
             public void Encryption(Func<X509Certificate, X509Chain, SslPolicyErrors, bool> callback)

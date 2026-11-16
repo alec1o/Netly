@@ -24,9 +24,9 @@ internal static class Net
         return ((IPEndPoint)socket.LocalEndPoint!).Port;
     }
 
-    public static NHost TcpHost() => new(IPAddress.Loopback, FreeTcpPort());
+    public static Host TcpHost() => new(IPAddress.Loopback, FreeTcpPort());
 
-    public static NHost UdpHost() => new(IPAddress.Loopback, FreeUdpPort());
+    public static Host UdpHost() => new(IPAddress.Loopback, FreeUdpPort());
 
     public static byte[] Payload(int size, int seed = 1)
     {

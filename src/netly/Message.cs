@@ -4,17 +4,17 @@ using System.Text;
 
 namespace Netly
 {
-    public static class NMessage
+    internal static class Message
     {
         private const long MinSize = 1;
 
         /// <summary>
-        ///     The prefix used in <see cref="NFraming" />.<see cref="NFraming.Prefix" /> is: [0x06, 0x03, 0x09, 0x01] in
+        ///     The prefix used in <see cref="Framing" />.<see cref="Framing.Prefix" /> is: [0x06, 0x03, 0x09, 0x01] in
         ///     hexadecimal,
         ///     which is [6, 3, 9, 1] in decimal. It serves as a “magic number”
         ///     to identify the start of a message payload.
         ///     <br />
-        ///     This value is the reverse of the prefix used in <see cref="NFraming" /> ([1, 9, 3, 6]),
+        ///     This value is the reverse of the prefix used in <see cref="Framing" /> ([1, 9, 3, 6]),
         ///     which refers to the year 1936 when Alan Turing introduced the Turing Machine.
         ///     By reversing the digits to 6391, this prefix symbolically represents
         ///     the message layer built on top of the framing layer, keeping a historical
@@ -43,7 +43,7 @@ namespace Netly
             if (name.Length < MinSize)
                 throw new ArgumentOutOfRangeException($"{nameof(name)}, {name.Length}");
 
-            if (messageSize < MinSize)
+            if (messageSize < 0)
                 throw new ArgumentOutOfRangeException($"{nameof(messageSize)}, {messageSize}");
 
             var encodedName = Encoding.UTF8.GetBytes(name);
@@ -110,9 +110,8 @@ namespace Netly
 
             try
             {
-                const long bodyPreview =
-                    MinSize + // Min Name Buffer
-                    MinSize; // Min Message Buffer
+                // min name buffer, the message can be empty
+                const long bodyPreview = MinSize;
 
                 if (stream.Length < headerSize + bodyPreview) return false;
 
@@ -126,7 +125,7 @@ namespace Netly
 
                 var offset = 0;
 
-                if (!NHelper.ArraySequenced(Prefix, header))
+                if (!Helper.ArraySequenced(Prefix, header))
                     return false;
 
                 offset += Prefix.Length;
@@ -137,7 +136,7 @@ namespace Netly
                 var messageSize = BitConverter.ToInt64(header, offset);
                 offset += sizeof(long);
 
-                if (nameSize < MinSize || messageSize < MinSize)
+                if (nameSize < MinSize || messageSize < 0)
                     return false;
 
                 var expectedSize = offset + nameSize + messageSize;
@@ -168,7 +167,7 @@ namespace Netly
                 name = null;
                 message?.Close();
                 message = null;
-                NLogger.Singleton.Submit(e);
+                Logger.Singleton.Submit(e);
                 return false;
             }
         }

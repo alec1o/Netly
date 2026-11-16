@@ -87,7 +87,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
 
                         try
                         {
@@ -96,7 +96,7 @@ namespace Netly
                         }
                         catch (Exception e2)
                         {
-                            NLogger.Singleton.Submit(e2);
+                            Logger.Singleton.Submit(e2);
                         }
                         finally
                         {
@@ -163,7 +163,7 @@ namespace Netly
                     }
                     catch (Exception e)
                     {
-                        NLogger.Singleton.Submit(e);
+                        Logger.Singleton.Submit(e);
                     }
                     finally
                     {
@@ -197,21 +197,21 @@ namespace Netly
 
             public void Event(string name, byte[] buffer, HTTP.MessageType messageType)
             {
-                var header = NMessage.Create(name, buffer.LongLength);
+                var header = Message.Create(name, buffer.LongLength);
                 Send(messageType, header, buffer);
             }
 
             public void Event(string name, string buffer, HTTP.MessageType messageType)
             {
                 var bytes = buffer.GetBytes();
-                var header = NMessage.Create(name, bytes.LongLength);
+                var header = Message.Create(name, bytes.LongLength);
                 Send(messageType, header, bytes);
             }
 
             public void Event(string name, string buffer, HTTP.MessageType messageType, Encoding encoding)
             {
                 var bytes = buffer.GetBytes(encoding);
-                var header = NMessage.Create(name, bytes.LongLength);
+                var header = Message.Create(name, bytes.LongLength);
                 Send(messageType, header, bytes);
             }
 
@@ -222,7 +222,7 @@ namespace Netly
                 var messageType = type == MessageType.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
 
                 // event header and body must be the same websocket message
-                var messageContent = new ArraySegment<byte>(buffers.Length == 1 ? buffers[0] : NHelper.ArrayConcat(buffers));
+                var messageContent = new ArraySegment<byte>(buffers.Length == 1 ? buffers[0] : Helper.ArrayConcat(buffers));
 
                 try
                 {
@@ -243,7 +243,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                 }
             }
 
@@ -281,7 +281,7 @@ namespace Netly
 
                         fragments.Write(buffer.Array, 0, result.Count);
 
-                        if (fragments.Length > NFraming.DefaultSize)
+                        if (fragments.Length > Framing.DefaultSize)
                             throw new InvalidOperationException($"{nameof(fragments)}: {fragments.Length}");
 
                         // wait the end of message
@@ -295,10 +295,10 @@ namespace Netly
                             ? MessageType.Text
                             : MessageType.Binary;
 
-                        var stream = NHelper.NewStream(data.LongLength);
+                        var stream = Helper.NewStream(data.LongLength);
                         await stream.WriteAsync(data, 0, data.Length);
 
-                        if (NMessage.TryParse(stream, out var name, out var message, NHelper.NewStream))
+                        if (Message.TryParse(stream, out var name, out var message, Helper.NewStream))
                         {
                             var reference = new byte[message.Length];
                             message.Position = 0;
@@ -313,7 +313,7 @@ namespace Netly
                 }
                 catch (Exception e)
                 {
-                    NLogger.Singleton.Submit(e);
+                    Logger.Singleton.Submit(e);
                     closeStatus = WebSocketCloseStatus.EndpointUnavailable;
                 }
                 finally

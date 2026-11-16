@@ -15,7 +15,7 @@
             /// <summary>
             ///     Remote Host
             /// </summary>
-            NHost Host { get; }
+            Host Host { get; }
 
             /// <summary>
             ///     Is Opened? (return true if connected)

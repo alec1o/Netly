@@ -10,7 +10,7 @@ namespace Netly.Interfaces
         internal interface Server
         {
             string Id { get; }
-            NHost Host { get; }
+            Host Host { get; }
             bool IsOpened { get; }
             bool IsFraming { get; }
             Socket Socket { get; }

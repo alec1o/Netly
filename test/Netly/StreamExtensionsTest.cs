@@ -1,6 +1,6 @@
 namespace NetlyTest.Netly;
 
-public class NStreamTest
+public class StreamExtensionsTest
 {
     [Fact]
     public void GetBytes_ReturnsAllBytes_AndKeepsPosition()

@@ -18,14 +18,14 @@ namespace Netly
             }
 
             // server side client
-            internal Client(Connection connection, NHost host)
+            internal Client(Connection connection, Host host)
             {
                 _on = new ClientOn();
                 _to = new ClientTo(this, connection, host);
             }
 
             public bool IsOpened => _to.IsOpened;
-            public NHost Host => _to.Host;
+            public Host Host => _to.Host;
             public IRUDP.ClientTo To => _to;
             public IRUDP.ClientOn On => _on;
             public string Id => _to.Id;

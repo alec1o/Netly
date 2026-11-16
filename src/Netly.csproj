@@ -25,6 +25,10 @@
       <PackageReference Include="System.Memory" Version="4.6.3" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="Test"/>
+    </ItemGroup>
+
     <PropertyGroup>
         <PackageId>Netly</PackageId>
         <Authors>alec1o</Authors>

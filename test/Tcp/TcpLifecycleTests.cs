@@ -96,7 +96,7 @@ public class TcpLifecycleTests
         Exception? failure = null;
         server.On.Error(e => failure = e);
 
-        await server.To.Open(new NHost("1.1.1.1", 0));
+        await server.To.Open(new Host("1.1.1.1", 0));
 
         Assert.False(server.IsOpened);
         Assert.NotNull(failure);

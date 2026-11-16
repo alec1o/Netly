@@ -5,7 +5,7 @@ namespace NetlyTest.Tcp;
 
 public class TcpTransferTests
 {
-    private static async Task<(TCP.Server server, NHost host)> EchoServer(bool framing = true)
+    private static async Task<(TCP.Server server, Host host)> EchoServer(bool framing = true)
     {
         var host = Net.TcpHost();
         var server = new TCP.Server(framing);

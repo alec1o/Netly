@@ -1,33 +1,34 @@
+using Message = Netly.Message;
 namespace NetlyTest.Netly;
 
-public class NMessageTest
+public class MessageTest
 {
     private const string Name = "Example";
-    private static readonly byte[] Message = "Hello World!"u8.ToArray();
+    private static readonly byte[] Body = "Hello World!"u8.ToArray();
 
     [Fact]
     public void Start()
     {
-        var header = NMessage.Create(Name, Message.LongLength);
+        var header = Message.Create(Name, Body.LongLength);
         Assert.NotEmpty(header);
-        var payload = NHelper.ArrayConcat(header, Message);
+        var payload = Helper.ArrayConcat(header, Body);
         Assert.NotEmpty(payload);
 
-        var stream = NHelper.NewStream(payload.LongLength);
+        var stream = Helper.NewStream(payload.LongLength);
         stream.Write(payload);
         Assert.Equal(payload.LongLength, stream.Position);
-        Assert.True(NMessage.TryParse(stream, out var myName, out var myMessage, NHelper.NewStream));
+        Assert.True(Message.TryParse(stream, out var myName, out var myMessage, Helper.NewStream));
         stream.Close();
         Assert.Equal(Name, myName);
         var data = new byte[myMessage.Length];
-        Assert.Equal(Message.Length, myMessage.Read(data, 0, data.Length));
-        Assert.Equal(Message, data);
+        Assert.Equal(Body.Length, myMessage.Read(data, 0, data.Length));
+        Assert.Equal(Body, data);
     }
 
     [Fact]
     public void Create()
     {
-        var header = NMessage.Create(Name, Message.Length);
+        var header = Message.Create(Name, Body.Length);
 
         var size =
             sizeof(int) + // Prefix size

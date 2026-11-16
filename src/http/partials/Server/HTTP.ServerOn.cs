@@ -15,22 +15,22 @@ namespace Netly
 
             public void Open(Action callback)
             {
-                OnOpen += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnOpen += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Error(Action<Exception> callback)
             {
-                OnError += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnError += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
 
             public void Close(Action callback)
             {
-                OnClose += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke());
+                OnClose += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke());
             }
 
             public void Modify(Action<HttpListener> callback)
             {
-                OnModify += (@object, @event) => NDispatcher.Singleton.Submit(() => callback?.Invoke(@event));
+                OnModify += (@object, @event) => Dispatcher.Singleton.Submit(() => callback?.Invoke(@event));
             }
         }
     }

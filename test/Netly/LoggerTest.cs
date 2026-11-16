@@ -4,17 +4,17 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 
-public class NLoggerTest
+public class LoggerTest
 {
     [Fact]
     public void Submit_String_ImmediateMode_ExecutesOnCallerThread()
     {
-        var logger = new NLogger();
+        var logger = new Logger();
         var callerThreadId = Environment.CurrentManagedThreadId;
         int? actionThreadId = null;
         string? capturedMessage = null;
 
-        logger.OnSubmit(msg =>
+        logger.OnLog(msg =>
         {
             capturedMessage = msg;
             actionThreadId = Environment.CurrentManagedThreadId;
@@ -30,13 +30,13 @@ public class NLoggerTest
     [Fact]
     public void Submit_String_NonImmediateMode_DispatchesViaDispatcher()
     {
-        var dispatcher = new NDispatcher(immediateMode: false);
-        var logger = new NLogger { Dispatcher = dispatcher };
+        var dispatcher = new Dispatcher(immediateMode: false);
+        var logger = new Logger { Dispatcher = dispatcher };
         int? actionThreadId = null;
         string? capturedMessage = null;
         var callerThreadId = Environment.CurrentManagedThreadId;
 
-        logger.OnSubmit(msg =>
+        logger.OnLog(msg =>
         {
             capturedMessage = msg;
             actionThreadId = Environment.CurrentManagedThreadId;
@@ -56,12 +56,12 @@ public class NLoggerTest
     [Fact]
     public void Submit_Exception_ImmediateMode_ExecutesOnCallerThread()
     {
-        var logger = new NLogger();
+        var logger = new Logger();
         var callerThreadId = Environment.CurrentManagedThreadId;
         int? actionThreadId = null;
         string? capturedMessage = null;
 
-        logger.OnSubmit(msg =>
+        logger.OnLog(msg =>
         {
             capturedMessage = msg;
             actionThreadId = Environment.CurrentManagedThreadId;
@@ -78,12 +78,12 @@ public class NLoggerTest
     [Fact]
     public void MultipleHandlers_AllReceiveLogs()
     {
-        var logger = new NLogger();
+        var logger = new Logger();
         int handler1Count = 0;
         int handler2Count = 0;
 
-        logger.OnSubmit(_ => handler1Count++);
-        logger.OnSubmit(_ => handler2Count++);
+        logger.OnLog(_ => handler1Count++);
+        logger.OnLog(_ => handler2Count++);
 
         logger.Submit("Test");
 
@@ -94,10 +94,10 @@ public class NLoggerTest
     [Fact]
     public void Submit_NullValue_DoesNotInvokeHandler()
     {
-        var logger = new NLogger();
+        var logger = new Logger();
         bool invoked = false;
 
-        logger.OnSubmit(_ => invoked = true);
+        logger.OnLog(_ => invoked = true);
 
         logger.Submit<string>(null!);
 

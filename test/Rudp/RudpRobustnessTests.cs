@@ -7,7 +7,7 @@ namespace NetlyTest.Rudp;
 
 public class RudpRobustnessTests
 {
-    private static async Task<(RUDP.Server server, NHost host)> EchoServer(int noResponse = 5000)
+    private static async Task<(RUDP.Server server, Host host)> EchoServer(int noResponse = 5000)
     {
         var host = Net.UdpHost();
         var server = new RUDP.Server { NoResponseTimeout = noResponse };
@@ -16,7 +16,7 @@ public class RudpRobustnessTests
         return (server, host);
     }
 
-    private static async Task AssertServerStillWorks(NHost host)
+    private static async Task AssertServerStillWorks(Host host)
     {
         var client = new RUDP.Client();
         var echoed = Wait.Signal<string>();
