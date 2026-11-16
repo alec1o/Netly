@@ -132,7 +132,12 @@ namespace Netly
                             _socket = null;
                             _isClosed = true;
                             _isClosing = false;
-                            Clients.Clear();
+
+                            lock (_lockClient)
+                            {
+                                Clients.Clear();
+                            }
+
                             On.OnClose?.Invoke(null, null);
                         }
                     });
@@ -226,6 +231,13 @@ namespace Netly
 
                             lock (_lockClient)
                             {
+                                // server is closing, drop the new connection
+                                if (_isClosing || _isClosed)
+                                {
+                                    _ = it.To.Close();
+                                    return;
+                                }
+
                                 Clients.Add(it);
                             }
 

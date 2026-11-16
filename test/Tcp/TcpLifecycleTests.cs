@@ -227,6 +227,36 @@ public class TcpLifecycleTests
     }
 
     [Fact]
+    public async Task ServerCloseDoesNotLeakClientsStillBeingAccepted()
+    {
+        const int rounds = 30, total = 5;
+
+        for (var round = 0; round < rounds; round++)
+        {
+            var host = Net.TcpHost();
+            var server = new TCP.Server();
+            var closed = 0;
+            await server.To.Open(host);
+
+            var clients = new List<TCP.Client>();
+
+            for (var i = 0; i < total; i++)
+            {
+                var client = new TCP.Client();
+                client.On.Close(() => Interlocked.Increment(ref closed));
+                clients.Add(client);
+            }
+
+            await Task.WhenAll(clients.Select(c => c.To.Open(host)));
+
+            // close without waiting accept, connections can be in flight
+            await server.To.Close();
+
+            await Wait.Until(() => closed == total, what: $"all clients closed (round {round})");
+        }
+    }
+
+    [Fact]
     public async Task ServerObservesClientClose()
     {
         var host = Net.TcpHost();
