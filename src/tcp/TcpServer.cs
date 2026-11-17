@@ -301,6 +301,8 @@ namespace Netly
                 {
                     socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                    socket.NoDelay = true;
+
                     _onModify?.Invoke(null, socket);
 
                     if (IsSecure) Certificate = new X509Certificate(_certificate, _certificatePassword);
@@ -425,6 +427,8 @@ namespace Netly
             try
             {
                 var socket = owner.EndAccept(result);
+
+                socket.NoDelay = true;
 
                 var client = new TcpClient(socket, this);
 

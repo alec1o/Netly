@@ -89,7 +89,8 @@ public class HelperTest
         var size = 1024 * 1024 * 20; // 20 MB
         using var stream = Helper.NewStream(size);
         Assert.IsType<MemoryStream>(stream);
-        Assert.Equal(size, ((MemoryStream)stream).Capacity);
+        // declared size does not reserve memory
+        Assert.True(((MemoryStream)stream).Capacity < size);
     }
 
     [Fact]

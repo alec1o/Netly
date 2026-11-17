@@ -398,6 +398,9 @@ namespace Netly
             {
                 socket = new Socket(host.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+                // avoid nagle + delayed ack on the last piece of a message
+                socket.NoDelay = true;
+
                 _onModify?.Invoke(null, socket);
 
                 await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, host.Address, host.Port, null);

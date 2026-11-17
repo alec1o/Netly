@@ -97,6 +97,8 @@ namespace Netly
             return result;
         }
 
+        private const int InitialCapacity = 64 * 1024;
+
         /// <summary>
         ///     Biggest size (64 MiB) of a <see cref="NewStream" /> kept in memory, bigger goes to a temporary file.
         /// </summary>
@@ -122,7 +124,8 @@ namespace Netly
                 throw new InvalidDataException($"{nameof(size)}: {size}");
 
             if (size <= MemoryLimit)
-                return new MemoryStream((int)size);
+                // grows as data arrives, a declared size alone never reserves memory
+                return new MemoryStream((int)Math.Min(size, InitialCapacity));
 
             try
             {
