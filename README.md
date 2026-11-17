@@ -162,6 +162,18 @@ powered by <a href="https://github.com/alec1o">ALEC1O</a><sub/>
 <td valign="top" align="left"></td>
 <td valign="top" align="left"><sub>XML comments improvement</sub></td>
 </tr>
+<tr> <!-- row #7 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>Message framing with version, size and checksum (big-endian), events detected by content</sub></td>
+</tr>
+<tr> <!-- row #8 -->
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"></td>
+<td valign="top" align="left"><sub>One failure contract for every protocol: <code>OnError</code>, then <code>OnClose</code></sub></td>
+</tr>
 </table>
 
 <br>
@@ -256,66 +268,80 @@ $ dotnet build "netly/" -c Release -o "netly/bin/"
 ```csharp
 using Netly;
 
-TCP.Client client = new TCP.Client(framing: true);
+TcpClient client = new TcpClient(isFraming: true);
 ```
 
 ```csharp
-client.On.Open(() =>
+client.OnOpen(() =>
 {
-    printf("connection opened");
+    Console.WriteLine("connection opened");
 });
 
-client.On.Close(() =>
+client.OnClose(() =>
 {
-    printf("connetion closed");
+    Console.WriteLine("connection closed");
 });
 
-client.On.Error((exception) =>
+client.OnError((exception) =>
 {
-    printf("connection erro on open");
+    // failed to open (OnClose is called after), failed to send, or the data received is invalid,
+    // above FramingSize or made an allocation/callback of the app throw (OnClose is called after).
+    Console.WriteLine("connection error");
 });
 
-client.On.Data((bytes) =>
+client.OnData((stream) =>
 {
-    printf("connection receive a raw data");
+    // one sent message = one OnData. The stream starts at position 0 and is disposed
+    // when the callback returns, copy it if you need it later.
+    Console.WriteLine($"received {stream.Length} bytes");
 });
 
-client.On.Event((name, data) =>
+client.OnEvent((name, stream) =>
 {
-    printf("connection receive a event");
+    Console.WriteLine($"received the event {name}");
 });
 
-client.On.Modify((socket) =>
+client.OnModify((socket) =>
 {
-    printf("called before try open connection.");
+    // called before try open connection, e.g. socket.NoDelay = true
 });
 
-client.On.Encryption((certificate, chain, errors) =>
+client.OnSecure((certificate, chain, errors) =>
 {
-    // Only if client.IsEncrypted is enabled
-    printf("validate ssl/tls certificate");
-    // return true if certificate is valid
+    // Only if client.IsSecure is enabled, return true if the certificate is valid
     return true;
+});
+
+client.OnAllocate((size) =>
+{
+    // where each received message is written, size is the exact size of the message
+    // e.g. return a FileStream to keep big messages out of memory
+    return new MemoryStream();
 });
 ```
 
 ```csharp
 // open connection if closed
-client.To.Open(new Host("127.0.0.1", 8080));
+client.Open(new Host("127.0.0.1", 8080));
 
 // close connection if opened
-client.To.Close();
+client.Close();
 
-// send raw data if connected
-client.To.Data(new byte[2] { 128, 255 });
-client.To.Data("hello world", NE.Encoding.UTF8);
+// send raw data if connected (if it is not connected, OnError is called)
+client.SendData(new byte[2] { 128, 255 });
+client.SendData(Encoding.UTF8.GetBytes("hello world"));
 
 // send event if connected
-client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8);
+client.SendEvent("name", new byte[2] { 128, 255 });
+client.SendEvent("name", Encoding.UTF8.GetBytes("hello world"));
 
-// enable encryption (must call before client.To.Open)
-client.To.Encryption(true);
+// enable TLS (must call before client.Open)
+client.ToSecure(true);
+
+// biggest message accepted (default 20 MB) and time to complete a header (default 5s)
+// must be set before client.Open
+client.FramingSize = 4 * 1024 * 1024;
+client.HeaderTimeout = TimeSpan.FromSeconds(3);
 ```
 
 </details>
@@ -324,76 +350,69 @@ client.To.Encryption(true);
 ```csharp
 using Netly;
 
-TCP.Server server = new TCP.Server(framing: true);
+TcpServer server = new TcpServer(isFraming: true);
 ```
 
 ```csharp
-server.On.Open(() =>
+server.OnOpen(() =>
 {
-    printf("connection opened");
+    Console.WriteLine("server opened");
 });
 
-server.On.Close(() =>
+server.OnClose(() =>
 {
-    printf("connection closed");
+    Console.WriteLine("server closed");
 });
 
-server.On.Error((exception) =>
+server.OnError((exception) =>
 {
-    printf("connection error on open");
+    Console.WriteLine("server error on open");
 });
 
-server.On.Accept((client) =>
+server.OnAccept((client) =>
 {
-    client.On.Modify((socket) =>
+    client.OnModify((socket) =>
     {
-        printf("modify client socket e.g Enable NoDelay");
+        // modify client socket e.g. Enable NoDelay
     });
 
-    client.On.Open(() =>
-    {
-        printf("client connected");
-    });
+    client.OnOpen(() => Console.WriteLine("client connected"));
 
-    client.On.Data((bytes) =>
-    {
-        printf("client receive a raw data");
-    });
+    client.OnData((stream) => Console.WriteLine("client sent a raw data"));
 
-    client.On.Event((name, bytes) =>
-    {
-        printf("client receive a event");
-    });
+    client.OnEvent((name, stream) => Console.WriteLine("client sent an event"));
 
-    client.On.Close(() =>
-    {
-        printf("client disconnected");
-    });
+    client.OnError((exception) => Console.WriteLine("client sent invalid data or a callback threw"));
+
+    client.OnClose(() => Console.WriteLine("client disconnected"));
 });
 
-server.On.Modify((socket) =>
+server.OnModify((socket) =>
 {
-    printf("called before try open connection.");
+    // called before try open connection.
 });
 ```
 
 ```csharp
 // open connection
-server.To.Open(new Host("1.1.1.1", 1111));
+server.Open(new Host("0.0.0.0", 1111));
 
 // close connection
-server.To.Close();
+server.Close();
 
-// enable encryption support (must called before server.To.Open)
-server.To.Encryption(enable: true, @mypfx, @mypfxpassword, SslProtocols.Tls12);
+// enable TLS support (must called before server.Open)
+server.ToSecure(pfxBytes, "pfx password", SslProtocols.Tls12, allowUnsecured: false);
+
+// biggest message accepted from each client (default 20 MB), same value for all of them
+server.FramingSize = 4 * 1024 * 1024;
 
 // broadcast raw data for all connected client
-server.To.DataBroadcast("text buffer");
-server.To.DataBroadcast(new byte[] { 1, 2, 3 });
+server.BroadcastData(Encoding.UTF8.GetBytes("text buffer"));
+server.BroadcastData(new byte[] { 1, 2, 3 });
 
-// broadcast event (netly event) for all connected client
-server.To.EventBroadcast("event name", "text buffer");
-server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
+// broadcast event for all connected client (or only the ones that match the condition)
+server.BroadcastEvent("event name", new byte[] { 1, 2, 3 });
+server.BroadcastEvent("event name", new byte[] { 1, 2, 3 }, (client) => client.IsOpened);
 ```
 
 </details>
@@ -404,61 +423,67 @@ server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
 
 <tr>
 <th align="center" valign="top"><sub>UDP<strong></strong></sub></th>
-<td>
+<td width="100%">
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
 
-UDP.Client client = new UDP.Client();
+UdpClient client = new UdpClient();
 ```
 
 ```csharp
-client.On.Open(() =>
+client.OnOpen(() =>
 {
-    printf("connection opened");
+    Console.WriteLine("socket opened");
 });
 
-client.On.Close(() =>
+client.OnClose(() =>
 {
-    printf("connection closed");
+    Console.WriteLine("socket closed");
 });
 
-client.On.Error((exception) =>
+client.OnError((exception) =>
 {
-    printf("connection error on open");
+    // failed to open (OnClose is called after), failed to send, or an allocation/callback
+    // of the app threw (the datagram is discarded and the socket closes: OnClose is called after).
+    Console.WriteLine("socket error");
 });
 
-client.On.Data((bytes) =>
+client.OnData((stream) =>
 {
-    printf("connection received a raw data");
+    // one datagram = one OnData
+    Console.WriteLine($"received {stream.Length} bytes");
 });
 
-client.On.Event((name, eventBytes) =>
+client.OnEvent((name, stream) =>
 {
-    printf("connection received a event");
+    Console.WriteLine($"received the event {name}");
 });
 
-client.On.Modify((socket) =>
+client.OnModify((socket) =>
 {
-   printf("called before try open connection.");
+    // called before try open connection.
 });
+
+client.OnAllocate((size) => new MemoryStream());
 ```
 
 ```csharp
-// open connection if closed
-client.To.Open(new Host("127.0.0.1", 8080));
+// open socket if closed
+client.Open(new Host("127.0.0.1", 8080));
 
-// close connection if opened
-client.To.Close();
+// close socket if opened
+client.Close();
 
-// send raw data if connected
-client.To.Data(new byte[2] { 128, 255 });
-client.To.Data("hello world", NE.Encoding.UTF8);
+// biggest datagram this socket can send (it depends on the buffers of the system)
+int max = client.MaxDatagram;
 
-// send event if connected
-client.To.Event("name", new byte[2] { 128, 255 });
-client.To.Event("name", "hello world", NE.Encoding.UTF8);
+// send raw data if opened (a datagram bigger than MaxDatagram throws ArgumentException)
+client.SendData(new byte[2] { 128, 255 });
+
+// send event if opened
+client.SendEvent("name", new byte[2] { 128, 255 });
 ```
 
 </details>
@@ -467,65 +492,44 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8);
 ```csharp
 using Netly;
 
-UDP.Server server = new UDP.Server();
+UdpServer server = new UdpServer();
 ```
 
 ```csharp
-server.On.Open(() =>
+server.OnOpen(() => Console.WriteLine("server opened"));
+
+server.OnClose(() => Console.WriteLine("server closed"));
+
+server.OnError((exception) => Console.WriteLine("server error on open"));
+
+server.OnAccept((client) =>
 {
-    printf("connection opened");
+    // a client is a peer that sent a datagram to the server
+    client.OnData((stream) => Console.WriteLine("peer sent a raw data"));
+
+    client.OnEvent((name, stream) => Console.WriteLine("peer sent an event"));
+
+    client.OnClose(() => Console.WriteLine("peer removed"));
 });
 
-server.On.Close(() =>
+server.OnModify((socket) =>
 {
-    printf("connection closed");
-});
-
-server.On.Error((exception) =>
-{
-    printf("connection error on open");
-});
-
-server.On.Accept((client) =>
-{
-    client.On.Open(() =>
-    {
-        printf("client connected");
-    });
-
-    client.On.Close(() =>
-    {
-        // Only if use connection is enabled.
-        printf("client disconnected");
-    });
-
-    client.On.Data((bytes) =>
-    {
-        printf("client received a raw data");
-    });
-
-    client.On.Event((name, bytes) =>
-    {
-        printf("client received a event");
-    });
+    // called before try open connection.
 });
 ```
 
 ```csharp
-// open connection
-server.To.Open(new Host("127.0.0.1", 8080));
+// open
+server.Open(new Host("0.0.0.0", 1111));
 
-// close connection
-server.To.Close();
+// close
+server.Close();
 
-// broadcast raw data for all connected client
-server.To.DataBroadcast("text buffer");
-server.To.DataBroadcast(new byte[] { 1, 2, 3 });
+// broadcast raw data for all peers
+server.BroadcastData(new byte[] { 1, 2, 3 });
 
-// broadcast event (netly event) for all connected client
-server.To.EventBroadcast("event name", "text buffer");
-server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
-
+// broadcast event for all peers
+server.BroadcastEvent("event name", new byte[] { 1, 2, 3 });
 ```
 
 </details>
@@ -542,62 +546,61 @@ server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 });
 ```csharp
 using Netly;
 
-HTTP.Client client = new HTTP.Client();
+HttpClient client = new HttpClient();
 
 // add http header for request
-client.Headers.Add("Content-Type", "json");
+client.Headers.Add("Content-Type", "application/json");
 client.Headers.Add("Token", "ImGui.h");
 
 // add http url queries e.g: https://www.alec1o.com/?page=about&version=4
 client.Queries.Add("page", "about");
 client.Queries.Add("version", "4");
 
-// set request timeout (ms) default 15s (15000ms), 0 or negative value means infinite timeout.
+// request timeout (ms) default 15s (15000ms), 0 or negative value means infinite timeout.
 client.Timeout = 6000; // 6s
+
+// send the request again when it fails (attempts, delay), 0 attempts turns it off.
+client.UseRetry(3, TimeSpan.FromSeconds(1));
 
 // is opened: while is requesting
 bool isFetching = client.IsOpened;
 ```
 
 ```csharp
-HttpClient http = null;
-
-// called before try connect to server
-// modify the HttpClient object
-client.On.Modify((HttpClient instance) =>
+// called before try connect to server, modify the System.Net.Http.HttpClient object
+client.OnModify((System.Net.Http.HttpClient http) =>
 {
-    http = instance;
+    // e.g. change the default request headers
 });
 
-// connection is opened and fetch server.
-client.On.Open((response) =>
+// the server answered
+client.OnOpen((response) =>
 {
-    // you can use "http" instance on this scope (isn't null)
-    if (http.<foo> == <bar>) { ... }
+    int status = response.Status;
+    string text = response.Body.Text;
 });
 
-// erro on fetch, it can be timeout or whatever error
-// but if you receives error it mean the operation is called or done
-client.On.Error((Exception exception) =>
+// error on fetch, it can be timeout or whatever error
+// but if you receive an error it means the operation is done (OnClose is called after)
+client.OnError((Exception exception) =>
 {
-    Ny.Logger.PushError(exception);
+    Console.WriteLine(exception);
 });
 
-// connection is closed with fetch server.
-client.On.Close(() =>
+// the request is over (with or without error)
+client.OnClose(() =>
 {
-     if (http.<bar> == <foo>) { ... }
+    Console.WriteLine("request done");
 });
 ```
 
 ```csharp
+// used to fetch a server: method, url, body (optional)
+client.Open("GET", "https://www.alec1o.com/");
+client.Open("POST", "https://www.alec1o.com/user", "{ \"name\": \"alec\" }");
 
-// used to fetch a server
-client.To.Open("method e.g GET", "url", "body, allow null");
-
-// used for cancel opened request
-client.To.Close();
-
+// used to cancel an opened request
+client.Close();
 ```
 
 </details>
@@ -606,65 +609,67 @@ client.To.Close();
 ```csharp
 using Netly;
 
-HTTP.Server server = new HTTP.Server();
+HttpServer server = new HttpServer();
 
 // return true if server is serve http context
 bool isServe = server.IsOpened;
-
 ```
 
 ```csharp
-
-server.On.Open(() =>
+server.OnOpen(() =>
 {
     // http server opened
 });
-server.On.Close(() =>
+
+server.OnClose(() =>
 {
     // http server closed
 });
 
-server.On.Error((exception) =>
+server.OnError((exception) =>
 {
     // http server open error
 });
 
-server.On.Modify((httpListener) =>
+server.OnModify((httpListener) =>
 {
     // HttpListener instance, called before try open connection.
 });
 
 // Open http server connection
-server.To.Open(new Uri("http://127.0.0.1:8080/"));
+server.Open(new Uri("http://127.0.0.1:8080/"));
 
 // Close http server connection
-server.To.Close();
+server.Close();
 ```
 
 ##### Map
 
 ```csharp
 // Map path
-server.Map.Get("/", async (req, res) => {
-    // Handle async: GET
-})
+server.Map.Get("/", (req, res) =>
+{
+    res.Send(200, "hello");
+});
 
-server.Map.Post("/user", (req, res) => {
-    // Handle sync: POST
+server.Map.Post("/user", (req, res) =>
+{
+    res.Send(201);
 });
 
 // map using dynamic URL
-server.Map.Delete("/post/{userId}/group/{groupId}", async (req, res)) =>
+server.Map.Delete("/post/{userId}/group/{groupId}", (req, res) =>
 {
-    string userId = req.Param["userId"];
-    string groupId = req.Param["groupId"];
+    string userId = req.Params["userId"];
+    string groupId = req.Params["groupId"];
 
-    // Handle async: Delete from dynamic URL path
+    res.Send(200, $"deleted {userId} from {groupId}");
 });
 
 server.Map.WebSocket("/echo", (req, ws) =>
 {
-    // Handle websocket connection from path
+    // Handle websocket connection from path (ws is a WebSocketClient)
+    ws.OnData((stream, delivery) => { ... });
 });
 
 /*
@@ -677,10 +682,9 @@ You can map:
  * Trace   # trace request
  * Options # options request
  * Head    # head request, (only head)
- * All     # all http nethod request
+ * All     # all http method request
  * WebSocket   # websocket request
 */
-
 ```
 
 ##### Middleware
@@ -692,35 +696,32 @@ You can map:
 */
 
 // Global Middleware (*don't have workflow path)
-server.Middleware.Add(async (req, res, next) => {
-    // verify request timer
-    Stopwatch watch = new Stopwatch(); // init timer
+server.Middleware.Add((req, res, next) =>
+{
+    var watch = Stopwatch.StartNew(); // init timer
 
     next(); // call another middleware.
 
     watch.Stop(); // stop timer
 
-    res.Header.Add("Request-Timer", watch.ElapsedMilliseconds.ToString());
+    res.Headers.Add("Request-Timer", watch.ElapsedMilliseconds.ToString());
 });
 
 
 // Local middleware (have workflow path)
-server.Middleware.Add("/admin", async (req, res, next) => {
-
-    if (MyApp.CheckAdminByHeader(req.Header))
+server.Middleware.Add("/admin", (req, res, next) =>
+{
+    if (MyApp.CheckAdminByHeader(req.Headers))
     {
-        res.Header.Add("Admin-Token", MyApp.RefreshAdminHeaderToken(req));
+        res.Headers.Add("Admin-Token", MyApp.RefreshAdminHeaderToken(req));
         // call next middleware
         next();
-        // now. all middleware is executed. (because this is two way middleware)
-        res.Header.Add("Request-Delay", (DateTime.UtcNow - timer)());
     }
     else
     {
-        res.Header.Add("Content-Type", "application/json;charset=UTF-8");
-        await res.Send(404, "{ 'error': 'invalid request.' }");
-        // skip other middlewares:
-        // next();
+        res.Headers.Add("Content-Type", "application/json;charset=UTF-8");
+        res.Send(404, "{ 'error': 'invalid request.' }");
+        // skip other middlewares: don't call next()
     }
 });
 ```
@@ -731,9 +732,9 @@ server.Middleware.Add("/admin", async (req, res, next) => {
 // Register parse middleware
 server.Middleware.Add((request, response, next) =>
 {
-    if (request.Enctype == HTTP.Enctype.Json)
+    if (request.Enctype == HttpEnctype.Json)
     {
-        request.Body.RegisterParse(true, (Type type) =>
+        request.Body.RegisterParser(true, (Type type) =>
         {
             // e.g. using dotnet >= 6 @System.Text.Json
             return JsonSerializer.Deserialize(request.Body.Text, type);
@@ -762,61 +763,73 @@ server.Map.Post("/register", (request, response) =>
 
 <tr>
 <th align="center" valign="top"><sub>RUDP<strong></strong></sub></th>
-<td>
+<td width="100%">
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
 
-RUDP.Client client = new RUDP.Client();
+RudpClient client = new RudpClient();
 ```
 
 ```csharp
-client.On.Open(() =>
+client.OnOpen(() =>
 {
-    printf("connection opened");
+    Console.WriteLine("connection opened");
 });
 
-client.On.Close(() =>
+client.OnClose(() =>
 {
-    printf("connection closed");
+    Console.WriteLine("connection closed");
 });
 
-client.On.Error((exception) =>
+client.OnError((exception) =>
 {
-    printf("connection error on open");
+    // failed to open (OnClose is called after), failed to send, or the data received is invalid,
+    // above FramingSize or made an allocation/callback of the app throw (OnClose is called after).
+    Console.WriteLine("connection error");
 });
 
-client.On.Data((bytes, type) =>
+client.OnData((stream, delivery) =>
 {
-    printf("connection received a raw data");
+    // delivery: how the message arrived (Reliable, Sequenced or Unreliable)
+    Console.WriteLine($"received {stream.Length} bytes by {delivery}");
 });
 
-client.On.Event((name, bytes, type) =>
+client.OnEvent((name, stream, delivery) =>
 {
-    printf("connection received a event");
+    Console.WriteLine($"received the event {name} by {delivery}");
 });
 
-client.On.Modify((socket) =>
+client.OnModify((socket) =>
 {
-    printf("called before try open connection.");
+    // called before try open connection.
 });
+
+client.OnAllocate((size) => new MemoryStream());
 ```
 
 ```csharp
 // open connection if closed
-client.To.Open(new Host("127.0.0.1", 8080));
+client.Open(new Host("127.0.0.1", 8080));
 
 // close connection if opened
-client.To.Close();
+client.Close();
 
-// send raw data if connected
-client.To.Data(new byte[2] { 128, 255 }, RUDP.Unreliable);
-client.To.Data("hello world", NE.Encoding.UTF8, RUDP.Reliable);
+// send raw data if connected (default is RudpDelivery.Reliable)
+client.SendData(new byte[2] { 128, 255 });
+client.SendData(new byte[2] { 128, 255 }, RudpDelivery.Unreliable);
+client.SendData(new byte[2] { 128, 255 }, RudpDelivery.Sequenced);
 
 // send event if connected
-client.To.Event("name", new byte[2] { 128, 255 }, RUDP.Unreliable);
-client.To.Event("name", "hello world", NE.Encoding.UTF8, RUDP.Reliable);
+client.SendEvent("name", new byte[2] { 128, 255 }, RudpDelivery.Reliable);
+
+// biggest message accepted (default 20 MB), time without any packet from the other
+// side before the connection closes (default 5s) and time to wait the handshake (default 5s)
+// must be set before client.Open
+client.FramingSize = 4 * 1024 * 1024;
+client.NoResponseTimeout = 8000;
+client.HandshakeTimeout = 3000;
 ```
 
 </details>
@@ -825,75 +838,46 @@ client.To.Event("name", "hello world", NE.Encoding.UTF8, RUDP.Reliable);
 ```csharp
 using Netly;
 
-RUDP.Server server = new RUDP.Server();
+RudpServer server = new RudpServer();
 ```
 
 ```csharp
-server.On.Open(() =>
+server.OnOpen(() => Console.WriteLine("server opened"));
+
+server.OnClose(() => Console.WriteLine("server closed"));
+
+server.OnError((exception) => Console.WriteLine("server error on open"));
+
+server.OnAccept((client) =>
 {
-    printf("connection opened");
+    client.OnOpen(() => Console.WriteLine("client connected"));
+
+    client.OnData((stream, delivery) => Console.WriteLine("client sent a raw data"));
+
+    client.OnEvent((name, stream, delivery) => Console.WriteLine("client sent an event"));
+
+    client.OnClose(() => Console.WriteLine("client disconnected"));
 });
 
-server.On.Close(() =>
+server.OnModify((socket) =>
 {
-    printf("connection closed");
-});
-
-server.On.Error((exception) =>
-{
-    printf("connection error on open");
-});
-
-server.On.Accept((client) =>
-{
-    client.On.Open(() =>
-    {
-        printf("client connected");
-    });
-
-    client.On.Close(() =>
-    {
-        // Only if use connection is enabled.
-        printf("client disconnected");
-    });
-
-    client.On.Data((bytes, type) =>
-    {
-        if (type == RUDP.Reliable) { ... }
-        else if (type == RUDP.Unreliable) { ... }
-        else {  ... } /* type == RUDP.Sequenced */
-
-
-        printf("client received a raw data");
-    });
-
-    client.On.Event((name, type) =>
-
-        if (type == RUDP.Reliable) { ... }
-        else if (type == RUDP.Unreliable) { ... }
-        else {  ... } /* type == RUDP.Sequenced */
-
-        printf("client received a event");
-    });
+    // called before try open connection.
 });
 ```
 
 ```csharp
-// open connection
-server.To.Open(new Host("127.0.0.1", 8080));
+// open
+server.Open(new Host("0.0.0.0", 1111));
 
-// close connection
-server.To.Close();
+// close
+server.Close();
 
 // broadcast raw data for all connected client
-server.To.DataBroadcast("text buffer", RUDP.Unreliable);
-server.To.DataBroadcast(new byte[] { 1, 2, 3 }, RUDP.Reliable);
-server.To.DataBroadcast(new byte[] { 3, 2, 1 }, RUDP.Sequenced);
+server.BroadcastData(new byte[] { 1, 2, 3 });
+server.BroadcastData(new byte[] { 1, 2, 3 }, RudpDelivery.Unreliable);
 
-// broadcast event (netly event) for all connected client
-server.To.EventBroadcast("event name", "text buffer", RUDP.Unreliable);
-server.To.EventBroadcast("event name", new byte[] { 1, 2, 3 }, RUDP.Reliable);
-server.To.EventBroadcast("event name", new byte[] { 3, 2, 1 }, RUDP.Sequenced);
+// broadcast event for all connected client (or only the ones that match the condition)
+server.BroadcastEvent("event name", new byte[] { 1, 2, 3 }, RudpDelivery.Reliable);
 ```
 
 </details>
@@ -904,73 +888,84 @@ server.To.EventBroadcast("event name", new byte[] { 3, 2, 1 }, RUDP.Sequenced);
 
 <tr>
 <th align="center" valign="top"><sub>WebSocket<strong></strong></sub></th>
-<td>
+<td width="100%">
 <details><summary>📄 <strong><sup><sub>Client</sub></sup></strong></summary>
 
 ```csharp
 using Netly;
 
-HTTP.WebSocket client = new HTTP.WebSocket();
+WebSocketClient client = new WebSocketClient();
+
+// headers sent in the handshake (must be set before client.Open)
+client.Headers.Add("Token", "my-token");
 ```
 
 ```csharp
-client.On.Open(() =>
+client.OnOpen(() =>
 {
-    // websocket connection opened
+    Console.WriteLine("connection opened");
 });
 
-client.On.Close(() =>
+client.OnClose(() =>
 {
-    // websocket connection closed
+    Console.WriteLine("connection closed");
 });
 
-client.On.Error((exception) =>
+client.OnClose((status) =>
 {
-    // error on open websocket connectin
+    Console.WriteLine($"connection closed with {status}");
 });
 
-client.On.Data((bytes, type) =>
+client.OnError((exception) =>
 {
-    if (type == HTTP.Binary) { ... }
-    else if (type == HTTP.Text) { ... }
-    else { /* NOTE: it's imposible */ }
-
-    // raw data received from server
+    // failed to open (OnClose is called after), or the message is above FramingSize or made
+    // an allocation/callback of the app throw (the connection closes: OnClose is called after).
+    Console.WriteLine("connection error");
 });
 
-client.On.Event((name, bytes, type) =>
+client.OnData((stream, delivery) =>
 {
-    if (type == HTTP.Binary) { ... }
-    else if (type == HTTP.Text) { ... }
-    else { /* NOTE: it's imposible */ }
-
-    // event received from server
+    // delivery: WebSocketDelivery.Binary or WebSocketDelivery.Text
+    Console.WriteLine($"received {stream.Length} bytes");
 });
 
-client.On.Modify((wsSocket) =>
+client.OnEvent((name, stream, delivery) =>
 {
-    // modify websocket socket
+    Console.WriteLine($"received the event {name}");
+});
+
+client.OnModify((clientWebSocket) =>
+{
+    // called before try open connection.
+});
+
+// A WebSocket does not tell the size of a message before its end, so there is no OnAllocate:
+// OnDynamicAllocation is called with 0 to start the message and again with the current size
+// (8 KB, 16 KB, 32 KB...) when it grows. Return a bigger stream (the content is copied to it and the
+// old one is disposed) or null to keep the current one.
+client.OnDynamicAllocation((size) =>
+{
+    return size <= 1024 * 1024 ? new MemoryStream() : null;
 });
 ```
 
 ```csharp
-// open websocket client connection
-client.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
+// open connection if closed
+client.Open(new Uri("ws://127.0.0.1:8080/chat"));
 
-// close websocket client connection
-client.To.Close();
+// close connection if opened
+client.Close();
+client.Close(WebSocketCloseStatus.NormalClosure);
 
-// send raw data for server
-//      text message
-client.To.Data("my message", HTTP.Text);
-//      binnary message
-client.To.Data(NE.GetBytes("my buffer"), HTTP.Binary);
+// send raw data if connected (Binary is the default)
+client.SendData(new byte[2] { 128, 255 });
+client.SendData(Encoding.UTF8.GetBytes("hello world"), WebSocketDelivery.Text);
 
-// send event (netly event) for server
-//      text message
-client.To.Event("event name", "my message", HTTP.Text);
-//      binnary message
-client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary);
+// send event if connected
+client.SendEvent("name", Encoding.UTF8.GetBytes("hello world"), WebSocketDelivery.Text);
+
+// biggest message accepted (default 20 MB), must be set before client.Open
+client.FramingSize = 4 * 1024 * 1024;
 ```
 
 </details>
@@ -978,117 +973,56 @@ client.To.Data("event name", NE.GetBytes("my buffer"), HTTP.Binary);
 
 ```csharp
 using Netly;
-using Netly.Interfaces;
 
-HTTP.Server server = new HTTP.Server();
-
-IHTTP.WebSocket[] Clients = server.WebSocketClients;
+WebSocketServer server = new WebSocketServer();
 ```
 
 ```csharp
-server.Map.WebSocket("/chat/{token}", async (req, ws) =>
+server.OnOpen(() => Console.WriteLine("server opened"));
+
+server.OnClose(() => Console.WriteLine("server closed"));
+
+server.OnError((exception) => Console.WriteLine("server error on open"));
+
+server.OnAccept((client) =>
 {
-    // Accept websocket from dynamic path
-    string token = req.Params["token"];
+    client.OnOpen(() => Console.WriteLine("client connected"));
 
-    // validate websocket connection from params
-    if (Foo.Bar(token) == false)
-    {
-        ws.To.Close();
-    }
+    client.OnData((stream, delivery) => Console.WriteLine("client sent a raw data"));
 
-    ws.On.Modify(...);
-    ws.On.Open(...);
-    ws.On.Close(...);
-    ws.On.Data(...);
-    ws.On.Event(...);
+    client.OnEvent((name, stream, delivery) => Console.WriteLine("client sent an event"));
+
+    client.OnClose(() => Console.WriteLine("client disconnected"));
 });
 
-
-server.Map.Websocket("/echo", (req, ws) =>
-{
-    // Handle websocket on /echo path
-
-    ws.On.Modify((wsSocket) =>
-    {
-        // modify server-side websocket ocket
-    });
-
-    ws.On.Open(() =>
-    {
-        // server-side websocket connection opened
-    });
-
-    ws.On.Close(() =>
-    {
-        // server-side websocket connection closed
-    });
-
-    ws.On.Data((bytes, type) =>
-    {
-        if (type == HTTP.Binary) { ... }
-        else if (type == HTTP.Text) { ... }
-        else { /* NOTE: it's imposible */ }
-
-        // server-side websocket received raw data
-    });
-
-    ws.On.Event((name, bytes, type) =>
-    {
-        if (type == HTTP.Binary) { ... }
-        else if (type == HTTP.Text) { ... }
-        else { /* NOTE: it's imposible */ }
-
-        // server-side websocket received event
-    });
-});
-```
-
-```csharp
-server.On.Open(() =>
-{
-    // http server opened
-});
-server.On.Close(() =>
-{
-    // http server closed
-});
-
-server.On.Error((exception) =>
-{
-    // http server open error
-});
-
-server.On.Modify((httpListener) =>
+server.OnModify((httpListener) =>
 {
     // HttpListener instance, called before try open connection.
 });
 
-// Open http server connection
-server.To.Open(new Uri("http://127.0.0.1:8080/"));
-
-// Close http server connection
-server.To.Close();
+// where each message of the clients is written, same rules of the client
+server.OnDynamicAllocation((size) => new MemoryStream());
 ```
 
 ```csharp
-// open websocket client connection
-client.To.Open(new Uri("ws://127.0.0.1:8080/echo"));
+// open (the path is where the clients connect)
+server.Open(new Uri("ws://127.0.0.1:8080/chat"));
 
-// close websocket client connection
-client.To.Close();
+// close
+server.Close();
 
-// broadcast raw data for all connected websocket socket
+// biggest message accepted from each client (default 20 MB), must be set before server.Open
+server.FramingSize = 4 * 1024 * 1024;
+
+// broadcast raw data for all connected websocket
 //      text message
-server.To.WebsocketDataBroadcast("my message", HTTP.Text);
-//      binnary message
-server.To.WebsocketDataBroadcast(NE.GetBytes("my buffer"), HTTP.Binary);
+server.BroadcastData(Encoding.UTF8.GetBytes("my message"), WebSocketDelivery.Text);
+//      binary message
+server.BroadcastData(new byte[] { 1, 2, 3 }, WebSocketDelivery.Binary);
 
-// broadcast event (netly event) for all connected websocket socket
-//      text message
-server.To.WebsocketEventBroadcast("event name", "my message", HTTP.Text);
-//      binnary message
-server.To.WebsocketEventBroadcast("event name", NE.GetBytes("my buffer"), HTTP.Binary);
+// broadcast event for all connected websocket
+server.BroadcastEvent("event name", Encoding.UTF8.GetBytes("my message"), WebSocketDelivery.Text);
+server.BroadcastEvent("event name", new byte[] { 1, 2, 3 }, WebSocketDelivery.Binary);
 ```
 
 </details>
@@ -1351,6 +1285,112 @@ using Byter;
 
 <br>
 
+##### Protocol
+
+> <sub>What goes on the wire and what happens when something fails. Every multi-byte value is **big-endian** (network byte order).</sub>
+
+<table>
+<tr>
+<th align="center" valign="top"><sub>Framing<strong></strong></sub></th>
+<td width="100%">
+<sub>TCP is a stream of bytes, so each message starts with a header that tells where it ends. RUDP uses the same header at the start of every message (reliable, sequenced and unreliable). UDP is one datagram per message and WebSocket delimits its own messages, so they don't need it.</sub>
+<br>
+<br>
+
+| <sub>Field</sub>         | <sub>Size</sub>   | <sub>Description</sub>                                          |
+| ------------------------ | ----------------- | --------------------------------------------------------------- |
+| <sub>`Version`</sub>     | <sub>1 B</sub>    | <sub>Header version, `1`</sub>                                  |
+| <sub>`Length`</sub>      | <sub>8 B</sub>    | <sub>Size of the payload (`ulong`), 1 to `FramingSize`</sub>    |
+| <sub>`Checksum`</sub>    | <sub>1 B</sub>    | <sub>CRC-8 (polynomial `0x07`) of `Version` + `Length`</sub>    |
+| <sub>`Payload`</sub>     | <sub>`Length`</sub> | <sub>Data or event</sub>                                      |
+
+<sub>The size is checked against `FramingSize` (default 20 MB) before any memory is allocated, and the checksum tells a header from data out of alignment. A peer that starts a header and stops (`HeaderTimeout`, default 5 seconds on TCP) is disconnected.</sub>
+<br>
+<br>
+</td>
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>Event<strong></strong></sub></th>
+<td width="100%">
+<sub>An event is detected by its content, so any peer can send one by writing these bytes: no extra field of the transport is needed. When the prefix, the checksum, the exact sizes or the name (UTF-8) don't match, the message is delivered as data (<code>OnData</code>).</sub>
+<br>
+<br>
+
+| <sub>Field</sub>         | <sub>Size</sub>      | <sub>Description</sub>                                          |
+| ------------------------ | -------------------- | --------------------------------------------------------------- |
+| <sub>`Prefix`</sub>      | <sub>2 B</sub>       | <sub>`19 36`, read each byte in decimal: 1936, the year of the Turing Machine</sub> |
+| <sub>`NameSize`</sub>    | <sub>2 B</sub>       | <sub>Size of the name in bytes (`ushort`), 1 to 65535</sub>     |
+| <sub>`BodySize`</sub>    | <sub>8 B</sub>       | <sub>Size of the body (`ulong`)</sub>                           |
+| <sub>`Checksum`</sub>    | <sub>1 B</sub>       | <sub>CRC-8 of `Prefix` + `NameSize` + `BodySize`</sub>          |
+| <sub>`Name`</sub>        | <sub>`NameSize`</sub> | <sub>Event name, UTF-8</sub>                                   |
+| <sub>`Body`</sub>        | <sub>`BodySize`</sub> | <sub>Event content</sub>                                       |
+
+<br>
+</td>
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>Failures<strong></strong></sub></th>
+<td width="100%">
+<sub>The same contract for TCP, UDP, RUDP and WebSocket. There is no automatic reconnection: to connect again, call <code>Open</code> inside <code>OnClose</code>.</sub>
+<br>
+<br>
+
+| <sub>What happened</sub>                                                      | <sub>`OnError`</sub> | <sub>`OnClose`</sub> |
+| ----------------------------------------------------------------------------- | -------------------- | -------------------- |
+| <sub>The connection fails to open</sub>                                       | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>Invalid header, message above `FramingSize`, header not completed</sub>  | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>`OnAllocate` (or a write to its stream) throws</sub>                     | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>An exception of the app in `OnData` or `OnEvent`</sub>                   | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>Send without an open connection</sub>                                    | <sub>yes</sub>       | <sub>no</sub>         |
+| <sub>The send queue of RUDP is full</sub>                                     | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>The other side closes or the network drops</sub>                         | <sub>no</sub>        | <sub>yes</sub>        |
+
+<sub>The message that caused the failure is always discarded. An exception thrown inside <code>OnOpen</code>, <code>OnClose</code> or <code>OnError</code> is only logged. UDP has no connection: a failure closes the socket (or removes the peer, on a server).</sub>
+<br>
+<br>
+</td>
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>Allocation<strong></strong></sub></th>
+<td width="100%">
+<sub>The stream where a received message is written is chosen by the app.</sub>
+<br>
+<br>
+
+| <sub>Callback</sub>                  | <sub>Protocols</sub>                    | <sub>How it is called</sub>                                                                 |
+| ------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| <sub>`OnAllocate(size)`</sub>        | <sub>TCP, UDP, RUDP</sub>               | <sub>Once for each message, with its exact size</sub>                                       |
+| <sub>`OnDynamicAllocation(size)`</sub> | <sub>WebSocket</sub>                  | <sub>First with `0`, then with the current size when the message grows (8 KB, 16 KB, 32 KB...). Return a bigger stream (the library copies the content and disposes the old one) or `null` to keep the current one</sub> |
+
+<sub>An exception or a failed copy discards the message and closes the connection (<code>OnError</code>, then <code>OnClose</code>).</sub>
+<br>
+<br>
+</td>
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>RUDP<strong></strong></sub></th>
+<td width="100%">
+<sub>Reliable UDP keeps the same connection through short network drops (retransmission with growing timeout and keep-alive) and closes it when nothing arrives for <code>NoResponseTimeout</code> (default 5 seconds). The wire format is big-endian, version 3 of the handshake: peers of other versions are refused.</sub>
+<br>
+<br>
+</td>
+</tr>
+</table>
+
+<br>
+
 ##### Usage
 
 > <sub>Integration and interaction example codes</sub>
@@ -1364,41 +1404,41 @@ using Byter;
 
 ```csharp
 using System;
+using System.Text;
 using Netly;
 
 public class Program
 {
     private static void Main(string[] args)
     {
-        UDP.Client client = new UDP.Client();
+        UdpClient client = new UdpClient();
+        Host host = new Host("1.1.1.1", 1111);
 
-        client.On.Open(() =>
+        client.OnOpen(() =>
         {
-            Console.WriteLine(<some-text-here>);
-        };
+            Console.WriteLine("opened");
+        });
 
-        client.On.Close(() =>
+        client.OnClose(() =>
         {
-            Console.WriteLine(<some-text-here>);
-        };
+            Console.WriteLine("closed, open it again");
+            client.Open(host);
+        });
 
-        client.On.Error((exception) =>
+        client.OnError((exception) =>
         {
-            Console.WriteLine(<some-text-here>);
-        };
+            Console.WriteLine(exception.Message);
+        });
 
-        while(true)
+        client.Open(host);
+
+        while (true)
         {
-            if(!client.IsOpened)
-            {
-                client.To.Open(new Host("1.1.1.1", 1111));
-            }
-            else
-            {
-                Console.WriteLine("Message: ");
-                string message = Console.ReadLine();
-                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
-            }
+            Console.WriteLine("Message: ");
+            string message = Console.ReadLine();
+
+            if (client.IsOpened)
+                client.SendData(Encoding.UTF8.GetBytes(message ?? "No message."));
         }
     }
 }
@@ -1416,7 +1456,7 @@ public class Program
 <details><summary>📄 <strong><sup><sub>Script</sub></sup></strong></summary>
 
 ```csharp
-using System;
+using System.Text;
 using FlaxEngine;
 using Netly;
 
@@ -1424,45 +1464,40 @@ public class Example : Script
 {
     public string message;
 
-    internal UDP.Client client;
+    internal UdpClient client;
 
-    public override void Awake()
+    private readonly Host host = new Host("1.1.1.1", 1111);
+
+    public override void OnAwake()
     {
-        client = new UDP.Client();
+        client = new UdpClient();
 
-        client.On.Open(() =>
+        client.OnOpen(() =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log("opened");
+        });
 
-        client.On.Close(() =>
+        client.OnClose(() =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log("closed");
+        });
 
-        client.On.Error((exception) =>
+        client.OnError((exception) =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log(exception.Message);
+        });
     }
 
-    public override void Start()
+    public override void OnStart()
     {
-        client.To.Open(new Host("1.1.1.1", 1111));
+        client.Open(host);
     }
 
-    public override void Update()
+    public override void OnUpdate()
     {
-        if(!client.IsOpened)
+        if (client.IsOpened && Input.GetKeyDown(KeyboardKeys.Spacebar))
         {
-             client.To.Open(new Host("1.1.1.1", 1111));
-        }
-        else
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
-            }
+            client.SendData(Encoding.UTF8.GetBytes(message ?? "No message."));
         }
     }
 }
@@ -1481,53 +1516,48 @@ public class Example : Script
 <details><summary>📄 <strong><sup><sub>MonoBehaviour</sub></sup></strong></summary>
 
 ```csharp
-using System;
-using FlaxEngine;
+using System.Text;
+using UnityEngine;
 using Netly;
 
 public class Example : MonoBehaviour
 {
     public string message;
 
-    internal UDP.Client client;
+    internal UdpClient client;
+
+    private readonly Host host = new Host("1.1.1.1", 1111);
 
     private void Awake()
     {
-        client = new UDP.Client();
+        client = new UdpClient();
 
-        client.On.Open(() =>
+        client.OnOpen(() =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log("opened");
+        });
 
-        client.On.Close(() =>
+        client.OnClose(() =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log("closed");
+        });
 
-        client.On.Error((exception) =>
+        client.OnError((exception) =>
         {
-            Debug.Log(<some-text-here>);
-        };
+            Debug.Log(exception.Message);
+        });
     }
 
     private void Start()
     {
-        client.To.Open(new Host("1.1.1.1", 1111));
+        client.Open(host);
     }
 
     private void Update()
     {
-        if(!client.IsOpened)
+        if (client.IsOpened && Input.GetKeyDown(KeyCode.Space))
         {
-             client.To.Open(new Host("1.1.1.1", 1111));
-        }
-        else
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                client.To.Data(message ?? "No message.", NE.Encoding.UTF8);
-            }
+            client.SendData(Encoding.UTF8.GetBytes(message ?? "No message."));
         }
     }
 }
@@ -1539,17 +1569,16 @@ public class Example : MonoBehaviour
 
 <tr><th></th></tr>
 <tr>
-<tr>
 <th align="center" valign="top"><sub><i>WARNING:</i></sub></th>
 <td>
 
 <sub>
-<strong>Initialize event handlers once, not in loops</strong>. Set up handlers with `<protocol>.<client|server>.On.<event>` methods in initialization methods like `Awake()` or `Start()`. Avoid repeatedly setting these up in update loops to maintain performance.
+<strong>Initialize event handlers once, not in loops</strong>. Set up handlers with the <code>client.On&lt;Event&gt;(...)</code> and <code>server.On&lt;Event&gt;(...)</code> methods (<code>OnOpen</code>, <code>OnClose</code>, <code>OnError</code>, <code>OnData</code>, <code>OnEvent</code>...) in initialization methods like <code>Awake()</code> or <code>Start()</code>. Every call adds a new handler, so calling them repeatedly in update loops makes the same code run many times.
 </sub>
 <br>
 <br>
 <sub>
-<strong>Handle protocol actions wisely</strong>. Use `<protocol>.<client|server>.To.<action>` methods, such as `<protocol>.<client|server>.To.Open()`, `<protocol>.<client|server>.To.Data()`, and `<protocol>.<client|server>.To.Close()`, with careful management. Ensure you only open a connection when it's not already open and send data only when the connection is confirmed as active. Avoid calling these methods in tight loops.
+<strong>Handle protocol actions wisely</strong>. Use <code>Open()</code>, <code>SendData()</code>, <code>SendEvent()</code> and <code>Close()</code> with careful management. Ensure you only open a connection when it's not already open and send data only when the connection is confirmed as active (<code>IsOpened</code>). Avoid calling these methods in tight loops. To connect again after a failure, call <code>Open()</code> inside <code>OnClose</code>: there is no automatic reconnection.
 </sub>
 
 <br><br>
@@ -1560,29 +1589,29 @@ private void Start()
 {
     var client = ...;
 
-    client.On.Open(() => ...); // e.g generic handler
-    client.On.Open(() => ...); // e.g only to send "Hi"
-    client.On.Event((name, bytes, ?) => ...); // e.g generic event handler
-    client.On.Event((name, bytes, ?) => ...); // e.g only to handle A event
-    client.On.Event((name, bytes, ?) => ...); // e.g only to handle B event
+    client.OnOpen(() => ...); // e.g generic handler
+    client.OnOpen(() => ...); // e.g only to send "Hi"
+    client.OnEvent((name, stream) => ...); // e.g generic event handler
+    client.OnEvent((name, stream) => ...); // e.g only to handle A event
+    client.OnEvent((name, stream) => ...); // e.g only to handle B event
 
-    client.To.Open(...);
+    client.Open(...);
 }
 ```
 
 ```csharp
 public void Update()
 {
-    client.To.Open(...);                 // [OK? - May Not In Loop?]
-    client.To.Data(...);                 // [OK? - May Not In Loop?]
-    client.To.Event(...);                // [OK? - May Not In Loop?]
-    client.To.Close(...);                // [OK? - May Not In Loop?]
+    client.Open(...);                    // [OK? - May Not In Loop?]
+    client.SendData(...);                // [OK? - May Not In Loop?]
+    client.SendEvent(...);               // [OK? - May Not In Loop?]
+    client.Close(...);                   // [OK? - May Not In Loop?]
 
-    ws.On.Open(() => ...);               // [BAD - Never In Loop]
-    ws.On.Close(() => ... );             // [BAD - Never In Loop]
-    ws.On.Data((bytes) => ... );         // [BAD - Never In Loop]
-    ws.On.Error((exception) => ... );    // [BAD - Never In Loop]
-    ws.On.Event((name, bytes) =>  ... ); // [BAD - Never In Loop]
+    ws.OnOpen(() => ...);                // [BAD - Never In Loop]
+    ws.OnClose(() => ... );              // [BAD - Never In Loop]
+    ws.OnData((stream, delivery) => ...);// [BAD - Never In Loop]
+    ws.OnError((exception) => ... );     // [BAD - Never In Loop]
+    ws.OnEvent((name, stream, delivery) => ... ); // [BAD - Never In Loop]
 }
 ```
 
