@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Netly.csproj" />
+  <Project Path="test/Test.csproj" />
+  <Project Path="bench/Bench.csproj" />
+</Solution>
