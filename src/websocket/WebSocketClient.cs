@@ -23,6 +23,7 @@ namespace Netly
         private System.Net.WebSockets.WebSocket _serverSocket;
         private bool _tryConnecting, _tryClosing, _serverInitialized;
         private Uri _openHost;
+        private long _framingSize = Framing.DefaultSize;
         private int _reopenId, _activeId, _isOpening;
         private EventHandler<int> _onReopen;
         private EventHandler _onOpen;
@@ -87,6 +88,28 @@ namespace Netly
         ///     Address of the other side.
         /// </summary>
         public Uri Host { get; private set; }
+
+        /// <summary>
+        ///     Biggest message accepted, a bigger one closes the connection. Default is 20 MB, minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the connection is opened or for a client of a server.</exception>
+        public long FramingSize
+        {
+            get => _framingSize;
+            set
+            {
+                if (IsOpened || IsServer)
+                    throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
+
+                _framingSize = Math.Max(1024, value);
+            }
+        }
+
+        // the server gives its limit to each client it accepts
+        internal void SetFramingSize(long value)
+        {
+            _framingSize = Math.Max(1024, value);
+        }
 
         /// <summary>
         ///     Headers sent in the handshake, change them before <see cref="Open" />.
@@ -603,7 +626,7 @@ namespace Netly
 
                     fragments.Write(buffer.Array, 0, result.Count);
 
-                    if (fragments.Length > Framing.DefaultSize)
+                    if (fragments.Length > _framingSize)
                         throw new InvalidOperationException($"{nameof(fragments)}: {fragments.Length}");
 
                     // wait the end of message

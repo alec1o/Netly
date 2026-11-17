@@ -15,6 +15,7 @@ namespace Netly
         private readonly List<WebSocketClient> _clients = new List<WebSocketClient>();
         private readonly HashSet<string> _paths = new HashSet<string>();
         private EventHandler<WebSocketClient> _onAccept;
+        private long _framingSize = Framing.DefaultSize;
 
         /* ---- INTERFACE --- */
 
@@ -32,6 +33,23 @@ namespace Netly
         ///     Address where the server is listening.
         /// </summary>
         public Uri Host => _inner.Host;
+
+        /// <summary>
+        ///     Biggest message accepted from the clients, a bigger one closes the connection of that client.
+        ///     Default is 20 MB, minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the server is opened.</exception>
+        public long FramingSize
+        {
+            get => _framingSize;
+            set
+            {
+                if (IsOpened)
+                    throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
+
+                _framingSize = Math.Max(1024, value);
+            }
+        }
 
         /// <summary>
         ///     Snapshot of the connected clients.
@@ -146,6 +164,8 @@ namespace Netly
 
         private void Register(WebSocketClient client)
         {
+            client.SetFramingSize(_framingSize);
+
             lock (_locker)
             {
                 _clients.Add(client);

@@ -18,6 +18,7 @@ namespace Netly
         private Dictionary<IPEndPoint, Session> _sessions = new Dictionary<IPEndPoint, Session>();
         private bool _isOpening, _isClosing;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
+        private long _framingSize = Framing.DefaultSize;
         private EventHandler<RudpClient> _onAccept;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
@@ -100,6 +101,23 @@ namespace Netly
         {
             get => _noResponseTimeout;
             set => _noResponseTimeout = Timeout(value, nameof(NoResponseTimeout));
+        }
+
+        /// <summary>
+        ///     Biggest message accepted from the clients, a bigger one closes the connection of that client.
+        ///     Default is 20 MB, minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
+        public long FramingSize
+        {
+            get => _framingSize;
+            set
+            {
+                if (IsOpened)
+                    throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
+
+                _framingSize = Math.Max(1024, value);
+            }
         }
 
         private int Timeout(int value, string name)
@@ -424,7 +442,8 @@ namespace Netly
             var connection = new RudpConnection(owner, remote, true)
             {
                 HandshakeTimeout = _handshakeTimeout,
-                NoResponseTimeout = _noResponseTimeout
+                NoResponseTimeout = _noResponseTimeout,
+                MaxMessageSize = _framingSize
             };
             var client = new RudpClient(this, owner, connection, new Host(remote));
 

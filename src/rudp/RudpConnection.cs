@@ -123,6 +123,9 @@ namespace Netly
 
         public string Id { get; private set; } = string.Empty;
         public int MaxDatagram { get; private set; }
+
+        // biggest message accepted, a bigger one closes the connection
+        public long MaxMessageSize { get; set; } = Framing.DefaultSize;
         public int HandshakeTimeout { get; set; } = 5000;
         public int NoResponseTimeout { get; set; } = 5000;
         public bool IsOpened => _state == State.Connected;
@@ -645,6 +648,13 @@ namespace Netly
             // message in a single packet
             if (isFirst && isLast)
             {
+                if (length > MaxMessageSize)
+                {
+                    Logger.Singleton.Submit($"[RudpConnection] Message above the limit, connection closed. Id: {Id}");
+                    CloseLocked(ref pending, true, null);
+                    return;
+                }
+
                 var data = new byte[length];
 
                 Buffer.BlockCopy(buffer, offset, data, 0, length);
@@ -659,7 +669,7 @@ namespace Netly
 
             _assembly.Write(buffer, offset, length);
 
-            if (_assembly.Length > Framing.DefaultSize)
+            if (_assembly.Length > MaxMessageSize)
             {
                 Logger.Singleton.Submit($"[RudpConnection] Message above the limit, connection closed. Id: {Id}");
                 CloseLocked(ref pending, true, null);

@@ -20,6 +20,7 @@ namespace Netly
         private int _reopenId;
         private EventHandler<int> _onReopen;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
+        private long _framingSize = Framing.DefaultSize;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
         private EventHandler<(string Name, Stream Stream, RudpDelivery Delivery)> _onEvent;
@@ -52,6 +53,7 @@ namespace Netly
             _connection = connection;
             _handshakeTimeout = connection.HandshakeTimeout;
             _noResponseTimeout = connection.NoResponseTimeout;
+            _framingSize = connection.MaxMessageSize;
             Socket = socket;
             Host = host;
             IsServer = true;
@@ -115,6 +117,22 @@ namespace Netly
         {
             get => _noResponseTimeout;
             set => _noResponseTimeout = Timeout(value, nameof(NoResponseTimeout));
+        }
+
+        /// <summary>
+        ///     Biggest message accepted, a bigger one closes the connection. Default is 20 MB, minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the connection is opened or for a client of a server.</exception>
+        public long FramingSize
+        {
+            get => _framingSize;
+            set
+            {
+                if (IsOpened || IsServer)
+                    throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
+
+                _framingSize = Math.Max(1024, value);
+            }
         }
 
         private int Timeout(int value, string name)
@@ -391,7 +409,8 @@ namespace Netly
                     var connection = new RudpConnection(socket, host.IPEndPoint, false)
                     {
                         HandshakeTimeout = _handshakeTimeout,
-                        NoResponseTimeout = _noResponseTimeout
+                        NoResponseTimeout = _noResponseTimeout,
+                        MaxMessageSize = _framingSize
                     };
 
                     connection.OnOpen += () =>
