@@ -199,4 +199,29 @@ public class UdpFragmentTests
 
         await Close(server);
     }
+
+    [Fact]
+    public async Task SendToAPortWithoutServer_NeverRaisesOnError()
+    {
+        // nobody listens: the system answers with ICMP and reports it on the next send, each system on a different one
+        var client = new UdpClient();
+        var errors = 0;
+        var opened = Wait.Signal<bool>();
+
+        client.OnError(_ => Interlocked.Increment(ref errors));
+        client.OnOpen(() => opened.TrySetResult(true));
+        client.Open(Net.UdpHost());
+        Assert.True(await Wait.For(opened, what: "client open"));
+
+        for (var i = 0; i < 8; i++)
+        {
+            client.SendData(Net.Payload(50));
+            await Task.Delay(40);
+        }
+
+        Assert.Equal(0, errors);
+        Assert.True(client.IsOpened);
+
+        client.Close();
+    }
 }

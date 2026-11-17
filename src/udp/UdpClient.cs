@@ -549,6 +549,12 @@ namespace Netly
                     Send(socket, fragment, fragment.Length);
                 }
             }
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.ConnectionReset ||
+                                            e.SocketErrorCode == SocketError.ConnectionRefused)
+            {
+                // nobody is listening on the other side (ICMP of a previous datagram): linux, windows and macOS
+                // report it on a different send, UDP has no connection to lose
+            }
             catch (Exception e)
             {
                 Logger.Singleton.Submit(e);
