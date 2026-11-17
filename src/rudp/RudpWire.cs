@@ -23,7 +23,7 @@ namespace Netly
     // fragment: message id(2) | index(1) | count(1)
     internal static class RudpWire
     {
-        public const byte Version = 1;
+        public const byte Version = 2;
 
         public const byte
             Unreliable = 0,
@@ -51,11 +51,14 @@ namespace Netly
             FragmentSize = 4,
             ReliableHeader = 1 + TokenSize + 4 + AckSize,
             ControlHeader = 1 + TokenSize + AckSize,
-            SynSize = 1 + 1 + 1 + 4,
-            SynAckSize = 1 + 1 + 4 + TokenSize + 16,
+            SynSize = 1 + 1 + 1 + 4 + 2,
+            SynAckSize = 1 + 1 + 4 + TokenSize + 16 + 2,
             HandshakeAckSize = 1 + 1 + TokenSize;
 
         // datagram limits: ip fragmentation is avoided on the internet (ipv6 minimum mtu), loopback has a big mtu
+        // smallest datagram a peer can announce, a lower value (or zero) is raised to it
+        public const int MinDatagram = 512;
+
         public const int InternetDatagram = 1232;
         public const int LoopbackDatagram = 8192;
 

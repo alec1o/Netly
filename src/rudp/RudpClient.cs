@@ -73,6 +73,13 @@ namespace Netly
         public bool IsOpened => _connection != null && _connection.IsOpened;
 
         /// <summary>
+        ///     Biggest datagram of the connection: the smaller one between the limits of the sockets of both sides,
+        ///     agreed in the handshake (each limit comes from the send and receive buffers of the socket).
+        ///     Before the connection is open it is the limit of this side.
+        /// </summary>
+        public int MaxDatagram => _connection?.MaxDatagram ?? 0;
+
+        /// <summary>
         ///     True when this client was accepted by a <see cref="RudpServer" />.
         /// </summary>
         public bool IsServer { get; }

@@ -79,6 +79,7 @@ namespace Netly
         private uint _token, _nonce;
         private long _startedAt, _nextHandshakeAt, _handshakeDelay, _synSentAt;
         private long _nextTickAt;
+        private readonly int _localDatagram;
         private bool _synRetransmitted;
         private long _lastReceiveAt, _lastSendAt;
 
@@ -113,12 +114,15 @@ namespace Netly
             _remote = remote;
             _isServer = isServer;
             // the usual size of the path, never above what the send and receive buffers of the socket hold
-                MaxDatagram = SocketLimits.Both(socket,
+                _localDatagram = SocketLimits.Both(socket,
                     IPAddress.IsLoopback(remote.Address) ? RudpWire.LoopbackDatagram : RudpWire.InternetDatagram);
+
+                // until the handshake ends it is the limit of this side, then the smaller one of the two peers
+                MaxDatagram = _localDatagram;
         }
 
         public string Id { get; private set; } = string.Empty;
-        public int MaxDatagram { get; }
+        public int MaxDatagram { get; private set; }
         public int HandshakeTimeout { get; set; } = 5000;
         public int NoResponseTimeout { get; set; } = 5000;
         public bool IsOpened => _state == State.Connected;
@@ -165,6 +169,7 @@ namespace Netly
             buffer[1] = RudpWire.Syn;
             buffer[2] = RudpWire.Version;
             RudpWire.Put32(buffer, 3, _nonce);
+            RudpWire.Put16(buffer, 7, (ushort)_localDatagram);
 
             if (_synSentAt == 0) _synSentAt = now;
             else _synRetransmitted = true;
@@ -186,6 +191,7 @@ namespace Netly
             RudpWire.Put32(buffer, 2, _nonce);
             RudpWire.Put32(buffer, 6, _token);
             Buffer.BlockCopy(Guid.Parse(Id).ToByteArray(), 0, buffer, 10, 16);
+            RudpWire.Put16(buffer, 26, (ushort)_localDatagram);
 
             _nextHandshakeAt = RudpWire.Now() + _handshakeDelay;
             _handshakeDelay = Math.Min(_handshakeDelay * 2, 500);
@@ -321,6 +327,7 @@ namespace Netly
                         _startedAt = RudpWire.Now();
                         _lastReceiveAt = _startedAt;
                         _handshakeDelay = 100;
+                        MaxDatagram = Negotiate(RudpWire.Get16(buffer, 7));
                         SendSynAck();
                         RudpScheduler.Add(this);
                     }
@@ -344,6 +351,7 @@ namespace Netly
                 _token = RudpWire.Get32(buffer, 6);
                 Buffer.BlockCopy(buffer, 10, id, 0, 16);
                 Id = new Guid(id).ToString();
+                MaxDatagram = Negotiate(RudpWire.Get16(buffer, 26));
 
                 var now = RudpWire.Now();
                 _lastReceiveAt = now;
@@ -360,6 +368,12 @@ namespace Netly
 
                 pending.Opened = true;
             }
+        }
+
+        // both peers use the smaller datagram, a bigger one would be dropped by the peer that can't hold it
+        private int Negotiate(int peer)
+        {
+            return Math.Min(_localDatagram, Math.Max(RudpWire.MinDatagram, peer));
         }
 
         private void Confirm(ref Pending pending)
