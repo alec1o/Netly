@@ -88,4 +88,24 @@ public class WebSocketFramingSizeTests
 
         await server.CloseAsync();
     }
+
+    [Fact]
+    public async Task BiggerMessage_PeerReceivesMessageTooBig()
+    {
+        var server = new WebSocketServer { FramingSize = 4096 };
+        var uri = new Uri($"ws://127.0.0.1:{Net.FreeTcpPort()}/chat");
+        await server.OpenAsync(uri);
+
+        var client = new WebSocketClient();
+        var closed = Wait.Signal<System.Net.WebSockets.WebSocketCloseStatus>();
+        client.OnClose(status => closed.TrySetResult(status));
+        await client.OpenAsync(uri);
+        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
+
+        client.SendData(Net.Payload(20000));
+
+        Assert.Equal(System.Net.WebSockets.WebSocketCloseStatus.MessageTooBig, await Wait.For(closed, what: "close status"));
+
+        await server.CloseAsync();
+    }
 }

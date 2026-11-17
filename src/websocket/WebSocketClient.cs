@@ -543,7 +543,10 @@ namespace Netly
             }
             catch (Exception e)
             {
+                // write failed: OnError then OnClose
                 Logger.Singleton.Submit(e);
+                _onError?.Invoke(null, e);
+                _ = CloseAsync(WebSocketCloseStatus.InternalServerError);
             }
         }
 
@@ -586,8 +589,11 @@ namespace Netly
                         }
 
                         if (written + result.Count > _framingSize)
+                        {
+                            closeStatus = WebSocketCloseStatus.MessageTooBig;
                             throw new InvalidDataException(
                                 $"message: {written + result.Count} > {nameof(FramingSize)}: {_framingSize}");
+                        }
 
                         while (written + result.Count > limit)
                         {
@@ -616,7 +622,10 @@ namespace Netly
                         // data or app failed: OnError then OnClose
                         Logger.Singleton.Submit(e);
                         _onError?.Invoke(null, e);
-                        closeStatus = WebSocketCloseStatus.EndpointUnavailable;
+
+                        if (closeStatus != WebSocketCloseStatus.MessageTooBig)
+                            closeStatus = WebSocketCloseStatus.InternalServerError;
+
                         break;
                     }
                 }
