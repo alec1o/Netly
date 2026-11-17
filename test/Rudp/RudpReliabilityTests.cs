@@ -315,4 +315,32 @@ public class RudpReliabilityTests
         await client.CloseAsync();
         await server.CloseAsync();
     });
+
+    [Fact]
+    public Task OverheadIsSmall_WhenThePeerHasASmallReceiveBuffer() => Guard.Run(async () =>
+    {
+        // linux runners cap the receive buffer (rmem_max 208 KB): a burst above it is dropped and sent again
+        const int size = 4 * 1024 * 1024;
+        var host = Net.UdpHost();
+        var server = new RudpServer();
+        server.OnAccept(c => c.OnOpen(() => c.SendData(Net.Payload(size, 3), RudpDelivery.Reliable)));
+        await server.OpenAsync(host);
+
+        using var proxy = new UdpProxy(host);
+        var done = Wait.Signal<bool>();
+        var client = new RudpClient();
+        client.OnModify(socket => socket.ReceiveBufferSize = 106496);
+        client.OnData((stream, _) =>
+        {
+            if (stream.Length == size) done.TrySetResult(true);
+        });
+        await client.OpenAsync(proxy.Host);
+
+        await Wait.For(done, TimeSpan.FromSeconds(30), "transfer");
+
+        Assert.True(proxy.ToClientBytes < size * 1.02, $"to client: {proxy.ToClientBytes} bytes for {size}");
+
+        await client.CloseAsync();
+        await server.CloseAsync();
+    });
 }

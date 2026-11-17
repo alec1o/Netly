@@ -84,6 +84,8 @@ namespace Netly
         private long _startedAt, _nextHandshakeAt, _handshakeDelay, _synSentAt;
         private long _nextTickAt;
         private readonly int _localDatagram;
+        private readonly int _localWindow;
+        private int _peerWindow = MaxInFlightBytes;
         private bool _synRetransmitted;
         private long _lastReceiveAt, _lastSendAt;
 
@@ -126,6 +128,9 @@ namespace Netly
 
                 // until the handshake ends it is the limit of this side, then the smaller one of the two peers
                 MaxDatagram = _localDatagram;
+
+                // a burst bigger than the receive buffer is dropped by the system (linux caps it by rmem_max)
+                _localWindow = SocketLimits.Receive(socket, int.MaxValue);
         }
 
         public string Id { get; private set; } = string.Empty;
@@ -186,6 +191,7 @@ namespace Netly
             buffer[2] = RudpWire.Version;
             RudpWire.Put32(buffer, 3, _nonce);
             RudpWire.Put16(buffer, 7, (ushort)_localDatagram);
+            RudpWire.Put32(buffer, 9, (uint)_localWindow);
 
             if (_synSentAt == 0) _synSentAt = now;
             else _synRetransmitted = true;
@@ -208,6 +214,7 @@ namespace Netly
             RudpWire.Put32(buffer, 6, _token);
             Buffer.BlockCopy(Guid.Parse(Id).ToByteArray(), 0, buffer, 10, 16);
             RudpWire.Put16(buffer, 26, (ushort)_localDatagram);
+            RudpWire.Put32(buffer, 28, (uint)_localWindow);
 
             _nextHandshakeAt = RudpWire.Now() + _handshakeDelay;
             _handshakeDelay = Math.Min(_handshakeDelay * 2, 500);
@@ -354,6 +361,7 @@ namespace Netly
                         _lastReceiveAt = _startedAt;
                         _handshakeDelay = 100;
                         MaxDatagram = Negotiate(RudpWire.Get16(buffer, 7));
+                        _peerWindow = Window(RudpWire.Get32(buffer, 9));
                         SendSynAck();
                         RudpScheduler.Add(this);
                     }
@@ -378,6 +386,7 @@ namespace Netly
                 Buffer.BlockCopy(buffer, 10, id, 0, 16);
                 Id = new Guid(id).ToString();
                 MaxDatagram = Negotiate(RudpWire.Get16(buffer, 26));
+                _peerWindow = Window(RudpWire.Get32(buffer, 28));
 
                 var now = RudpWire.Now();
                 _lastReceiveAt = now;
@@ -400,6 +409,12 @@ namespace Netly
         private int Negotiate(int peer)
         {
             return Math.Min(_localDatagram, Math.Max(RudpWire.MinDatagram, peer));
+        }
+
+        // bytes in flight: half of the receive buffer of the peer, the system also counts its own overhead by datagram
+        private static int Window(uint peer)
+        {
+            return (int)Math.Max(RudpWire.MinDatagram * 4, Math.Min(MaxInFlightBytes, peer / 2));
         }
 
         private void Confirm(ref Pending pending)
@@ -485,8 +500,8 @@ namespace Netly
         // send queued packets while the window allows it
         private void Pump()
         {
-            // window in packets, limited by the bytes in flight (a burst above this overflows buffers)
-            var window = Math.Min((int)_cwnd, Math.Max(4, MaxInFlightBytes / MaxDatagram));
+            // window in packets, limited by the bytes in flight (a burst above the buffer of the peer is dropped)
+            var window = Math.Min((int)_cwnd, Math.Max(4, _peerWindow / MaxDatagram));
 
             while (_sent < _out.Count)
             {

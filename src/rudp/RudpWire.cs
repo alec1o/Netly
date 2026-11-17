@@ -16,15 +16,16 @@ namespace Netly
     // Sequenced:  flags | token(4) | seq(4) | [fragment(4)] | payload
     // Message:    framing header (version(1) | length(8) | checksum(1)) | payload, before it is split in packets
     // Handshake:  flags | kind(1) | ...
-    //     syn:     version(1) | nonce(4)
-    //     syn ack: nonce(4) | token(4) | id(16)
+    //     syn:     version(1) | nonce(4) | datagram(2) | window(4)
+    //     syn ack: nonce(4) | token(4) | id(16) | datagram(2) | window(4)
+    //     window: bytes the receive buffer of the sender holds, the peer never has more than it in flight
     //     ack:     token(4)
     //
     // ack: next expected seq (4), every seq below it was received, and a bitmap (8): bit i is seq next + 1 + i
     // fragment: message id(2) | index(1) | count(1)
     internal static class RudpWire
     {
-        public const byte Version = 3;
+        public const byte Version = 4;
 
         public const byte
             Unreliable = 0,
@@ -52,8 +53,8 @@ namespace Netly
             FragmentSize = 4,
             ReliableHeader = 1 + TokenSize + 4 + AckSize,
             ControlHeader = 1 + TokenSize + AckSize,
-            SynSize = 1 + 1 + 1 + 4 + 2,
-            SynAckSize = 1 + 1 + 4 + TokenSize + 16 + 2,
+            SynSize = 1 + 1 + 1 + 4 + 2 + 4,
+            SynAckSize = 1 + 1 + 4 + TokenSize + 16 + 2 + 4,
             HandshakeAckSize = 1 + 1 + TokenSize;
 
         // datagram limits: ip fragmentation is avoided on the internet (ipv6 minimum mtu), loopback has a big mtu

@@ -30,7 +30,7 @@ public class RudpFailureTests
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, buffer);
         Assert.Equal(0x0102030405060708UL, RudpWire.Get64(buffer, 0));
 
-        Assert.Equal(3, RudpWire.Version);
+        Assert.Equal(4, RudpWire.Version);
     }
 
     [Theory]
