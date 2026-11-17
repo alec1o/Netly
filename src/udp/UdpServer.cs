@@ -16,6 +16,7 @@ namespace Netly
     {
         private readonly object _locker = new object();
         private Dictionary<IPEndPoint, UdpClient> _clients;
+        private int _receiveLimit = UdpClient.MaxDatagramSize;
         private bool _isOpening, _isClosing;
         private EventHandler<UdpClient> _onAccept;
         private EventHandler _onOpen, _onClose;
@@ -197,7 +198,10 @@ namespace Netly
 
                     _onOpen?.Invoke(null, null);
 
-                    ReceiveTrigger(socket, new byte[SocketLimits.Receive(socket, UdpClient.MaxDatagramSize)]);
+                    // read after the bind, the user can change the buffers of the socket in OnModify
+                    _receiveLimit = SocketLimits.Receive(socket, UdpClient.MaxDatagramSize);
+
+                    ReceiveTrigger(socket, new byte[_receiveLimit]);
                 }
                 catch (Exception e)
                 {

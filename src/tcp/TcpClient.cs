@@ -30,6 +30,7 @@ namespace Netly
         private string _certificatePassword;
         private bool _isOpening, _isClosing;
         private int _reopenId, _spurious;
+        private int _receiveChunk = ChunkSize, _poolChunk = PoolChunkSize;
         private Host _openHost;
         private EventHandler<int> _onReopen;
         private NetworkStream _networkStream;
@@ -739,13 +740,17 @@ namespace Netly
 
         private void InitReceiver(Socket owner)
         {
+            // read once after the connection, the user can change the buffers of the socket in OnModify
+            _receiveChunk = SocketLimits.Receive(owner, ChunkSize);
+            _poolChunk = SocketLimits.Receive(owner, PoolChunkSize);
+
             if (_zeroByteRead && IsSecure is false)
             {
                 ReceiveWait(owner);
                 return;
             }
 
-            ReceiveTrigger(owner, new byte[SocketLimits.Receive(owner, ChunkSize)]);
+            ReceiveTrigger(owner, new byte[_receiveChunk]);
         }
 
         // no buffer is kept while the connection is idle, one is rented only to read the data that arrived
@@ -797,13 +802,13 @@ namespace Netly
                     // a platform that does it every time would spin: stop using zero byte reads, a read that waits
                     // would hold a thread of the pool for every idle connection
                     _zeroByteRead = false;
-                    ReceiveTrigger(owner, new byte[SocketLimits.Receive(owner, ChunkSize)]);
+                    ReceiveTrigger(owner, new byte[_receiveChunk]);
                     return false;
                 }
 
                 _spurious = 0;
 
-                buffer = ArrayPool<byte>.Shared.Rent(SocketLimits.Receive(owner, PoolChunkSize));
+                buffer = ArrayPool<byte>.Shared.Rent(_poolChunk);
 
                 var size = Stream.Read(buffer, 0, buffer.Length);
 
