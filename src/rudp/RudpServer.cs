@@ -259,6 +259,9 @@ namespace Netly
 
                     socket.Bind(host.EndPoint);
 
+                    // REQUIRED: the scheduler thread sends for every connection, it must never wait for buffer space
+                    socket.Blocking = false;
+
                     lock (_locker)
                     {
                         Host = new Host(socket.LocalEndPoint);

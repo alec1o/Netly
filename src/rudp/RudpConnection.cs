@@ -49,11 +49,19 @@ namespace Netly
             public bool Opened, Closed;
             public string Fail, Error;
             public List<KeyValuePair<byte[], RudpDelivery>> Messages;
+            public List<byte[]> Datagrams;
 
             public void Add(byte[] data, RudpDelivery type)
             {
                 if (Messages == null) Messages = new List<KeyValuePair<byte[], RudpDelivery>>();
                 Messages.Add(new KeyValuePair<byte[], RudpDelivery>(data, type));
+            }
+
+            // sent out of the lock by the thread of the user, it can wait for buffer space
+            public void AddDatagram(byte[] data)
+            {
+                if (Datagrams == null) Datagrams = new List<byte[]>();
+                Datagrams.Add(data);
             }
         }
 
@@ -65,6 +73,7 @@ namespace Netly
         private const long AckDelay = 2;
         private const long MinRto = 100, MaxRto = 1500, InitialRto = 200;
         private const long DatagramLifetime = 2000;
+        private const long SendWait = 1000;
         private const int MaxRetransmits = 20;
         private const int DuplicateThreshold = 3;
         private const int MaxReorder = 2048;
@@ -543,7 +552,7 @@ namespace Netly
                 if (isSequenced) RudpWire.Put32(buffer, 5, seq);
                 Buffer.BlockCopy(data, 0, buffer, header, data.Length);
 
-                SendRaw(buffer, buffer.Length);
+                pending.AddDatagram(buffer);
                 return;
             }
 
@@ -574,7 +583,7 @@ namespace Netly
                 buffer[header + 3] = (byte)count;
                 Buffer.BlockCopy(data, offset, buffer, header + RudpWire.FragmentSize, length);
 
-                SendRaw(buffer, buffer.Length);
+                pending.AddDatagram(buffer);
             }
         }
 
@@ -594,6 +603,55 @@ namespace Netly
             catch (SocketException)
             {
                 // datagram dropped by the system (buffer full, icmp error), the protocol recovers
+            }
+        }
+
+        // the socket never blocks (the scheduler sends for every connection): the thread of the user waits here
+        // for buffer space instead, a datagram that still does not fit is dropped
+        private void SendWaiting(byte[] buffer)
+        {
+            var deadline = RudpWire.Now() + SendWait;
+
+            for (;;)
+            {
+                try
+                {
+                    _lastSendAt = RudpWire.Now();
+
+                    if (_isServer) _socket.SendTo(buffer, 0, buffer.Length, SocketFlags.None, _remote);
+                    else _socket.Send(buffer, 0, buffer.Length, SocketFlags.None);
+
+                    return;
+                }
+                catch (SocketException e) when
+                (
+                    e.SocketErrorCode == SocketError.WouldBlock ||
+                    e.SocketErrorCode == SocketError.NoBufferSpaceAvailable
+                )
+                {
+                    var left = deadline - RudpWire.Now();
+
+                    if (left <= 0) return;
+
+                    try
+                    {
+                        _socket.Poll((int)Math.Min(left, 50) * 1000, SelectMode.SelectWrite);
+                    }
+                    catch (Exception)
+                    {
+                        return;
+                    }
+                }
+                catch (ObjectDisposedException)
+                {
+                    // socket closed, the connection is closing
+                    return;
+                }
+                catch (SocketException)
+                {
+                    // datagram dropped by the system (icmp error)
+                    return;
+                }
             }
         }
 
@@ -1079,6 +1137,10 @@ namespace Netly
 
         private void Flush(Pending pending)
         {
+            if (pending.Datagrams != null)
+                foreach (var datagram in pending.Datagrams)
+                    SendWaiting(datagram);
+
             try
             {
                 if (pending.Opened) OnOpen?.Invoke();

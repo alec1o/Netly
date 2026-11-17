@@ -373,6 +373,10 @@ namespace Netly
 
                     socket.Connect(host.EndPoint);
 
+                    // REQUIRED: the scheduler thread sends for every connection, a send that waits for buffer space
+                    // (macOS with a small send buffer) would stop all of them; a datagram that does not fit is dropped
+                    socket.Blocking = false;
+
                     var connection = new RudpConnection(socket, host.IPEndPoint, false)
                     {
                         HandshakeTimeout = _handshakeTimeout,
