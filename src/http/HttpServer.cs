@@ -361,21 +361,50 @@ namespace Netly
             {
                 var descriptor = descriptors[i];
 
-                try
-                {
-                    descriptor.Next = descriptors[i + 1];
-                }
-                catch (Exception e)
-                {
-                    Logger.Singleton.Submit(e);
-                    descriptor.Next = null;
-                }
+                descriptor.Next = i + 1 < descriptors.Count ? descriptors[i + 1] : null;
             }
 
-            descriptors[0].Callback(request, response, () => descriptors[0].Execute(request, response));
+            try
+            {
+                descriptors[0].Callback(request, response, () => descriptors[0].Execute(request, response));
+            }
+            catch (Exception e)
+            {
+                Fail(response, e);
+            }
+        }
+
+        // app failed: OnError and 500, the server keeps running
+        private void Fail(HttpServerResponse response, Exception e)
+        {
+            Logger.Singleton.Submit(e);
+            _onError?.Invoke(null, e);
+
+            try
+            {
+                response.Send(500);
+            }
+            catch (Exception exception)
+            {
+                Logger.Singleton.Submit(exception);
+            }
         }
 
         private async void MapMiddlewareCallback(HttpListenerContext context, HttpServerRequest request,
+            HttpServerResponse response, Action next)
+        {
+            // async void: an exception here would crash the process
+            try
+            {
+                await MapCallback(context, request, response, next);
+            }
+            catch (Exception e)
+            {
+                Fail(response, e);
+            }
+        }
+
+        private async Task MapCallback(HttpListenerContext context, HttpServerRequest request,
             HttpServerResponse response, Action next)
         {
             if (!response.IsOpened)

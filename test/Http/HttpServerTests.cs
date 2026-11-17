@@ -384,4 +384,26 @@ public class HttpServerTests
 
         await server.CloseAsync();
     }
+
+    [Fact]
+    public async Task HandlerThrows_Responds500AndRaisesOnError()
+    {
+        var port = Net.FreeTcpPort();
+        var server = new HttpServer();
+        var error = Wait.Signal<Exception>();
+        server.OnError(e => error.TrySetResult(e));
+        server.Map.Get("/boom", (_, _) => throw new InvalidOperationException("boom"));
+        server.Map.Get("/ping", (_, res) => res.Send(200, "pong"));
+        await server.OpenAsync(new Uri($"http://127.0.0.1:{port}/"));
+
+        var (status, _) = await HttpHelper.Request("GET", $"http://127.0.0.1:{port}/boom");
+
+        Assert.Equal(500, status);
+        Assert.Equal("boom", (await Wait.For(error, what: "OnError")).Message);
+
+        // the server keeps working
+        Assert.Equal((200, "pong"), await HttpHelper.Request("GET", $"http://127.0.0.1:{port}/ping"));
+
+        await server.CloseAsync();
+    }
 }
