@@ -180,6 +180,8 @@ namespace Netly
 
                     DisableConnectionReset(socket);
 
+                    Tune(socket);
+
                     socket.Bind(host.EndPoint);
 
                     lock (_locker)
@@ -275,6 +277,20 @@ namespace Netly
         }
 
         /* ---- RECEIVE --- */
+
+        // many clients sending at the same time overflow the default receive buffer and the system drops datagrams
+        private static void Tune(Socket socket)
+        {
+            try
+            {
+                socket.ReceiveBufferSize = 4 * 1024 * 1024;
+                socket.SendBufferSize = 4 * 1024 * 1024;
+            }
+            catch (Exception)
+            {
+                // the system keeps the default size
+            }
+        }
 
         // windows reports a closed remote port as an error on the next receive of the socket, it is not an error
         private static void DisableConnectionReset(Socket socket)
