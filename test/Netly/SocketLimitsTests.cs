@@ -30,9 +30,9 @@ public class SocketLimitsTests
         var send = SocketLimits.Send(socket, 65507);
         var receive = SocketLimits.Receive(socket, 65507);
 
-        // each system rounds or doubles what is set, the limit is whatever the socket reports
-        Assert.Equal(socket.SendBufferSize, send);
-        Assert.Equal(socket.ReceiveBufferSize, receive);
+        // each system rounds or doubles what is set: the limit is what the socket reports without the doubling
+        Assert.Equal(Math.Max(512, socket.SendBufferSize / SocketLimits.BufferFactor), send);
+        Assert.Equal(Math.Max(512, socket.ReceiveBufferSize / SocketLimits.BufferFactor), receive);
         Assert.Equal(Math.Min(send, receive), SocketLimits.Both(socket, 65507));
         Assert.True(send < 65507 && receive < 65507);
     }
@@ -92,5 +92,16 @@ public class SocketLimitsTests
 
         await client.CloseAsync();
         await server.CloseAsync();
+    }
+
+    [Fact]
+    public void BufferFactor_IsDetectedFromTheSystem()
+    {
+        using var socket = Udp();
+        socket.SendBufferSize = 64 * 1024;
+
+        // the factor is what the system does with a buffer that is set: 1 keeps it, 2 doubles it (linux)
+        Assert.Contains(SocketLimits.BufferFactor, new[] { 1, 2 });
+        Assert.Equal(socket.SendBufferSize == 64 * 1024 ? 1 : 2, SocketLimits.BufferFactor);
     }
 }
