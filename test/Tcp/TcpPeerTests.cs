@@ -111,7 +111,7 @@ public class TcpPeerTests
         var (server, host) = await EchoServer();
         using var raw = RawConnect(host);
 
-        raw.Send(Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size)));
+        raw.Send(Framing.Header(Framing.Version, (ulong)size));
 
         Assert.True(await IsClosedByRemote(raw));
         await AssertServerStillWorks(host);
@@ -128,7 +128,7 @@ public class TcpPeerTests
         using var raw = RawConnect(host);
         var before = GC.GetTotalMemory(true);
 
-        raw.Send(Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size)));
+        raw.Send(Framing.Header(Framing.Version, (ulong)size));
 
         Assert.True(await IsClosedByRemote(raw), $"size {size} must be refused");
         Assert.True(GC.GetTotalMemory(true) - before < 64 * 1024 * 1024, "must not allocate the announced size");
@@ -143,7 +143,7 @@ public class TcpPeerTests
         using var slow = RawConnect(host);
 
         // slowloris style: only part of the header, then silence
-        slow.Send(new[] { Framing.Prefix[0], Framing.Prefix[1], Framing.Prefix[2] });
+        slow.Send(Framing.Create(10).Take(3).ToArray());
 
         await AssertServerStillWorks(host);
         Assert.False(await IsClosedByRemote(slow, 500), "server must not close an idle valid-so-far connection immediately");
@@ -339,5 +339,132 @@ public class TcpPeerTests
         Assert.False(client.IsOpened);
 
         await CloseServer(server);
+    }
+
+    [Fact]
+    public async Task InvalidDataReceived_CallsOnErrorThenOnClose()
+    {
+        var host = Net.TcpHost();
+        var listener = new TcpListener(host.IPEndPoint);
+        listener.Start();
+
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+        var client = new TcpClient(true);
+
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
+        {
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
+        });
+
+        client.Open(host);
+
+        // framing is active on the client, the peer sends data without a header
+        using var raw = await listener.AcceptSocketAsync();
+        raw.Send(new byte[64]);
+
+        Assert.True(await Wait.For(closed, what: "close after invalid data"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task ClientHeaderNotCompleted_CallsOnErrorThenOnClose()
+    {
+        var host = Net.TcpHost();
+        var listener = new TcpListener(host.IPEndPoint);
+        listener.Start();
+
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+        var client = new TcpClient(true) { HeaderTimeout = TimeSpan.FromMilliseconds(300) };
+
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
+        {
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
+        });
+        client.Open(host);
+
+        // the peer starts a header and stops
+        using var raw = await listener.AcceptSocketAsync();
+        raw.Send(Framing.Create(10).Take(3).ToArray());
+
+        Assert.True(await Wait.For(closed, what: "close after the header timeout"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+
+        listener.Stop();
+    }
+
+    [Fact]
+    public async Task ServerHeaderNotCompleted_ClosesOnlyThatConnection()
+    {
+        var host = Net.TcpHost();
+        var server = new TcpServer(true) { HeaderTimeout = TimeSpan.FromMilliseconds(300) };
+        var opened = Wait.Signal<bool>();
+
+        server.OnAccept(client => client.OnData(stream => client.SendData(Read(stream))));
+        server.OnOpen(() => opened.TrySetResult(true));
+        server.Open(host);
+        Assert.True(await Wait.For(opened, what: "server open"));
+
+        using var slow = RawConnect(host);
+        slow.Send(Framing.Create(10).Take(3).ToArray());
+
+        Assert.True(await IsClosedByRemote(slow, 3000), "the header was not completed, the connection must close");
+        await AssertServerStillWorks(host);
+        await CloseServer(server);
+    }
+
+    [Fact]
+    public async Task HeaderTimeout_DoesNotCloseASlowButCompleteMessage()
+    {
+        var host = Net.TcpHost();
+        var server = new TcpServer(true) { HeaderTimeout = TimeSpan.FromMilliseconds(300) };
+        var opened = Wait.Signal<bool>();
+        var received = Wait.Signal<int>();
+
+        server.OnAccept(client => client.OnData(stream => received.TrySetResult((int)stream.Length)));
+        server.OnOpen(() => opened.TrySetResult(true));
+        server.Open(host);
+        Assert.True(await Wait.For(opened, what: "server open"));
+
+        using var raw = RawConnect(host);
+        raw.NoDelay = true;
+        var frame = Helper.ArrayConcat(Framing.Create(20), new byte[20]);
+
+        // the header arrives in two parts inside the time, the body can be slow
+        raw.Send(frame.Take(4).ToArray());
+        await Task.Delay(100);
+        raw.Send(frame.Skip(4).Take(6).ToArray());
+        await Task.Delay(600);
+        raw.Send(frame.Skip(10).ToArray());
+
+        Assert.Equal(20, await Wait.For(received, what: "slow message"));
+        await CloseServer(server);
+    }
+
+    [Fact]
+    public async Task OpenFailure_CallsOnErrorThenOnClose()
+    {
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+        var client = new TcpClient(true);
+
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
+        {
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
+        });
+
+        client.Open(Net.TcpHost());
+
+        Assert.True(await Wait.For(closed, what: "close after the open failed"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
     }
 }

@@ -29,10 +29,11 @@ namespace Netly
         private byte[] _certificate;
         private string _certificatePassword;
         private bool _isOpening, _isClosing;
-        private int _reopenId, _spurious;
+        private int _spurious;
+        private TimeSpan _headerTimeout = TimeSpan.FromSeconds(5);
+        private Timer _headerTimer;
+        private long _headerTimerCount;
         private int _receiveChunk = ChunkSize, _poolChunk = PoolChunkSize;
-        private Host _openHost;
-        private EventHandler<int> _onReopen;
         private NetworkStream _networkStream;
         private Action<bool> _onAccepted;
         private EventHandler _onOpen, _onClose;
@@ -57,9 +58,6 @@ namespace Netly
             IsSecure = false;
             IsFraming = false;
             IsServer = false;
-            ReopenEnabled = false;
-            ReopenAttempts = 5;
-            ReopenDelay = TimeSpan.FromSeconds(1);
             FramingSize = Framing.DefaultSize;
             Socket = null;
             Certificate = null;
@@ -86,6 +84,7 @@ namespace Netly
             Socket = socket;
             Host = new Host(socket.RemoteEndPoint);
             _framing.MaxSize = server.FramingSize;
+            _headerTimeout = server.HeaderTimeout;
             _server = server;
         }
 
@@ -123,22 +122,6 @@ namespace Netly
         public SslProtocols SecureProtocol { get; private set; }
 
         /// <summary>
-        ///     True when the client opens the connection again after it was lost.
-        ///     Use <see cref="UseAutoReopen" /> to change it.
-        /// </summary>
-        public bool ReopenEnabled { get; private set; }
-
-        /// <summary>
-        ///     How many times the client tries to open again after a connection is lost. -1 means no limit.
-        /// </summary>
-        public int ReopenAttempts { get; private set; }
-
-        /// <summary>
-        ///     Time to wait before each attempt to open again.
-        /// </summary>
-        public TimeSpan ReopenDelay { get; private set; }
-
-        /// <summary>
         ///     Server name used to validate the certificate. Empty means the host address.
         /// </summary>
         public string SecureDomain { get; private set; }
@@ -156,6 +139,27 @@ namespace Netly
                     throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
 
                 _framing.MaxSize = Math.Max(1024, value);
+            }
+        }
+
+        /// <summary>
+        ///     Time a peer has to complete the header of a message once it started it, when <see cref="IsFraming" /> is
+        ///     true. A peer that stops in the middle of it (or sends data without the header, shorter than it) closes
+        ///     the connection with <see cref="OnError" />, then <see cref="OnClose" />. Default is 5 seconds.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When the value is not positive.</exception>
+        public TimeSpan HeaderTimeout
+        {
+            get => _headerTimeout;
+            set
+            {
+                if (IsOpened || IsServer)
+                    throw new InvalidOperationException($"Must not update ({nameof(HeaderTimeout)}) while socket is Opened.");
+
+                if (value <= TimeSpan.Zero) throw new ArgumentOutOfRangeException($"{nameof(HeaderTimeout)}: {value}");
+
+                _headerTimeout = value;
             }
         }
 
@@ -195,15 +199,6 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Called before each attempt to open the connection again, with the number of the attempt (starts at 1).
-        ///     <see cref="OnOpen" /> is called when an attempt works, <see cref="OnError" /> when it fails.
-        /// </summary>
-        public void OnReopen(Action<int> callback)
-        {
-            _onReopen += (sender, attempt) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(attempt));
-        }
-
-        /// <summary>
         ///     Called when the connection is closed, by this side or by the peer.
         /// </summary>
         public void OnClose(Action callback)
@@ -212,7 +207,9 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Called when the connection fails to open, when a send fails or when a callback throws while receiving.
+        ///     Called when the connection fails to open (then <see cref="OnClose" /> is called), when a send fails, or
+        ///     when the data received breaks the protocol, is above the limit or makes an allocation or a callback of the
+        ///     app throw (the message is discarded and the connection closes: <see cref="OnClose" /> is called after).
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
@@ -257,31 +254,6 @@ namespace Netly
             if (callback == null) return;
 
             _onSecure.Add(callback);
-        }
-
-        /// <summary>
-        ///     Enables or disables opening the connection again when it is lost (for example when the server closes it) or when the first open fails.
-        ///     It does not happen after <see cref="Close()" /> and it must be called before <see cref="Open" />.
-        /// </summary>
-        /// <param name="enabled">True to open the connection again.</param>
-        /// <param name="attempts">Maximum number of attempts for each lost connection. -1 means no limit.</param>
-        /// <param name="delay">Time to wait before each attempt. Null means one second.</param>
-        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is invalid.</exception>
-        public void UseAutoReopen(bool enabled, int attempts = 5, TimeSpan? delay = null)
-        {
-            if (IsOpened || IsServer)
-                throw new InvalidOperationException($"Must not modify ({nameof(ReopenEnabled)}) while socket is Opened.");
-
-            if (attempts == 0 || attempts < -1)
-                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
-
-            if (delay < TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
-
-            ReopenEnabled = enabled;
-            ReopenAttempts = attempts;
-            ReopenDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
@@ -400,21 +372,18 @@ namespace Netly
 
         /// <summary>
         ///     Starts the connection and returns without waiting.
-        ///     The result comes by <see cref="OnOpen" /> or <see cref="OnError" />.
+        ///     The result comes by <see cref="OnOpen" />, or by <see cref="OnError" /> followed by <see cref="OnClose" />.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="host" /> is null.</exception>
         public void Open(Host host)
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
-            // a new Open replaces any pending reopen
-            var id = Interlocked.Increment(ref _reopenId);
-
-            _ = OpenAsync(host, id, false);
+            _ = OpenAsync(host);
         }
 
-        // every failure goes to OnError, it never throws
-        private async Task OpenAsync(Host host, int id, bool isAttempt)
+        // every failure goes to OnError then OnClose, it never throws
+        private async Task OpenAsync(Host host)
         {
             lock (_locker)
             {
@@ -448,7 +417,6 @@ namespace Netly
                     _networkStream = networkStream;
                     Socket = socket;
                     Host = new Host(socket.RemoteEndPoint);
-                    _openHost = host;
                     IsOpened = true;
 
                     // Open can be called again from the OnOpen callback
@@ -483,10 +451,7 @@ namespace Netly
 
                 Logger.Singleton.Submit(e);
                 _onError?.Invoke(null, e);
-
-                // an attempt that fails is handled by the loop of the reopen
-                if (isAttempt is false && ReopenEnabled && IsServer is false && Volatile.Read(ref _reopenId) == id)
-                    Reopen(host, id);
+                _onClose?.Invoke(null, null);
             }
             finally
             {
@@ -499,9 +464,6 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            // user close never opens again
-            Interlocked.Increment(ref _reopenId);
-
             Socket owner;
 
             lock (_locker)
@@ -606,7 +568,7 @@ namespace Netly
             {
                 var stream = Stream;
 
-                if (IsOpened is false || stream == null) return;
+                if (IsOpened is false || stream == null) throw new InvalidOperationException("The connection is not open.");
 
                 // REQUIRED: one writer at time, framing prefix and body must not interleave
                 lock (_sendLocker)
@@ -660,7 +622,7 @@ namespace Netly
             {
                 var stream = Stream;
 
-                if (IsOpened is false || stream == null) return;
+                if (IsOpened is false || stream == null) throw new InvalidOperationException("The connection is not open.");
 
                 var buffer = new byte[Math.Min(count, 81920)];
 
@@ -807,13 +769,11 @@ namespace Netly
                     return false;
                 }
 
-                ReceiveProcess(buffer, size);
+                if (!ReceiveProcess(owner, buffer, size)) return false;
             }
             catch (Exception e)
             {
-                // connection closed by this side or by the peer
-                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
-                Close(owner);
+                ReceiveFail(owner, e);
                 return false;
             }
             finally
@@ -871,31 +831,54 @@ namespace Netly
                     return false;
                 }
 
-                ReceiveProcess(buffer, size);
+                return ReceiveProcess(owner, buffer, size);
+            }
+            catch (Exception e)
+            {
+                ReceiveFail(owner, e);
+                return false;
+            }
+        }
+
+        // closed by this side or by the peer, OnClose without OnError
+        private void ReceiveFail(Socket owner, Exception e)
+        {
+            if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
+
+            Close(owner);
+        }
+
+        // false when closed, invalid data or an app exception discards the message: OnError then OnClose
+        private bool ReceiveProcess(Socket owner, byte[] buffer, int size)
+        {
+            try
+            {
+                if (IsFraming)
+                {
+                    _framing.Write(new ArraySegment<byte>(buffer, 0, size), Allocate);
+                    while (_framing.Read(out var stream)) ReceiveRelease(stream);
+                    UpdateHeaderTimer(owner);
+                }
+                else
+                {
+                    var stream = Allocate(size);
+                    stream.Write(buffer, 0, size);
+                    ReceiveRelease(stream);
+                }
 
                 return true;
             }
             catch (Exception e)
             {
-                // connection closed by this side or by the peer
-                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
+                // closed while processing
+                if (IsOpened && _isClosing is false)
+                {
+                    Logger.Singleton.Submit(e);
+                    _onError?.Invoke(null, e);
+                }
+
                 Close(owner);
                 return false;
-            }
-        }
-
-        private void ReceiveProcess(byte[] buffer, int size)
-        {
-            if (IsFraming)
-            {
-                _framing.Write(new ArraySegment<byte>(buffer, 0, size), Allocate);
-                while (_framing.Read(out var stream)) ReceiveRelease(stream);
-            }
-            else
-            {
-                var stream = Allocate(size);
-                stream.Write(buffer, 0, size);
-                ReceiveRelease(stream);
             }
         }
 
@@ -915,11 +898,50 @@ namespace Netly
                     Release(stream, () => _onData?.Invoke(null, stream));
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Singleton.Submit(e);
-                _onError?.Invoke(null, e);
+                stream.Dispose();
+                throw;
             }
+        }
+
+        // a peer that stops in the middle of a header must not hold the connection
+        private void UpdateHeaderTimer(Socket owner)
+        {
+            lock (_locker)
+            {
+                if (_framing.IsHeaderPending)
+                {
+                    if (_headerTimer != null && _headerTimerCount == _framing.HeaderCount) return;
+
+                    _headerTimer?.Dispose();
+                    _headerTimerCount = _framing.HeaderCount;
+                    _headerTimer = new Timer(HeaderExpired, owner, _headerTimeout, System.Threading.Timeout.InfiniteTimeSpan);
+                }
+                else
+                {
+                    DisposeHeaderTimer();
+                }
+            }
+        }
+
+        private void DisposeHeaderTimer()
+        {
+            _headerTimer?.Dispose();
+            _headerTimer = null;
+        }
+
+        private void HeaderExpired(object state)
+        {
+            var owner = (Socket)state;
+
+            if (IsOpened is false || _isClosing || _framing.IsHeaderPending is false) return;
+
+            var e = new InvalidDataException($"The header was not completed in {_headerTimeout.TotalSeconds}s");
+
+            Logger.Singleton.Submit(e);
+            _onError?.Invoke(null, e);
+            Close(owner);
         }
 
         // stream is valid only during the callback
@@ -942,8 +964,6 @@ namespace Netly
         // owner avoids an old connection closing a new one.
         private void Close(Socket owner, bool byUser = false)
         {
-            var id = Volatile.Read(ref _reopenId);
-
             lock (_locker)
             {
                 if (_isClosing || IsOpened is false || ReferenceEquals(Socket, owner) is false) return;
@@ -953,6 +973,11 @@ namespace Netly
 
             try
             {
+                lock (_locker)
+                {
+                    DisposeHeaderTimer();
+                }
+
                 _framing.Close();
                 _secureStream?.Dispose();
                 _networkStream?.Dispose();
@@ -976,29 +1001,6 @@ namespace Netly
                 _onClose?.Invoke(null, null);
             }
 
-            if (byUser is false && ReopenEnabled && IsServer is false) Reopen(_openHost, id);
-        }
-
-        // closes made by the user change _reopenId, so the connection is only opened again when the id is the same
-        private void Reopen(Host host, int id)
-        {
-            if (host == null) return;
-
-            Task.Run(async () =>
-            {
-                for (var attempt = 1; ReopenAttempts < 0 || attempt <= ReopenAttempts; attempt++)
-                {
-                    await Task.Delay(ReopenDelay);
-
-                    if (Volatile.Read(ref _reopenId) != id || IsOpened) return;
-
-                    _onReopen?.Invoke(null, attempt);
-
-                    await OpenAsync(host, id, true);
-
-                    if (IsOpened) return;
-                }
-            });
         }
 
         /* ---- TLS --- */

@@ -427,25 +427,50 @@ public class TcpClientTests
     }
 
     [Fact]
-    public async Task UserCallbackThrowing_DoesNotKillConnection()
+    public async Task UserCallbackThrowing_CallsOnErrorThenOnClose()
     {
         var (server, host) = await EchoServer();
         var client = await Connect(host);
-        var calls = 0;
-        var second = Wait.Signal<bool>();
-        client.OnData(_ =>
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
         {
-            if (Interlocked.Increment(ref calls) == 1) throw new InvalidOperationException("user error");
-            second.TrySetResult(true);
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
         });
+        client.OnData(_ => throw new InvalidOperationException("user error"));
 
         client.SendData(Net.Payload(8));
-        await Wait.Until(() => Volatile.Read(ref calls) == 1, what: "first");
+
+        Assert.True(await Wait.For(closed, what: "close after the exception of the app"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+        Assert.False(client.IsOpened);
+        await Closed(server);
+    }
+
+    [Fact]
+    public async Task AllocateThrowing_CallsOnErrorThenOnClose()
+    {
+        var (server, host) = await EchoServer();
+        var client = new TcpClient(true);
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+        client.OnAllocate(_ => throw new IOException("disk full"));
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
+        {
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
+        });
+        client.Open(host);
+        await Wait.Until(() => client.IsOpened, what: "connect");
+
         client.SendData(Net.Payload(8));
 
-        Assert.True(await Wait.For(second, what: "second message"));
-        Assert.True(client.IsOpened);
-        await Close(client, server);
+        Assert.True(await Wait.For(closed, what: "close after the allocation failed"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+        await Closed(server);
     }
 
     [Fact]
@@ -775,226 +800,6 @@ public class TcpClientTests
     /* ---- REOPEN --- */
 
     private static readonly TimeSpan Fast = TimeSpan.FromMilliseconds(30);
-
-    [Fact]
-    public void Reopen_IsDisabledByDefault()
-    {
-        var client = new TcpClient(true);
-
-        Assert.False(client.ReopenEnabled);
-        Assert.Equal(5, client.ReopenAttempts);
-        Assert.Equal(TimeSpan.FromSeconds(1), client.ReopenDelay);
-    }
-
-    [Fact]
-    public void UseAutoReopen_StoresSettings()
-    {
-        var client = new TcpClient(true);
-
-        client.UseAutoReopen(true, -1, TimeSpan.FromMilliseconds(250));
-
-        Assert.True(client.ReopenEnabled);
-        Assert.Equal(-1, client.ReopenAttempts);
-        Assert.Equal(TimeSpan.FromMilliseconds(250), client.ReopenDelay);
-    }
-
-    [Fact]
-    public void UseAutoReopen_InvalidArguments_Throw()
-    {
-        var client = new TcpClient(true);
-
-        Assert.Throws<ArgumentOutOfRangeException>(() => client.UseAutoReopen(true, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => client.UseAutoReopen(true, -2));
-        Assert.Throws<ArgumentOutOfRangeException>(() => client.UseAutoReopen(true, 1, TimeSpan.FromSeconds(-1)));
-    }
-
-    [Fact]
-    public async Task UseAutoReopen_WhileOpened_Throws()
-    {
-        var (server, host) = await EchoServer();
-        var client = await Connect(host);
-
-        Assert.Throws<InvalidOperationException>(() => client.UseAutoReopen(true));
-        await Close(client, server);
-    }
-
-    [Fact]
-    public async Task Reopen_AfterServerDropsTheClient()
-    {
-        var host = Net.TcpHost();
-        var server = new TcpServer(true);
-        var accepted = new SemaphoreSlim(0);
-        var serverSide = new List<TcpClient>();
-        server.OnAccept(c =>
-        {
-            lock (serverSide) serverSide.Add(c);
-            c.OnData(s => c.SendData(Read(s)));
-            accepted.Release();
-        });
-        server.Open(host);
-        await Wait.Until(() => server.IsOpened, what: "server open");
-
-        var client = new TcpClient(true);
-        var attempts = new List<int>();
-        var closed = Wait.Signal<bool>();
-        var reopened = Wait.Signal<bool>();
-        var opens = 0;
-        client.UseAutoReopen(true, 5, Fast);
-        client.OnReopen(a =>
-        {
-            lock (attempts) attempts.Add(a);
-        });
-        client.OnClose(() => closed.TrySetResult(true));
-        client.OnOpen(() =>
-        {
-            if (Interlocked.Increment(ref opens) == 2) reopened.TrySetResult(true);
-        });
-        client.Open(host);
-        Assert.True(await accepted.WaitAsync(Wait.Default));
-
-        // the server drops this client
-        TcpClient first;
-        lock (serverSide) first = serverSide[0];
-        first.Close();
-
-        Assert.True(await Wait.For(closed, what: "client observes drop"));
-        Assert.True(await Wait.For(reopened, what: "client opens again"));
-        Assert.True(await accepted.WaitAsync(Wait.Default));
-        lock (attempts) Assert.Equal(new[] { 1 }, attempts.ToArray());
-
-        var received = Wait.Signal<byte[]>();
-        client.OnData(s => received.TrySetResult(Read(s)));
-        client.SendData(Net.Payload(40));
-
-        Assert.Equal(40, (await Wait.For(received, what: "echo after reopen")).Length);
-        await Closed(client);
-        await Closed(server);
-    }
-
-    [Fact]
-    public async Task Reopen_GivesUpAfterTheAttemptLimit()
-    {
-        var (server, host) = await EchoServer();
-        var client = new TcpClient(true);
-        var attempts = new List<int>();
-        var errors = 0;
-        client.UseAutoReopen(true, 3, Fast);
-        client.OnReopen(a =>
-        {
-            lock (attempts) attempts.Add(a);
-        });
-        client.OnError(_ => Interlocked.Increment(ref errors));
-        await Opened(client, host);
-        var closed = Wait.Signal<bool>();
-        client.OnClose(() => closed.TrySetResult(true));
-        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
-
-        // port is gone, every attempt fails
-        await Closed(server);
-
-        Assert.True(await Wait.For(closed, what: "client observes close"));
-        await Wait.Until(() => Volatile.Read(ref errors) >= 3, what: "3 failed attempts");
-        await Wait.Never(() => { lock (attempts) return attempts.Count > 3; }, TimeSpan.FromMilliseconds(300),
-            "more than 3 attempts");
-
-        lock (attempts) Assert.Equal(new[] { 1, 2, 3 }, attempts.ToArray());
-        Assert.False(client.IsOpened);
-    }
-
-    [Fact]
-    public async Task Reopen_UnlimitedAttempts_ConnectsWhenServerComesBack()
-    {
-        var (server, host) = await EchoServer();
-        var client = new TcpClient(true);
-        client.UseAutoReopen(true, -1, Fast);
-        await Opened(client, host);
-        var reopened = Wait.Signal<bool>();
-        var attempts = 0;
-        client.OnReopen(_ => Interlocked.Increment(ref attempts));
-        client.OnOpen(() => reopened.TrySetResult(true));
-        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
-
-        await Closed(server);
-        await Wait.Until(() => Volatile.Read(ref attempts) >= 2, what: "failed attempts while server is down");
-
-        var back = new TcpServer(true);
-        back.Open(host);
-
-        Assert.True(await Wait.For(reopened, what: "reopen after server is back"));
-        Assert.True(client.IsOpened);
-        await Closed(client);
-        await Closed(back);
-    }
-
-    [Fact]
-    public async Task Reopen_NotAfterUserClose()
-    {
-        var (server, host) = await EchoServer();
-        var client = new TcpClient(true);
-        var attempts = 0;
-        client.UseAutoReopen(true, 5, Fast);
-        client.OnReopen(_ => Interlocked.Increment(ref attempts));
-        await Opened(client, host);
-
-        await Closed(client);
-
-        await Wait.Never(() => Volatile.Read(ref attempts) > 0 || client.IsOpened, TimeSpan.FromMilliseconds(400),
-            "reopen after Close");
-        await Closed(server);
-    }
-
-    [Fact]
-    public async Task Reopen_CloseDuringTheWaitCancelsIt()
-    {
-        var host = Net.TcpHost();
-        var server = new TcpServer(true);
-        var serverSide = Wait.Signal<TcpClient>();
-        server.OnAccept(c => serverSide.TrySetResult(c));
-        server.Open(host);
-        await Wait.Until(() => server.IsOpened, what: "server open");
-
-        var client = new TcpClient(true);
-        var attempts = 0;
-        var closed = Wait.Signal<bool>();
-        client.UseAutoReopen(true, 5, TimeSpan.FromMilliseconds(300));
-        client.OnReopen(_ => Interlocked.Increment(ref attempts));
-        client.OnClose(() => closed.TrySetResult(true));
-        await Opened(client, host);
-
-        (await Wait.For(serverSide, what: "accept")).Close();
-        Assert.True(await Wait.For(closed, what: "drop"));
-
-        // user gives up while the client waits to open again
-        client.Close();
-
-        await Wait.Never(() => Volatile.Read(ref attempts) > 0 || client.IsOpened, TimeSpan.FromMilliseconds(700),
-            "reopen after Close during the wait");
-        await Closed(server);
-    }
-
-    [Fact]
-    public async Task Reopen_DisabledClientStaysClosed()
-    {
-        var host = Net.TcpHost();
-        var server = new TcpServer(true);
-        var serverSide = Wait.Signal<TcpClient>();
-        server.OnAccept(c => serverSide.TrySetResult(c));
-        server.Open(host);
-        await Wait.Until(() => server.IsOpened, what: "server open");
-
-        var client = new TcpClient(true);
-        var closed = Wait.Signal<bool>();
-        client.OnClose(() => closed.TrySetResult(true));
-        await Opened(client, host);
-
-        (await Wait.For(serverSide, what: "accept")).Close();
-        Assert.True(await Wait.For(closed, what: "drop"));
-
-        await Wait.Never(() => client.IsOpened, TimeSpan.FromMilliseconds(300), "client opened without reopen");
-        await Closed(server);
-    }
-
-    /* ---- TLS --- */
 
     [Fact]
     public async Task Tls_Echo()

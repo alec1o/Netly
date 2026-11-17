@@ -19,6 +19,7 @@ namespace Netly
         private byte[] _certificate;
         private string _certificatePassword;
         private List<TcpClient> _clients;
+        private TimeSpan _headerTimeout = TimeSpan.FromSeconds(5);
         private long _framing;
         private bool _isOpening, _isClosing;
         private EventHandler<TcpClient> _onAccept;
@@ -102,6 +103,27 @@ namespace Netly
                     throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
 
                 _framing = Math.Max(1024, value);
+            }
+        }
+
+        /// <summary>
+        ///     Time each client has to complete the header of a message once it started it, when
+        ///     <see cref="IsFraming" /> is true: after it the connection closes with <see cref="TcpClient.OnError" />
+        ///     and then <see cref="TcpClient.OnClose" />. Default is 5 seconds.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When the value is not positive.</exception>
+        public TimeSpan HeaderTimeout
+        {
+            get => _headerTimeout;
+            set
+            {
+                if (IsOpened)
+                    throw new InvalidOperationException($"Must not update ({nameof(HeaderTimeout)}) while socket is Opened.");
+
+                if (value <= TimeSpan.Zero) throw new ArgumentOutOfRangeException($"{nameof(HeaderTimeout)}: {value}");
+
+                _headerTimeout = value;
             }
         }
 

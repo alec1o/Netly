@@ -113,25 +113,6 @@ public class TcpLifecycleTests
     }
 
     [Fact]
-    public async Task ServerCanReopenAfterClose()
-    {
-        var host = Net.TcpHost();
-        var server = new TcpServer();
-        var open = 0;
-        server.OnOpen(() => Interlocked.Increment(ref open));
-
-        for (var i = 0; i < 3; i++)
-        {
-            Assert.True(await Open(server, host));
-            Assert.True(server.IsOpened);
-            await Close(server);
-            Assert.False(server.IsOpened);
-        }
-
-        Assert.Equal(3, open);
-    }
-
-    [Fact]
     public async Task ServerOpenOnUnassignableAddressFails()
     {
         var server = new TcpServer();
@@ -303,50 +284,21 @@ public class TcpLifecycleTests
     }
 
     [Fact]
-    public async Task Reopen_RetriesTheFirstOpen()
+    public async Task ServerCanReopenAfterClose()
     {
-        // nobody is listening yet: the first open fails and the client keeps trying
         var host = Net.TcpHost();
-        var client = new TcpClient();
-        var errors = 0;
-        var opened = Wait.Signal<bool>();
-        client.UseAutoReopen(true, -1, TimeSpan.FromMilliseconds(100));
-        client.OnError(_ => Interlocked.Increment(ref errors));
-        client.OnOpen(() => opened.TrySetResult(true));
-        client.Open(host);
-
-        await Wait.Until(() => Volatile.Read(ref errors) >= 2, what: "failed attempts");
-        Assert.False(client.IsOpened);
-
         var server = new TcpServer();
-        Assert.True(await Open(server, host));
+        var open = 0;
+        server.OnOpen(() => Interlocked.Increment(ref open));
 
-        Assert.True(await Wait.For(opened, what: "open after the server starts"));
-
-        await Close(client);
-        await Close(server);
-    }
-
-    [Fact]
-    public async Task Reopen_FirstOpenGivesUpAfterTheAttemptLimit()
-    {
-        var host = Net.TcpHost();
-        var client = new TcpClient();
-        var attempts = new List<int>();
-        var errors = 0;
-        client.UseAutoReopen(true, 2, TimeSpan.FromMilliseconds(50));
-        client.OnReopen(a =>
+        for (var i = 0; i < 3; i++)
         {
-            lock (attempts) attempts.Add(a);
-        });
-        client.OnError(_ => Interlocked.Increment(ref errors));
-        client.Open(host);
+            Assert.True(await Open(server, host));
+            Assert.True(server.IsOpened);
+            await Close(server);
+            Assert.False(server.IsOpened);
+        }
 
-        // the first open plus 2 attempts
-        await Wait.Until(() => Volatile.Read(ref errors) >= 3, what: "3 failures");
-        await Wait.Never(() => { lock (attempts) return attempts.Count > 2; }, TimeSpan.FromMilliseconds(300),
-            "more than 2 attempts");
-
-        lock (attempts) Assert.Equal(new[] { 1, 2 }, attempts.ToArray());
+        Assert.Equal(3, open);
     }
 }
