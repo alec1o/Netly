@@ -443,6 +443,12 @@ namespace Netly
             catch (Exception e)
             {
                 Logger.Singleton.Submit(e);
+
+                // the system can keep failing (too many open files): wait, a loop without pause uses all the cpu
+                if (IsOpened && ReferenceEquals(Socket, owner))
+                    Task.Delay(50).ContinueWith(_ => AcceptTrigger(owner));
+
+                return false;
             }
 
             return IsOpened && ReferenceEquals(Socket, owner);
