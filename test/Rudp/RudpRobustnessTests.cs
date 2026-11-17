@@ -136,17 +136,17 @@ public class RudpRobustnessTests
     });
 
     [Fact]
-    public Task SendOnClosedClientIsIgnored() => Guard.Run(async () =>
+    public Task SendOnClosedClient_CallsOnError() => Guard.Run(async () =>
     {
         var client = new RudpClient();
         var error = false;
         client.OnError(_ => error = true);
 
-        client.SendData("ignored", RudpDelivery.Reliable);
+        client.SendData("not sent", RudpDelivery.Reliable);
         await client.CloseAsync();
 
         Assert.False(client.IsOpened);
-        Assert.False(error);
+        Assert.True(error);
     });
 
     [Fact]

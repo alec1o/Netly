@@ -17,8 +17,7 @@ namespace Netly
         private readonly RudpServer _server;
         private RudpConnection _connection;
         private bool _isOpening;
-        private int _reopenId;
-        private EventHandler<int> _onReopen;
+        private volatile bool _failed;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
         private long _framingSize = Framing.DefaultSize;
         private EventHandler _onOpen, _onClose;
@@ -41,9 +40,6 @@ namespace Netly
             Host = Host.Default;
             IsServer = false;
             Socket = null;
-            ReopenEnabled = false;
-            ReopenAttempts = 5;
-            ReopenDelay = TimeSpan.FromSeconds(1);
         }
 
         // client accepted by the server, the connection is created by the server
@@ -59,6 +55,7 @@ namespace Netly
             IsServer = true;
 
             connection.OnMessage += OnMessage;
+            connection.OnError += ConnectionError;
             connection.OnClose += () => _onClose?.Invoke(null, null);
         }
 
@@ -171,7 +168,9 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Called when the connection fails to open, when a send fails or when a callback throws while receiving.
+        ///     Called when the connection fails to open (then <see cref="OnClose" /> is called), when a send fails,
+        ///     or when the data received breaks the protocol, is above the limit or makes a callback throw
+        ///     (the message is discarded and the connection closes: <see cref="OnClose" /> is called after).
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
@@ -205,56 +204,6 @@ namespace Netly
                 throw new InvalidOperationException($"Must not update ({nameof(OnAllocate)}) while socket is Opened.");
 
             _onAllocate = callback ?? Helper.NewStream;
-        }
-
-        /// <summary>
-        ///     True when the client opens the connection again after it was lost or failed to open.
-        ///     Use <see cref="UseAutoReopen" /> to change it.
-        /// </summary>
-        public bool ReopenEnabled { get; private set; }
-
-        /// <summary>
-        ///     How many times the client tries to open again. -1 means no limit.
-        /// </summary>
-        public int ReopenAttempts { get; private set; }
-
-        /// <summary>
-        ///     Time to wait before each attempt to open again.
-        /// </summary>
-        public TimeSpan ReopenDelay { get; private set; }
-
-        /// <summary>
-        ///     Called before each attempt to open again, with the number of the attempt (starts at 1).
-        ///     <see cref="OnOpen" /> is called when an attempt works, <see cref="OnError" /> when it fails.
-        /// </summary>
-        public void OnReopen(Action<int> callback)
-        {
-            _onReopen += (sender, attempt) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(attempt));
-        }
-
-        /// <summary>
-        ///     Enables or disables opening the connection again when it is lost or when the first open fails.
-        ///     It does not happen after <see cref="Close" /> and it must be called before <see cref="Open" />.
-        /// </summary>
-        /// <param name="enabled">True to open the connection again.</param>
-        /// <param name="attempts">Maximum number of attempts for each failure. -1 means no limit.</param>
-        /// <param name="delay">Time to wait before each attempt. Null means one second.</param>
-        /// <exception cref="InvalidOperationException">While the connection is opened.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is invalid.</exception>
-        public void UseAutoReopen(bool enabled, int attempts = 5, TimeSpan? delay = null)
-        {
-            if (IsOpened || IsServer)
-                throw new InvalidOperationException($"Must not modify ({nameof(ReopenEnabled)}) while socket is Opened.");
-
-            if (attempts == 0 || attempts < -1)
-                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
-
-            if (delay < TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
-
-            ReopenEnabled = enabled;
-            ReopenAttempts = attempts;
-            ReopenDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /* ---- SEND --- */
@@ -365,21 +314,18 @@ namespace Netly
 
         /// <summary>
         ///     Starts the connection and returns without waiting.
-        ///     The result comes by <see cref="OnOpen" /> or <see cref="OnError" />.
+        ///     The result comes by <see cref="OnOpen" />, or by <see cref="OnError" /> followed by <see cref="OnClose" />.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="host" /> is null.</exception>
         public void Open(Host host)
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
-            // a new Open replaces any pending reopen
-            var id = Interlocked.Increment(ref _reopenId);
-
-            _ = OpenAsync(host, id, false);
+            _ = OpenAsync(host);
         }
 
         // true when the connection is open, every failure goes to OnError, it never throws
-        private Task<bool> OpenAsync(Host host, int id, bool isAttempt)
+        private Task<bool> OpenAsync(Host host)
         {
             var source = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -394,6 +340,7 @@ namespace Netly
                     }
 
                     _isOpening = true;
+                    _failed = false;
                 }
 
                 Socket socket = null;
@@ -429,22 +376,18 @@ namespace Netly
                         var e = new Exception(message);
                         Logger.Singleton.Submit(e);
                         _onError?.Invoke(null, e);
+                        _onClose?.Invoke(null, null);
                         source.TrySetResult(false);
-
-                        // an attempt that fails is handled by the loop of the reopen
-                        if (isAttempt is false && ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
                     };
 
                     connection.OnClose += () =>
                     {
                         CloseSocket(socket);
                         _onClose?.Invoke(null, null);
-
-                        // closes made by the user change _reopenId
-                        if (ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
                     };
 
                     connection.OnMessage += OnMessage;
+                    connection.OnError += ConnectionError;
 
                     lock (_locker)
                     {
@@ -462,30 +405,12 @@ namespace Netly
 
                     Logger.Singleton.Submit(e);
                     _onError?.Invoke(null, e);
+                    _onClose?.Invoke(null, null);
                     source.TrySetResult(false);
-
-                    if (isAttempt is false && ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
                 }
             });
 
             return source.Task;
-        }
-
-        private void Reopen(Host host, int id)
-        {
-            Task.Run(async () =>
-            {
-                for (var attempt = 1; ReopenAttempts < 0 || attempt <= ReopenAttempts; attempt++)
-                {
-                    await Task.Delay(ReopenDelay);
-
-                    if (Volatile.Read(ref _reopenId) != id || IsOpened) return;
-
-                    _onReopen?.Invoke(null, attempt);
-
-                    if (await OpenAsync(host, id, true)) return;
-                }
-            });
         }
 
         /// <summary>
@@ -493,9 +418,6 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            // user close never opens again
-            Interlocked.Increment(ref _reopenId);
-
             _connection?.Close();
         }
 
@@ -574,7 +496,8 @@ namespace Netly
             {
                 var connection = _connection;
 
-                if (connection == null || connection.IsOpened is false) return;
+                if (connection == null || connection.IsOpened is false)
+                    throw new InvalidOperationException("The connection is not open.");
 
                 connection.Send(header == null ? body : Helper.ArrayConcat(header, body), delivery);
             }
@@ -587,8 +510,20 @@ namespace Netly
 
         /* ---- RECEIVE --- */
 
+        // OnError, the connection closes right after
+        private void ConnectionError(string message)
+        {
+            var e = new InvalidDataException(message);
+
+            Logger.Singleton.Submit(e);
+            _onError?.Invoke(null, e);
+        }
+
         private void OnMessage(byte[] data, RudpDelivery delivery)
         {
+            // discard the rest after a failure
+            if (_failed) return;
+
             try
             {
                 var stream = Allocate(data.LongLength);
@@ -607,8 +542,11 @@ namespace Netly
             }
             catch (Exception e)
             {
+                // message discarded, OnError then OnClose
+                _failed = true;
                 Logger.Singleton.Submit(e);
                 _onError?.Invoke(null, e);
+                _connection?.Close();
             }
         }
 

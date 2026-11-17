@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Netly
 {
-    // packet format (little endian)
+    // packet format (big endian)
     //
     // flags (1 byte): bits 0-2 type, bit 3 reserved, bit 4 first fragment, bit 5 last fragment, bit 6 datagram fragment
     //
@@ -14,6 +14,7 @@ namespace Netly
     // Close:      flags | token(4)
     // Unreliable: flags | token(4) | [fragment(4)] | payload
     // Sequenced:  flags | token(4) | seq(4) | [fragment(4)] | payload
+    // Message:    framing header (version(1) | length(8) | checksum(1)) | payload, before it is split in packets
     // Handshake:  flags | kind(1) | ...
     //     syn:     version(1) | nonce(4)
     //     syn ack: nonce(4) | token(4) | id(16)
@@ -23,7 +24,7 @@ namespace Netly
     // fragment: message id(2) | index(1) | count(1)
     internal static class RudpWire
     {
-        public const byte Version = 2;
+        public const byte Version = 3;
 
         public const byte
             Unreliable = 0,
@@ -86,38 +87,38 @@ namespace Netly
 
         public static void Put16(byte[] buffer, int offset, ushort value)
         {
-            buffer[offset] = (byte)value;
-            buffer[offset + 1] = (byte)(value >> 8);
+            buffer[offset] = (byte)(value >> 8);
+            buffer[offset + 1] = (byte)value;
         }
 
         public static void Put32(byte[] buffer, int offset, uint value)
         {
-            buffer[offset] = (byte)value;
-            buffer[offset + 1] = (byte)(value >> 8);
-            buffer[offset + 2] = (byte)(value >> 16);
-            buffer[offset + 3] = (byte)(value >> 24);
+            buffer[offset] = (byte)(value >> 24);
+            buffer[offset + 1] = (byte)(value >> 16);
+            buffer[offset + 2] = (byte)(value >> 8);
+            buffer[offset + 3] = (byte)value;
         }
 
         public static void Put64(byte[] buffer, int offset, ulong value)
         {
-            Put32(buffer, offset, (uint)value);
-            Put32(buffer, offset + 4, (uint)(value >> 32));
+            Put32(buffer, offset, (uint)(value >> 32));
+            Put32(buffer, offset + 4, (uint)value);
         }
 
         public static ushort Get16(byte[] buffer, int offset)
         {
-            return (ushort)(buffer[offset] | (buffer[offset + 1] << 8));
+            return (ushort)((buffer[offset] << 8) | buffer[offset + 1]);
         }
 
         public static uint Get32(byte[] buffer, int offset)
         {
-            return (uint)(buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) |
-                          (buffer[offset + 3] << 24));
+            return (uint)((buffer[offset] << 24) | (buffer[offset + 1] << 16) | (buffer[offset + 2] << 8) |
+                          buffer[offset + 3]);
         }
 
         public static ulong Get64(byte[] buffer, int offset)
         {
-            return Get32(buffer, offset) | ((ulong)Get32(buffer, offset + 4) << 32);
+            return ((ulong)Get32(buffer, offset) << 32) | Get32(buffer, offset + 4);
         }
 
         // sequence numbers wrap around, a is newer than b when the signed distance is positive

@@ -47,7 +47,7 @@ namespace Netly
         private struct Pending
         {
             public bool Opened, Closed;
-            public string Fail;
+            public string Fail, Error;
             public List<KeyValuePair<byte[], RudpDelivery>> Messages;
 
             public void Add(byte[] data, RudpDelivery type)
@@ -97,7 +97,9 @@ namespace Netly
 
         // receive
         private readonly Dictionary<uint, Fragment> _reorder = new Dictionary<uint, Fragment>();
-        private MemoryStream _assembly;
+        // reliable message being assembled
+        private byte[] _assemblyData;
+        private int _assemblyPosition;
         private uint _nextExpected;
         private int _unackedReceived;
         private long _ackDueAt;
@@ -137,6 +139,9 @@ namespace Netly
         public Action OnOpen { get; set; }
         public Action OnClose { get; set; }
         public Action<string> OnOpenFail { get; set; }
+
+        // raised before OnClose
+        public Action<string> OnError { get; set; }
         public Action<byte[], RudpDelivery> OnMessage { get; set; }
 
         /* ---- CLIENT --- */
@@ -208,6 +213,14 @@ namespace Netly
         {
             if (data == null || data.Length < 1) return;
 
+            // every message starts with the framing header
+            var framed = new byte[Framing.HeaderSize + data.Length];
+
+            Buffer.BlockCopy(Framing.Create(data.Length), 0, framed, 0, Framing.HeaderSize);
+            Buffer.BlockCopy(data, 0, framed, Framing.HeaderSize, data.Length);
+
+            var pending = new Pending();
+
             lock (_locker)
             {
                 if (_state != State.Connected) return;
@@ -215,10 +228,12 @@ namespace Netly
                 _nextTickAt = 0;
 
                 if (messageType == RudpDelivery.Reliable)
-                    SendReliable(data);
+                    SendReliable(framed, ref pending);
                 else
-                    SendDatagram(data, messageType);
+                    SendDatagram(framed, messageType, ref pending);
             }
+
+            Flush(pending);
         }
 
         public void Close()
@@ -424,11 +439,12 @@ namespace Netly
 
         /* ---- SEND --- */
 
-        private void SendReliable(byte[] data)
+        private void SendReliable(byte[] data, ref Pending pending)
         {
+            // queue without limit would use all the memory
             if (_pendingBytes + data.Length > MaxPendingBytes)
             {
-                Logger.Singleton.Submit($"[RudpConnection] Send queue is full, data ignored. Id: {Id}");
+                Violation(ref pending, "Send queue is full");
                 return;
             }
 
@@ -488,7 +504,7 @@ namespace Netly
             _ackDueAt = 0;
         }
 
-        private void SendDatagram(byte[] data, RudpDelivery messageType)
+        private void SendDatagram(byte[] data, RudpDelivery messageType, ref Pending pending)
         {
             var isSequenced = messageType == RudpDelivery.Sequenced;
             var header = 1 + RudpWire.TokenSize + (isSequenced ? 4 : 0);
@@ -515,6 +531,7 @@ namespace Netly
             if (count > byte.MaxValue)
             {
                 Logger.Singleton.Submit($"[RudpConnection] Message too big for {messageType}, ignored. Id: {Id}");
+                pending.Error = $"Message too big for {messageType}";
                 return;
             }
 
@@ -645,41 +662,45 @@ namespace Netly
             var isFirst = (flags & RudpWire.First) != 0;
             var isLast = (flags & RudpWire.Last) != 0;
 
-            // message in a single packet
-            if (isFirst && isLast)
+            if (isFirst)
             {
-                if (length > MaxMessageSize)
+                // the header gives the size before any allocation
+                if (!Framing.TryReadHeader(buffer, offset, length, MaxMessageSize, out var size))
                 {
-                    Logger.Singleton.Submit($"[RudpConnection] Message above the limit, connection closed. Id: {Id}");
-                    CloseLocked(ref pending, true, null);
+                    Violation(ref pending, "Invalid message header or message above the limit");
                     return;
                 }
 
-                var data = new byte[length];
-
-                Buffer.BlockCopy(buffer, offset, data, 0, length);
-                pending.Add(data, RudpDelivery.Reliable);
-                return;
+                _assemblyData = new byte[size];
+                _assemblyPosition = 0;
+                offset += Framing.HeaderSize;
+                length -= Framing.HeaderSize;
             }
-
-            if (isFirst) _assembly = new MemoryStream();
 
             // fragment without the first one
-            if (_assembly == null) return;
+            if (_assemblyData == null) return;
 
-            _assembly.Write(buffer, offset, length);
-
-            if (_assembly.Length > MaxMessageSize)
+            if (length > _assemblyData.Length - _assemblyPosition)
             {
-                Logger.Singleton.Submit($"[RudpConnection] Message above the limit, connection closed. Id: {Id}");
-                CloseLocked(ref pending, true, null);
+                Violation(ref pending, "Message bigger than its header");
                 return;
             }
+
+            Buffer.BlockCopy(buffer, offset, _assemblyData, _assemblyPosition, length);
+            _assemblyPosition += length;
 
             if (!isLast) return;
 
-            pending.Add(_assembly.ToArray(), RudpDelivery.Reliable);
-            _assembly = null;
+            if (_assemblyPosition != _assemblyData.Length)
+            {
+                Violation(ref pending, "Message smaller than its header");
+                return;
+            }
+
+            var data = _assemblyData;
+
+            _assemblyData = null;
+            pending.Add(data, RudpDelivery.Reliable);
         }
 
         private void ReceiveDatagram(byte[] buffer, int length, byte type, ref Pending pending)
@@ -748,6 +769,14 @@ namespace Netly
 
         private void DeliverDatagram(byte[] data, RudpDelivery messageType, uint seq, ref Pending pending)
         {
+            // header must describe the message
+            if (!Framing.TryReadHeader(data, 0, data.Length, MaxMessageSize, out var size) ||
+                size != data.Length - Framing.HeaderSize)
+            {
+                Violation(ref pending, "Invalid message header or message above the limit");
+                return;
+            }
+
             if (messageType == RudpDelivery.Sequenced)
             {
                 // old message: a newer one was already delivered
@@ -757,7 +786,10 @@ namespace Netly
                 _lastSequenced = seq;
             }
 
-            pending.Add(data, messageType);
+            var payload = new byte[size];
+
+            Buffer.BlockCopy(data, Framing.HeaderSize, payload, 0, payload.Length);
+            pending.Add(payload, messageType);
         }
 
         private void DropOldestAssembly()
@@ -980,6 +1012,15 @@ namespace Netly
 
         /* ---- CLOSE --- */
 
+        // OnError, then the connection closes
+        private void Violation(ref Pending pending, string message)
+        {
+            Logger.Singleton.Submit($"[RudpConnection] {message}, connection closed. Id: {Id}");
+
+            pending.Error = message;
+            CloseLocked(ref pending, true, null);
+        }
+
         private void CloseLocked(ref Pending pending, bool notify, string failMessage)
         {
             if (_state == State.Closed) return;
@@ -1005,7 +1046,7 @@ namespace Netly
             _out.Clear();
             _reorder.Clear();
             _assemblies.Clear();
-            _assembly = null;
+            _assemblyData = null;
             _head = _sent = _sackedCount = 0;
             _pendingBytes = 0;
 
@@ -1022,6 +1063,8 @@ namespace Netly
                 if (pending.Messages != null)
                     foreach (var message in pending.Messages)
                         OnMessage?.Invoke(message.Key, message.Value);
+
+                if (pending.Error != null) OnError?.Invoke(pending.Error);
 
                 if (pending.Fail != null) OnOpenFail?.Invoke(pending.Fail);
 
