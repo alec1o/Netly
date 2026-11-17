@@ -476,10 +476,11 @@ client.Open(new Host("127.0.0.1", 8080));
 // close socket if opened
 client.Close();
 
-// biggest datagram this socket can send (it depends on the buffers of the system)
+// biggest datagram this socket sends: the buffers of the system and, for loopback, what was seen to arrive
 int max = client.MaxDatagram;
 
-// send raw data if opened (a datagram bigger than MaxDatagram throws ArgumentException)
+// send raw data if opened: a message that fits MaxDatagram is one datagram (any UDP program reads it),
+// a bigger one (up to UdpClient.MaxDatagramSize, 65507 bytes) is sent in fragments and joined by Netly
 client.SendData(new byte[2] { 128, 255 });
 
 // send event if opened
@@ -824,10 +825,11 @@ client.SendData(new byte[2] { 128, 255 }, RudpDelivery.Sequenced);
 // send event if connected
 client.SendEvent("name", new byte[2] { 128, 255 }, RudpDelivery.Reliable);
 
-// biggest message accepted (default 20 MB), time without any packet from the other
-// side before the connection closes (default 5s) and time to wait the handshake (default 5s)
-// must be set before client.Open
+// biggest message accepted (default 20 MB), biggest amount of bytes waiting to be sent (default 64 MB),
+// time without any packet from the other side before the connection closes (default 5s)
+// and time to wait the handshake (default 5s), must be set before client.Open
 client.FramingSize = 4 * 1024 * 1024;
+client.MaxPendingSize = 16 * 1024 * 1024;
 client.NoResponseTimeout = 8000;
 client.HandshakeTimeout = 3000;
 ```
@@ -1348,10 +1350,34 @@ using Byter;
 | <sub>`OnAllocate` (or a write to its stream) throws</sub>                     | <sub>yes</sub>       | <sub>yes, after</sub> |
 | <sub>An exception of the app in `OnData` or `OnEvent`</sub>                   | <sub>yes</sub>       | <sub>yes, after</sub> |
 | <sub>Send without an open connection</sub>                                    | <sub>yes</sub>       | <sub>no</sub>         |
-| <sub>The send queue of RUDP is full</sub>                                     | <sub>yes</sub>       | <sub>yes, after</sub> |
+| <sub>The send queue of RUDP is full (`MaxPendingSize`, default 64 MB)</sub>   | <sub>yes</sub>       | <sub>yes, after</sub> |
 | <sub>The other side closes or the network drops</sub>                         | <sub>no</sub>        | <sub>yes</sub>        |
 
 <sub>The message that caused the failure is always discarded. An exception thrown inside <code>OnOpen</code>, <code>OnClose</code> or <code>OnError</code> is only logged. UDP has no connection: a failure closes the socket (or removes the peer, on a server).</sub>
+<br>
+<br>
+</td>
+</tr>
+
+<tr><th></th></tr>
+
+<tr>
+<th align="center" valign="top"><sub>UDP<strong></strong></sub></th>
+<td width="100%">
+<sub>One message is one datagram, as any UDP program expects. Some systems drop big datagrams without any error (macOS sends up to its send buffer, and some machines lose the ones above ~4 KB until the other side answers), so Netly measures what a new socket delivers to loopback (once) and uses the send buffer as limit: <code>MaxDatagram</code>. A message above it is split in fragments and joined by the receiver. The fragment is detected by its content, like the event, so any other datagram is delivered as it is.</sub>
+<br>
+<br>
+
+| <sub>Field</sub>         | <sub>Size</sub>      | <sub>Description</sub>                                          |
+| ------------------------ | -------------------- | --------------------------------------------------------------- |
+| <sub>`Prefix`</sub>      | <sub>2 B</sub>       | <sub>`36 19`</sub>                                              |
+| <sub>`Id`</sub>          | <sub>2 B</sub>       | <sub>Message id (`ushort`)</sub>                                |
+| <sub>`Index`</sub>       | <sub>1 B</sub>       | <sub>Position of the fragment, from 0</sub>                     |
+| <sub>`Count`</sub>       | <sub>1 B</sub>       | <sub>How many fragments the message has, at least 2</sub>       |
+| <sub>`Checksum`</sub>    | <sub>1 B</sub>       | <sub>CRC-8 of the fields before it</sub>                        |
+| <sub>`Payload`</sub>     | <sub>rest</sub>      | <sub>A part of the message</sub>                                |
+
+<sub>A message that does not complete in 2 seconds is dropped, up to 16 messages wait at the same time for each peer, and a message is never bigger than 65507 bytes.</sub>
 <br>
 <br>
 </td>
