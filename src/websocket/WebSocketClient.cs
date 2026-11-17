@@ -22,10 +22,9 @@ namespace Netly
         private ClientWebSocket _clientSocket;
         private System.Net.WebSockets.WebSocket _serverSocket;
         private bool _tryConnecting, _tryClosing, _serverInitialized;
-        private Uri _openHost;
         private long _framingSize = Framing.DefaultSize;
-        private int _reopenId, _activeId, _isOpening;
-        private EventHandler<int> _onReopen;
+        private int _isOpening;
+        private Func<long, Stream> _onDynamicAllocation;
         private EventHandler _onOpen;
         private EventHandler<WebSocketCloseStatus> _onClose;
         private EventHandler<Exception> _onError;
@@ -42,15 +41,6 @@ namespace Netly
         {
             IsServer = false;
             Host = new Uri($"{EncryptedScheme}://{IPAddress.Any}");
-            ReopenEnabled = false;
-            ReopenAttempts = 5;
-            ReopenDelay = TimeSpan.FromSeconds(1);
-
-            // closes made by the user change _reopenId
-            _onClose += (sender, status) =>
-            {
-                if (ReopenEnabled && Volatile.Read(ref _reopenId) == _activeId) Reopen(_openHost, _activeId);
-            };
         }
 
         // client accepted by a server
@@ -154,11 +144,46 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Called when the connection fails to open.
+        ///     Called when the connection fails to open (then <see cref="OnClose(Action)" /> is called), or when the
+        ///     data received is above the limit or makes an allocation or a callback of the app throw (the message is
+        ///     discarded and the connection closes: <see cref="OnClose(Action)" /> is called after).
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
             _onError += (sender, exception) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(exception));
+        }
+
+        /// <summary>
+        ///     Chooses where each received message is written. A WebSocket does not tell the size of a message before
+        ///     its end, so this is the only allocation callback of the WebSocket (there is no OnAllocate):
+        ///     <br />
+        ///     - the first call receives <c>0</c> and returns the stream that starts the message (for example one of 8 KB);
+        ///     <br />
+        ///     - when the message grows over the size of the stream (at 8 KB, 16 KB, 32 KB...) it is called again with the
+        ///     current size: return a bigger stream, the content is copied to it and the old one is disposed, or
+        ///     <c>null</c> to keep the current one (a stream that grows by itself, like a <see cref="FileStream" />);
+        ///     <br />
+        ///     - for the body of an event, which is allocated after the message ended, it is called once with the
+        ///     exact size.
+        ///     <br />
+        ///     An exception, a <c>null</c> on the first call or a failed copy discards the message and closes the
+        ///     connection: <see cref="OnError" />, then <see cref="OnClose(Action)" />. Without it a
+        ///     <see cref="MemoryStream" /> is used. The limit is always <see cref="FramingSize" />.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the connection is opened.</exception>
+        public void OnDynamicAllocation(Func<long, Stream> callback)
+        {
+            if (IsOpened && !IsServer)
+                throw new InvalidOperationException(
+                    $"Must not update ({nameof(OnDynamicAllocation)}) while socket is Opened.");
+
+            _onDynamicAllocation = callback;
+        }
+
+        // the server gives it to each client it accepts
+        internal void SetDynamicAllocation(Func<long, Stream> callback)
+        {
+            _onDynamicAllocation = callback;
         }
 
         /// <summary>
@@ -176,56 +201,6 @@ namespace Netly
         public void OnEvent(Action<string, Stream, WebSocketDelivery> callback)
         {
             _onEvent += (sender, data) => callback?.Invoke(data.Name, data.Stream, data.Delivery);
-        }
-
-        /// <summary>
-        ///     True when the client opens the connection again after it was lost or failed to open.
-        ///     Use <see cref="UseAutoReopen" /> to change it.
-        /// </summary>
-        public bool ReopenEnabled { get; private set; }
-
-        /// <summary>
-        ///     How many times the client tries to open again. -1 means no limit.
-        /// </summary>
-        public int ReopenAttempts { get; private set; }
-
-        /// <summary>
-        ///     Time to wait before each attempt to open again.
-        /// </summary>
-        public TimeSpan ReopenDelay { get; private set; }
-
-        /// <summary>
-        ///     Called before each attempt to open again, with the number of the attempt (starts at 1).
-        ///     <see cref="OnOpen" /> is called when an attempt works, <see cref="OnError" /> when it fails.
-        /// </summary>
-        public void OnReopen(Action<int> callback)
-        {
-            _onReopen += (sender, attempt) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(attempt));
-        }
-
-        /// <summary>
-        ///     Enables or disables opening the connection again when it is lost or when the first open fails.
-        ///     It does not happen after <see cref="Close()" /> and it must be called before <see cref="Open" />.
-        /// </summary>
-        /// <param name="enabled">True to open the connection again.</param>
-        /// <param name="attempts">Maximum number of attempts for each failure. -1 means no limit.</param>
-        /// <param name="delay">Time to wait before each attempt. Null means one second.</param>
-        /// <exception cref="InvalidOperationException">While the connection is opened or for a client of a server.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">When <paramref name="attempts" /> or <paramref name="delay" /> is invalid.</exception>
-        public void UseAutoReopen(bool enabled, int attempts = 5, TimeSpan? delay = null)
-        {
-            if (IsOpened || IsServer)
-                throw new InvalidOperationException($"Must not modify ({nameof(ReopenEnabled)}) while socket is Opened.");
-
-            if (attempts == 0 || attempts < -1)
-                throw new ArgumentOutOfRangeException($"{nameof(attempts)}: {attempts}");
-
-            if (delay < TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
-
-            ReopenEnabled = enabled;
-            ReopenAttempts = attempts;
-            ReopenDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /* ---- SEND --- */
@@ -337,7 +312,8 @@ namespace Netly
 
         /// <summary>
         ///     Starts the connection and returns without waiting.
-        ///     The result comes by <see cref="OnOpen" /> or <see cref="OnError" />.
+        ///     The result comes by <see cref="OnOpen" />, or by <see cref="OnError" /> followed by
+        ///     <see cref="OnClose(Action)" />.
         /// </summary>
         /// <param name="host">Server address, e.g. ws://127.0.0.1:8080/chat</param>
         /// <exception cref="ArgumentNullException"><paramref name="host" /> is null.</exception>
@@ -345,22 +321,16 @@ namespace Netly
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
-            // a new Open replaces any pending reopen
-            var id = Interlocked.Increment(ref _reopenId);
-
-            _ = OpenAsync(host, id, false);
+            _ = OpenAsync(host);
         }
 
-        // true when the connection is open, every failure goes to OnError
-        private async Task<bool> OpenAsync(Uri host, int id, bool isAttempt)
+        // true when the connection is open, every failure goes to OnError then OnClose
+        private async Task<bool> OpenAsync(Uri host)
         {
             if (IsServer || IsOpened || Interlocked.Exchange(ref _isOpening, 1) == 1) return IsOpened;
 
             try
             {
-                _openHost = host;
-                _activeId = id;
-
                 await Connect(host);
             }
             finally
@@ -368,12 +338,7 @@ namespace Netly
                 Interlocked.Exchange(ref _isOpening, 0);
             }
 
-            if (IsOpened) return true;
-
-            // an attempt that fails is handled by the loop of the reopen
-            if (isAttempt is false && ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
-
-            return false;
+            return IsOpened;
         }
 
         // every failure goes to OnError, it never throws
@@ -433,6 +398,7 @@ namespace Netly
                     _clientSocket = null;
 
                     _onError?.Invoke(null, e);
+                    _onClose?.Invoke(null, WebSocketCloseStatus.Empty);
                 }
                 finally
                 {
@@ -441,25 +407,6 @@ namespace Netly
                     {
                         _tryConnecting = false;
                     }
-                }
-            });
-        }
-
-        private void Reopen(Uri host, int id)
-        {
-            if (host == null) return;
-
-            Task.Run(async () =>
-            {
-                for (var attempt = 1; ReopenAttempts < 0 || attempt <= ReopenAttempts; attempt++)
-                {
-                    await Task.Delay(ReopenDelay);
-
-                    if (Volatile.Read(ref _reopenId) != id || IsOpened) return;
-
-                    _onReopen?.Invoke(null, attempt);
-
-                    if (await OpenAsync(host, id, true)) return;
                 }
             });
         }
@@ -477,9 +424,6 @@ namespace Netly
         /// </summary>
         public void Close(WebSocketCloseStatus status)
         {
-            // user close never opens again
-            Interlocked.Increment(ref _reopenId);
-
             _ = CloseAsync(status);
         }
 
@@ -569,7 +513,13 @@ namespace Netly
 
         private async void Send(WebSocketDelivery delivery, params byte[][] buffers)
         {
-            if (IsOpened is false || buffers == null || buffers.Length <= 0) return;
+            if (buffers == null || buffers.Length <= 0) return;
+
+            if (IsOpened is false)
+            {
+                _onError?.Invoke(null, new InvalidOperationException("The connection is not open."));
+                return;
+            }
 
             var type = delivery == WebSocketDelivery.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
 
@@ -606,12 +556,13 @@ namespace Netly
         private async void ReceiveJob(object _)
         {
             var closeStatus = WebSocketCloseStatus.Empty;
+            Stream message = null;
 
             try
             {
                 const int size = 1024 * 8;
                 var buffer = new ArraySegment<byte>(new byte[size], 0, size);
-                var fragments = new MemoryStream();
+                long written = 0, limit = 0;
 
                 while (IsOpened)
                 {
@@ -624,23 +575,50 @@ namespace Netly
                         break;
                     }
 
-                    fragments.Write(buffer.Array, 0, result.Count);
+                    try
+                    {
+                        // write in the stream of the app while it arrives
+                        if (message == null)
+                        {
+                            message = Allocate(0, null);
+                            written = 0;
+                            limit = _onDynamicAllocation == null ? long.MaxValue : size;
+                        }
 
-                    if (fragments.Length > _framingSize)
-                        throw new InvalidOperationException($"{nameof(fragments)}: {fragments.Length}");
+                        if (written + result.Count > _framingSize)
+                            throw new InvalidDataException(
+                                $"message: {written + result.Count} > {nameof(FramingSize)}: {_framingSize}");
 
-                    // wait the end of message
-                    if (!result.EndOfMessage) continue;
+                        while (written + result.Count > limit)
+                        {
+                            message = Allocate(written, message);
+                            limit = Math.Max(limit * 2, written + result.Count);
+                        }
 
-                    var data = fragments.ToArray();
+                        message.Write(buffer.Array, 0, result.Count);
+                        written += result.Count;
 
-                    fragments.SetLength(0);
+                        // wait the end of message
+                        if (!result.EndOfMessage) continue;
 
-                    var delivery = result.MessageType == WebSocketMessageType.Text
-                        ? WebSocketDelivery.Text
-                        : WebSocketDelivery.Binary;
+                        var delivery = result.MessageType == WebSocketMessageType.Text
+                            ? WebSocketDelivery.Text
+                            : WebSocketDelivery.Binary;
 
-                    Release(data, delivery);
+                        var done = message;
+
+                        message = null;
+
+                        Release(done, delivery);
+                    }
+                    catch (Exception e)
+                    {
+                        // data or app failed: OnError then OnClose
+                        Logger.Singleton.Submit(e);
+                        _onError?.Invoke(null, e);
+                        closeStatus = WebSocketCloseStatus.EndpointUnavailable;
+                        break;
+                    }
                 }
             }
             catch (Exception e)
@@ -650,6 +628,9 @@ namespace Netly
             }
             finally
             {
+                // message that did not end
+                message?.Dispose();
+
                 try
                 {
                     await CloseAsync(closeStatus);
@@ -662,14 +643,47 @@ namespace Netly
             }
         }
 
-        private void Release(byte[] data, WebSocketDelivery delivery)
+        // first call starts the stream, the next ones copy it to a bigger one
+        private Stream Allocate(long size, Stream current)
+        {
+            var callback = _onDynamicAllocation;
+
+            if (callback == null) return current ?? new MemoryStream();
+
+            var next = callback(size);
+
+            if (current == null)
+                return next ?? throw new InvalidOperationException("OnDynamicAllocation returned null on the first call");
+
+            // keep the current stream
+            if (next == null || ReferenceEquals(next, current)) return current;
+
+            try
+            {
+                current.Position = 0;
+                current.CopyTo(next);
+
+                if (next.Position != size) throw new InvalidDataException($"{nameof(next.Position)}: {next.Position}");
+            }
+            catch (Exception)
+            {
+                next.Dispose();
+                throw;
+            }
+
+            current.Dispose();
+
+            return next;
+        }
+
+        // message complete, an event or data
+        private void Release(Stream stream, WebSocketDelivery delivery)
         {
             try
             {
-                var stream = Helper.NewStream(data.LongLength);
-                stream.Write(data, 0, data.Length);
+                stream.Position = 0;
 
-                if (Message.TryParse(stream, out var name, out var message, Helper.NewStream))
+                if (Message.TryParse(stream, out var name, out var message, length => Allocate(length, null)))
                 {
                     stream.Dispose();
                     Release(message, () => _onEvent?.Invoke(null, (name, message, delivery)));
@@ -679,10 +693,10 @@ namespace Netly
                     Release(stream, () => _onData?.Invoke(null, (stream, delivery)));
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Singleton.Submit(e);
-                _onError?.Invoke(null, e);
+                stream.Dispose();
+                throw;
             }
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,6 +17,7 @@ namespace Netly
         private readonly HashSet<string> _paths = new HashSet<string>();
         private EventHandler<WebSocketClient> _onAccept;
         private long _framingSize = Framing.DefaultSize;
+        private Func<long, Stream> _onDynamicAllocation;
 
         /* ---- INTERFACE --- */
 
@@ -49,6 +51,20 @@ namespace Netly
 
                 _framingSize = Math.Max(1024, value);
             }
+        }
+
+        /// <summary>
+        ///     Chooses where each message received from the clients is written, same rules of
+        ///     <see cref="WebSocketClient.OnDynamicAllocation" />.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the server is opened.</exception>
+        public void OnDynamicAllocation(Func<long, Stream> callback)
+        {
+            if (IsOpened)
+                throw new InvalidOperationException(
+                    $"Must not update ({nameof(OnDynamicAllocation)}) while socket is Opened.");
+
+            _onDynamicAllocation = callback;
         }
 
         /// <summary>
@@ -165,6 +181,7 @@ namespace Netly
         private void Register(WebSocketClient client)
         {
             client.SetFramingSize(_framingSize);
+            client.SetDynamicAllocation(_onDynamicAllocation);
 
             lock (_locker)
             {

@@ -294,17 +294,17 @@ public class WebSocketTests
     }
 
     [Fact]
-    public async Task SendBeforeOpenIsIgnored()
+    public async Task SendBeforeOpen_CallsOnError()
     {
         var client = new WebSocketClient();
         var error = false;
         client.OnError(_ => error = true);
 
-        client.SendData("ignored", WebSocketDelivery.Text);
+        client.SendData("not sent", WebSocketDelivery.Text);
         await client.CloseAsync();
 
         Assert.False(client.IsOpened);
-        Assert.False(error);
+        Assert.True(error);
     }
 
     private static TaskCompletionSource<T> TaskToSignal<T>(Task<T> task)
