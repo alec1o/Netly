@@ -759,9 +759,8 @@ namespace Netly
                     // the system can complete a zero byte read once without anything to read, wait again
                     if (++_spurious < 32) return true;
 
-                    // a platform that does it every time would spin: stop using zero byte reads, a read that waits
-                    // would hold a thread of the pool for every idle connection
-                    Capabilities.DisableZeroByteRead();
+                    // it would spin: only this connection reads with a buffer from now on, one odd connection must
+                    // not turn zero byte reads off for every other connection of the process
                     ReceiveTrigger(owner, new byte[_receiveChunk]);
                     return false;
                 }
