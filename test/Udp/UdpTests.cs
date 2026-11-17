@@ -183,17 +183,17 @@ public class UdpTests
     }
 
     [Fact]
-    public async Task ClientDataBeforeOpenIsIgnored()
+    public async Task ClientDataBeforeOpen_CallsOnError()
     {
         var client = new UdpClient();
         var error = false;
         client.OnError(_ => error = true);
 
-        client.SendData(Utf8("ignored"));
+        client.SendData(Utf8("not sent"));
         client.Close();
 
         Assert.False(client.IsOpened);
-        Assert.False(error);
+        Assert.True(error);
         await Task.CompletedTask;
     }
 
@@ -587,35 +587,28 @@ public class UdpTests
     }
 
     [Fact]
-    public async Task CallbackThrowing_DoesNotStopReceiving()
+    public async Task CallbackThrowing_CallsOnErrorThenOnClose()
     {
         var (server, host) = await EchoServer();
-        var errors = Wait.Signal<Exception>();
-        var received = Wait.Signal<string>();
-        var first = true;
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
         var client = await Connect(host, server, c =>
         {
-            c.OnError(e => errors.TrySetResult(e));
-            c.OnData(s =>
+            c.OnError(_ => { lock (events) events.Add("error"); });
+            c.OnClose(() =>
             {
-                var text = Encoding.UTF8.GetString(Read(s));
-                if (first)
-                {
-                    first = false;
-                    throw new InvalidOperationException("user callback");
-                }
-
-                received.TrySetResult(text);
+                lock (events) events.Add("close");
+                closed.TrySetResult(true);
             });
+            c.OnData(_ => throw new InvalidOperationException("user callback"));
         });
 
         client.SendData(Utf8("one"));
-        await Wait.For(errors, what: "error from the throwing callback");
-        client.SendData(Utf8("two"));
 
-        Assert.Equal("two", await Wait.For(received, what: "echo after the exception"));
+        Assert.True(await Wait.For(closed, what: "close after the exception of the app"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+        Assert.False(client.IsOpened);
 
-        await Close(client);
         await Close(server);
     }
 

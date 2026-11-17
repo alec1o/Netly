@@ -114,7 +114,8 @@ namespace Netly
         }
 
         /// <summary>
-        ///     Called when the socket fails to open, when a send fails or when a callback throws while receiving.
+        ///     Called when the socket fails to open (then <see cref="OnClose" /> is called), when a send fails, or when an
+        ///     allocation or a callback of the app throws while receiving (the datagram is discarded and the socket closes).
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
@@ -321,6 +322,7 @@ namespace Netly
 
                     Logger.Singleton.Submit(e);
                     _onError?.Invoke(null, e);
+                    _onClose?.Invoke(null, null);
                 }
                 finally
                 {
@@ -500,7 +502,7 @@ namespace Netly
 
                 lock (_locker)
                 {
-                    if (IsOpened is false) return;
+                    if (IsOpened is false) throw new InvalidOperationException("The connection is not open.");
 
                     socket = Socket;
                 }
@@ -604,8 +606,18 @@ namespace Netly
             }
             catch (Exception e)
             {
+                // datagram discarded, OnError then OnClose
                 Logger.Singleton.Submit(e);
                 _onError?.Invoke(null, e);
+
+                Socket owner;
+
+                lock (_locker)
+                {
+                    owner = Socket;
+                }
+
+                if (owner != null) Close(owner);
             }
         }
 
