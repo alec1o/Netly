@@ -270,6 +270,9 @@ namespace Netly
                         _isOpening = false;
                     }
 
+                    // measured now, the first peer of loopback does not wait for it
+                    Task.Run(() => Capabilities.LoopbackDatagram);
+
                     _onOpen?.Invoke(null, null);
 
                     ReceiveTrigger(socket, new byte[ushort.MaxValue]);

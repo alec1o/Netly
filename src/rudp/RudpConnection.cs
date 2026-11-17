@@ -59,6 +59,9 @@ namespace Netly
 
         public const long DefaultPendingBytes = 64L * 1024 * 1024;
 
+        // a message is one array: this is the biggest one the runtime creates
+        private const long MaxArray = 0x7FFFFFC7;
+
         private const long AckDelay = 2;
         private const long MinRto = 100, MaxRto = 1500, InitialRto = 200;
         private const long DatagramLifetime = 2000;
@@ -117,8 +120,9 @@ namespace Netly
             _remote = remote;
             _isServer = isServer;
             // the usual size of the path, never above what the send and receive buffers of the socket hold
-                _localDatagram = SocketLimits.Both(socket,
-                    IPAddress.IsLoopback(remote.Address) ? RudpWire.LoopbackDatagram : RudpWire.InternetDatagram);
+                _localDatagram = SocketLimits.Both(socket, IPAddress.IsLoopback(remote.Address)
+                    ? Math.Min(RudpWire.LoopbackDatagram, Capabilities.LoopbackDatagram)
+                    : RudpWire.InternetDatagram);
 
                 // until the handshake ends it is the limit of this side, then the smaller one of the two peers
                 MaxDatagram = _localDatagram;
@@ -669,7 +673,7 @@ namespace Netly
             if (isFirst)
             {
                 // the header gives the size before any allocation
-                if (!Framing.TryReadHeader(buffer, offset, length, MaxMessageSize, out var size))
+                if (!Framing.TryReadHeader(buffer, offset, length, Math.Min(MaxMessageSize, MaxArray), out var size))
                 {
                     Violation(ref pending, "Invalid message header or message above the limit");
                     return;
@@ -774,7 +778,7 @@ namespace Netly
         private void DeliverDatagram(byte[] data, RudpDelivery messageType, uint seq, ref Pending pending)
         {
             // header must describe the message
-            if (!Framing.TryReadHeader(data, 0, data.Length, MaxMessageSize, out var size) ||
+            if (!Framing.TryReadHeader(data, 0, data.Length, Math.Min(MaxMessageSize, MaxArray), out var size) ||
                 size != data.Length - Framing.HeaderSize)
             {
                 Violation(ref pending, "Invalid message header or message above the limit");

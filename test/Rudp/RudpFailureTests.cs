@@ -189,4 +189,19 @@ public class RudpFailureTests
 
         await server.CloseAsync();
     });
+
+    [Fact]
+    public Task LoopbackDatagram_NeverAboveWhatLoopbackDelivers() => Guard.Run(async () =>
+    {
+        var (server, host) = await EchoServer();
+        var client = new RudpClient();
+        await client.OpenAsync(host);
+        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
+
+        Assert.InRange(client.MaxDatagram, 512, Math.Min(8192, Capabilities.LoopbackDatagram));
+        Assert.Equal(client.MaxDatagram, server.Clients.Single().MaxDatagram);
+
+        await client.CloseAsync();
+        await server.CloseAsync();
+    });
 }
