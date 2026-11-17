@@ -60,15 +60,19 @@ namespace Netly
 
             try
             {
-                if (Reaches(maximum)) return maximum;
+                // true or a system that can't be tested (no ipv4 loopback): nothing says the limit is lower
+                if (Reaches(maximum) != false) return maximum;
 
                 int low = minimum, high = maximum - 1;
 
                 while (low < high)
                 {
                     var middle = low + (high - low + 1) / 2;
+                    var result = Reaches(middle);
 
-                    if (Reaches(middle))
+                    if (result == null) return low;
+
+                    if (result == true)
                         low = middle;
                     else
                         high = middle - 1;
@@ -82,8 +86,9 @@ namespace Netly
             }
         }
 
-        // every try uses new sockets: a flow that already got an answer is not the case to measure
-        private static bool Reaches(int size)
+        // every try uses new sockets: a flow that already got an answer is not the case to measure.
+        // null when the system can't make the test (it is not an answer about the size)
+        private static bool? Reaches(int size)
         {
             try
             {
@@ -102,7 +107,15 @@ namespace Netly
                         // the system keeps the default size
                     }
 
-                    sender.SendTo(new byte[size], receiver.LocalEndPoint);
+                    try
+                    {
+                        sender.SendTo(new byte[size], receiver.LocalEndPoint);
+                    }
+                    catch (SocketException e) when (e.SocketErrorCode == SocketError.MessageSize)
+                    {
+                        // the system refuses this size
+                        return false;
+                    }
 
                     // loopback delivers at once, a datagram that is not there after this time was dropped
                     if (receiver.Poll(25 * 1000, SelectMode.SelectRead) is false) return false;
@@ -112,7 +125,7 @@ namespace Netly
             }
             catch (Exception)
             {
-                return false;
+                return null;
             }
         }
 
