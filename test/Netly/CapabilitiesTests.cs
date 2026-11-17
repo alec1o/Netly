@@ -30,6 +30,33 @@ public class CapabilitiesTests
     }
 
     [Fact]
+    public void LoopbackDatagram_IsMeasuredOnceAndKept()
+    {
+        var first = Capabilities.LoopbackDatagram;
+
+        Assert.InRange(first, 512, global::Netly.UdpClient.MaxDatagramSize);
+
+        var results = new int[16];
+        Parallel.For(0, results.Length, i => results[i] = Capabilities.LoopbackDatagram);
+
+        Assert.All(results, value => Assert.Equal(first, value));
+    }
+
+    [Fact]
+    public void LoopbackDatagram_IsWhatANewSocketDelivers()
+    {
+        var size = Capabilities.LoopbackDatagram;
+
+        using var receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        receiver.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0));
+        sender.SendTo(new byte[size], receiver.LocalEndPoint!);
+
+        Assert.True(receiver.Poll(2_000_000, SelectMode.SelectRead), $"a datagram of {size} bytes did not arrive");
+        Assert.Equal(size, receiver.Receive(new byte[size + 1]));
+    }
+
+    [Fact]
     public void ZeroByteRead_IsOnForANewRuntime()
     {
         // the tests run on .NET 8 or newer

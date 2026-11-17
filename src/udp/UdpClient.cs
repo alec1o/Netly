@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Netly
@@ -20,7 +22,9 @@ namespace Netly
 
         private readonly object _locker = new object();
         private readonly UdpServer _server;
+        private readonly Dictionary<ushort, Assembly> _assemblies = new Dictionary<ushort, Assembly>();
         private int _maxDatagram = MaxDatagramSize;
+        private int _messageId;
         private bool _isOpening, _isClosing;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
@@ -29,6 +33,17 @@ namespace Netly
         private EventHandler<Stream> _onData;
         private Func<long, Stream> _onAllocate;
         private Func<long, Stream> Allocate => IsServer ? _server.OnAllocateObject : _onAllocate;
+
+        private const long FragmentLifetime = 2000;
+        private const int MaxAssemblies = 16;
+
+        // fragments of a message that is not complete, the others are dropped when it takes too long
+        private class Assembly
+        {
+            public byte[][] Parts;
+            public int Received, Length;
+            public long Deadline;
+        }
 
         /* ---- CONSTRUCTOR --- */
 
@@ -52,7 +67,7 @@ namespace Netly
             Host = host;
             IsServer = true;
             IsOpened = true;
-            _maxDatagram = LimitOf(socket);
+            _maxDatagram = LimitOf(socket, host.Address);
         }
 
         /* ---- INTERFACE --- */
@@ -73,9 +88,11 @@ namespace Netly
         public bool IsServer { get; }
 
         /// <summary>
-        ///     Biggest datagram this socket can send: <see cref="MaxDatagramSize" /> or the send buffer of the socket,
-        ///     when the system limits it (macOS only sends up to its send buffer, 9216 bytes by default).
-        ///     A bigger datagram is lost without any error when the receiver can't hold it, so it is refused here.
+        ///     Biggest datagram this socket sends: <see cref="MaxDatagramSize" />, or less when the system limits it:
+        ///     the send buffer (macOS only sends up to its send buffer, 9216 bytes by default) or, for a loopback
+        ///     address, the biggest datagram that was seen to arrive (some systems drop the bigger ones, without any error).
+        ///     A message bigger than this is sent in fragments (up to <see cref="MaxDatagramSize" /> bytes) and joined by the
+        ///     receiver, a message that fits it is sent as one datagram, so it works with any other UDP program.
         /// </summary>
         public int MaxDatagram => _maxDatagram;
 
@@ -157,7 +174,7 @@ namespace Netly
         ///     Sends the data from <see cref="System.IO.Stream.Position" /> to the end, the stream is not closed
         ///     and its position is restored.
         /// </summary>
-        /// <exception cref="ArgumentException">When the stream can't seek or the datagram is too big.</exception>
+        /// <exception cref="ArgumentException">When the stream can't seek or the message is bigger than <see cref="MaxDatagramSize" />.</exception>
         public void SendData(Stream data)
         {
             Send(null, data);
@@ -166,7 +183,7 @@ namespace Netly
         /// <summary>
         ///     Sends the whole array.
         /// </summary>
-        /// <exception cref="ArgumentException">When the datagram is bigger than <see cref="MaxDatagramSize" />.</exception>
+        /// <exception cref="ArgumentException">When the message is bigger than <see cref="MaxDatagramSize" />.</exception>
         public void SendData(byte[] data)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
@@ -286,7 +303,7 @@ namespace Netly
 
                     socket.Connect(host.Address, host.Port);
 
-                    _maxDatagram = LimitOf(socket);
+                    _maxDatagram = LimitOf(socket, host.Address);
 
                     lock (_locker)
                     {
@@ -474,9 +491,12 @@ namespace Netly
             }
         }
 
-        private static int LimitOf(Socket socket)
+        // the loopback is measured (the first time takes a moment), the network is not: the system tells nothing about it
+        private static int LimitOf(Socket socket, IPAddress remote)
         {
-            return SocketLimits.Send(socket, MaxDatagramSize);
+            var limit = SocketLimits.Send(socket, MaxDatagramSize);
+
+            return remote != null && IPAddress.IsLoopback(remote) ? Math.Min(limit, Capabilities.LoopbackDatagram) : limit;
         }
 
         // header at the start, the caller fills the body
@@ -484,8 +504,8 @@ namespace Netly
         {
             var size = (header?.Length ?? 0) + bodySize;
 
-            if (size > _maxDatagram)
-                throw new ArgumentException($"size: {size} > {nameof(MaxDatagram)}: {_maxDatagram}");
+            if (size > MaxDatagramSize)
+                throw new ArgumentException($"size: {size} > {nameof(MaxDatagramSize)}: {MaxDatagramSize}");
 
             var datagram = new byte[size];
 
@@ -507,16 +527,41 @@ namespace Netly
                     socket = Socket;
                 }
 
-                if (IsServer)
-                    socket.SendTo(datagram, 0, datagram.Length, SocketFlags.None, Host.EndPoint);
-                else
-                    socket.Send(datagram, 0, datagram.Length, SocketFlags.None);
+                // fits in one datagram: sent as it is
+                if (datagram.Length <= _maxDatagram)
+                {
+                    Send(socket, datagram, datagram.Length);
+                    return;
+                }
+
+                var size = _maxDatagram - UdpFragment.HeaderSize;
+                var count = (datagram.Length + size - 1) / size;
+                var id = unchecked((ushort)Interlocked.Increment(ref _messageId));
+
+                for (var index = 0; index < count; index++)
+                {
+                    var offset = index * size;
+                    var length = Math.Min(size, datagram.Length - offset);
+                    var fragment = new byte[UdpFragment.HeaderSize + length];
+
+                    UdpFragment.Write(fragment, id, index, count);
+                    Buffer.BlockCopy(datagram, offset, fragment, UdpFragment.HeaderSize, length);
+                    Send(socket, fragment, fragment.Length);
+                }
             }
             catch (Exception e)
             {
                 Logger.Singleton.Submit(e);
                 _onError?.Invoke(null, e);
             }
+        }
+
+        private void Send(Socket socket, byte[] datagram, int length)
+        {
+            if (IsServer)
+                socket.SendTo(datagram, 0, length, SocketFlags.None, Host.EndPoint);
+            else
+                socket.Send(datagram, 0, length, SocketFlags.None);
         }
 
         /* ---- RECEIVE --- */
@@ -590,6 +635,16 @@ namespace Netly
         {
             try
             {
+                // a fragment waits for the others, the message is delivered when the last one arrives
+                if (UdpFragment.TryRead(buffer, size, out var id, out var index, out var count))
+                {
+                    buffer = Join(buffer, size, id, index, count);
+
+                    if (buffer == null) return;
+
+                    size = buffer.Length;
+                }
+
                 var stream = Allocate(size);
 
                 stream.Write(buffer, 0, size);
@@ -619,6 +674,82 @@ namespace Netly
 
                 if (owner != null) Close(owner);
             }
+        }
+
+        // null until all fragments of the message arrived
+        private byte[] Join(byte[] buffer, int size, ushort id, int index, int count)
+        {
+            lock (_assemblies)
+            {
+                var now = RudpWire.Now();
+                List<ushort> expired = null;
+
+                foreach (var pair in _assemblies)
+                {
+                    if (pair.Value.Deadline >= now) continue;
+
+                    if (expired == null) expired = new List<ushort>();
+                    expired.Add(pair.Key);
+                }
+
+                if (expired != null)
+                    foreach (var key in expired)
+                        _assemblies.Remove(key);
+
+                if (_assemblies.TryGetValue(id, out var assembly) is false)
+                {
+                    if (_assemblies.Count >= MaxAssemblies) DropOldest();
+
+                    assembly = new Assembly { Parts = new byte[count][], Deadline = now + FragmentLifetime };
+                    _assemblies[id] = assembly;
+                }
+
+                if (assembly.Parts.Length != count || assembly.Parts[index] != null) return null;
+
+                var part = new byte[size - UdpFragment.HeaderSize];
+
+                Buffer.BlockCopy(buffer, UdpFragment.HeaderSize, part, 0, part.Length);
+                assembly.Parts[index] = part;
+                assembly.Received++;
+                assembly.Length += part.Length;
+
+                // a message is never bigger than the protocol allows
+                if (assembly.Length > MaxDatagramSize)
+                {
+                    _assemblies.Remove(id);
+                    return null;
+                }
+
+                if (assembly.Received < count) return null;
+
+                var message = new byte[assembly.Length];
+                var offset = 0;
+
+                foreach (var item in assembly.Parts)
+                {
+                    Buffer.BlockCopy(item, 0, message, offset, item.Length);
+                    offset += item.Length;
+                }
+
+                _assemblies.Remove(id);
+
+                return message;
+            }
+        }
+
+        private void DropOldest()
+        {
+            ushort oldest = 0;
+            var deadline = long.MaxValue;
+
+            foreach (var pair in _assemblies)
+                if (pair.Value.Deadline < deadline)
+                {
+                    deadline = pair.Value.Deadline;
+                    oldest = pair.Key;
+                }
+
+            _assemblies.Remove(oldest);
         }
 
         // stream is valid only during the callback

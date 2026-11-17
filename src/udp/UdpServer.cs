@@ -198,6 +198,9 @@ namespace Netly
 
                     _onOpen?.Invoke(null, null);
 
+                    // measured now, the first peer of loopback does not wait for it
+                    Task.Run(() => Capabilities.LoopbackDatagram);
+
                     // read after the bind, the user can change the buffers of the socket in OnModify
                     _receiveLimit = SocketLimits.Receive(socket, UdpClient.MaxDatagramSize);
 

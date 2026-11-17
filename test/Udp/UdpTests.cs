@@ -617,24 +617,25 @@ public class UdpTests
     {
         var (server, host) = await EchoServer();
 
-        // default: the buffer is raised, so the protocol limit is available on every system (macOS starts with 9216)
+        // default: the buffer is raised, so the limit is the protocol one or what loopback is seen to deliver
         var normal = new UdpClient();
         Assert.True(await Open(normal, host));
-        Assert.Equal(UdpClient.MaxDatagramSize, normal.MaxDatagram);
+        Assert.Equal(Math.Min(UdpClient.MaxDatagramSize, Capabilities.LoopbackDatagram), normal.MaxDatagram);
         normal.SendData(Hello);
         normal.SendData(new byte[normal.MaxDatagram]);
 
-        // the user shrinks the send buffer: the limit follows it and a bigger datagram is refused, not lost
+        // the user shrinks the send buffer: the limit follows it, a bigger message is sent in fragments, not lost
         var small = new UdpClient();
         small.OnModify(socket => socket.SendBufferSize = 4096);
         Assert.True(await Open(small, host));
         Assert.InRange(small.MaxDatagram, 512, 16384);
-        Assert.Throws<ArgumentException>(() => small.SendData(new byte[UdpClient.MaxDatagramSize]));
+        small.SendData(new byte[UdpClient.MaxDatagramSize]);
+        Assert.Throws<ArgumentException>(() => small.SendData(new byte[UdpClient.MaxDatagramSize + 1]));
         small.SendData(Hello);
 
         // a client of a server uses the socket of the server
         await Wait.Until(() => server.Clients.Count == 2, what: "server accept");
-        Assert.All(server.Clients, c => Assert.Equal(UdpClient.MaxDatagramSize, c.MaxDatagram));
+        Assert.All(server.Clients, c => Assert.Equal(normal.MaxDatagram, c.MaxDatagram));
 
         await Close(normal);
         await Close(small);
