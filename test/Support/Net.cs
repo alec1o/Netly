@@ -8,20 +8,32 @@ namespace NetlyTest.Support;
 /// </summary>
 internal static class Net
 {
+    // a port is never given twice: a test that closes its socket releases the port and another test could take it
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, byte> Issued = new();
+
     public static int FreeTcpPort()
     {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
+        for (;;)
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+
+            if (Issued.TryAdd(port, 0)) return port;
+        }
     }
 
     public static int FreeUdpPort()
     {
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-        return ((IPEndPoint)socket.LocalEndPoint!).Port;
+        for (;;)
+        {
+            using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            var port = ((IPEndPoint)socket.LocalEndPoint!).Port;
+
+            if (Issued.TryAdd(port, 0)) return port;
+        }
     }
 
     public static Host TcpHost() => new(IPAddress.Loopback, FreeTcpPort());

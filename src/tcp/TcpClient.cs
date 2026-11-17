@@ -29,7 +29,7 @@ namespace Netly
         private byte[] _certificate;
         private string _certificatePassword;
         private bool _isOpening, _isClosing;
-        private int _reopenId;
+        private int _reopenId, _spurious;
         private Host _openHost;
         private EventHandler<int> _onReopen;
         private NetworkStream _networkStream;
@@ -727,7 +727,7 @@ namespace Netly
         private const int ChunkSize = 16 * 1024, PoolChunkSize = 64 * 1024;
 
         // a zero byte read waits for data without a buffer, runtimes before .NET 5 and Mono return at once
-        private static readonly bool ZeroByteRead = IsZeroByteReadSupported();
+        private static volatile bool _zeroByteRead = IsZeroByteReadSupported();
 
         private static bool IsZeroByteReadSupported()
         {
@@ -739,30 +739,47 @@ namespace Netly
 
         private void InitReceiver(Socket owner)
         {
-            if (ZeroByteRead && IsSecure is false)
+            if (_zeroByteRead && IsSecure is false)
             {
                 ReceiveWait(owner);
                 return;
             }
 
-            ReceiveTrigger(owner, new byte[ChunkSize]);
+            ReceiveTrigger(owner, new byte[SocketLimits.Receive(owner, ChunkSize)]);
         }
 
         // no buffer is kept while the connection is idle, one is rented only to read the data that arrived
         private void ReceiveWait(Socket owner)
         {
-            try
+            for (;;)
             {
-                Stream.BeginRead(Array.Empty<byte>(), 0, 0, WaitHandler, owner);
-            }
-            catch (Exception e)
-            {
-                if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
-                Close(owner);
+                IAsyncResult result;
+
+                try
+                {
+                    result = Stream.BeginRead(Array.Empty<byte>(), 0, 0, WaitHandler, owner);
+                }
+                catch (Exception e)
+                {
+                    if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
+                    Close(owner);
+                    return;
+                }
+
+                // a read that completed inside BeginRead is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || WaitComplete(result) is false) return;
             }
         }
 
         private void WaitHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (WaitComplete(result)) ReceiveWait((Socket)result.AsyncState);
+        }
+
+        // true when the next wait must be started
+        private bool WaitComplete(IAsyncResult result)
         {
             var owner = (Socket)result.AsyncState;
             byte[] buffer = null;
@@ -771,15 +788,29 @@ namespace Netly
             {
                 Stream.EndRead(result);
 
-                buffer = ArrayPool<byte>.Shared.Rent(PoolChunkSize);
+                // data, the end of the connection or an error make the socket readable, a read then never waits
+                if (owner.Available <= 0 && owner.Poll(0, SelectMode.SelectRead) is false)
+                {
+                    // the system can complete a zero byte read once without anything to read, wait again
+                    if (++_spurious < 32) return true;
 
-                // the data is already there, this read does not wait
+                    // a platform that does it every time would spin: stop using zero byte reads, a read that waits
+                    // would hold a thread of the pool for every idle connection
+                    _zeroByteRead = false;
+                    ReceiveTrigger(owner, new byte[SocketLimits.Receive(owner, ChunkSize)]);
+                    return false;
+                }
+
+                _spurious = 0;
+
+                buffer = ArrayPool<byte>.Shared.Rent(SocketLimits.Receive(owner, PoolChunkSize));
+
                 var size = Stream.Read(buffer, 0, buffer.Length);
 
                 if (size <= 0)
                 {
                     Close(owner);
-                    return;
+                    return false;
                 }
 
                 ReceiveProcess(buffer, size);
@@ -789,30 +820,50 @@ namespace Netly
                 // connection closed by this side or by the peer
                 if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
                 Close(owner);
-                return;
+                return false;
             }
             finally
             {
                 if (buffer != null) ArrayPool<byte>.Shared.Return(buffer);
             }
 
-            ReceiveWait(owner);
+            return true;
         }
 
         private void ReceiveTrigger(Socket owner, byte[] buffer)
         {
-            try
+            for (;;)
             {
-                Stream.BeginRead(buffer, 0, buffer.Length, ReceiveHandler, (owner, buffer));
-            }
-            catch (Exception e)
-            {
-                Logger.Singleton.Submit(e);
-                Close(owner);
+                IAsyncResult result;
+
+                try
+                {
+                    result = Stream.BeginRead(buffer, 0, buffer.Length, ReceiveHandler, (owner, buffer));
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                    Close(owner);
+                    return;
+                }
+
+                // a read that completed inside BeginRead is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || ReceiveComplete(result) is false) return;
             }
         }
 
         private void ReceiveHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (ReceiveComplete(result) is false) return;
+
+            var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
+            ReceiveTrigger(owner, buffer);
+        }
+
+        // true when the next read must be started
+        private bool ReceiveComplete(IAsyncResult result)
         {
             var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
 
@@ -823,18 +874,19 @@ namespace Netly
                 if (size <= 0)
                 {
                     Close(owner);
-                    return;
+                    return false;
                 }
 
                 ReceiveProcess(buffer, size);
 
-                ReceiveTrigger(owner, buffer);
+                return true;
             }
             catch (Exception e)
             {
                 // connection closed by this side or by the peer
                 if (IsOpened && _isClosing is false) Logger.Singleton.Submit(e);
                 Close(owner);
+                return false;
             }
         }
 

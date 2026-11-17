@@ -615,45 +615,66 @@ namespace Netly
 
         private static void StartReceiver(Socket socket, RudpConnection connection)
         {
-            var buffer = new byte[connection.MaxDatagram + 64];
+            Receive(socket, connection, new byte[connection.MaxDatagram + 64]);
+        }
 
-            Receive();
-
-            void Receive()
+        private static void Receive(Socket socket, RudpConnection connection, byte[] buffer)
+        {
+            for (;;)
             {
+                IAsyncResult result;
+
                 try
                 {
-                    socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, Callback, null);
+                    result = socket.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, ReceiveHandler,
+                        (socket, connection, buffer));
                 }
                 catch (Exception)
                 {
                     // socket closed
-                }
-            }
-
-            void Callback(IAsyncResult result)
-            {
-                try
-                {
-                    var size = socket.EndReceive(result);
-
-                    if (size > 0) connection.Receive(buffer, size);
-                }
-                catch (ObjectDisposedException)
-                {
                     return;
                 }
-                catch (SocketException)
-                {
-                    // icmp error of a previous datagram (server not found yet), keep receiving
-                }
-                catch (Exception e)
-                {
-                    Logger.Singleton.Submit(e);
-                }
 
-                if (!connection.IsClosed) Receive();
+                // a receive that completed inside BeginReceive is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || ReceiveComplete(result) is false) return;
             }
+        }
+
+        private static void ReceiveHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (ReceiveComplete(result) is false) return;
+
+            var (socket, connection, buffer) = ((Socket, RudpConnection, byte[]))result.AsyncState;
+            Receive(socket, connection, buffer);
+        }
+
+        // true when the next receive must be started
+        private static bool ReceiveComplete(IAsyncResult result)
+        {
+            var (socket, connection, buffer) = ((Socket, RudpConnection, byte[]))result.AsyncState;
+
+            try
+            {
+                var size = socket.EndReceive(result);
+
+                if (size > 0) connection.Receive(buffer, size);
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+            catch (SocketException)
+            {
+                // icmp error of a previous datagram (server not found yet), keep receiving
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+            }
+
+            return !connection.IsClosed;
         }
 
         // the server calls it when the connection of an accepted client opens

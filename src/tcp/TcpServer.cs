@@ -367,19 +367,36 @@ namespace Netly
 
         private void AcceptTrigger(Socket owner)
         {
-            try
+            for (;;)
             {
-                owner.BeginAccept(AcceptHandler, owner);
-            }
-            catch (Exception e)
-            {
-                // listener closed
-                if (IsOpened) Logger.Singleton.Submit(e);
-                Close();
+                IAsyncResult result;
+
+                try
+                {
+                    result = owner.BeginAccept(AcceptHandler, owner);
+                }
+                catch (Exception e)
+                {
+                    // listener closed
+                    if (IsOpened) Logger.Singleton.Submit(e);
+                    Close();
+                    return;
+                }
+
+                // an accept that completed inside BeginAccept is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || AcceptComplete(result) is false) return;
             }
         }
 
         private void AcceptHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (AcceptComplete(result)) AcceptTrigger((Socket)result.AsyncState);
+        }
+
+        // true when the next accept must be started
+        private bool AcceptComplete(IAsyncResult result)
         {
             var owner = (Socket)result.AsyncState;
 
@@ -399,15 +416,14 @@ namespace Netly
             catch (ObjectDisposedException)
             {
                 // listener closed
-                return;
+                return false;
             }
             catch (Exception e)
             {
                 Logger.Singleton.Submit(e);
             }
 
-            if (IsOpened && ReferenceEquals(Socket, owner))
-                AcceptTrigger(owner);
+            return IsOpened && ReferenceEquals(Socket, owner);
         }
 
         // a client accepted while the server is closing must not leak

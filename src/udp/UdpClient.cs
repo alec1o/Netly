@@ -13,12 +13,14 @@ namespace Netly
     public class UdpClient
     {
         /// <summary>
-        ///     Biggest datagram that can be sent (65535 - 8 bytes UDP header - 20 bytes IP header).
+        ///     Biggest datagram the protocol allows (65535 - 8 bytes UDP header - 20 bytes IP header).
+        ///     The real limit of a socket is <see cref="MaxDatagram" />, the system can allow less.
         /// </summary>
         public const int MaxDatagramSize = 65507;
 
         private readonly object _locker = new object();
         private readonly UdpServer _server;
+        private int _maxDatagram = MaxDatagramSize;
         private bool _isOpening, _isClosing;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
@@ -50,6 +52,7 @@ namespace Netly
             Host = host;
             IsServer = true;
             IsOpened = true;
+            _maxDatagram = LimitOf(socket);
         }
 
         /* ---- INTERFACE --- */
@@ -68,6 +71,13 @@ namespace Netly
         ///     True when this client is a peer known by an <see cref="UdpServer" />.
         /// </summary>
         public bool IsServer { get; }
+
+        /// <summary>
+        ///     Biggest datagram this socket can send: <see cref="MaxDatagramSize" /> or the send buffer of the socket,
+        ///     when the system limits it (macOS only sends up to its send buffer, 9216 bytes by default).
+        ///     A bigger datagram is lost without any error when the receiver can't hold it, so it is refused here.
+        /// </summary>
+        public int MaxDatagram => _maxDatagram;
 
         /// <summary>
         ///     The socket. For a client of a server it is the socket of the server.
@@ -269,9 +279,13 @@ namespace Netly
                 {
                     socket = new Socket(host.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
 
+                    Tune(socket);
+
                     _onModify?.Invoke(null, socket);
 
                     socket.Connect(host.Address, host.Port);
+
+                    _maxDatagram = LimitOf(socket);
 
                     lock (_locker)
                     {
@@ -286,7 +300,7 @@ namespace Netly
                     // allow client send data on OnOpen callback.
                     _onOpen?.Invoke(null, null);
 
-                    ReceiveTrigger(socket, new byte[MaxDatagramSize]);
+                    ReceiveTrigger(socket, new byte[SocketLimits.Receive(socket, MaxDatagramSize)]);
                 }
                 catch (Exception e)
                 {
@@ -444,13 +458,32 @@ namespace Netly
             Transmit(datagram);
         }
 
+        // a send buffer smaller than a datagram makes some systems (macOS) refuse it, so the buffer must be at least that big
+        private static void Tune(Socket socket)
+        {
+            try
+            {
+                socket.SendBufferSize = 256 * 1024;
+                socket.ReceiveBufferSize = 256 * 1024;
+            }
+            catch (Exception)
+            {
+                // the system keeps the default size
+            }
+        }
+
+        private static int LimitOf(Socket socket)
+        {
+            return SocketLimits.Send(socket, MaxDatagramSize);
+        }
+
         // header at the start, the caller fills the body
-        private static byte[] Datagram(byte[] header, long bodySize)
+        private byte[] Datagram(byte[] header, long bodySize)
         {
             var size = (header?.Length ?? 0) + bodySize;
 
-            if (size > MaxDatagramSize)
-                throw new ArgumentException($"size: {size} > {nameof(MaxDatagramSize)}: {MaxDatagramSize}");
+            if (size > _maxDatagram)
+                throw new ArgumentException($"size: {size} > {nameof(MaxDatagram)}: {_maxDatagram}");
 
             var datagram = new byte[size];
 
@@ -488,18 +521,39 @@ namespace Netly
 
         private void ReceiveTrigger(Socket owner, byte[] buffer)
         {
-            try
+            for (;;)
             {
-                owner.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, ReceiveHandler, (owner, buffer));
-            }
-            catch (Exception e)
-            {
-                if (IsOpened) Logger.Singleton.Submit(e);
-                Close(owner);
+                IAsyncResult result;
+
+                try
+                {
+                    result = owner.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, ReceiveHandler,
+                        (owner, buffer));
+                }
+                catch (Exception e)
+                {
+                    if (IsOpened) Logger.Singleton.Submit(e);
+                    Close(owner);
+                    return;
+                }
+
+                // a receive that completed inside BeginReceive is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || ReceiveComplete(result) is false) return;
             }
         }
 
         private void ReceiveHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (ReceiveComplete(result) is false) return;
+
+            var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
+            ReceiveTrigger(owner, buffer);
+        }
+
+        // true when the next receive must be started
+        private bool ReceiveComplete(IAsyncResult result)
         {
             var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
 
@@ -512,7 +566,7 @@ namespace Netly
             catch (ObjectDisposedException)
             {
                 Close(owner);
-                return;
+                return false;
             }
             catch (SocketException e) when (e.SocketErrorCode == SocketError.ConnectionReset ||
                                             e.SocketErrorCode == SocketError.ConnectionRefused)
@@ -523,11 +577,10 @@ namespace Netly
             {
                 Logger.Singleton.Submit(e);
                 Close(owner);
-                return;
+                return false;
             }
 
-            if (IsOpened && ReferenceEquals(Socket, owner))
-                ReceiveTrigger(owner, buffer);
+            return IsOpened && ReferenceEquals(Socket, owner);
         }
 
         // the server delivers the datagrams of its peers here

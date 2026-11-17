@@ -58,7 +58,7 @@ namespace Netly
         }
 
         private const long AckDelay = 2;
-        private const long MinRto = 20, MaxRto = 1500, InitialRto = 200;
+        private const long MinRto = 100, MaxRto = 1500, InitialRto = 200;
         private const long DatagramLifetime = 2000;
         private const int MaxRetransmits = 20;
         private const int DuplicateThreshold = 3;
@@ -112,7 +112,9 @@ namespace Netly
             _socket = socket;
             _remote = remote;
             _isServer = isServer;
-            MaxDatagram = IPAddress.IsLoopback(remote.Address) ? RudpWire.LoopbackDatagram : RudpWire.InternetDatagram;
+            // the usual size of the path, never above what the send and receive buffers of the socket hold
+                MaxDatagram = SocketLimits.Both(socket,
+                    IPAddress.IsLoopback(remote.Address) ? RudpWire.LoopbackDatagram : RudpWire.InternetDatagram);
         }
 
         public string Id { get; private set; } = string.Empty;

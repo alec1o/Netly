@@ -4,6 +4,11 @@ using Xunit.Abstractions;
 
 namespace NetlyTest.Tcp;
 
+// the heap of the whole process is measured, nothing else may run while it does
+[CollectionDefinition(nameof(TcpScaleTests), DisableParallelization = true)]
+public class TcpScaleCollection;
+
+[Collection(nameof(TcpScaleTests))]
 public class TcpScaleTests(ITestOutputHelper output)
 {
     [Fact]

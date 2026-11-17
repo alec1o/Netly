@@ -197,7 +197,7 @@ namespace Netly
 
                     _onOpen?.Invoke(null, null);
 
-                    ReceiveTrigger(socket, new byte[UdpClient.MaxDatagramSize]);
+                    ReceiveTrigger(socket, new byte[SocketLimits.Receive(socket, UdpClient.MaxDatagramSize)]);
                 }
                 catch (Exception e)
                 {
@@ -308,29 +308,53 @@ namespace Netly
 
         private void ReceiveTrigger(Socket owner, byte[] buffer)
         {
-            try
+            for (;;)
             {
-                EndPoint remote = new IPEndPoint(
-                    owner.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
+                IAsyncResult result;
 
-                owner.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote, ReceiveHandler,
-                    (owner, buffer));
-            }
-            catch (Exception e)
-            {
-                if (IsOpened) Logger.Singleton.Submit(e);
-                Close();
+                try
+                {
+                    EndPoint remote = AnyEndPoint(owner);
+
+                    result = owner.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote,
+                        ReceiveHandler, (owner, buffer));
+                }
+                catch (Exception e)
+                {
+                    if (IsOpened) Logger.Singleton.Submit(e);
+                    Close();
+                    return;
+                }
+
+                // a receive that completed inside BeginReceiveFrom is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || ReceiveComplete(result) is false) return;
             }
         }
 
         private void ReceiveHandler(IAsyncResult result)
         {
+            if (result.CompletedSynchronously) return;
+
+            if (ReceiveComplete(result) is false) return;
+
+            var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
+            ReceiveTrigger(owner, buffer);
+        }
+
+        private static EndPoint AnyEndPoint(Socket socket)
+        {
+            return new IPEndPoint(
+                socket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
+        }
+
+        // true when the next receive must be started
+        private bool ReceiveComplete(IAsyncResult result)
+        {
             var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
 
             try
             {
-                EndPoint remote = new IPEndPoint(
-                    owner.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
+                var remote = AnyEndPoint(owner);
 
                 var size = owner.EndReceiveFrom(result, ref remote);
 
@@ -340,7 +364,7 @@ namespace Netly
             catch (ObjectDisposedException)
             {
                 // socket closed
-                return;
+                return false;
             }
             catch (SocketException e) when (e.SocketErrorCode == SocketError.ConnectionReset ||
                                             e.SocketErrorCode == SocketError.ConnectionRefused)
@@ -352,8 +376,7 @@ namespace Netly
                 Logger.Singleton.Submit(e);
             }
 
-            if (IsOpened && ReferenceEquals(Socket, owner))
-                ReceiveTrigger(owner, buffer);
+            return IsOpened && ReferenceEquals(Socket, owner);
         }
 
         private void Release(IPEndPoint remote, Socket owner, byte[] buffer, int size)

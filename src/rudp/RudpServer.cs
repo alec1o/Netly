@@ -339,21 +339,41 @@ namespace Netly
 
         private void ReceiveTrigger(Socket owner, byte[] buffer)
         {
-            try
+            for (;;)
             {
-                var remote = AnyEndPoint(owner);
+                IAsyncResult result;
 
-                owner.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote, ReceiveHandler,
-                    (owner, buffer));
-            }
-            catch (Exception e)
-            {
-                if (IsOpened) Logger.Singleton.Submit(e);
-                Close();
+                try
+                {
+                    var remote = AnyEndPoint(owner);
+
+                    result = owner.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote,
+                        ReceiveHandler, (owner, buffer));
+                }
+                catch (Exception e)
+                {
+                    if (IsOpened) Logger.Singleton.Submit(e);
+                    Close();
+                    return;
+                }
+
+                // a receive that completed inside BeginReceiveFrom is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || ReceiveComplete(result) is false) return;
             }
         }
 
         private void ReceiveHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (ReceiveComplete(result) is false) return;
+
+            var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
+            ReceiveTrigger(owner, buffer);
+        }
+
+        // true when the next receive must be started
+        private bool ReceiveComplete(IAsyncResult result)
         {
             var (owner, buffer) = ((Socket, byte[]))result.AsyncState;
 
@@ -368,7 +388,7 @@ namespace Netly
             catch (ObjectDisposedException)
             {
                 // socket closed
-                return;
+                return false;
             }
             catch (SocketException)
             {
@@ -379,8 +399,7 @@ namespace Netly
                 Logger.Singleton.Submit(e);
             }
 
-            if (IsOpened && ReferenceEquals(Socket, owner))
-                ReceiveTrigger(owner, buffer);
+            return IsOpened && ReferenceEquals(Socket, owner);
         }
 
         private void Dispatch(IPEndPoint endpoint, Socket owner, byte[] data, int size)

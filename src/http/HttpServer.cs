@@ -223,27 +223,54 @@ namespace Netly
 
         private void AcceptTrigger()
         {
-            _listener.BeginGetContext(AcceptHandler, null);
+            for (;;)
+            {
+                IAsyncResult result;
+
+                try
+                {
+                    result = _listener.BeginGetContext(AcceptHandler, null);
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                    return;
+                }
+
+                // a context that was ready inside BeginGetContext is handled here, a recursion would overflow the stack
+                if (result.CompletedSynchronously is false || AcceptComplete(result) is false) return;
+            }
         }
 
         private void AcceptHandler(IAsyncResult result)
+        {
+            if (result.CompletedSynchronously) return;
+
+            if (AcceptComplete(result)) AcceptTrigger();
+        }
+
+        // true when the next accept must be started
+        private bool AcceptComplete(IAsyncResult result)
         {
             try
             {
                 if (IsOpened)
                 {
                     HandleContext(_listener.EndGetContext(result));
-                    AcceptTrigger();
+                    return true;
                 }
-                else
-                {
-                    Close();
-                }
+
+                Close();
             }
             catch (Exception e)
             {
+                // one request that fails (aborted by the client) must not stop the server
                 Logger.Singleton.Submit(e);
+
+                return IsOpened;
             }
+
+            return false;
         }
 
         private void HandleContext(HttpListenerContext context)

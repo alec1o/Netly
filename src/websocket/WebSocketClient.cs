@@ -489,7 +489,14 @@ namespace Netly
                         state == WebSocketState.CloseReceived ||
                         state == WebSocketState.CloseSent
                     )
-                        await socket.CloseAsync(status, string.Empty, CancellationToken.None);
+                    {
+                        // only sends the close frame, waiting for the answer of the peer can hang when both sides close
+                        // at the same time (the receiver of this socket already reads that answer)
+                        using (var timeout = new CancellationTokenSource(5000))
+                        {
+                            await socket.CloseOutputAsync(status, string.Empty, timeout.Token);
+                        }
+                    }
                 }
                 catch (Exception e) when
                 (
