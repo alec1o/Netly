@@ -82,7 +82,7 @@ public class HttpServerTests
     {
         var received = string.Empty;
 
-        void Callback(global::Netly.Interfaces.IHTTP.ServerRequest req, global::Netly.Interfaces.IHTTP.ServerResponse res)
+        void Callback(HttpServerRequest req, HttpServerResponse res)
         {
             received = req.Method.Method;
             res.Send(200, "ok");

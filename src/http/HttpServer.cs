@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using Netly.Interfaces;
+using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netly
 {
@@ -9,7 +13,13 @@ namespace Netly
     /// </summary>
     public class HttpServer
     {
-        private readonly HTTP.Server _inner = new HTTP.Server();
+        private readonly List<WebSocketClient> _websocketList = new List<WebSocketClient>();
+        private readonly object _websocketListLock = new object();
+        private HttpListener _listener;
+        private bool _tryOpen, _tryClose;
+        private EventHandler _onOpen, _onClose;
+        private EventHandler<HttpListener> _onModify;
+        private EventHandler<Exception> _onError;
 
         /* ---- CONSTRUCTOR --- */
 
@@ -18,7 +28,8 @@ namespace Netly
         /// </summary>
         public HttpServer()
         {
-            Map = new HttpMap(_inner);
+            Map = new HttpMap();
+            Middleware = new HttpMiddleware();
         }
 
         /* ---- INTERFACE --- */
@@ -31,12 +42,12 @@ namespace Netly
         /// <summary>
         ///     True while the server is listening.
         /// </summary>
-        public bool IsOpened => _inner.IsOpened;
+        public bool IsOpened => _listener != null && _listener.IsListening;
 
         /// <summary>
         ///     Address where the server is listening.
         /// </summary>
-        public Uri Host => _inner.Host;
+        public Uri Host { get; private set; } = new Uri("http://0.0.0.0:80/");
 
         /// <summary>
         ///     Routes of the server.
@@ -46,14 +57,14 @@ namespace Netly
         /// <summary>
         ///     Middleware that runs before the routes.
         /// </summary>
-        public IHTTP.Middleware Middleware => _inner.Middleware;
+        public HttpMiddleware Middleware { get; }
 
         /// <summary>
         ///     Called with the new listener before it starts, change the listener options here.
         /// </summary>
         public void OnModify(Action<HttpListener> callback)
         {
-            _inner.On.Modify(callback);
+            _onModify += (sender, listener) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(listener));
         }
 
         /// <summary>
@@ -61,7 +72,7 @@ namespace Netly
         /// </summary>
         public void OnOpen(Action callback)
         {
-            _inner.On.Open(callback);
+            _onOpen += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
         }
 
         /// <summary>
@@ -69,7 +80,7 @@ namespace Netly
         /// </summary>
         public void OnClose(Action callback)
         {
-            _inner.On.Close(callback);
+            _onClose += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
         }
 
         /// <summary>
@@ -77,7 +88,7 @@ namespace Netly
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
-            _inner.On.Error(callback);
+            _onError += (sender, exception) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(exception));
         }
 
         /* ---- SEND --- */
@@ -89,7 +100,7 @@ namespace Netly
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
 
-            _inner.To.WebsocketDataBroadcast(data, (HTTP.MessageType)(int)delivery);
+            foreach (var socket in WebSockets()) socket.SendData(data, delivery);
         }
 
         /// <summary>
@@ -100,7 +111,15 @@ namespace Netly
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
 
-            _inner.To.WebsocketEventBroadcast(name, data, (HTTP.MessageType)(int)delivery);
+            foreach (var socket in WebSockets()) socket.SendEvent(name, data, delivery);
+        }
+
+        private WebSocketClient[] WebSockets()
+        {
+            lock (_websocketListLock)
+            {
+                return _websocketList.ToArray();
+            }
         }
 
         /* ---- OPEN AND CLOSE --- */
@@ -114,7 +133,55 @@ namespace Netly
         {
             if (host == null) throw new ArgumentNullException(nameof(host));
 
-            _ = _inner.To.Open(host);
+            if (IsOpened || _tryClose || _tryOpen) return;
+
+            _tryOpen = true;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    var server = new HttpListener();
+
+                    var hostScheme = host.Host.ToLower();
+
+                    switch (hostScheme)
+                    {
+                        case "0.0.0.0":
+                        case "localhost":
+                        case "::":
+                        case "*":
+                        case ".":
+                            hostScheme = "*";
+                            break;
+                    }
+
+                    var httpUrl = $"{Uri.UriSchemeHttp}{Uri.SchemeDelimiter}{hostScheme}:{host.Port}/";
+
+                    server.Prefixes.Add(httpUrl);
+
+                    _onModify?.Invoke(null, server);
+
+                    server.Start();
+
+                    Host = host;
+
+                    _listener = server;
+
+                    _onOpen?.Invoke(null, null);
+
+                    AcceptTrigger();
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                    _onError?.Invoke(null, e);
+                }
+                finally
+                {
+                    _tryOpen = false;
+                }
+            });
         }
 
         /// <summary>
@@ -122,101 +189,303 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            _ = _inner.To.Close();
-        }
-    }
+            if (_tryOpen || _tryClose || _listener == null) return;
 
-    /// <summary>
-    ///     Routes of a <see cref="HttpServer" />.
-    /// </summary>
-    public class HttpMap
-    {
-        private readonly HTTP.Server _server;
+            _tryClose = true;
 
-        internal HttpMap(HTTP.Server server)
-        {
-            _server = server;
-        }
+            Task.Run(() =>
+            {
+                try
+                {
+                    if (_listener != null)
+                    {
+                        _listener.Stop();
+                        _listener.Abort();
+                        _listener.Close();
+                    }
 
-        /// <summary>
-        ///     Route for WebSocket connections. The client is already open when the callback runs.
-        /// </summary>
-        public void WebSocket(string path, Action<IHTTP.ServerRequest, WebSocketClient> callback)
-        {
-            _server.Map.WebSocket(path, (request, socket) =>
-                callback?.Invoke(request, new WebSocketClient((HTTP.WebSocket)socket)));
-        }
-
-        /// <summary>
-        ///     Route for any method.
-        /// </summary>
-        public void All(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
-        {
-            _server.Map.All(path, callback);
+                    foreach (var socket in WebSockets()) socket.Close();
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                }
+                finally
+                {
+                    _tryClose = false;
+                    _listener = null;
+                    _onClose?.Invoke(null, null);
+                }
+            });
         }
 
-        /// <summary>
-        ///     Route for GET.
-        /// </summary>
-        public void Get(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        /* ---- ACCEPT --- */
+
+        private void AcceptTrigger()
         {
-            _server.Map.Get(path, callback);
+            _listener.BeginGetContext(AcceptHandler, null);
         }
 
-        /// <summary>
-        ///     Route for PUT.
-        /// </summary>
-        public void Put(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        private void AcceptHandler(IAsyncResult result)
         {
-            _server.Map.Put(path, callback);
+            try
+            {
+                if (IsOpened)
+                {
+                    HandleContext(_listener.EndGetContext(result));
+                    AcceptTrigger();
+                }
+                else
+                {
+                    Close();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+            }
         }
 
-        /// <summary>
-        ///     Route for HEAD.
-        /// </summary>
-        public void Head(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        private void HandleContext(HttpListenerContext context)
         {
-            _server.Map.Head(path, callback);
+            Task.Run(async () =>
+            {
+                HttpListenerWebSocketContext socket = null;
+
+                try
+                {
+                    if (context.Request.IsWebSocketRequest)
+                        socket = await context.AcceptWebSocketAsync(null);
+
+                    HandleConnection(context, socket);
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit($"{this}: {e}");
+                    if (socket?.WebSocket != null)
+                        await socket.WebSocket.CloseAsync
+                        (
+                            WebSocketCloseStatus.InternalServerError,
+                            string.Empty,
+                            CancellationToken.None
+                        );
+                }
+            });
         }
 
-        /// <summary>
-        ///     Route for POST.
-        /// </summary>
-        public void Post(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        private static string DefaultHtmlBody(string content)
         {
-            _server.Map.Post(path, callback);
+            var html =
+                $@"<body style='background-color: #0a0f19'>
+                            <p style='font-size: 12px; color: #fff; letter-spacing: 2.5px; font-family: monospace, cursive'>{content}</p>
+                        </body>";
+
+            return html;
         }
 
-        /// <summary>
-        ///     Route for PATCH.
-        /// </summary>
-        public void Patch(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        private void HandleConnection(HttpListenerContext context, HttpListenerWebSocketContext socketContext)
         {
-            _server.Map.Patch(path, callback);
+            var request = new HttpServerRequest(context.Request);
+
+            var response = new HttpServerResponse(context.Response, socketContext);
+
+            var middlewares = Middleware.Middlewares.Length <= byte.MinValue
+                ? new List<HttpMiddlewareDescriptor>()
+                : Middleware.Middlewares.ToList();
+
+            var descriptors = middlewares.Where(x =>
+            {
+                // allow global middleware
+                if (x.Path == HttpMiddleware.GlobalPath) return true;
+
+                if (!x.UseParams)
+                    // simple path compare
+                    return HttpPath.ComparePath(request.Path, x.Path);
+
+                // compare custom path
+                var result = HttpPath.ParseParam(x.Path, request.Path);
+
+                // is custom path invalid?
+                if (!result.Valid) return false;
+
+                // set values in request object
+                foreach (var myParam in result.Params)
+                {
+                    // only add value if not exist for prevent exception "Key in use!"
+                    // optimization: if key exist it mean that it was added before with other callback
+                    if (request.Params.ContainsKey(myParam.Key)) break;
+                    // save params on object
+                    request.Params.Add(myParam.Key, myParam.Value);
+                }
+
+                return true;
+            }).ToList();
+
+            descriptors.Add
+            (
+                new HttpMiddlewareDescriptor
+                (
+                    path: HttpMiddleware.GlobalPath,
+                    useParams: false,
+                    callback: (_, __, next) => MapMiddlewareCallback(context, request, response, next))
+            );
+
+            for (var i = 0; i < descriptors.Count; i++)
+            {
+                var descriptor = descriptors[i];
+
+                try
+                {
+                    descriptor.Next = descriptors[i + 1];
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                    descriptor.Next = null;
+                }
+            }
+
+            descriptors[0].Callback(request, response, () => descriptors[0].Execute(request, response));
         }
 
-        /// <summary>
-        ///     Route for DELETE.
-        /// </summary>
-        public void Delete(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
+        private async void MapMiddlewareCallback(HttpListenerContext context, HttpServerRequest request,
+            HttpServerResponse response, Action next)
         {
-            _server.Map.Delete(path, callback);
-        }
+            if (!response.IsOpened)
+            {
+                // request is already response by another middleware
+                next();
+                return;
+            }
 
-        /// <summary>
-        ///     Route for TRACE.
-        /// </summary>
-        public void Trace(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
-        {
-            _server.Map.Trace(path, callback);
-        }
+            // SEARCH ROUTE
 
-        /// <summary>
-        ///     Route for OPTIONS.
-        /// </summary>
-        public void Options(string path, Action<IHTTP.ServerRequest, IHTTP.ServerResponse> callback)
-        {
-            _server.Map.Options(path, callback);
+            var map = Map.MapList.FirstOrDefault(x =>
+            {
+                // websocket connection
+                if (request.IsWebSocket)
+                {
+                    if (!x.IsWebsocket) return false;
+                }
+                // http connection
+                else
+                {
+                    // handle all method
+                    var handleMethod =
+                        string.Equals(x.Method, HttpMap.AllMethod, StringComparison.CurrentCultureIgnoreCase)
+                        ||
+                        string.Equals(request.Method.Method, x.Method,
+                            StringComparison.CurrentCultureIgnoreCase);
+
+                    if (!handleMethod) return false;
+                }
+
+                // compare regular path
+                if (!x.UseParams)
+                    // simple path compare
+                    return HttpPath.ComparePath(request.Path, x.Path);
+
+                // compare custom path
+                var result = HttpPath.ParseParam(x.Path, request.Path);
+
+                // custom path is valid.
+                if (result.Valid)
+                {
+                    // set values in request object
+                    foreach (var myParam in result.Params)
+                    {
+                        // only add value if not exist for prevent exception "Key in use!"
+                        // optimization: if key exist it mean that it was added before with other callback
+                        if (request.Params.ContainsKey(myParam.Key)) break;
+                        // save params on object
+                        request.Params.Add(myParam.Key, myParam.Value);
+                    }
+
+                    return true;
+                }
+
+                return false;
+            });
+
+            if (map == null)
+            {
+                if (request.IsWebSocket)
+                {
+                    try
+                    {
+                        // https://github.com/dotnet/runtime/issues/81762#issuecomment-1421047699
+                        await response.WebSocketContext.WebSocket.CloseAsync
+                        (
+                            WebSocketCloseStatus.EndpointUnavailable,
+                            "Empty handler.",
+                            CancellationToken.None
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Singleton.Submit(e);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            context.Response.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Singleton.Submit(e);
+                        }
+                    }
+
+                    return;
+                }
+
+                if (context.Response.OutputStream.CanWrite)
+                {
+                    response.Headers["X-XSS-Protection"] = "1; mode=block";
+                    response.Headers["Content-Type"] = "text/html; charset=utf-8";
+                    response.Headers["Server"] = "NETLY HTTP/S";
+                    response.Send(404, DefaultHtmlBody($"[{request.Method.Method.ToUpper()}] {request.Path}"));
+                }
+
+                next();
+                return;
+            }
+
+            #region HANDLE HTTP REQUEST
+
+            if (!request.IsWebSocket) // IS HTTP CONNECTION
+            {
+                map.HttpCallback(request, response);
+            }
+            else // IS WEBSOCKET CONNECTION
+            {
+                var websocket = new WebSocketClient(response.WebSocketContext.WebSocket, request);
+
+                websocket.OnOpen(() =>
+                {
+                    lock (_websocketListLock)
+                    {
+                        _websocketList.Add(websocket);
+                    }
+                });
+
+                websocket.OnClose(() =>
+                {
+                    lock (_websocketListLock)
+                    {
+                        _websocketList.Remove(websocket);
+                    }
+                });
+
+                map.WebsocketCallback?.Invoke(request, websocket);
+
+                websocket.ServerInitializer();
+            }
+
+            #endregion
+
+            next();
         }
     }
 }

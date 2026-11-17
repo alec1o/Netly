@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +15,22 @@ namespace Netly
     /// </summary>
     public class WebSocketClient
     {
-        private readonly HTTP.WebSocket _inner;
+        private const string EncryptedScheme = "wss", UnencryptedScheme = "ws";
+
+        private readonly SemaphoreSlim _sendLocker = new SemaphoreSlim(1, 1);
+        private readonly object _closeLocker = new object();
+        private ClientWebSocket _clientSocket;
+        private System.Net.WebSockets.WebSocket _serverSocket;
+        private bool _tryConnecting, _tryClosing, _serverInitialized;
         private Uri _openHost;
         private int _reopenId, _activeId, _isOpening;
         private EventHandler<int> _onReopen;
+        private EventHandler _onOpen;
+        private EventHandler<WebSocketCloseStatus> _onClose;
+        private EventHandler<Exception> _onError;
+        private EventHandler<ClientWebSocket> _onModify;
+        private EventHandler<(Stream Stream, WebSocketDelivery Delivery)> _onData;
+        private EventHandler<(string Name, Stream Stream, WebSocketDelivery Delivery)> _onEvent;
 
         /* ---- CONSTRUCTOR --- */
 
@@ -26,23 +39,29 @@ namespace Netly
         /// </summary>
         public WebSocketClient()
         {
-            _inner = new HTTP.WebSocket();
             IsServer = false;
+            Host = new Uri($"{EncryptedScheme}://{IPAddress.Any}");
             ReopenEnabled = false;
             ReopenAttempts = 5;
             ReopenDelay = TimeSpan.FromSeconds(1);
 
             // closes made by the user change _reopenId
-            _inner.On.Close((Action)(() =>
+            _onClose += (sender, status) =>
             {
                 if (ReopenEnabled && Volatile.Read(ref _reopenId) == _activeId) Reopen(_openHost, _activeId);
-            }));
+            };
         }
 
-        internal WebSocketClient(HTTP.WebSocket inner)
+        // client accepted by a server
+        internal WebSocketClient(System.Net.WebSockets.WebSocket socket, HttpServerRequest request)
         {
-            _inner = inner;
+            _serverSocket = socket;
             IsServer = true;
+            Request = request;
+            Host = new Uri
+            (
+                $"{(request.IsEncrypted ? EncryptedScheme : UnencryptedScheme)}://{request.RemoteEndPoint.Address}:{request.RemoteEndPoint.Port}"
+            );
         }
 
         /* ---- INTERFACE --- */
@@ -55,7 +74,9 @@ namespace Netly
         /// <summary>
         ///     True while the connection is open.
         /// </summary>
-        public bool IsOpened => _inner.IsOpened;
+        public bool IsOpened => IsServer
+            ? _serverSocket != null && _serverSocket.State == WebSocketState.Open
+            : _clientSocket != null && _clientSocket.State == WebSocketState.Open;
 
         /// <summary>
         ///     True when this client was accepted by a server.
@@ -65,24 +86,24 @@ namespace Netly
         /// <summary>
         ///     Address of the other side.
         /// </summary>
-        public Uri Host => _inner.Host;
+        public Uri Host { get; private set; }
 
         /// <summary>
         ///     Headers sent in the handshake, change them before <see cref="Open" />.
         /// </summary>
-        public Dictionary<string, string> Headers => _inner.Headers;
+        public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
 
         /// <summary>
         ///     The handshake request, as the server received it.
         /// </summary>
-        public Interfaces.IHTTP.ServerRequest Request => _inner.ServerRequest;
+        public HttpServerRequest Request { get; private set; }
 
         /// <summary>
         ///     Called with the new socket before it connects, change the socket options here.
         /// </summary>
         public void OnModify(Action<ClientWebSocket> callback)
         {
-            _inner.On.Modify(callback);
+            _onModify += (sender, socket) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(socket));
         }
 
         /// <summary>
@@ -90,7 +111,7 @@ namespace Netly
         /// </summary>
         public void OnOpen(Action callback)
         {
-            _inner.On.Open(callback);
+            _onOpen += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
         }
 
         /// <summary>
@@ -98,7 +119,7 @@ namespace Netly
         /// </summary>
         public void OnClose(Action callback)
         {
-            _inner.On.Close(callback);
+            _onClose += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
         }
 
         /// <summary>
@@ -106,7 +127,7 @@ namespace Netly
         /// </summary>
         public void OnClose(Action<WebSocketCloseStatus> callback)
         {
-            _inner.On.Close(callback);
+            _onClose += (sender, status) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(status));
         }
 
         /// <summary>
@@ -114,7 +135,7 @@ namespace Netly
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
-            _inner.On.Error(callback);
+            _onError += (sender, exception) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(exception));
         }
 
         /// <summary>
@@ -123,7 +144,7 @@ namespace Netly
         /// </summary>
         public void OnData(Action<Stream, WebSocketDelivery> callback)
         {
-            _inner.On.Data((data, type) => Release(data, stream => callback?.Invoke(stream, (WebSocketDelivery)(int)type)));
+            _onData += (sender, data) => callback?.Invoke(data.Stream, data.Delivery);
         }
 
         /// <summary>
@@ -131,16 +152,7 @@ namespace Netly
         /// </summary>
         public void OnEvent(Action<string, Stream, WebSocketDelivery> callback)
         {
-            _inner.On.Event((name, data, type) =>
-                Release(data, stream => callback?.Invoke(name, stream, (WebSocketDelivery)(int)type)));
-        }
-
-        private static void Release(byte[] data, Action<Stream> callback)
-        {
-            using (var stream = new MemoryStream(data, false))
-            {
-                callback(stream);
-            }
+            _onEvent += (sender, data) => callback?.Invoke(data.Name, data.Stream, data.Delivery);
         }
 
         /// <summary>
@@ -215,7 +227,7 @@ namespace Netly
             // empty data is ignored
             if (data.Length < 1) return;
 
-            _inner.To.Data(data, (HTTP.MessageType)(int)delivery);
+            Send(delivery, data);
         }
 
         /// <summary>
@@ -269,7 +281,7 @@ namespace Netly
 
             if (data == null) throw new ArgumentNullException(nameof(data));
 
-            _inner.To.Event(name, data, (HTTP.MessageType)(int)delivery);
+            Send(delivery, Message.Create(name, data.LongLength), data);
         }
 
         /// <summary>
@@ -326,7 +338,7 @@ namespace Netly
                 _openHost = host;
                 _activeId = id;
 
-                await _inner.To.Open(host);
+                await Connect(host);
             }
             finally
             {
@@ -339,6 +351,75 @@ namespace Netly
             if (isAttempt is false && ReopenEnabled && Volatile.Read(ref _reopenId) == id) Reopen(host, id);
 
             return false;
+        }
+
+        // every failure goes to OnError, it never throws
+        private Task Connect(Uri host)
+        {
+            lock (_closeLocker)
+            {
+                if (_tryConnecting || _tryClosing) return Task.CompletedTask;
+
+                _tryConnecting = true;
+            }
+
+            return Task.Run(async () =>
+            {
+                ClientWebSocket ws = null;
+
+                try
+                {
+                    ws = new ClientWebSocket();
+
+                    foreach (var header in Headers) ws.Options.SetRequestHeader(header.Key, header.Value);
+
+                    _onModify?.Invoke(null, ws);
+
+                    await ws.ConnectAsync(host, CancellationToken.None);
+
+                    Request = new HttpServerRequest(ws, host, Headers);
+
+                    Host = host;
+
+                    _clientSocket = ws;
+
+                    // connecting is done, the user can close (or open again) inside OnOpen
+                    lock (_closeLocker)
+                    {
+                        _tryConnecting = false;
+                    }
+
+                    _onOpen?.Invoke(null, null);
+
+                    ReceiveTrigger();
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+
+                    // the socket never opened, there is no close handshake
+                    try
+                    {
+                        ws?.Dispose();
+                    }
+                    catch (Exception e2)
+                    {
+                        Logger.Singleton.Submit(e2);
+                    }
+
+                    _clientSocket = null;
+
+                    _onError?.Invoke(null, e);
+                }
+                finally
+                {
+                    // REQUIRED: do not touch the closing flag, a close can already be running
+                    lock (_closeLocker)
+                    {
+                        _tryConnecting = false;
+                    }
+                }
+            });
         }
 
         private void Reopen(Uri host, int id)
@@ -365,10 +446,7 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            // user close never opens again
-            Interlocked.Increment(ref _reopenId);
-
-            _ = _inner.To.Close();
+            Close(WebSocketCloseStatus.NormalClosure);
         }
 
         /// <summary>
@@ -376,9 +454,221 @@ namespace Netly
         /// </summary>
         public void Close(WebSocketCloseStatus status)
         {
+            // user close never opens again
             Interlocked.Increment(ref _reopenId);
 
-            _ = _inner.To.Close(status);
+            _ = CloseAsync(status);
+        }
+
+        private Task CloseAsync(WebSocketCloseStatus status)
+        {
+            System.Net.WebSockets.WebSocket socket;
+
+            // the user and the receiver can close at the same time, only one of them goes on
+            lock (_closeLocker)
+            {
+                if (_tryClosing || _tryConnecting) return Task.CompletedTask;
+
+                socket = IsServer ? _serverSocket : _clientSocket;
+
+                if (socket == null) return Task.CompletedTask;
+
+                _tryClosing = true;
+            }
+
+            return Task.Run(async () =>
+            {
+                try
+                {
+                    var state = socket.State;
+
+                    // close handshake only works in these states, otherwise it throws (WebSocketException 997)
+                    if
+                    (
+                        state == WebSocketState.Open ||
+                        state == WebSocketState.CloseReceived ||
+                        state == WebSocketState.CloseSent
+                    )
+                        await socket.CloseAsync(status, string.Empty, CancellationToken.None);
+                }
+                catch (Exception e) when
+                (
+                    e is WebSocketException ||
+                    e is ObjectDisposedException ||
+                    e is OperationCanceledException
+                )
+                {
+                    // peer aborted or disposed the socket between the state check and the close
+                }
+                catch (Exception e)
+                {
+                    Logger.Singleton.Submit(e);
+                }
+                finally
+                {
+                    socket.Dispose();
+
+                    if (IsServer)
+                        _serverSocket = null;
+                    else
+                        _clientSocket = null;
+
+                    lock (_closeLocker)
+                    {
+                        _tryClosing = false;
+                    }
+
+                    _onClose?.Invoke(null, status);
+                }
+            });
+        }
+
+        // the server calls it when the client was accepted
+        internal void ServerInitializer()
+        {
+            if (_serverInitialized) return;
+
+            _serverInitialized = true;
+
+            ReceiveTrigger();
+
+            _onOpen?.Invoke(null, null);
+        }
+
+        /* ---- SEND AND RECEIVE --- */
+
+        private async void Send(WebSocketDelivery delivery, params byte[][] buffers)
+        {
+            if (IsOpened is false || buffers == null || buffers.Length <= 0) return;
+
+            var type = delivery == WebSocketDelivery.Text ? WebSocketMessageType.Text : WebSocketMessageType.Binary;
+
+            // event header and body must be the same websocket message
+            var content = new ArraySegment<byte>(buffers.Length == 1 ? buffers[0] : Helper.ArrayConcat(buffers));
+
+            try
+            {
+                // websocket allows only one outstanding send
+                await _sendLocker.WaitAsync();
+
+                try
+                {
+                    await (IsServer ? _serverSocket : _clientSocket).SendAsync(content, type, true,
+                        CancellationToken.None);
+                }
+                finally
+                {
+                    _sendLocker.Release();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+            }
+        }
+
+        private void ReceiveTrigger()
+        {
+            // the loop awaits the socket, it does not hold a thread while the connection is idle
+            ThreadPool.QueueUserWorkItem(ReceiveJob);
+        }
+
+        private async void ReceiveJob(object _)
+        {
+            var closeStatus = WebSocketCloseStatus.Empty;
+
+            try
+            {
+                const int size = 1024 * 8;
+                var buffer = new ArraySegment<byte>(new byte[size], 0, size);
+                var fragments = new MemoryStream();
+
+                while (IsOpened)
+                {
+                    var result = await (IsServer ? _serverSocket : _clientSocket).ReceiveAsync(buffer,
+                        CancellationToken.None);
+
+                    if (result.MessageType == WebSocketMessageType.Close || buffer.Array == null)
+                    {
+                        closeStatus = result.CloseStatus ?? closeStatus;
+                        break;
+                    }
+
+                    fragments.Write(buffer.Array, 0, result.Count);
+
+                    if (fragments.Length > Framing.DefaultSize)
+                        throw new InvalidOperationException($"{nameof(fragments)}: {fragments.Length}");
+
+                    // wait the end of message
+                    if (!result.EndOfMessage) continue;
+
+                    var data = fragments.ToArray();
+
+                    fragments.SetLength(0);
+
+                    var delivery = result.MessageType == WebSocketMessageType.Text
+                        ? WebSocketDelivery.Text
+                        : WebSocketDelivery.Binary;
+
+                    Release(data, delivery);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+                closeStatus = WebSocketCloseStatus.EndpointUnavailable;
+            }
+            finally
+            {
+                try
+                {
+                    await CloseAsync(closeStatus);
+                }
+                catch (Exception e)
+                {
+                    // async void: nothing can be thrown from here
+                    Logger.Singleton.Submit(e);
+                }
+            }
+        }
+
+        private void Release(byte[] data, WebSocketDelivery delivery)
+        {
+            try
+            {
+                var stream = Helper.NewStream(data.LongLength);
+                stream.Write(data, 0, data.Length);
+
+                if (Message.TryParse(stream, out var name, out var message, Helper.NewStream))
+                {
+                    stream.Dispose();
+                    Release(message, () => _onEvent?.Invoke(null, (name, message, delivery)));
+                }
+                else
+                {
+                    Release(stream, () => _onData?.Invoke(null, (stream, delivery)));
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Singleton.Submit(e);
+                _onError?.Invoke(null, e);
+            }
+        }
+
+        // stream is valid only during the callback
+        private static void Release(Stream stream, Action callback)
+        {
+            try
+            {
+                if (stream.CanSeek) stream.Position = 0;
+
+                callback();
+            }
+            finally
+            {
+                stream.Dispose();
+            }
         }
 
         /* ---- HELPERS --- */

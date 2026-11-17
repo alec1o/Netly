@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
 using System.Text;
-using Netly.Interfaces;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace Netly
 {
@@ -10,7 +14,12 @@ namespace Netly
     /// </summary>
     public class HttpClient
     {
-        private readonly HTTP.Client _inner = new HTTP.Client();
+        private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        private int _timeout = 15000;
+        private EventHandler<HttpClientResponse> _onOpen;
+        private EventHandler _onClose;
+        private EventHandler<Exception> _onError;
+        private EventHandler<System.Net.Http.HttpClient> _onModify;
 
         /* ---- INTERFACE --- */
 
@@ -22,37 +31,48 @@ namespace Netly
         /// <summary>
         ///     True while a request is running.
         /// </summary>
-        public bool IsOpened => _inner.IsOpened;
+        public bool IsOpened { get; private set; }
 
         /// <summary>
         ///     Headers sent in every request.
         /// </summary>
-        public Dictionary<string, string> Headers => _inner.Headers;
+        public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
 
         /// <summary>
         ///     Query parameters sent in every request.
         /// </summary>
-        public Dictionary<string, string> Queries => _inner.Queries;
+        public Dictionary<string, string> Queries { get; } = new Dictionary<string, string>();
 
         /// <summary>
-        ///     Milliseconds to wait for the response. Default is 15000.
+        ///     Milliseconds to wait for the response, 0 or -1 means no timeout. Default is 15000.
         /// </summary>
+        /// <exception cref="InvalidOperationException">While a request is running.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">When the value is less than -1.</exception>
         public int Timeout
         {
-            get => _inner.Timeout;
-            set => _inner.Timeout = value;
+            get => _timeout;
+            set
+            {
+                if (IsOpened)
+                    throw new InvalidOperationException($"Must not modify ({nameof(Timeout)}) while a request is running.");
+
+                if (value < -1)
+                    throw new ArgumentOutOfRangeException($"{nameof(Timeout)}: {value}");
+
+                _timeout = value;
+            }
         }
 
         /// <summary>
         ///     How many times a request that failed by network or timeout is sent again. Default is 0 (never).
         ///     A request canceled by <see cref="Close" /> or with an invalid url is never sent again.
         /// </summary>
-        public int RetryAttempts => _inner._to.RetryAttempts;
+        public int RetryAttempts { get; private set; }
 
         /// <summary>
         ///     Time to wait before each new attempt. Default is one second.
         /// </summary>
-        public TimeSpan RetryDelay => _inner._to.RetryDelay;
+        public TimeSpan RetryDelay { get; private set; } = TimeSpan.FromSeconds(1);
 
         /// <summary>
         ///     Sends again a request that failed by network or timeout, <see cref="OnError" /> is called only when
@@ -73,8 +93,8 @@ namespace Netly
             if (delay < TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException($"{nameof(delay)}: {delay}");
 
-            _inner._to.RetryAttempts = attempts;
-            _inner._to.RetryDelay = delay ?? TimeSpan.FromSeconds(1);
+            RetryAttempts = attempts;
+            RetryDelay = delay ?? TimeSpan.FromSeconds(1);
         }
 
         /// <summary>
@@ -82,15 +102,15 @@ namespace Netly
         /// </summary>
         public void OnModify(Action<System.Net.Http.HttpClient> callback)
         {
-            _inner.On.Modify(callback);
+            _onModify += (sender, client) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(client));
         }
 
         /// <summary>
         ///     Called when the response arrives.
         /// </summary>
-        public void OnOpen(Action<IHTTP.ClientResponse> callback)
+        public void OnOpen(Action<HttpClientResponse> callback)
         {
-            _inner.On.Open(callback);
+            _onOpen += (sender, response) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(response));
         }
 
         /// <summary>
@@ -98,7 +118,7 @@ namespace Netly
         /// </summary>
         public void OnClose(Action callback)
         {
-            _inner.On.Close(callback);
+            _onClose += (sender, _) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke());
         }
 
         /// <summary>
@@ -106,7 +126,7 @@ namespace Netly
         /// </summary>
         public void OnError(Action<Exception> callback)
         {
-            _inner.On.Error(callback);
+            _onError += (sender, exception) => Dispatcher.Singleton.SubmitSafe(() => callback?.Invoke(exception));
         }
 
         /* ---- OPEN AND CLOSE --- */
@@ -115,17 +135,10 @@ namespace Netly
         ///     Sends the request and returns without waiting.
         ///     The result comes by <see cref="OnOpen" /> or <see cref="OnError" />.
         /// </summary>
+        /// <exception cref="InvalidOperationException">While a request is running.</exception>
         public void Open(string method, string url)
         {
-            _ = _inner.To.Open(method, url);
-        }
-
-        /// <summary>
-        ///     Sends the request with a body.
-        /// </summary>
-        public void Open(string method, string url, byte[] body)
-        {
-            _ = _inner.To.Open(method, url, body);
+            Open(method, url, Array.Empty<byte>());
         }
 
         /// <summary>
@@ -133,7 +146,7 @@ namespace Netly
         /// </summary>
         public void Open(string method, string url, string body)
         {
-            _ = _inner.To.Open(method, url, body);
+            Open(method, url, Encoding.UTF8.GetBytes(body ?? string.Empty));
         }
 
         /// <summary>
@@ -141,7 +154,63 @@ namespace Netly
         /// </summary>
         public void Open(string method, string url, string body, Encoding encoding)
         {
-            _ = _inner.To.Open(method, url, body, encoding);
+            Open(method, url, (encoding ?? Encoding.UTF8).GetBytes(body ?? string.Empty));
+        }
+
+        /// <summary>
+        ///     Sends the request with a body.
+        /// </summary>
+        public void Open(string method, string url, byte[] body)
+        {
+            if (IsOpened)
+            {
+                var e = new InvalidOperationException
+                (
+                    $"[{nameof(HttpClient)}] a request is already running in this instance. " +
+                    $"Wait for {nameof(OnClose)} before sending another one."
+                );
+
+                Logger.Singleton.Submit(e);
+
+                throw e;
+            }
+
+            // start and block operation
+            IsOpened = true;
+
+            // each request has its own token, a Close must not cancel the next request
+            var cancellation = new CancellationTokenSource();
+            _cancellationToken = cancellation;
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    for (var attempt = 0;; attempt++)
+                        try
+                        {
+                            await Send(method, url, body, cancellation.Token);
+                            break;
+                        }
+                        catch (Exception ex) when (CanRetry(ex, attempt, cancellation.Token))
+                        {
+                            Logger.Singleton.Submit(ex.Message);
+                            await Task.Delay(RetryDelay, cancellation.Token);
+                        }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Singleton.Submit(ex.Message);
+                    _onError?.Invoke(null, ex);
+                }
+                finally
+                {
+                    // release operation
+                    IsOpened = false;
+                    cancellation.Dispose();
+                    _onClose?.Invoke(null, null);
+                }
+            });
         }
 
         /// <summary>
@@ -149,7 +218,92 @@ namespace Netly
         /// </summary>
         public void Close()
         {
-            _ = _inner.To.Close();
+            try
+            {
+                _cancellationToken.Cancel(true);
+            }
+            catch (ObjectDisposedException)
+            {
+                // the request already finished
+            }
+        }
+
+        // only network failures and timeouts, a bad url or a cancel by the user never repeat
+        private bool CanRetry(Exception e, int attempt, CancellationToken token)
+        {
+            if (attempt >= RetryAttempts || token.IsCancellationRequested) return false;
+
+            return e is HttpRequestException || e is TaskCanceledException || e is IOException;
+        }
+
+        private async Task Send(string method, string url, byte[] body, CancellationToken token)
+        {
+            using (var http = new System.Net.Http.HttpClient())
+            {
+                var host = new Uri(url);
+
+                var timeout = _timeout <= 0
+                    ? System.Threading.Timeout.InfiniteTimeSpan
+                    : TimeSpan.FromMilliseconds(_timeout);
+
+                var httpMethod = new HttpMethod(method.Trim().ToUpper());
+
+                #region Set Queries On Request
+
+                if (Queries.Count > 0)
+                {
+                    var uriBuilder = new UriBuilder(host);
+                    var queryBuilder = HttpUtility.ParseQueryString(uriBuilder.Query);
+
+                    foreach (var key in Queries.Keys)
+                        if (!string.IsNullOrWhiteSpace(key))
+                            queryBuilder.Add(key, Queries[key] ?? string.Empty);
+
+                    uriBuilder.Query = queryBuilder.ToString();
+                    host = new Uri(uriBuilder.ToString());
+                }
+
+                #endregion
+
+                using (var message = new HttpRequestMessage(httpMethod, host))
+                {
+                    if
+                    (
+                        httpMethod != HttpMethod.Get &&
+                        httpMethod != HttpMethod.Head &&
+                        httpMethod != HttpMethod.Trace
+                    )
+                        message.Content = new ByteArrayContent(body ?? Array.Empty<byte>());
+                    else
+                        message.Content = new StringContent(string.Empty);
+
+                    #region Set Headers On Request
+
+                    message.Headers.Clear();
+                    message.Content.Headers.Clear();
+                    http.DefaultRequestHeaders.Clear();
+
+                    // request headers first, the ones that belong to the content (Content-Type...) go there
+                    foreach (var header in Headers)
+                        if (!message.Headers.TryAddWithoutValidation(header.Key, header.Value))
+                            message.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+                    #endregion
+
+                    http.BaseAddress = host;
+                    http.Timeout = timeout;
+
+                    _onModify?.Invoke(null, http);
+
+                    using (var response = await http.SendAsync(message, token))
+                    {
+                        var received = response;
+                        var native = http;
+
+                        _onOpen?.Invoke(null, new HttpClientResponse(ref received, ref native));
+                    }
+                }
+            }
         }
     }
 }
