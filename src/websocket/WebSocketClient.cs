@@ -750,6 +750,9 @@ namespace Netly
             if (data.CanSeek is false)
                 throw new ArgumentException($"{nameof(data)}: {nameof(data.CanSeek)} = {data.CanSeek}");
 
+            if (data.Position > data.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(data)}: {nameof(data.Position)} = {data.Position}, {nameof(data.Length)} = {data.Length}");
+
             var start = data.Position;
             var result = new byte[data.Length - start];
 

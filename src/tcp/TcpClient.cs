@@ -545,6 +545,9 @@ namespace Netly
             if (data.CanSeek is false)
                 throw new ArgumentException($"{nameof(data)}: {nameof(data.CanSeek)} = {data.CanSeek}");
 
+            if (data.Position > data.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(data)}: {nameof(data.Position)} = {data.Position}, {nameof(data.Length)} = {data.Length}");
+
             return Header(name, data.Length - data.Position);
         }
 
@@ -612,6 +615,9 @@ namespace Netly
 
             if (body.CanSeek is false)
                 throw new ArgumentException($"{nameof(body)}: {nameof(body.CanSeek)} = {body.CanSeek}");
+
+            if (body.Position > body.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(body)}: {nameof(body.Position)} = {body.Position}, {nameof(body.Length)} = {body.Length}");
 
             var start = body.Position;
             var count = body.Length - start;
