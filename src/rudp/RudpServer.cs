@@ -19,6 +19,7 @@ namespace Netly
         private bool _isOpening, _isClosing;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
         private long _framingSize = Framing.DefaultSize;
+        private long _pendingSize = RudpConnection.DefaultPendingBytes;
         private EventHandler<RudpClient> _onAccept;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
@@ -117,6 +118,23 @@ namespace Netly
                     throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
 
                 _framingSize = Math.Max(1024, value);
+            }
+        }
+
+        /// <summary>
+        ///     Biggest amount of bytes waiting to be sent to each client, same rules of
+        ///     <see cref="RudpClient.MaxPendingSize" />. Default is 64 MB, minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the socket is opened.</exception>
+        public long MaxPendingSize
+        {
+            get => _pendingSize;
+            set
+            {
+                if (IsOpened)
+                    throw new InvalidOperationException($"Must not update ({nameof(MaxPendingSize)}) while socket is Opened.");
+
+                _pendingSize = Math.Max(1024, value);
             }
         }
 
@@ -443,7 +461,8 @@ namespace Netly
             {
                 HandshakeTimeout = _handshakeTimeout,
                 NoResponseTimeout = _noResponseTimeout,
-                MaxMessageSize = _framingSize
+                MaxMessageSize = _framingSize,
+                MaxPendingBytes = _pendingSize
             };
             var client = new RudpClient(this, owner, connection, new Host(remote));
 

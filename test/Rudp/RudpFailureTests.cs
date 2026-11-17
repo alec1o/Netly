@@ -125,4 +125,68 @@ public class RudpFailureTests
         Assert.True(await Wait.For(closed, what: "close after the open failed"));
         lock (events) Assert.Equal(new[] { "error", "close" }, events);
     });
+
+    [Fact]
+    public void MaxPendingSize_DefaultAndValidation()
+    {
+        var client = new RudpClient();
+        var server = new RudpServer();
+
+        Assert.Equal(64L * 1024 * 1024, client.MaxPendingSize);
+        Assert.Equal(64L * 1024 * 1024, server.MaxPendingSize);
+
+        client.MaxPendingSize = 10;
+        server.MaxPendingSize = 8192;
+
+        // minimum of 1 KB
+        Assert.Equal(1024, client.MaxPendingSize);
+        Assert.Equal(8192, server.MaxPendingSize);
+    }
+
+    [Fact]
+    public Task MaxPendingSize_CannotChangeWhileOpened_AndServerGivesItToItsClients() => Guard.Run(async () =>
+    {
+        var host = Net.UdpHost();
+        var server = new RudpServer { MaxPendingSize = 4096 };
+        await server.OpenAsync(host);
+        var client = new RudpClient();
+        await client.OpenAsync(host);
+        await Wait.Until(() => server.Clients.Count == 1, what: "accept");
+
+        Assert.Throws<InvalidOperationException>(() => server.MaxPendingSize = 2048);
+        Assert.Throws<InvalidOperationException>(() => client.MaxPendingSize = 2048);
+        Assert.Throws<InvalidOperationException>(() => server.Clients.Single().MaxPendingSize = 2048);
+        Assert.Equal(4096, server.Clients.Single().MaxPendingSize);
+
+        await client.CloseAsync();
+        await server.CloseAsync();
+    });
+
+    [Fact]
+    public Task SendAboveMaxPendingSize_CallsOnErrorThenOnClose() => Guard.Run(async () =>
+    {
+        var (server, host) = await EchoServer();
+        var client = new RudpClient { MaxPendingSize = 2048 };
+        var events = new List<string>();
+        var closed = Wait.Signal<bool>();
+
+        client.OnError(_ => { lock (events) events.Add("error"); });
+        client.OnClose(() =>
+        {
+            lock (events) events.Add("close");
+            closed.TrySetResult(true);
+        });
+        await client.OpenAsync(host);
+
+        // smaller than the queue works
+        client.SendData(Net.Payload(500), RudpDelivery.Reliable);
+
+        // bigger than the queue never fits
+        client.SendData(Net.Payload(5000), RudpDelivery.Reliable);
+
+        Assert.True(await Wait.For(closed, what: "close after the queue limit"));
+        lock (events) Assert.Equal(new[] { "error", "close" }, events);
+
+        await server.CloseAsync();
+    });
 }

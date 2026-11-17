@@ -20,6 +20,7 @@ namespace Netly
         private volatile bool _failed;
         private int _handshakeTimeout = 5000, _noResponseTimeout = 5000;
         private long _framingSize = Framing.DefaultSize;
+        private long _pendingSize = RudpConnection.DefaultPendingBytes;
         private EventHandler _onOpen, _onClose;
         private EventHandler<Socket> _onModify;
         private EventHandler<(string Name, Stream Stream, RudpDelivery Delivery)> _onEvent;
@@ -50,6 +51,7 @@ namespace Netly
             _handshakeTimeout = connection.HandshakeTimeout;
             _noResponseTimeout = connection.NoResponseTimeout;
             _framingSize = connection.MaxMessageSize;
+            _pendingSize = connection.MaxPendingBytes;
             Socket = socket;
             Host = host;
             IsServer = true;
@@ -129,6 +131,24 @@ namespace Netly
                     throw new InvalidOperationException($"Must not update ({nameof(FramingSize)}) while socket is Opened.");
 
                 _framingSize = Math.Max(1024, value);
+            }
+        }
+
+        /// <summary>
+        ///     Biggest amount of bytes waiting to be sent (messages that the other side did not confirm yet).
+        ///     A send above it is an error: <see cref="OnError" />, then the connection closes. Default is 64 MB,
+        ///     minimum 1 KB.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">While the connection is opened or for a client of a server.</exception>
+        public long MaxPendingSize
+        {
+            get => _pendingSize;
+            set
+            {
+                if (IsOpened || IsServer)
+                    throw new InvalidOperationException($"Must not update ({nameof(MaxPendingSize)}) while socket is Opened.");
+
+                _pendingSize = Math.Max(1024, value);
             }
         }
 
@@ -357,7 +377,8 @@ namespace Netly
                     {
                         HandshakeTimeout = _handshakeTimeout,
                         NoResponseTimeout = _noResponseTimeout,
-                        MaxMessageSize = _framingSize
+                        MaxMessageSize = _framingSize,
+                        MaxPendingBytes = _pendingSize
                     };
 
                     connection.OnOpen += () =>

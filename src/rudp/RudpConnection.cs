@@ -57,6 +57,8 @@ namespace Netly
             }
         }
 
+        public const long DefaultPendingBytes = 64L * 1024 * 1024;
+
         private const long AckDelay = 2;
         private const long MinRto = 100, MaxRto = 1500, InitialRto = 200;
         private const long DatagramLifetime = 2000;
@@ -66,7 +68,6 @@ namespace Netly
         private const int MaxAssemblies = 16;
         private const int MaxWindow = 1024;
         private const int InitialWindow = 32;
-        private const long MaxPendingBytes = 64L * 1024 * 1024;
         private const int MaxInFlightBytes = 1024 * 1024;
 
         private readonly object _locker = new object();
@@ -128,6 +129,9 @@ namespace Netly
 
         // biggest message accepted, a bigger one closes the connection
         public long MaxMessageSize { get; set; } = Framing.DefaultSize;
+
+        // biggest amount of bytes waiting to be sent, a send above it closes the connection
+        public long MaxPendingBytes { get; set; } = DefaultPendingBytes;
         public int HandshakeTimeout { get; set; } = 5000;
         public int NoResponseTimeout { get; set; } = 5000;
         public bool IsOpened => _state == State.Connected;
