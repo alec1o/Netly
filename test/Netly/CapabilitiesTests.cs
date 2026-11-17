@@ -50,6 +50,11 @@ public class CapabilitiesTests
         using var receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         receiver.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0));
+
+        // the same buffers the lib sets (UdpClient and the probe): macOS refuses a datagram above its 9216 B default
+        receiver.ReceiveBufferSize = 256 * 1024;
+        sender.SendBufferSize = 256 * 1024;
+
         sender.SendTo(new byte[size], receiver.LocalEndPoint!);
 
         Assert.True(receiver.Poll(2_000_000, SelectMode.SelectRead), $"a datagram of {size} bytes did not arrive");
