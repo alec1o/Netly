@@ -9,6 +9,18 @@ public class MessageEdgeTest
 
     private static MemoryStream StreamOf(byte[] bytes) => new(bytes);
 
+    // a hostile peer sends a valid checksum for the sizes it chose
+    private static byte[] Sign(byte[] header)
+    {
+        header[Message.HeaderSize - 1] = Framing.Checksum(header, Message.HeaderSize - 1);
+        return header;
+    }
+
+    private static void PutBodySize(byte[] header, ulong size)
+    {
+        for (var i = 0; i < sizeof(ulong); i++) header[Message.Prefix.Length + 2 + i] = (byte)(size >> (8 * (7 - i)));
+    }
+
     [Theory]
     [InlineData("")]
     public void Create_InvalidName_Throws(string name)
@@ -101,7 +113,8 @@ public class MessageEdgeTest
         var hostile = (byte[])header.Clone();
 
         // overwrite declared message size with long.MaxValue
-        BitConverter.GetBytes(long.MaxValue).CopyTo(hostile, Message.Prefix.Length + sizeof(int));
+        PutBodySize(hostile, long.MaxValue);
+        Sign(hostile);
 
         var called = false;
         var result = Message.TryParse(StreamOf(Helper.ArrayConcat(hostile, new byte[10])), out _, out _, size =>
@@ -120,8 +133,10 @@ public class MessageEdgeTest
         var header = Message.Create("name", 10);
         var hostile = (byte[])header.Clone();
 
-        // overwrite declared name size with int.MaxValue
-        BitConverter.GetBytes(int.MaxValue).CopyTo(hostile, Message.Prefix.Length);
+        // overwrite declared name size with ushort.MaxValue
+        hostile[Message.Prefix.Length] = 0xFF;
+        hostile[Message.Prefix.Length + 1] = 0xFF;
+        Sign(hostile);
 
         Assert.False(Message.TryParse(StreamOf(Helper.ArrayConcat(hostile, new byte[10])), out _, out _, Memory));
     }
@@ -133,23 +148,63 @@ public class MessageEdgeTest
     }
 
     [Fact]
-    public void TryParse_NameSizeOverflowingInt_DoesNotAllocate()
+    public void TryParse_BodySizeAboveLong_DoesNotAllocate()
     {
         var hostile = Message.Create("name", 0);
         var body = new byte[10];
 
-        // 16 + nameSize overflows int, messageSize is chosen so the old int math matched the stream length
-        var nameSize = int.MaxValue - 15;
-        var stream = StreamOf(Helper.ArrayConcat(hostile, body));
-        var messageSize = stream.Length + (1L << 31);
-
-        BitConverter.GetBytes(nameSize).CopyTo(hostile, Message.Prefix.Length);
-        BitConverter.GetBytes(messageSize).CopyTo(hostile, Message.Prefix.Length + sizeof(int));
-        stream = StreamOf(Helper.ArrayConcat(hostile, body));
+        PutBodySize(hostile, ulong.MaxValue);
+        Sign(hostile);
 
         var before = GC.GetAllocatedBytesForCurrentThread();
+        var called = false;
 
-        Assert.False(Message.TryParse(stream, out _, out _, Memory));
+        Assert.False(Message.TryParse(StreamOf(Helper.ArrayConcat(hostile, body)), out _, out _, size =>
+        {
+            called = true;
+            return Memory(1);
+        }));
+        Assert.False(called);
         Assert.True(GC.GetAllocatedBytesForCurrentThread() - before < 1024 * 1024);
+    }
+
+    [Fact]
+    public void TryParse_WrongChecksum_IsData()
+    {
+        var payload = Helper.ArrayConcat(Message.Create("name", 4), new byte[4]);
+
+        payload[Message.HeaderSize - 1] ^= 0xFF;
+
+        Assert.False(Message.TryParse(StreamOf(payload), out _, out _, Memory));
+    }
+
+    [Fact]
+    public void TryParse_WrongPrefix_IsData()
+    {
+        var header = Message.Create("name", 4);
+
+        header[0] ^= 0xFF;
+        Sign(header);
+
+        Assert.False(Message.TryParse(StreamOf(Helper.ArrayConcat(header, new byte[4])), out _, out _, Memory));
+    }
+
+    [Fact]
+    public void TryParse_NameNotUtf8_IsData()
+    {
+        var header = Message.Create("name", 4);
+
+        // 0xFF is never valid in UTF-8
+        header[Message.HeaderSize] = 0xFF;
+
+        Assert.False(Message.TryParse(StreamOf(Helper.ArrayConcat(header, new byte[4])), out var name, out _, Memory));
+        Assert.Null(name);
+    }
+
+    [Fact]
+    public void Create_NameAboveUshort_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Message.Create(new string('a', ushort.MaxValue + 1), 1));
+        Assert.NotEmpty(Message.Create(new string('a', ushort.MaxValue), 1));
     }
 }

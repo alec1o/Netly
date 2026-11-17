@@ -14,21 +14,19 @@ namespace Netly
         public const long DefaultSize = 1024 * 1024 * 20; // 20.00 MB
 
         /// <summary>
-        ///     The prefix used in <see cref="Framing" /> is: [0x1, 0x9, 0x3, 0x3] in hexadecimal,
-        ///     which is [1, 9, 3, 3] in decimal. It serves as a “magic number”
-        ///     to identify the start of a message in a TCP stream.
-        ///     <br />
-        ///     Inspired by computing history: in 1936, Alan Turing created
-        ///     the Turing Machine, a theoretical model of computation. The main
-        ///     challenge was defining when the machine should halt, leading to
-        ///     the concept of the Halting Problem, establishing the limits of
-        ///     what is computable.
-        ///     <br />
-        ///     See: https://en.wikipedia.org/wiki/Turing_machine
+        ///     Version of the header, the first byte of every message. A peer with another version is refused.
         /// </summary>
-        public static readonly byte[] Prefix = { 0x01, 0x09, 0x03, 0x03 };
+        public const byte Version = 1;
 
-        private readonly byte[] _headerBuffer = new byte[Prefix.Length + sizeof(long)];
+        /// <summary>
+        ///     Size of the header: Version (1) + Length (8, unsigned, big-endian) + Checksum (1).
+        ///     <br />
+        ///     The checksum (CRC-8 of Version + Length) takes the place of a magic prefix: it tells a valid header
+        ///     from data out of alignment (or random) without reading the payload.
+        /// </summary>
+        public const int HeaderSize = 1 + sizeof(ulong) + 1;
+
+        private readonly byte[] _headerBuffer = new byte[HeaderSize];
         private readonly object _locker = new object();
         private readonly LinkedList<Transaction> _transactions = new LinkedList<Transaction>();
 
@@ -49,6 +47,25 @@ namespace Netly
         ///     Gets whether the <see ref="Framing" /> instance is opened for writing/reading.
         /// </summary>
         public bool IsOpened { get; private set; } = true;
+
+        /// <summary>
+        ///     Gets whether a header has started and is not complete yet (a peer that stops in the middle of it).
+        /// </summary>
+        public bool IsHeaderPending
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _size == 0 && _headerOffset > 0;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Gets how many headers were completed, it tells a new header from the one that was already waited.
+        /// </summary>
+        public long HeaderCount { get; private set; }
 
 
         /// <summary>
@@ -156,22 +173,29 @@ namespace Netly
 
                         if (_headerOffset == _headerBuffer.Length)
                         {
-                            // get and verify size
-                            var size = BitConverter.ToInt64(_headerBuffer, Prefix.Length);
+                            // verify header
+                            if (_headerBuffer[HeaderSize - 1] != Checksum(_headerBuffer, HeaderSize - 1))
+                                throw new InvalidDataException(
+                                    $"Header checksum: {Helper.Format(_headerBuffer)}");
 
-                            if (size < MinMessageSize)
-                                throw new InvalidDataException($"{nameof(size)}: {size}");
+                            if (_headerBuffer[0] != Version)
+                                throw new InvalidDataException($"Version: {_headerBuffer[0]} != {Version}");
+
+                            var length = ReadLength(_headerBuffer);
+
+                            // get and verify size
+                            if (length < (ulong)MinMessageSize || length > long.MaxValue)
+                                throw new InvalidDataException($"{nameof(length)}: {length}");
+
+                            var size = (long)length;
+
+                            HeaderCount++;
 
                             // size comes from the remote peer, never allocate/open a stream above the limit.
                             if (size > MaxSize)
                                 throw new InvalidDataException($"{nameof(size)}: {size} > {nameof(MaxSize)}: {MaxSize}");
 
-                            // get and verify prefix
-                            if (Helper.ArraySequenced(Prefix, _headerBuffer))
-                                _transactions.AddLast(new Transaction(getStream(size), false));
-                            else
-                                throw new InvalidDataException(
-                                    $"{nameof(Prefix)}: {Helper.Format(Prefix)} - {Helper.Format(_headerBuffer)}");
+                            _transactions.AddLast(new Transaction(getStream(size), false));
 
                             segment = Helper.SegmentShift(segment, copied);
                             _size = size;
@@ -223,22 +247,82 @@ namespace Netly
 
         /// <summary>
         ///     Creates a byte array representing a framed message header for a given size.
-        ///     The resulting array contains the prefix followed by the length in bytes.
+        ///     The resulting array contains: Version, Length (8 bytes, big-endian) and Checksum.
         /// </summary>
         /// <param name="size">The size of the payload.</param>
-        /// <returns>A byte array containing the prefix and length.</returns>
+        /// <returns>A byte array containing the header.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown if size is less than the minimum message size.</exception>
         public static byte[] Create(long size)
         {
             if (size < MinMessageSize) throw new IndexOutOfRangeException($"{nameof(size)}: {size}");
 
-            var body = BitConverter.GetBytes(size);
-            var buffer = new byte[Prefix.Length + body.Length];
+            return Header(Version, (ulong)size);
+        }
 
-            Buffer.BlockCopy(Prefix, 0, buffer, 0, Prefix.Length);
-            Buffer.BlockCopy(body, 0, buffer, Prefix.Length, body.Length);
+        /// <summary>
+        ///     Reads and validates the header at the start of a message that is already in memory (RUDP): checksum,
+        ///     version and size (between 1 and <paramref name="maxSize" />).
+        /// </summary>
+        /// <returns>True when the header is valid, <paramref name="length" /> is the size of the payload that follows.</returns>
+        internal static bool TryReadHeader(byte[] data, int offset, int count, long maxSize, out long length)
+        {
+            length = 0;
+
+            if (count < HeaderSize) return false;
+
+            var header = new byte[HeaderSize];
+
+            Buffer.BlockCopy(data, offset, header, 0, HeaderSize);
+
+            if (header[HeaderSize - 1] != Checksum(header, HeaderSize - 1) || header[0] != Version) return false;
+
+            var value = ReadLength(header);
+
+            if (value < (ulong)MinMessageSize || value > long.MaxValue || (long)value > maxSize) return false;
+
+            length = (long)value;
+            return true;
+        }
+
+        // no validation of the size
+        internal static byte[] Header(byte version, ulong length)
+        {
+            var buffer = new byte[HeaderSize];
+
+            buffer[0] = version;
+
+            for (var i = 0; i < sizeof(ulong); i++)
+                buffer[1 + i] = (byte)(length >> (8 * (sizeof(ulong) - 1 - i)));
+
+            buffer[HeaderSize - 1] = Checksum(buffer, HeaderSize - 1);
 
             return buffer;
+        }
+
+        private static ulong ReadLength(byte[] header)
+        {
+            ulong length = 0;
+
+            for (var i = 0; i < sizeof(ulong); i++)
+                length = (length << 8) | header[1 + i];
+
+            return length;
+        }
+
+        // crc-8 (polynomial 0x07), the seed is not zero so a header of zeros is not valid
+        internal static byte Checksum(byte[] data, int count)
+        {
+            var crc = (byte)0xFF;
+
+            for (var i = 0; i < count; i++)
+            {
+                crc ^= data[i];
+
+                for (var bit = 0; bit < 8; bit++)
+                    crc = (crc & 0x80) != 0 ? (byte)((crc << 1) ^ 0x07) : (byte)(crc << 1);
+            }
+
+            return crc;
         }
 
         private class Transaction

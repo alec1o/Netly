@@ -62,18 +62,38 @@ public class FramingSecurityTest
     public void InvalidSize_Throws(long size)
     {
         var framing = new Framing();
-        var header = Helper.ArrayConcat(Framing.Prefix, BitConverter.GetBytes(size));
+        var header = Framing.Header(Framing.Version, (ulong)size);
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), Memory));
     }
 
     [Fact]
-    public void InvalidPrefix_Throws()
+    public void InvalidChecksum_Throws()
     {
         var framing = new Framing();
-        var header = Helper.ArrayConcat(new byte[] { 9, 9, 9, 9 }, BitConverter.GetBytes(4L));
+        var header = Framing.Create(4);
+
+        header[Framing.HeaderSize - 1] ^= 0xFF;
 
         Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), Memory));
+    }
+
+    [Fact]
+    public void InvalidVersion_Throws()
+    {
+        var framing = new Framing();
+        var header = Framing.Header(Framing.Version + 1, 4);
+
+        Assert.Throws<InvalidDataException>(() => framing.Write(new ArraySegment<byte>(header), Memory));
+    }
+
+    [Fact]
+    public void HeaderOfZeros_Throws()
+    {
+        var framing = new Framing();
+
+        Assert.Throws<InvalidDataException>(() =>
+            framing.Write(new ArraySegment<byte>(new byte[Framing.HeaderSize]), Memory));
     }
 
     [Fact]

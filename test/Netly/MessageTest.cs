@@ -31,11 +31,24 @@ public class MessageTest
         var header = Message.Create(Name, Body.Length);
 
         var size =
-            sizeof(int) + // Prefix size
-            sizeof(long) + // Package size (payload + header)
-            sizeof(int) + // Message.Name size
-            Name.Length; // Message.Name buffer
+            sizeof(ushort) + // Prefix
+            sizeof(ushort) + // Name size
+            sizeof(ulong) + // Body size
+            sizeof(byte) + // Checksum
+            Name.Length; // Name
 
         Assert.Equal(size, header.Length);
+        Assert.Equal(Message.HeaderSize + Name.Length, header.Length);
+    }
+
+    [Fact]
+    public void Create_IsBigEndian()
+    {
+        var header = Message.Create("ab", 0x0102);
+
+        Assert.Equal(new byte[] { 19, 36, 0x00, 0x02, 0, 0, 0, 0, 0, 0, 0x01, 0x02 },
+            header.Take(12).ToArray());
+        Assert.Equal((byte)'a', header[Message.HeaderSize]);
+        Assert.Equal((byte)'b', header[Message.HeaderSize + 1]);
     }
 }

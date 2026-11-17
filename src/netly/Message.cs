@@ -9,32 +9,34 @@ namespace Netly
         private const long MinSize = 1;
 
         /// <summary>
-        ///     The prefix used in <see cref="Framing" />.<see cref="Framing.Prefix" /> is: [0x06, 0x03, 0x09, 0x01] in
-        ///     hexadecimal,
-        ///     which is [6, 3, 9, 1] in decimal. It serves as a “magic number”
-        ///     to identify the start of a message payload.
+        ///     The magic prefix that starts an event: [19, 36] in decimal, [0x13, 0x24] in hexadecimal.
+        ///     Read each byte as a decimal number and it is 19 36: the year 1936, when Alan Turing introduced the
+        ///     Turing Machine, a theoretical model of computation whose main challenge was defining when the machine
+        ///     should halt, leading to the Halting Problem and the limits of what is computable.
         ///     <br />
-        ///     This value is the reverse of the prefix used in <see cref="Framing" /> ([1, 9, 3, 6]),
-        ///     which refers to the year 1936 when Alan Turing introduced the Turing Machine.
-        ///     By reversing the digits to 6391, this prefix symbolically represents
-        ///     the message layer built on top of the framing layer, keeping a historical
-        ///     and conceptual link to the foundation of computability.
+        ///     It is the first mark the receiver looks for to tell an event from data.
         ///     <br />
         ///     See: https://en.wikipedia.org/wiki/Turing_machine
         /// </summary>
-        public static readonly byte[] Prefix = { 6, 3, 9, 1 };
+        public static readonly byte[] Prefix = { 19, 36 };
 
         /// <summary>
-        ///     Creates a serialized message header that contains a prefix,
-        ///     the encoded name, and the message size.
+        ///     Header of an event (big-endian): Prefix (2) + NameSize (2, ushort) + BodySize (8, ulong) + Checksum (1),
+        ///     followed by the name (UTF-8) and the body.
+        ///     The receiver trusts the header (it is an event, otherwise it is data) only when the prefix, the checksum
+        ///     (CRC-8 of the fields before it, same algorithm of the <see cref="Framing" />) and the sizes agree with the
+        ///     message received.
         /// </summary>
-        /// <param name="name">The logical name of the message (must not be empty).</param>
-        /// <param name="messageSize">The size of the payload message in bytes (must be greater than 0).</param>
-        /// <returns>
-        ///     A byte array containing the prefix, name length, message size, and the encoded name.
-        /// </returns>
+        public static readonly int HeaderSize = Prefix.Length + sizeof(ushort) + sizeof(ulong) + 1;
+
+        /// <summary>
+        ///     Creates the header of an event: header fields followed by the encoded name.
+        /// </summary>
+        /// <param name="name">The logical name of the message (must not be empty, up to 65535 bytes in UTF-8).</param>
+        /// <param name="messageSize">The size of the payload message in bytes (must not be negative).</param>
+        /// <returns>A byte array containing the header and the encoded name.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown if <paramref name="name" /> is empty or <paramref name="messageSize" /> is less than 1.
+        ///     Thrown if <paramref name="name" /> is empty or too big, or <paramref name="messageSize" /> is negative.
         /// </exception>
         public static byte[] Create(string name, long messageSize)
         {
@@ -47,36 +49,29 @@ namespace Netly
                 throw new ArgumentOutOfRangeException($"{nameof(messageSize)}, {messageSize}");
 
             var encodedName = Encoding.UTF8.GetBytes(name);
-            var encodedNameSize = BitConverter.GetBytes(encodedName.Length);
-            var encodedMessageSize = BitConverter.GetBytes(messageSize);
 
-            var buffer = new byte
-            [
-                Prefix.Length + // Prefix Size (4)
-                encodedNameSize.Length + // Encoded Name Size (4)
-                encodedMessageSize.Length + // Encoded Message Size (8)
-                encodedName.Length // Encoded Name (N >= 1)
-            ];
+            if (encodedName.Length > ushort.MaxValue)
+                throw new ArgumentOutOfRangeException($"{nameof(name)}, {encodedName.Length}");
 
-            var offset = 0;
+            var buffer = new byte[HeaderSize + encodedName.Length];
 
-            Buffer.BlockCopy(Prefix, 0, buffer, offset, Prefix.Length);
-            offset += Prefix.Length;
+            Buffer.BlockCopy(Prefix, 0, buffer, 0, Prefix.Length);
 
-            Buffer.BlockCopy(encodedNameSize, 0, buffer, offset, encodedNameSize.Length);
-            offset += encodedNameSize.Length;
+            var offset = Prefix.Length;
 
-            Buffer.BlockCopy(encodedMessageSize, 0, buffer, offset, encodedMessageSize.Length);
-            offset += encodedMessageSize.Length;
+            buffer[offset] = (byte)(encodedName.Length >> 8);
+            buffer[offset + 1] = (byte)encodedName.Length;
+            offset += sizeof(ushort);
 
-            Buffer.BlockCopy(encodedName, 0, buffer, offset, encodedName.Length);
-            offset += encodedName.Length;
+            for (var i = 0; i < sizeof(ulong); i++)
+                buffer[offset + i] = (byte)((ulong)messageSize >> (8 * (sizeof(ulong) - 1 - i)));
 
-            if (offset != buffer.Length) throw new FormatException(nameof(offset));
+            buffer[HeaderSize - 1] = Framing.Checksum(buffer, HeaderSize - 1);
+
+            Buffer.BlockCopy(encodedName, 0, buffer, HeaderSize, encodedName.Length);
 
             return buffer;
         }
-
 
         /// <summary>
         ///     Attempts to parse a message from a given <see cref="Stream" />.
@@ -92,30 +87,26 @@ namespace Netly
         ///     <c>true</c> if parsing was successful, otherwise <c>false</c>.
         /// </returns>
         /// <remarks>
-        ///     - This method validates the prefix, name size, and message size.
+        ///     - This method validates the prefix, checksum, name size, and message size.
         ///     - Copies payload bytes into the allocated stream using <paramref name="getStream" />.
         ///     - Resets stream positions appropriately before returning.
         /// </remarks>
         public static bool TryParse(Stream stream, out string name, out Stream message,
             Func<long, Stream> getStream)
         {
-            var headerSize =
-                Prefix.Length + // Prefix size
-                sizeof(int) + // Name size
-                sizeof(long); // Message size
-
-
             name = null;
             message = null;
+
+            var allocating = false;
 
             try
             {
                 // min name buffer, the message can be empty
                 const long bodyPreview = MinSize;
 
-                if (stream.Length < headerSize + bodyPreview) return false;
+                if (stream.Length < HeaderSize + bodyPreview) return false;
 
-                var header = new byte[headerSize];
+                var header = new byte[HeaderSize];
 
                 stream.Position = 0;
                 var readHeader = stream.Read(header, 0, header.Length);
@@ -123,24 +114,27 @@ namespace Netly
                 if (readHeader != header.Length)
                     return false;
 
-                var offset = 0;
-
-                if (!Helper.ArraySequenced(Prefix, header))
+                // not an event, it is data
+                if (!Helper.ArraySequenced(Prefix, header) ||
+                    header[HeaderSize - 1] != Framing.Checksum(header, HeaderSize - 1))
                     return false;
 
-                offset += Prefix.Length;
+                var offset = Prefix.Length;
+                var nameSize = (header[offset] << 8) | header[offset + 1];
+                offset += sizeof(ushort);
 
-                var nameSize = BitConverter.ToInt32(header, offset);
-                offset += sizeof(int);
+                ulong bodySize = 0;
 
-                var messageSize = BitConverter.ToInt64(header, offset);
-                offset += sizeof(long);
+                for (var i = 0; i < sizeof(ulong); i++)
+                    bodySize = (bodySize << 8) | header[offset + i];
 
-                if (nameSize < MinSize || messageSize < 0)
+                if (nameSize < MinSize || bodySize > long.MaxValue)
                     return false;
 
-                // long math, nameSize comes from the peer and can overflow int
-                var expectedSize = (long)offset + nameSize + messageSize;
+                var messageSize = (long)bodySize;
+
+                // long math, sizes come from the peer
+                var expectedSize = HeaderSize + (long)nameSize + messageSize;
                 if (expectedSize != stream.Length)
                     return false;
 
@@ -148,21 +142,43 @@ namespace Netly
                 if (stream.Read(nameBuffer, 0, nameBuffer.Length) != nameBuffer.Length)
                     return false;
 
-                name = Encoding.UTF8.GetString(nameBuffer);
+                try
+                {
+                    name = new UTF8Encoding(false, true).GetString(nameBuffer);
+                }
+                catch (ArgumentException)
+                {
+                    // not utf-8, it is data
+                    stream.Position = 0;
+                    return false;
+                }
 
+                allocating = true;
+
+                // allocation errors go to the caller
                 message = getStream(messageSize);
-                message.Position = 0;
 
-                stream.CopyTo(message);
+                try
+                {
+                    message.Position = 0;
 
-                if (message.Position != messageSize)
-                    throw new InvalidDataException(nameof(message.Position));
+                    stream.CopyTo(message);
 
-                message.Position = 0;
+                    if (message.Position != messageSize)
+                        throw new InvalidDataException(nameof(message.Position));
+
+                    message.Position = 0;
+                }
+                catch (Exception)
+                {
+                    message.Dispose();
+                    message = null;
+                    throw;
+                }
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception e) when (!allocating)
             {
                 stream.Position = 0;
                 name = null;
