@@ -727,24 +727,13 @@ namespace Netly
         // buffer of a connection that can't wait for data without one, and of the pool when it can
         private const int ChunkSize = 16 * 1024, PoolChunkSize = 64 * 1024;
 
-        // a zero byte read waits for data without a buffer, runtimes before .NET 5 and Mono return at once
-        private static volatile bool _zeroByteRead = IsZeroByteReadSupported();
-
-        private static bool IsZeroByteReadSupported()
-        {
-            var name = RuntimeInformation.FrameworkDescription ?? string.Empty;
-
-            // ".NET 8.0.1" yes, ".NET Core 3.1", ".NET Framework 4.8" and "Mono" no
-            return name.StartsWith(".NET ", StringComparison.Ordinal) && name.Length > 5 && char.IsDigit(name[5]);
-        }
-
         private void InitReceiver(Socket owner)
         {
             // read once after the connection, the user can change the buffers of the socket in OnModify
             _receiveChunk = SocketLimits.Receive(owner, ChunkSize);
             _poolChunk = SocketLimits.Receive(owner, PoolChunkSize);
 
-            if (_zeroByteRead && IsSecure is false)
+            if (Capabilities.ZeroByteRead && IsSecure is false)
             {
                 ReceiveWait(owner);
                 return;
@@ -801,7 +790,7 @@ namespace Netly
 
                     // a platform that does it every time would spin: stop using zero byte reads, a read that waits
                     // would hold a thread of the pool for every idle connection
-                    _zeroByteRead = false;
+                    Capabilities.DisableZeroByteRead();
                     ReceiveTrigger(owner, new byte[_receiveChunk]);
                     return false;
                 }

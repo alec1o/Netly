@@ -10,38 +10,12 @@ namespace Netly
     {
         private const int Minimum = 512;
 
-        // some systems (linux) keep the double of the buffer that is set, to pay the cost of each packet in the kernel, and
-        // give that value back: the bytes a datagram can use are the value divided by this factor. It is detected, not
-        // guessed by the name of the system: a buffer is set and read back once.
-        private static readonly Lazy<int> Factor = new Lazy<int>(DetectFactor);
-
-        internal static int BufferFactor => Factor.Value;
-
-        private static int DetectFactor()
-        {
-            try
-            {
-                using (var probe = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
-                {
-                    const int size = 64 * 1024;
-
-                    probe.SendBufferSize = size;
-
-                    return probe.SendBufferSize >= size * 2 ? 2 : 1;
-                }
-            }
-            catch (Exception)
-            {
-                return 1;
-            }
-        }
-
         // biggest message the socket can send, up to the limit of the protocol
         public static int Send(Socket socket, int protocolLimit)
         {
             try
             {
-                return Math.Max(Minimum, Math.Min(protocolLimit, socket.SendBufferSize / BufferFactor));
+                return Math.Max(Minimum, Math.Min(protocolLimit, socket.SendBufferSize / Capabilities.BufferFactor));
             }
             catch (Exception)
             {
@@ -54,7 +28,7 @@ namespace Netly
         {
             try
             {
-                return Math.Max(Minimum, Math.Min(protocolLimit, socket.ReceiveBufferSize / BufferFactor));
+                return Math.Max(Minimum, Math.Min(protocolLimit, socket.ReceiveBufferSize / Capabilities.BufferFactor));
             }
             catch (Exception)
             {
